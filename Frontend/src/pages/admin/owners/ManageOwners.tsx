@@ -15,7 +15,7 @@ import {
   ChevronRight,
   X
 } from 'lucide-react';
-import { cn } from '../../../utils';
+import { cn } from '../../../utils/utils';
 
 type OwnerType = 'Accommodation' | 'Both';
 type OwnerStatus = 'Active' | 'Inactive';

@@ -8,7 +8,7 @@ import {
   CheckCircle2, 
   X 
 } from 'lucide-react';
-import { cn } from '../../utils';
+import { cn } from '../../utils/utils';
 
 export interface AdminNotification {
   id: string;

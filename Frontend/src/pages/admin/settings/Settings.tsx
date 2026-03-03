@@ -1,6 +1,6 @@
 import React from 'react';
 import { Save } from 'lucide-react';
-import { cn } from '../../../utils';
+import { cn } from '../../../utils/utils';
 import { useTheme } from '../../../theme';
 import { GeneralSettingsSection } from './sections/GeneralSettingsSection';
 import { SecuritySettingsSection } from './sections/SecuritySettingsSection';

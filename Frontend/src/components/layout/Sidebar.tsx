@@ -3,7 +3,7 @@ import {
   LogOut,
   ShieldCheck
 } from 'lucide-react';
-import { cn } from '../../utils';
+import { cn } from '../../utils/utils';
 import { MAIN_MENU_ITEMS, SYSTEM_MENU_ITEMS } from './menuBar';
 
 interface SidebarProps {

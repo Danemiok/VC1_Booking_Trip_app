@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { ArrowLeft, CheckCircle2, Eye } from 'lucide-react';
-import { cn } from '../../../utils';
+import { cn } from '../../../utils/utils';
 
 interface ViewAllApplicationsProps {
   onBack?: () => void;

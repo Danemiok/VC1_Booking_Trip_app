@@ -7,7 +7,7 @@ import {
   ChevronLeft,
   ChevronRight
 } from 'lucide-react';
-import { cn } from '../../../utils';
+import { cn } from '../../../utils/utils';
 
 export const Destinations: React.FC = () => {
   const [searchQuery, setSearchQuery] = useState('');

@@ -1,6 +1,6 @@
 import React from 'react';
 import { AlertTriangle, Bell, Camera, CheckCircle2, Globe, Info, Lock, ShieldCheck, User, X } from 'lucide-react';
-import { cn } from '../../../utils';
+import { cn } from '../../../utils/utils';
 
 interface AdminProfileProps {
   onDirtyChange: (isDirty: boolean) => void;

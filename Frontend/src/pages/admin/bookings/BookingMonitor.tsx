@@ -14,8 +14,7 @@ import {
   ChevronLeft,
   ChevronRight
 } from 'lucide-react';
-import { cn } from '../../../utils';
-
+import { cn } from '../../../utils/utils';
 const StatCard = ({ title, value, trend, icon: Icon }: any) => (
   <div className="card p-4">
     <div className="flex items-start justify-between">

@@ -14,7 +14,7 @@ import {
   ChevronRight,
   X
 } from 'lucide-react';
-import { cn } from '../../../utils';
+import { cn } from '../../../utils/utils';
 import { ViewUserDetails, UserItem } from './ViewUserDetails';
 
 const StatCard = ({ title, value, trend, icon: Icon }: any) => (

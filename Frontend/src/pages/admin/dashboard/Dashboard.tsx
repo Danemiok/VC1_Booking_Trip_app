@@ -20,7 +20,7 @@ import {
   CheckCircle2,
   MoreHorizontal
 } from 'lucide-react';
-import { cn } from '../../../utils';
+import { cn } from '../../../utils/utils';
 
 const data = [
   { name: 'JAN', income: 400, expenses: 220 },

@@ -13,7 +13,7 @@ import {
   ChevronLeft,
   ChevronRight
 } from 'lucide-react';
-import { cn } from '../../../utils';
+import { cn } from '../../../utils/utils';
 
 export const AuditLogs: React.FC = () => {
   const logs = [
