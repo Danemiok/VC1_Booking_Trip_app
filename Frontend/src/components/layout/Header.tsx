@@ -45,6 +45,8 @@ export const Header: React.FC<HeaderProps> = ({
           <button 
             onClick={() => setIsNotificationsOpen(!isNotificationsOpen)}
             className="p-2 text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg relative transition-colors"
+            title={isDark ? "View Notifications" : "View Notifications"}
+
           >
             <Bell size={20} />
             <span className="absolute top-2 right-2 w-2 h-2 bg-red-500 rounded-full border-2 border-white dark:border-slate-900"></span>
