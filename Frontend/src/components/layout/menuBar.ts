@@ -44,6 +44,7 @@ export const PATH_TO_TAB: Record<string, string> = baseItems.reduce((acc, item) 
 }, {} as Record<string, string>);
 
 PATH_TO_TAB['/owners/applications'] = 'owners';
+PATH_TO_TAB['/owners/applications/details'] = 'owners';
 PATH_TO_TAB['/owners/details'] = 'owners';
 PATH_TO_TAB['/owners/request-detail'] = 'ownerRequestDetail';
 PATH_TO_TAB['/profile'] = 'profile';

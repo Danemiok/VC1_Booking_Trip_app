@@ -1,6 +1,8 @@
 import React, { useState } from 'react';
 import { Search, Bell, HelpCircle, Sun, Moon } from 'lucide-react';
 import { AdminNotification, NotificationDropdown } from '../common/NotificationDropdown';
+import { ProfileDropdown } from '../common/ProfileDropdown';
+import { LogoutConfirmModal } from '../common/LogoutConfirmModal';
 
 interface HeaderProps {
   title: string;
@@ -8,6 +10,8 @@ interface HeaderProps {
   toggleTheme: () => void;
   onNotificationClick: (notification: AdminNotification) => void;
   onProfileClick: () => void;
+  onLogoutClick: () => void;
+  user?: { name?: string; email?: string } | null;
 }
 
 export const Header: React.FC<HeaderProps> = ({
@@ -16,8 +20,25 @@ export const Header: React.FC<HeaderProps> = ({
   toggleTheme,
   onNotificationClick,
   onProfileClick,
+  onLogoutClick,
+  user,
 }) => {
   const [isNotificationsOpen, setIsNotificationsOpen] = useState(false);
+  const [isProfileDropdownOpen, setIsProfileDropdownOpen] = useState(false);
+  const [isLogoutConfirmOpen, setIsLogoutConfirmOpen] = useState(false);
+  
+  const avatarName = user?.name || 'User';
+  const avatarSrc = `https://ui-avatars.com/api/?name=${encodeURIComponent(avatarName)}&background=f1f5f9&color=0f172a&size=128`;
+
+  const handleLogoutClick = () => {
+    setIsProfileDropdownOpen(false);
+    setIsLogoutConfirmOpen(true);
+  };
+
+  const handleConfirmLogout = () => {
+    setIsLogoutConfirmOpen(false);
+    onLogoutClick(); // Use the logout prop from parent component
+  };
 
   return (
     <header className="h-16 flex items-center justify-between px-8 border-b border-slate-200/50 dark:border-slate-800/50 bg-white/60 dark:bg-slate-900/40 backdrop-blur-xl sticky top-0 z-10">
@@ -35,7 +56,7 @@ export const Header: React.FC<HeaderProps> = ({
       <div className="flex items-center gap-4">
         <button 
           onClick={toggleTheme}
-          className="p-2 text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg transition-colors"
+          className="p-2 text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-full transition-colors"
           title={isDark ? "Switch to Light Mode" : "Switch to Dark Mode"}
         >
           {isDark ? <Sun size={20} /> : <Moon size={20} />}
@@ -44,7 +65,7 @@ export const Header: React.FC<HeaderProps> = ({
         <div className="relative">
           <button 
             onClick={() => setIsNotificationsOpen(!isNotificationsOpen)}
-            className="p-2 text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg relative transition-colors"
+            className="p-2 text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-full relative transition-colors"
             title={isDark ? "View Notifications" : "View Notifications"}
 
           >
@@ -62,24 +83,41 @@ export const Header: React.FC<HeaderProps> = ({
           />
         </div>
 
-        <button className="p-2 text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg">
+        <button className="p-2 text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-full">
           <HelpCircle size={20} />
         </button>
-        <button
-          onClick={onProfileClick}
-          className="flex items-center gap-3 pl-3 pr-0.5 py-0.5 rounded-full hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
-          title="Open admin profile"
-        >
-          <span className="w-px h-8 bg-slate-200 dark:bg-slate-800" />
-          <span className="w-10 h-10 rounded-full bg-slate-200 dark:bg-slate-800 border-2 border-primary/20 overflow-hidden hover:ring-2 hover:ring-primary/30 transition-all">
-          <img 
-            src="https://lh3.googleusercontent.com/aida-public/AB6AXuCztcfvWxSzC8j5Fx7emZCKH-ZveyW4tW0hfstQHaMlqi2v24tvMoiHcZCKLOgLwCtq6MUieyaKK305L8loR1x6KLm198VVSuZtnYJMl96TLzkI--ZKfHdIejt6o7QilHZ2d2ApNEAJnMSsQqq4Hm5WgE1CvfzLBvwvyBaYI3hIIenZhHk8IjNVVQdlGmo1nwm6DPatu79jashD5lHf3bPn39jAe4QO3S7UvDdOACl1tdbEwWm_yv-zmDQbaFZU5G1zqLl-zQ1Il8jy" 
-            alt="User Avatar"
-            className="w-full h-full object-cover"
-          />
-          </span>
-        </button>
+        <div className="relative">
+          <button
+            onClick={() => setIsProfileDropdownOpen(!isProfileDropdownOpen)}
+            className="flex items-center gap-3 pl-3 pr-0.5 py-0.5 rounded-full hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
+            title="Open profile"
+          >
+            <span className="w-px h-8 bg-slate-200 dark:bg-slate-800" />
+            <span className="w-8 h-8 rounded-full bg-slate-200 dark:bg-slate-800 border-2 border-primary/40 overflow-hidden hover:ring-2 hover:ring-primary/30 transition-all">
+              <img
+                src={avatarSrc}
+                alt={avatarName}
+                className="w-full h-full object-cover"
+              />
+            </span>
+          </button>
+          
+          {isProfileDropdownOpen && (
+            <ProfileDropdown
+              user={user}
+              onClose={() => setIsProfileDropdownOpen(false)}
+              onLogoutClick={handleLogoutClick}
+              onProfileClick={onProfileClick}
+            />
+          )}
+        </div>
       </div>
+      
+      <LogoutConfirmModal
+              isOpen={isLogoutConfirmOpen}
+              onCancel={() => setIsLogoutConfirmOpen(false)}
+              onConfirm={handleConfirmLogout}
+            />
     </header>
   );
 };

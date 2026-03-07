@@ -1,190 +1,244 @@
-import React from 'react';
-import { motion, AnimatePresence } from 'motion/react';
-import { Navigate, Route, Routes, useLocation, useNavigate } from 'react-router-dom';
-import { Sidebar } from './components/layout/Sidebar';
-import { Header } from './components/layout/Header';
-import { PATH_TO_TAB, TAB_TO_PATH } from './components/layout/menuBar';
-import {
-  AuditLogs,
-  Bookings,
-  Dashboard,
-  Destinations,
-  Finances,
-  AdminProfile,
-  OwnerManagement,
-  OwnerDetailsPage,
-  Settings,
-  UserManagement,
-  ViewAllApplications,
-} from './pages/admin';
-import { useTheme } from './theme';
-import { AdminNotification } from './components/common/NotificationDropdown';
+import React, { useState } from 'react';
+import { AnimatePresence, motion } from 'motion/react';
+import { Navbar } from './components/layout/Navbar';
+import { Footer } from './components/layout/Footer';
+// import { RecommendationModal } from './components/common/RecommendationModal';
+// import { DestinationModal } from './components/common/DestinationModal';
+import { AppRoutes } from './routes/AppRoutes';
+import { Login } from './pages/auth/Login';
+import { Register } from './pages/auth/Register';
+import { useAuth } from './context/AuthContext';
+import { ThemeProvider } from './context/ThemeContext';
 
-export default function App() {
-  const location = useLocation();
-  const navigate = useNavigate();
-  const { isDark, toggleTheme } = useTheme();
-  const [hasUnsavedProfileChanges, setHasUnsavedProfileChanges] = React.useState(false);
-  const [pendingNavigationPath, setPendingNavigationPath] = React.useState<string | null>(null);
+const AppContent = () => {
+  const [view, setView] = useState('landing');
+  const [activeProfileTab, setActiveProfileTab] = useState<any>('profile');
+  const { user, logout } = useAuth();
 
-  const safeNavigate = React.useCallback((path: string) => {
-    if (hasUnsavedProfileChanges && location.pathname === '/profile' && path !== '/profile') {
-      setPendingNavigationPath(path);
-      return;
+  const handleProfileClick = (tab?: any) => {
+    if (tab) setActiveProfileTab(tab);
+    setView('profile');
+  };
+  const [selectedRecommendation, setSelectedRecommendation] = useState<any | null>(null);
+  const [selectedDestination, setSelectedDestination] = useState<any | null>(null);
+  const [selectedHotel, setSelectedHotel] = useState<any | null>(null);
+  const [selectedActivityIds, setSelectedActivityIds] = useState<number[]>([1, 2]);
+  const isAdminUser = user?.role === 'admin';
+  
+  // Initialize real-time dates
+  const today = new Date('2026-03-03T00:34:03-08:00');
+  const startDate = new Date(today);
+  startDate.setDate(today.getDate() + 7);
+  const endDate = new Date(startDate);
+  endDate.setDate(startDate.getDate() + 7);
+  const startDateString = startDate.toLocaleDateString('en-US', { month: 'long', day: 'numeric' });
+  const endDateString = endDate.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' });
+  const dateRangeString = `${startDateString} - ${endDateString}`;
+
+  const [tripData, setTripData] = useState({
+    title: "Adventure in Siem Reap",
+    emoji: "🇰🇭",
+    dates: dateRangeString,
+    guests: "2 Adults",
+    reference: "#TP-48291",
+    hotel: {
+      name: "Raffles Grand Hotel d'Angkor",
+      location: "1 Vithei Charles de Gaulle, Siem Reap, Cambodia",
+      roomType: "Landmark Garden View Room",
+      guests: "2 Adults",
+      price: 2450.00,
+      nights: 7,
+      status: "Reserved",
+      image: "https://images.unsplash.com/photo-1542314831-068cd1dbfeeb?auto=format&fit=crop&q=80&w=800"
+    },
+    rental: {
+      name: "Lexus LX570 SUV",
+      pickup: "Siem Reap Angkor International (SAI)",
+      features: "Automatic • Premium Interior",
+      price: 560.00,
+      days: 7,
+      status: "Pending",
+      isBooked: true,
+      image: "https://images.unsplash.com/photo-1619767886558-efdc259cde1a?auto=format&fit=crop&q=80&w=800"
     }
+  });
+  const [notifications, setNotifications] = useState([
+    { id: 1, title: "Booking Confirmed", message: "Your stay at Raffles Grand Hotel is confirmed for Oct 12.", time: "2h ago", type: "booking", read: false },
+    { id: 2, title: "New Message", message: "Owner of Paradise Beach Resort sent you a message.", time: "5h ago", type: "message", read: false },
+    { id: 3, title: "Price Drop", message: "Koh Rong ferry prices just dropped by 15%!", time: "1d ago", type: "alert", read: true },
+  ]);
 
-    navigate(path);
-  }, [hasUnsavedProfileChanges, location.pathname, navigate]);
-
-  const cancelPendingNavigation = () => {
-    setPendingNavigationPath(null);
+  const handleMarkAsRead = (id: number) => {
+    setNotifications(notifications.map(n => n.id === id ? { ...n, read: true } : n));
   };
 
-  const confirmPendingNavigation = () => {
-    if (!pendingNavigationPath) {
-      return;
-    }
-
-    setHasUnsavedProfileChanges(false);
-    navigate(pendingNavigationPath);
-    setPendingNavigationPath(null);
+  const handleMarkAllAsRead = () => {
+    setNotifications(notifications.map(n => ({ ...n, read: true })));
   };
 
-  const activeTab = PATH_TO_TAB[location.pathname] ?? 'dashboard';
-
-  const setActiveTab = (tab: string) => {
-    const path = TAB_TO_PATH[tab];
-    if (path) {
-      safeNavigate(path);
+  const handleSelectRecommendation = (item: any) => {
+    if (item.type === 'hotel') {
+      setSelectedHotel(item);
+      setView('hotel-details');
+    } else {
+      setSelectedRecommendation(item);
     }
   };
 
-  const handleNotificationClick = (notification: AdminNotification) => {
-    if (notification.id === '1') {
-      safeNavigate('/owners/details');
+  const handleSelectDestination = (dest: any) => {
+    if (dest.type === 'hotel') {
+      setSelectedHotel(dest);
+      setView('hotel-details');
+    } else {
+      setSelectedDestination(dest);
     }
   };
-
-  const openAdminProfile = () => {
-    safeNavigate('/profile');
-  };
-
-  const getTitle = () => {
-    if (location.pathname === '/owners/applications') {
-      return 'Owner Applications';
-    }
-    if (location.pathname === '/owners/details') {
-      return 'Owner Details';
-    }
-
-    switch (activeTab) {
-      case 'dashboard': return 'Executive Overview';
-      case 'users': return 'User Management';
-      case 'owners': return 'Owners Management';
-      case 'destinations': return 'Destinations Management';
-      case 'bookings': return 'Bookings Management';
-      case 'finances': return 'Finances Management';
-      case 'logs': return 'System Audit Logs';
-      case 'settings': return 'System Settings';
-      case 'profile': return 'Admin Profile';
-      case 'ownerRequestDetail': return 'Owner Request Detail';
-      default: return 'Dashboard';
-    }
+  const isAuthModalOpen = view === 'login' || view === 'register';
+  const mainView = isAuthModalOpen ? 'landing' : view;
+  const shouldShowFooter = !isAdminUser && user === null;
+  const handleAuthSuccess = (nextView: string) => {
+    setView(nextView);
   };
 
   return (
-    <div className="flex h-screen overflow-hidden font-sans transition-colors duration-200">
-      <Sidebar activeTab={activeTab} setActiveTab={setActiveTab} onProfileClick={openAdminProfile} />
-      
-      <main className="flex-1 flex flex-col overflow-hidden">
-        <Header
-          title={getTitle()}
-          isDark={isDark}
-          toggleTheme={toggleTheme}
-          onNotificationClick={handleNotificationClick}
-          onProfileClick={openAdminProfile}
+    <div className="min-h-screen bg-white dark:bg-slate-900 transition-colors duration-300">
+      {!isAdminUser && (
+        <Navbar
+          onLoginClick={() => setView('login')}
+          user={user}
+          onLogout={logout}
+          onProfileClick={handleProfileClick}
+          notifications={notifications}
+          onMarkAsRead={handleMarkAsRead}
+          onMarkAllAsRead={handleMarkAllAsRead}
+          onHotelsClick={() => setView('hotels')}
+          onRentalsClick={() => setView('rentals')}
+          onHomeClick={() => setView('landing')}
+          onBookingsClick={() => setView('bookings')}
+          onTripPlannerClick={() => setView('trip-planner')}
+          onActivitiesClick={() => setView('activities')}
+          currentView={view}
         />
-        
-        <div className="flex-1 overflow-y-auto">
-          <AnimatePresence mode="wait">
-            <motion.div
-              key={location.pathname}
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -10 }}
-              transition={{ duration: 0.2 }}
-              className="h-full"
-            >
-              <Routes>
-                <Route
-                  path="/"
-                  element={<Navigate to="/dashboard" replace />}
-                />
-                <Route
-                  path="/dashboard"
-                  element={
-                    <Dashboard
-                      onOpenTotalUsersDetails={() => safeNavigate('/users')}
-                      onOpenTotalOwnersDetails={() => safeNavigate('/owners')}
-                      onOpenTotalBookingsDetails={() => safeNavigate('/bookings')}
-                      onOpenSystemIncomeDetails={() => safeNavigate('/finances')}
-                      onOpenOwnerApplicationsDetails={() => safeNavigate('/owners/applications')}
-                    />
-                  }
-                />
-                <Route path="/users" element={<UserManagement />} />
-                <Route
-                  path="/owners"
-                  element={
-                    <OwnerManagement
-                      onViewAllApplications={() => safeNavigate('/owners/applications')}
-                      onViewOwnerDetails={() => safeNavigate('/owners/details')}
-                    />
-                  }
-                />
-                <Route path="/owners/applications" element={<ViewAllApplications onBack={() => safeNavigate('/owners')} onViewDetails={() => safeNavigate('/owners/details')} />} />
-                <Route path="/owners/details" element={<OwnerDetailsPage onBack={() => safeNavigate('/owners')} />} />
-                <Route path="/owners/request-detail" element={<OwnerDetailsPage onBack={() => safeNavigate('/owners')} />} />
-                <Route path="/destinations" element={<Destinations />} />
-                <Route path="/bookings" element={<Bookings />} />
-                <Route path="/finances" element={<Finances />} />
-                <Route path="/logs" element={<AuditLogs />} />
-                <Route path="/profile" element={<AdminProfile onDirtyChange={setHasUnsavedProfileChanges} />} />
-                <Route path="/settings" element={<Settings />} />
-                <Route path="*" element={<Navigate to="/dashboard" replace />} />
-              </Routes>
-            </motion.div>
-          </AnimatePresence>
-        </div>
-      </main>
-
-      {pendingNavigationPath && (
-        <>
-          <div className="fixed inset-0 bg-slate-900/40 backdrop-blur-[1px] z-40" onClick={cancelPendingNavigation} />
-          <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-            <div className="w-full max-w-md card p-6">
-              <h3 className="text-lg font-bold text-slate-900 dark:text-slate-100">Unsaved Changes</h3>
-              <p className="mt-2 text-sm text-slate-600 dark:text-slate-300">
-                You have unsaved profile changes. If you leave this page now, your edits will be lost.
-              </p>
-              <div className="mt-5 flex justify-end gap-3">
-                <button
-                  onClick={cancelPendingNavigation}
-                  className="h-10 px-4 rounded-lg border border-slate-300 dark:border-slate-700 text-slate-700 dark:text-slate-200 font-semibold hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors"
-                >
-                  Cancel
-                </button>
-                <button
-                  onClick={confirmPendingNavigation}
-                  className="h-10 px-4 rounded-lg bg-amber-500 text-white font-semibold hover:bg-amber-600 transition-colors"
-                >
-                  Okay
-                </button>
-              </div>
-            </div>
-          </div>
-        </>
       )}
+
+      {isAdminUser ? (
+        <AppRoutes
+          view={mainView}
+          setView={setView}
+          onSelectRecommendation={handleSelectRecommendation}
+          onSelectDestination={handleSelectDestination}
+          onPromotionsClick={() => setView('promotions')}
+          onHotelsClick={() => setView('hotels')}
+          onRentalsClick={() => setView('rentals')}
+          onActivitiesClick={() => setView('activities')}
+          notifications={notifications}
+          onMarkAsRead={handleMarkAsRead}
+          onMarkAllAsRead={handleMarkAllAsRead}
+          activeProfileTab={activeProfileTab}
+          selectedHotel={selectedHotel}
+          setSelectedHotel={setSelectedHotel}
+          selectedActivityIds={selectedActivityIds}
+          setSelectedActivityIds={setSelectedActivityIds}
+          tripData={tripData}
+          setTripData={setTripData}
+        />
+      ) : (
+        <AnimatePresence mode="wait">
+          <motion.div
+            key={mainView}
+            initial={{ opacity: 0, y: 16 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -10 }}
+            transition={{ duration: 0.22, ease: 'easeOut' }}
+            className="pt-24"
+          >
+            <AppRoutes
+              view={mainView}
+              setView={setView}
+              onSelectRecommendation={handleSelectRecommendation}
+              onSelectDestination={handleSelectDestination}
+              onPromotionsClick={() => setView('promotions')}
+              onHotelsClick={() => setView('hotels')}
+              onRentalsClick={() => setView('rentals')}
+              onActivitiesClick={() => setView('activities')}
+              notifications={notifications}
+              onMarkAsRead={handleMarkAsRead}
+              onMarkAllAsRead={handleMarkAllAsRead}
+              activeProfileTab={activeProfileTab}
+              selectedHotel={selectedHotel}
+              setSelectedHotel={setSelectedHotel}
+              selectedActivityIds={selectedActivityIds}
+              setSelectedActivityIds={setSelectedActivityIds}
+              tripData={tripData}
+              setTripData={setTripData}
+            />
+          </motion.div>
+        </AnimatePresence>
+      )}
+
+      {shouldShowFooter && <Footer onLoginClick={() => setView('login')} user={user} />}
+
+      <AnimatePresence>
+        {isAuthModalOpen && (
+          <motion.div
+            className="fixed inset-0 z-[100] bg-slate-950/55 backdrop-blur-[1px] overflow-y-auto"
+            onClick={() => setView('landing')}
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.35, ease: 'easeOut' }}
+          >
+            <motion.div
+              onClick={(event) => event.stopPropagation()}
+              initial={{ opacity: 0, y: 40, scale: 0.96 }}
+              animate={{ opacity: 1, y: 0, scale: 1 }}
+              exit={{ opacity: 0, y: 18, scale: 0.98 }}
+              transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
+            >
+              {view === 'login' ? (
+                <Login
+                  onSwitchToRegister={() => setView('register')}
+                  onBack={() => setView('landing')}
+                  onSuccess={handleAuthSuccess}
+                  onClose={() => setView('landing')}
+                />
+              ) : (
+                <Register
+                  onSwitchToLogin={() => setView('login')}
+                  onBack={() => setView('landing')}
+                  onSuccess={handleAuthSuccess}
+                  onClose={() => setView('landing')}
+                />
+              )}
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* <AnimatePresence>
+        {selectedRecommendation && (
+          <RecommendationModal 
+            item={selectedRecommendation} 
+            onClose={() => setSelectedRecommendation(null)} 
+          />
+        )}
+        {selectedDestination && (
+          <DestinationModal 
+            dest={selectedDestination} 
+            onClose={() => setSelectedDestination(null)} 
+          />
+        )}
+      </AnimatePresence> */}
     </div>
   );
-}
+};
+
+const App = () => {
+  return (
+    <ThemeProvider>
+      <AppContent />
+    </ThemeProvider>
+  );
+};
+
+export default App;

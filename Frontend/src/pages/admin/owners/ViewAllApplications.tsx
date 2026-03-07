@@ -4,22 +4,23 @@ import { cn } from '../../../utils/utils';
 
 interface ViewAllApplicationsProps {
   onBack?: () => void;
-  onViewDetails?: () => void;
+  onViewDetails?: (applicationId: string) => void;
 }
 
 type OwnerApplication = {
+  id: string;
   name: string;
   business: string;
   email: string;
-  type: string;
+  type: 'Accommodation' | 'Transport' | 'Both';
   status: 'Pending' | 'Approved';
 };
 
 const initialApplications: OwnerApplication[] = [
-  { name: 'Marc Stevens', business: 'Mountain Lodge', email: 'marc@mountainlodge.com', type: 'Accommodation', status: 'Pending' },
-  { name: 'Elena Rossi', business: 'Urban Loft Stay', email: 'elena@urbanloft.com', type: 'Accommodation', status: 'Pending' },
-  { name: 'James Wu', business: 'Island Villas', email: 'james@islandvillas.com', type: 'Both', status: 'Pending' },
-  { name: 'Sophia Patel', business: 'Riverstone Retreat', email: 'sophia@riverstone.com', type: 'Accommodation', status: 'Pending' },
+  { id: 'app-1001', name: 'Marc Stevens', business: 'Mountain Lodge', email: 'marc@mountainlodge.com', type: 'Accommodation', status: 'Pending' },
+  { id: 'app-1002', name: 'Elena Rossi', business: 'Urban Loft Stay', email: 'elena@urbanloft.com', type: 'Accommodation', status: 'Pending' },
+  { id: 'app-1003', name: 'James Wu', business: 'Island Villas', email: 'james@islandvillas.com', type: 'Both', status: 'Pending' },
+  { id: 'app-1004', name: 'Sophia Patel', business: 'Riverstone Retreat', email: 'sophia@riverstone.com', type: 'Accommodation', status: 'Pending' },
 ];
 
 export const ViewAllApplications: React.FC<ViewAllApplicationsProps> = ({ onBack, onViewDetails }) => {
@@ -81,8 +82,8 @@ export const ViewAllApplications: React.FC<ViewAllApplicationsProps> = ({ onBack
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
-              {applications.map((application, index) => (
-                <tr key={index} className="table-row">
+              {applications.map((application) => (
+                <tr key={application.id} className="table-row">
                   <td className="px-6 py-4">
                     <div>
                       <p className="text-sm font-bold">{application.name}</p>
@@ -113,7 +114,7 @@ export const ViewAllApplications: React.FC<ViewAllApplicationsProps> = ({ onBack
                     <div className="flex items-center justify-end gap-2">
                       <button
                         type="button"
-                      
+                        onClick={() => onViewDetails?.(application.id)}
                         className="flex items-center gap-1.5 px-3 py-1.5 border border-slate-200 dark:border-slate-800 rounded-lg text-xs font-bold hover:text-primary transition-colors"
                       >
                         <Eye size={14} />

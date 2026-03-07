@@ -257,23 +257,26 @@ export const OwnerManagement: React.FC<OwnerManagementProps> = ({ onViewAllAppli
                           event.stopPropagation();
                           openOwnerDetails(owner);
                         }}
-                        className="p-2 text-slate-400 hover:text-primary transition-colors"
+                        className="flex items-center gap-1.5 px-3 py-1.5 border border-slate-200 dark:border-slate-800 rounded-lg text-xs hover:text-primary transition-colors hover:text-primary transition-colors"
                       >
                         <Eye size={18} />
+                        View
                       </button>
                       <button
                         type="button"
                         onClick={(event) => event.stopPropagation()}
-                        className="p-2 text-slate-400 hover:text-primary transition-colors"
+                        className="flex items-center gap-1.5 px-3 py-1.5 border border-slate-200 dark:border-slate-800 rounded-lg text-xs hover:text-primary transition-colors   hover:text-primary transition-colors"
                       >
                         <Edit2 size={18} />
+                        Edit
                       </button>
                       <button
                         type="button"
                         onClick={(event) => event.stopPropagation()}
-                        className="p-2 text-slate-400 hover:text-red-500 transition-colors"
+                        className="flex items-center gap-1.5 px-3 py-1.5 border border-slate-200 dark:border-slate-800 rounded-lg text-xs hover:text-red-500 transition-colors"
                       >
                         <Trash2 size={18} />
+                        Delete
                       </button>
                     </div>
                   </td>

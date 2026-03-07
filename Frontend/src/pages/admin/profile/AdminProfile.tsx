@@ -1,6 +1,9 @@
 import React from 'react';
 import { AlertTriangle, Bell, Camera, CheckCircle2, Globe, Info, Lock, ShieldCheck, User, X } from 'lucide-react';
 import { cn } from '../../../utils/utils';
+import { useAuth } from '../../../context/AuthContext';
+import { getAuthToken } from '../../../services/authService';
+import { apiRequest } from '../../../services/api';
 
 interface AdminProfileProps {
   onDirtyChange: (isDirty: boolean) => void;
@@ -13,25 +16,50 @@ interface ProfileForm {
   bio: string;
 }
 
-const INITIAL_PROFILE: ProfileForm = {
-  fullName: 'Alex Johnson',
-  email: 'alex.j@komrong.com',
-  phoneNumber: '+1 (555) 987-6543',
-  bio: "Senior operations manager with over 10 years of experience in the travel industry. Overseeing the Komrong platform's global expansion.",
-};
-
 interface ProfileAlert {
   type: 'success' | 'warning' | 'info';
   message: string;
 }
 
+interface ApiUser {
+  id: number | string;
+  name: string;
+  email: string;
+  role?: string;
+  created_at?: string;
+}
+
+const INITIAL_PROFILE: ProfileForm = {
+  fullName: '',
+  email: '',
+  phoneNumber: '',
+  bio: '',
+};
+
+const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+const toTitleCase = (value: string) => value.charAt(0).toUpperCase() + value.slice(1).toLowerCase();
+
+const formatMemberSince = (isoDate?: string) => {
+  if (!isoDate) return 'Member since -';
+  const date = new Date(isoDate);
+  if (Number.isNaN(date.getTime())) return 'Member since -';
+  return `Member since ${date.toLocaleDateString('en-US', { month: 'long', year: 'numeric' })}`;
+};
+
 export const AdminProfile: React.FC<AdminProfileProps> = ({ onDirtyChange }) => {
+  const { updateUser } = useAuth();
   const [isEditingProfile, setIsEditingProfile] = React.useState(false);
   const [savedProfile, setSavedProfile] = React.useState<ProfileForm>(INITIAL_PROFILE);
   const [profileForm, setProfileForm] = React.useState<ProfileForm>(INITIAL_PROFILE);
   const [alert, setAlert] = React.useState<ProfileAlert | null>(null);
   const [showDiscardEditPrompt, setShowDiscardEditPrompt] = React.useState(false);
-  const [profileImage, setProfileImage] = React.useState('https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&w=280&q=80');
+  const [profileImage, setProfileImage] = React.useState('');
+  const [isLoadingProfile, setIsLoadingProfile] = React.useState(true);
+  const [isSavingProfile, setIsSavingProfile] = React.useState(false);
+  const [userId, setUserId] = React.useState<number | string | null>(null);
+  const [userRole, setUserRole] = React.useState('admin');
+  const [memberSinceLabel, setMemberSinceLabel] = React.useState('Member since -');
   const fileInputRef = React.useRef<HTMLInputElement | null>(null);
   const uploadedImageRef = React.useRef<string | null>(null);
 
@@ -41,6 +69,23 @@ export const AdminProfile: React.FC<AdminProfileProps> = ({ onDirtyChange }) => 
     profileForm.phoneNumber !== savedProfile.phoneNumber ||
     profileForm.bio !== savedProfile.bio
   );
+
+  const emailError = React.useMemo(() => {
+    if (!isEditingProfile) {
+      return '';
+    }
+
+    const email = profileForm.email.trim();
+    if (email === '') {
+      return 'Email address is required.';
+    }
+
+    if (!EMAIL_REGEX.test(email)) {
+      return 'Please enter a valid email address.';
+    }
+
+    return '';
+  }, [isEditingProfile, profileForm.email]);
 
   React.useEffect(() => {
     onDirtyChange(isDirty);
@@ -85,6 +130,47 @@ export const AdminProfile: React.FC<AdminProfileProps> = ({ onDirtyChange }) => 
     };
   }, []);
 
+  React.useEffect(() => {
+    const loadAdminProfile = async () => {
+      setIsLoadingProfile(true);
+      const token = getAuthToken();
+      if (!token) {
+        setAlert({ type: 'warning', message: 'Authentication token is missing. Please login again.' });
+        setIsLoadingProfile(false);
+        return;
+      }
+
+      try {
+        const response = await apiRequest('/auth/user', {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }) as { user?: ApiUser };
+        const user = response?.user;
+
+        const nextProfile: ProfileForm = {
+          fullName: user?.name ?? '',
+          email: user?.email ?? '',
+          phoneNumber: '',
+          bio: '',
+        };
+
+        setUserId(user?.id ?? null);
+        setUserRole(user?.role ?? 'admin');
+        setMemberSinceLabel(formatMemberSince(user?.created_at));
+        setSavedProfile(nextProfile);
+        setProfileForm(nextProfile);
+        setProfileImage(`https://ui-avatars.com/api/?name=${encodeURIComponent(user?.name ?? 'Admin')}&background=0D8ABC&color=fff&size=256`);
+      } catch (error: any) {
+        setAlert({ type: 'warning', message: error?.data?.message ?? 'Failed to load admin profile.' });
+      } finally {
+        setIsLoadingProfile(false);
+      }
+    };
+
+    loadAdminProfile();
+  }, []);
+
   const handleToggleEdit = () => {
     if (isEditingProfile) {
       if (isDirty) {
@@ -102,7 +188,7 @@ export const AdminProfile: React.FC<AdminProfileProps> = ({ onDirtyChange }) => 
     setAlert({ type: 'info', message: 'Edit mode enabled. Update your profile and save.' });
   };
 
-  const handleSaveProfile = () => {
+  const handleSaveProfile = async () => {
     if (!isEditingProfile) {
       setAlert({ type: 'warning', message: 'Click "Edit Profile" before making changes.' });
       return;
@@ -113,9 +199,69 @@ export const AdminProfile: React.FC<AdminProfileProps> = ({ onDirtyChange }) => 
       return;
     }
 
-    setSavedProfile(profileForm);
-    setIsEditingProfile(false);
-    setAlert({ type: 'success', message: 'Profile saved successfully.' });
+    if (emailError) {
+      setAlert({ type: 'warning', message: emailError });
+      return;
+    }
+
+    if (!userId) {
+      setAlert({ type: 'warning', message: 'Cannot update profile: user id is missing.' });
+      return;
+    }
+
+    const token = getAuthToken();
+    if (!token) {
+      setAlert({ type: 'warning', message: 'Authentication token is missing. Please login again.' });
+      return;
+    }
+
+    const normalizedProfile = {
+      ...profileForm,
+      fullName: profileForm.fullName.trim(),
+      email: profileForm.email.trim(),
+    };
+
+    setIsSavingProfile(true);
+    try {
+      const response = await apiRequest(`/users/${userId}`, {
+        method: 'PUT',
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({
+          name: normalizedProfile.fullName,
+          email: normalizedProfile.email,
+        }),
+      }) as { data?: ApiUser };
+
+      const updatedUser = response?.data;
+      const nextProfile: ProfileForm = {
+        fullName: updatedUser?.name ?? normalizedProfile.fullName,
+        email: updatedUser?.email ?? normalizedProfile.email,
+        phoneNumber: normalizedProfile.phoneNumber,
+        bio: normalizedProfile.bio,
+      };
+
+      setSavedProfile(nextProfile);
+      setProfileForm(nextProfile);
+      setIsEditingProfile(false);
+      setAlert({ type: 'success', message: 'Profile saved successfully.' });
+      updateUser({ name: nextProfile.fullName, email: nextProfile.email });
+      setProfileImage(`https://ui-avatars.com/api/?name=${encodeURIComponent(nextProfile.fullName || 'Admin')}&background=0D8ABC&color=fff&size=256`);
+    } catch (error: any) {
+      const fieldErrors = error?.data?.errors;
+      if (fieldErrors) {
+        const firstError = Object.values(fieldErrors)[0] as string[] | string | undefined;
+        setAlert({
+          type: 'warning',
+          message: Array.isArray(firstError) ? firstError[0] : 'Profile update failed.',
+        });
+      } else {
+        setAlert({ type: 'warning', message: error?.data?.message ?? 'Profile update failed.' });
+      }
+    } finally {
+      setIsSavingProfile(false);
+    }
   };
 
   const confirmDiscardProfileEdit = () => {
@@ -186,6 +332,25 @@ export const AdminProfile: React.FC<AdminProfileProps> = ({ onDirtyChange }) => 
     event.target.value = '';
   };
 
+  const enableEditModeForEmail = () => {
+    if (isEditingProfile) {
+      return;
+    }
+
+    setIsEditingProfile(true);
+    setAlert({ type: 'info', message: 'Edit mode enabled. You can now update your email.' });
+  };
+
+  if (isLoadingProfile) {
+    return (
+      <div className="max-w-6xl w-full mx-auto px-6 md:px-8 py-8">
+        <div className="card p-6">
+          <p className="text-sm text-slate-500">Loading admin profile...</p>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="max-w-6xl w-full mx-auto px-6 md:px-8 py-8 space-y-6">
       {alert && (
@@ -207,29 +372,38 @@ export const AdminProfile: React.FC<AdminProfileProps> = ({ onDirtyChange }) => 
         </div>
         <div className="flex items-center gap-3 w-full sm:w-auto">
           <button
+            type="button"
             onClick={handleToggleEdit}
             className="h-12 px-6 rounded-2xl border border-slate-300/90 dark:border-slate-700 text-slate-700 dark:text-slate-200 text-base font-semibold hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors flex-1 sm:flex-none"
           >
             {isEditingProfile ? 'Cancel Edit' : 'Edit Profile'}
           </button>
-          <button onClick={handleSaveProfile} className="h-12 px-6 rounded-2xl bg-primary text-white text-base font-semibold hover:bg-primary/90 shadow-sm transition-colors flex-1 sm:flex-none">
-            Save Profile
+          <button
+            type="button"
+            onClick={handleSaveProfile}
+            disabled={isSavingProfile}
+            className="h-12 px-6 rounded-2xl bg-primary text-white text-base font-semibold hover:bg-primary/90 shadow-sm transition-colors flex-1 sm:flex-none disabled:opacity-70 disabled:cursor-not-allowed"
+          >
+            {isSavingProfile ? 'Saving...' : 'Save Profile'}
           </button>
         </div>
       </div>
 
       <section className="rounded-[28px] p-7 md:p-8 border border-slate-300/60 bg-white/80 dark:bg-slate-800/60 shadow-lg">
         <div className="flex flex-col sm:flex-row sm:items-center gap-5">
-          <div className="relative w-36 h-36 md:w-40 md:h-40 rounded-full border-[6px] border-white overflow-hidden bg-slate-100 shadow-lg">
-            <img
-              src={profileImage}
-              alt="Admin profile"
-              className="w-full h-full object-cover rounded-full"
-            />
+          <div className="relative w-36 h-36 md:w-40 md:h-40">
+            <div className="w-full h-full rounded-full border-[6px] border-white overflow-hidden bg-slate-100 shadow-lg">
+              <img
+                src={profileImage || `https://ui-avatars.com/api/?name=${encodeURIComponent(profileForm.fullName || 'Admin')}&background=0D8ABC&color=fff&size=256`}
+                alt="Admin profile"
+                className="w-full h-full object-cover rounded-full"
+              />
+            </div>
             <button
+              type="button"
               onClick={openPhotoPicker}
               className={cn(
-                "absolute right-0 bottom-0 translate-x-1 translate-y-1 w-12 h-12 rounded-full flex items-center justify-center shadow-md border-4 border-white transition-all bg-slate-200",
+                "absolute -right-2 -bottom-2 w-12 h-12 rounded-full flex items-center justify-center shadow-md border-4 border-white transition-all bg-slate-200 z-10",
                 isEditingProfile
                   ? "text-black hover:bg-slate-300 cursor-pointer"
                   : "text-slate-500 cursor-not-allowed",
@@ -241,8 +415,8 @@ export const AdminProfile: React.FC<AdminProfileProps> = ({ onDirtyChange }) => 
             </button>
           </div>
           <div className="space-y-1.5 min-w-0">
-            <h2 className="text-2xl font-bold tracking-tight">Alex Johnson</h2>
-            <p className="text-slate-600 dark:text-slate-300 text-lg md:text-xl mt-1">Super Admin - Member since January 2023</p>
+            <h2 className="text-2xl font-bold tracking-tight">{profileForm.fullName || 'Admin'}</h2>
+            <p className="text-slate-600 dark:text-slate-300 text-lg md:text-xl mt-1">{toTitleCase(userRole)} - {memberSinceLabel}</p>
             <div className="flex flex-wrap items-center gap-2.5 pt-2">
               <span className="px-3 py-1 rounded-full text-sm font-semibold bg-blue-100 text-blue-700 border border-blue-200 dark:bg-blue-500/20 dark:text-blue-300 dark:border-blue-500/30">Active Status</span>
               <span className="px-3 py-1 rounded-full text-sm font-semibold bg-emerald-100 text-emerald-700 border border-emerald-200 dark:bg-emerald-500/20 dark:text-emerald-300 dark:border-emerald-500/30">Verified</span>
@@ -280,12 +454,21 @@ export const AdminProfile: React.FC<AdminProfileProps> = ({ onDirtyChange }) => 
           <div className="flex flex-col gap-2">
             <label className="text-sm font-semibold text-slate-700 dark:text-slate-200">Email Address</label>
             <input
-              className="input-base h-12 disabled:opacity-60 disabled:cursor-not-allowed"
+              className={cn(
+                'input-base h-12 disabled:opacity-60 disabled:cursor-not-allowed',
+                emailError && 'border-red-400 focus:border-red-400 focus:ring-red-400/30',
+              )}
               type="email"
               value={profileForm.email}
-              onChange={(event) => setProfileForm((prev) => ({ ...prev, email: event.target.value }))}
-              disabled={!isEditingProfile}
+              onFocus={enableEditModeForEmail}
+              onChange={(event) => {
+                enableEditModeForEmail();
+                setProfileForm((prev) => ({ ...prev, email: event.target.value }));
+              }}
             />
+            {emailError && (
+              <p className="text-xs font-medium text-red-600 dark:text-red-400">{emailError}</p>
+            )}
           </div>
           <div className="flex flex-col gap-2 md:col-span-2">
             <label className="text-sm font-semibold text-slate-700 dark:text-slate-200">Phone Number</label>
@@ -380,7 +563,7 @@ export const AdminProfile: React.FC<AdminProfileProps> = ({ onDirtyChange }) => 
           <div className="space-y-4">
             <div className="flex flex-col gap-2">
               <label className="text-sm font-semibold text-slate-700 dark:text-slate-200">Current Password</label>
-              <input className="input-base h-12 disabled:opacity-60 disabled:cursor-not-allowed" type="password" placeholder="••••••••" disabled={!isEditingProfile} />
+              <input className="input-base h-12 disabled:opacity-60 disabled:cursor-not-allowed" type="password" placeholder="********" disabled={!isEditingProfile} />
             </div>
             <div className="flex flex-col gap-2">
               <label className="text-sm font-semibold text-slate-700 dark:text-slate-200">New Password</label>
@@ -405,11 +588,16 @@ export const AdminProfile: React.FC<AdminProfileProps> = ({ onDirtyChange }) => 
       </section>
 
       <div className="flex justify-end gap-3 pb-2">
-        <button onClick={handleCancelAction} className="h-11 px-6 rounded-lg border border-slate-300 dark:border-slate-700 text-slate-700 dark:text-slate-200 font-semibold hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors">
+        <button type="button" onClick={handleCancelAction} className="h-11 px-6 rounded-lg border border-slate-300 dark:border-slate-700 text-slate-700 dark:text-slate-200 font-semibold hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors">
           Cancel
         </button>
-        <button onClick={handleSaveProfile} className="h-11 px-8 rounded-lg bg-primary text-white font-semibold hover:bg-primary/90 shadow-md shadow-primary/20 transition-all">
-          Save Changes
+        <button
+          type="button"
+          onClick={handleSaveProfile}
+          disabled={isSavingProfile}
+          className="h-11 px-8 rounded-lg bg-primary text-white font-semibold hover:bg-primary/90 shadow-md shadow-primary/20 transition-all disabled:opacity-70 disabled:cursor-not-allowed"
+        >
+          {isSavingProfile ? 'Saving...' : 'Save Changes'}
         </button>
       </div>
 
@@ -424,12 +612,14 @@ export const AdminProfile: React.FC<AdminProfileProps> = ({ onDirtyChange }) => 
               </p>
               <div className="mt-5 flex justify-end gap-3">
                 <button
+                  type="button"
                   onClick={dismissDiscardProfileEdit}
                   className="h-10 px-4 rounded-lg border border-slate-300 dark:border-slate-700 text-slate-700 dark:text-slate-200 font-semibold hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors"
                 >
                   Cancel
                 </button>
                 <button
+                  type="button"
                   onClick={confirmDiscardProfileEdit}
                   className="h-10 px-4 rounded-lg bg-amber-500 text-white font-semibold hover:bg-amber-600 transition-colors"
                 >

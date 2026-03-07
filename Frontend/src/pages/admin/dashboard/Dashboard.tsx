@@ -18,7 +18,9 @@ import {
   Wallet,
   UserCheck,
   CheckCircle2,
-  MoreHorizontal
+  MoreHorizontal,
+  Filter,
+  Download
 } from 'lucide-react';
 import { cn } from '../../../utils/utils';
 
@@ -97,6 +99,22 @@ interface DashboardProps {
   onOpenOwnerApplicationsDetails?: () => void;
 }
 
+interface RecentUser {
+  id: number;
+  name: string;
+  email: string;
+  role: 'User' | 'Owner';
+  status: 'Active' | 'Pending';
+  date: string;
+}
+
+const recentUsers: RecentUser[] = [
+  { id: 1, name: 'Lilly Dawson', email: 'lilly.d@example.com', role: 'User', status: 'Active', date: 'Oct 24, 2023' },
+  { id: 2, name: 'David Miller', email: 'd.miller@example.com', role: 'Owner', status: 'Pending', date: 'Oct 22, 2023' },
+  { id: 3, name: 'Ethan Brown', email: 'ethan.b@example.com', role: 'User', status: 'Pending', date: 'Oct 21, 2023' },
+  { id: 4, name: 'Clara Reed', email: 'clara.r@example.com', role: 'Owner', status: 'Active', date: 'Oct 18, 2023' },
+];
+
 export const Dashboard: React.FC<DashboardProps> = ({
   onOpenTotalUsersDetails,
   onOpenTotalOwnersDetails,
@@ -105,7 +123,106 @@ export const Dashboard: React.FC<DashboardProps> = ({
   onOpenOwnerApplicationsDetails,
 }) => {
   const [incomeRange, setIncomeRange] = React.useState<'1W' | '1M' | '1Y'>('1M');
+  const [users, setUsers] = React.useState<RecentUser[]>(recentUsers);
+  const [searchTerm, setSearchTerm] = React.useState('');
+  const [roleFilter, setRoleFilter] = React.useState<'All' | 'User' | 'Owner'>('All');
+  const [statusFilter, setStatusFilter] = React.useState<'All' | 'Active' | 'Pending'>('All');
+  const [isFilterOpen, setIsFilterOpen] = React.useState(false);
+  const [openActionUserId, setOpenActionUserId] = React.useState<number | null>(null);
   const incomeData = incomeOverviewData[incomeRange];
+
+  const filteredRecentUsers = React.useMemo(() => {
+    return users.filter((user) => {
+      const matchesSearch =
+        !searchTerm ||
+        user.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        user.email.toLowerCase().includes(searchTerm.toLowerCase());
+      const matchesRole = roleFilter === 'All' || user.role === roleFilter;
+      const matchesStatus = statusFilter === 'All' || user.status === statusFilter;
+
+      return matchesSearch && matchesRole && matchesStatus;
+    });
+  }, [users, searchTerm, roleFilter, statusFilter]);
+
+  const handleDeleteUser = (userId: number) => {
+    setUsers((prevUsers) => prevUsers.filter((user) => user.id !== userId));
+    setOpenActionUserId(null);
+  };
+
+  const handleOpenUserDetails = (user: RecentUser) => {
+    if (user.role === 'Owner' && user.status === 'Pending') {
+      onOpenOwnerApplicationsDetails?.();
+      return;
+    }
+
+    if (user.role === 'Owner') {
+      onOpenTotalOwnersDetails?.();
+      return;
+    }
+
+    onOpenTotalUsersDetails?.();
+  };
+
+  const handleViewDetails = (user: RecentUser) => {
+    handleOpenUserDetails(user);
+    setOpenActionUserId(null);
+  };
+
+  const handleEditUser = (userId: number) => {
+    const currentUser = users.find((user) => user.id === userId);
+    if (!currentUser) return;
+
+    const updatedEmail = window.prompt('Update email address', currentUser.email);
+    if (updatedEmail && updatedEmail.trim()) {
+      setUsers((prevUsers) =>
+        prevUsers.map((user) =>
+          user.id === userId ? { ...user, email: updatedEmail.trim() } : user,
+        ),
+      );
+    }
+    setOpenActionUserId(null);
+  };
+
+  const handleSuspendUser = (userId: number) => {
+    setUsers((prevUsers) =>
+      prevUsers.map((user) =>
+        user.id === userId ? { ...user, status: 'Pending' } : user,
+      ),
+    );
+    setOpenActionUserId(null);
+  };
+
+  const handleApproveUser = (userId: number) => {
+    setUsers((prevUsers) =>
+      prevUsers.map((user) =>
+        user.id === userId ? { ...user, status: 'Active' } : user,
+      ),
+    );
+    setOpenActionUserId(null);
+  };
+
+  const handleExportRecentUsers = () => {
+    const headers = ['Name', 'Email', 'Role', 'Status', 'Joined Date'];
+    const rows = filteredRecentUsers.map((user) => [
+      user.name,
+      user.email,
+      user.role,
+      user.status,
+      user.date,
+    ]);
+
+    const csvContent = [headers, ...rows]
+      .map((row) => row.map((cell) => `"${String(cell).replace(/"/g, '""')}"`).join(','))
+      .join('\n');
+
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = 'recent-user-management.csv';
+    link.click();
+    URL.revokeObjectURL(url);
+  };
 
   return (
     <div className="space-y-8 p-8">
@@ -238,16 +355,71 @@ export const Dashboard: React.FC<DashboardProps> = ({
       </div>
 
       <div className="card overflow-hidden">
-        <div className="p-6 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between">
+        <div className="p-6 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between relative">
           <h3 className="font-bold text-lg">Recent User Management</h3>
           <div className="flex gap-2">
-            <button className="flex items-center gap-2 px-3 py-1.5 border border-slate-200 dark:border-slate-800 rounded-lg text-xs font-bold">
+            <button
+              type="button"
+              onClick={onOpenTotalUsersDetails}
+              className="px-3 py-1.5 rounded-lg text-xs font-bold bg-primary text-white hover:bg-primary/90 transition-colors"
+            >
+              View All Users
+            </button>
+            <button
+              type="button"
+              onClick={() => setIsFilterOpen((prev) => !prev)}
+              className="flex items-center gap-2 px-3 py-1.5 border border-slate-200 dark:border-slate-800 rounded-lg text-xs font-bold hover:bg-slate-50 dark:hover:bg-slate-800/70 transition-colors"
+            >
+              <Filter size={14} />
               Filter
             </button>
-            <button className="flex items-center gap-2 px-3 py-1.5 border border-slate-200 dark:border-slate-800 rounded-lg text-xs font-bold">
+            <button
+              type="button"
+              onClick={handleExportRecentUsers}
+              className="flex items-center gap-2 px-3 py-1.5 border border-slate-200 dark:border-slate-800 rounded-lg text-xs font-bold hover:bg-slate-50 dark:hover:bg-slate-800/70 transition-colors"
+            >
+              <Download size={14} />
               Export
             </button>
           </div>
+          {isFilterOpen && (
+            <div className="absolute right-6 top-[calc(100%-10px)] z-20 w-[320px] rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 shadow-lg p-4 space-y-3">
+              <div className="grid grid-cols-2 gap-2">
+                <select
+                  value={roleFilter}
+                  onChange={(e) => setRoleFilter(e.target.value as 'All' | 'User' | 'Owner')}
+                  className="w-full px-3 py-2 text-sm rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 outline-none"
+                >
+                  <option value="All">All Roles</option>
+                  <option value="User">User</option>
+                  <option value="Owner">Owner</option>
+                </select>
+                <select
+                  value={statusFilter}
+                  onChange={(e) => setStatusFilter(e.target.value as 'All' | 'Active' | 'Pending')}
+                  className="w-full px-3 py-2 text-sm rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 outline-none"
+                >
+                  <option value="All">All Statuses</option>
+                  <option value="Active">Active</option>
+                  <option value="Pending">Pending</option>
+                </select>
+              </div>
+              <div className="flex justify-between items-center">
+                <span className="text-xs text-slate-500">{filteredRecentUsers.length} result(s)</span>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setSearchTerm('');
+                    setRoleFilter('All');
+                    setStatusFilter('All');
+                  }}
+                  className="text-xs font-semibold text-primary hover:underline"
+                >
+                  Clear
+                </button>
+              </div>
+            </div>
+          )}
         </div>
         <div className="overflow-x-auto">
           <table className="w-full text-left">
@@ -261,18 +433,21 @@ export const Dashboard: React.FC<DashboardProps> = ({
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
-              {[
-                { name: 'Lilly Dawson', email: 'lilly.d@example.com', role: 'User', status: 'Active', date: 'Oct 24, 2023' },
-                { name: 'David Miller', email: 'd.miller@example.com', role: 'Owner', status: 'Pending', date: 'Oct 22, 2023' },
-              ].map((user, i) => (
-                <tr key={i} className="table-row">
+              {filteredRecentUsers.map((user) => (
+                <tr key={user.id} className="table-row">
                   <td className="px-6 py-4">
                     <div className="flex items-center gap-3">
                       <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center text-primary font-bold text-[10px]">
                         {user.name.split(' ').map(n => n[0]).join('')}
                       </div>
                       <div>
-                        <p className="text-sm font-bold">{user.name}</p>
+                        <button
+                          type="button"
+                          onClick={() => handleOpenUserDetails(user)}
+                          className="text-sm font-bold hover:text-primary hover:underline transition-colors text-left"
+                        >
+                          {user.name}
+                        </button>
                         <p className="text-xs text-slate-500">{user.email}</p>
                       </div>
                     </div>
@@ -292,13 +467,70 @@ export const Dashboard: React.FC<DashboardProps> = ({
                     </span>
                   </td>
                   <td className="px-6 py-4 text-xs text-slate-500">{user.date}</td>
-                  <td className="px-6 py-4 text-right">
-                    <button className="p-1 text-slate-400 hover:text-primary transition-colors">
+                  <td className="px-6 py-4 text-right relative">
+                    <button
+                      type="button"
+                      onClick={() => setOpenActionUserId((prev) => (prev === user.id ? null : user.id))}
+                      className="p-1 text-slate-400 hover:text-primary transition-colors"
+                    >
                       <MoreHorizontal size={18} />
                     </button>
+                    {openActionUserId === user.id && (
+                      <div className="absolute right-6 top-10 z-10 w-40 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 shadow-lg overflow-hidden">
+                        <button
+                          type="button"
+                          onClick={() => handleViewDetails(user)}
+                          className="w-full text-left px-3 py-2 text-xs font-medium hover:bg-slate-50 dark:hover:bg-slate-800/70 transition-colors"
+                        >
+                          View Details
+                        </button>
+                        {user.status === 'Active' ? (
+                          <>
+                            <button
+                              type="button"
+                              onClick={() => handleEditUser(user.id)}
+                              className="w-full text-left px-3 py-2 text-xs font-medium hover:bg-slate-50 dark:hover:bg-slate-800/70 transition-colors"
+                            >
+                              Edit
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => handleSuspendUser(user.id)}
+                              className="w-full text-left px-3 py-2 text-xs font-medium text-amber-600 hover:bg-amber-50 dark:hover:bg-amber-950/30 transition-colors"
+                            >
+                              Suspend
+                            </button>
+                          </>
+                        ) : (
+                          <>
+                            <button
+                              type="button"
+                              onClick={() => handleApproveUser(user.id)}
+                              className="w-full text-left px-3 py-2 text-xs font-medium text-emerald-600 hover:bg-emerald-50 dark:hover:bg-emerald-950/30 transition-colors"
+                            >
+                              Approve
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => handleDeleteUser(user.id)}
+                              className="w-full text-left px-3 py-2 text-xs font-medium text-red-600 hover:bg-red-50 dark:hover:bg-red-950/40 transition-colors"
+                            >
+                              Reject
+                            </button>
+                          </>
+                        )}
+                      </div>
+                    )}
                   </td>
                 </tr>
               ))}
+              {!filteredRecentUsers.length && (
+                <tr>
+                  <td colSpan={5} className="px-6 py-8 text-sm text-center text-slate-500">
+                    No users match the current filter.
+                  </td>
+                </tr>
+              )}
             </tbody>
           </table>
         </div>
@@ -306,4 +538,3 @@ export const Dashboard: React.FC<DashboardProps> = ({
     </div>
   );
 };
-

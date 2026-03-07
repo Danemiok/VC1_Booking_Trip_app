@@ -3,6 +3,7 @@ export { UserManagement } from './users/ManageUsers';
 export { OwnerManagement } from './owners/ManageOwners';
 export { ViewDetails as OwnerDetailsPage } from './owners/ViewDetails';
 export { ViewAllApplications } from './owners/ViewAllApplications';
+export { OwnerApplicationDetails } from './owners/OwnerApplicationDetails';
 export { Destinations } from './destinations/ManageDestinations';
 export { Bookings } from './bookings/BookingMonitor';
 export { Finances } from './finance/IncomeReport';
