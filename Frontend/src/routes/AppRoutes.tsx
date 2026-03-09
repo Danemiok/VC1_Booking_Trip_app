@@ -15,6 +15,21 @@ import BookingHistory from '../pages/customer/BookingHistory';
 import GroupInvite from '../pages/customer/GroupInvite';
 import Payment from '../pages/customer/Payment';
 import OwnerDashboard from '../pages/owner/Dashboard';
+import OwnerDestinations from '../pages/owner/Destinations';
+import OwnerTransport from '../pages/owner/Transport';
+import OwnerBookings from '../pages/owner/Bookings';
+import OwnerMessages from '../pages/owner/Messages';
+import OwnerPromotions from '../pages/owner/Promotions';
+import OwnerAnalytics from '../pages/owner/Analytics';
+import OwnerFinancials from '../pages/owner/Financials';
+import OwnerSettings from '../pages/owner/Settings';
+import OwnerRegisterVehicle from '../pages/owner/RegisterVehicle';
+import OwnerPropertyDetail from '../pages/owner/PropertyDetail';
+import OwnerAddRoom from '../pages/owner/AddRoom';
+import OwnerAddProperty from '../pages/owner/AddProperty';
+import OwnerEditProperty from '../pages/owner/EditProperty';
+import { useLocation } from 'react-router-dom';
+import OwnerSidebar from '../components/layout/owner/Sidebar';
 import {
   Dashboard as AdminDashboard,
   UserManagement,
@@ -84,6 +99,79 @@ const normalizeAdminView = (view: string): AdminView => {
     default:
       return 'dashboard';
   }
+};
+
+const getOwnerTitle = (pathname: string): string => {
+  if (pathname.startsWith('/transport')) return 'Transport';
+  if (pathname.startsWith('/bookings')) return 'Bookings';
+  if (pathname.startsWith('/messages')) return 'Messages';
+  if (pathname.startsWith('/promotions')) return 'Promotions';
+  if (pathname.startsWith('/analytics')) return 'Analytics';
+  if (pathname.startsWith('/financials')) return 'Financials';
+  if (pathname.startsWith('/settings')) return 'Settings';
+  if (pathname.startsWith('/destinations')) return 'Destinations';
+  return 'Overview Dashboard';
+};
+
+const OwnerShell: React.FC<{ onLogout: () => void }> = ({ onLogout }) => {
+  const { user } = useAuth();
+  const { isDarkMode, toggleDarkMode } = useTheme();
+  const location = useLocation();
+
+  const renderOwnerPage = () => {
+    const path = location.pathname;
+
+    if (path === '/' || path === '/owner') return <OwnerDashboard />;
+    if (path.startsWith('/destinations') && path.includes('/add-room')) return <OwnerAddRoom />;
+    if (path.startsWith('/destinations') && path.includes('/edit')) return <OwnerEditProperty />;
+    if (path.startsWith('/destinations') && path.includes('/new')) return <OwnerAddProperty />;
+    if (path.startsWith('/destinations') && path !== '/destinations') return <OwnerPropertyDetail />;
+    if (path.startsWith('/destinations')) return <OwnerDestinations />;
+
+    if (path.startsWith('/transport/new')) return <OwnerRegisterVehicle />;
+    if (path.startsWith('/transport')) return <OwnerTransport />;
+    if (path.startsWith('/bookings')) return <OwnerBookings />;
+    if (path.startsWith('/messages')) return <OwnerMessages />;
+    if (path.startsWith('/promotions')) return <OwnerPromotions />;
+    if (path.startsWith('/analytics')) return <OwnerAnalytics />;
+    if (path.startsWith('/financials')) return <OwnerFinancials />;
+    if (path.startsWith('/settings')) return <OwnerSettings />;
+
+    return <OwnerDashboard />;
+  };
+
+  const title = getOwnerTitle(location.pathname);
+
+  return (
+    <div className="flex h-screen overflow-hidden font-sans transition-colors duration-200">
+      <OwnerSidebar />
+      <main className="flex-1 flex flex-col overflow-hidden lg:pl-64">
+        <Header
+          title={title}
+          isDark={isDarkMode}
+          toggleTheme={toggleDarkMode}
+          onNotificationClick={() => {}}
+          onProfileClick={() => {}}
+          onLogoutClick={onLogout}
+          user={user}
+        />
+        <div className="flex-1 overflow-y-auto">
+          <AnimatePresence mode="wait">
+            <motion.div
+              key={location.pathname}
+              initial={{ opacity: 0, y: 16 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -10 }}
+              transition={{ duration: 0.22, ease: 'easeOut' }}
+              className="h-full"
+            >
+              {renderOwnerPage()}
+            </motion.div>
+          </AnimatePresence>
+        </div>
+      </main>
+    </div>
+  );
 };
 
 const getAdminTitle = (view: AdminView): string => {
@@ -277,6 +365,10 @@ export const AppRoutes: React.FC<AppRoutesProps> = ({ view, setView }) => {
     return <AdminShell view={view} setView={setView} onLogout={logout} />;
   }
 
+  if (user?.role === 'owner') {
+    return <OwnerShell onLogout={logout} />;
+  }
+
   switch (view) {
     case 'login':
       return (
@@ -310,14 +402,11 @@ export const AppRoutes: React.FC<AppRoutesProps> = ({ view, setView }) => {
       return <GroupInvite />;
     case 'payment':
       return <Payment />;
-    case 'owner-dashboard':
-      return user?.role === 'owner' ? <OwnerDashboard /> : <VisitorHome />;
     case 'customer-dashboard':
       return user ? <CustomerDashboard /> : <VisitorHome />;
     case 'landing':
     default:
       if (!user) return <VisitorHome />;
-      if (user.role === 'owner') return <OwnerDashboard />;
       return <CustomerDashboard />;
   }
 };
