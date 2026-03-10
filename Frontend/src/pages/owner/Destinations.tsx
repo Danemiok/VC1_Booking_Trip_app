@@ -1,6 +1,7 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Search, Filter, Plus, Star, MapPin, Edit, Trash2, X } from 'lucide-react';
+import { apiRequest } from '@/src/services/api';
 
 const PropertyCard = ({ property, navigate, onDelete, activePromotion }: any) => {
   const basePrice = typeof property.price === 'number' ? property.price : undefined;
