@@ -20,6 +20,7 @@ import OwnerTransport from '../pages/owner/Transport';
 import OwnerBookings from '../pages/owner/Bookings';
 import OwnerMessages from '../pages/owner/Messages';
 import OwnerPromotions from '../pages/owner/Promotions';
+import OwnerCreatePromotion from '../pages/owner/CreatePromotion';
 import OwnerAnalytics from '../pages/owner/Analytics';
 import OwnerFinancials from '../pages/owner/Financials';
 import OwnerSettings from '../pages/owner/Settings';
@@ -132,6 +133,7 @@ const OwnerShell: React.FC<{ onLogout: () => void }> = ({ onLogout }) => {
     if (path.startsWith('/transport')) return <OwnerTransport />;
     if (path.startsWith('/bookings')) return <OwnerBookings />;
     if (path.startsWith('/messages')) return <OwnerMessages />;
+    if (path.startsWith('/promotions/new')) return <OwnerCreatePromotion />;
     if (path.startsWith('/promotions')) return <OwnerPromotions />;
     if (path.startsWith('/analytics')) return <OwnerAnalytics />;
     if (path.startsWith('/financials')) return <OwnerFinancials />;

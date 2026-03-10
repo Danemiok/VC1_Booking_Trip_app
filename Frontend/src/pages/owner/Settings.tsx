@@ -34,6 +34,31 @@ type OwnerInfo = {
   avatar: string;
 };
 
+type NotificationKey = 'newBookings' | 'paymentPayouts' | 'customerReviews' | 'systemUpdates';
+
+type NotificationPref = {
+  key: NotificationKey;
+  title: string;
+  desc: string;
+  active: boolean;
+};
+
+type TeamMember = {
+  name: string;
+  role: string;
+  email: string;
+  status: 'active' | 'pending';
+  avatar: string;
+};
+
+type SecurityPrefs = {
+  twoFactorEnabled: boolean;
+  activeSessions: number;
+  lastPasswordChangeLabel: string;
+};
+
+const SETTINGS_STORAGE_KEY = 'ownerSettingsPrefs';
+
 const Settings = () => {
   const [activeTab, setActiveTab] = React.useState('profile');
   const navigate = useNavigate();
@@ -90,12 +115,155 @@ const Settings = () => {
     { id: 'security', label: 'Security', icon: Shield },
   ];
 
-  const teamMembers = [
+  const [notificationPrefs, setNotificationPrefs] = React.useState<NotificationPref[]>([
+    { key: 'newBookings', title: 'New Bookings', desc: 'Receive alerts when a new booking is confirmed.', active: true },
+    { key: 'paymentPayouts', title: 'Payment Payouts', desc: 'Get notified when a withdrawal is processed.', active: true },
+    { key: 'customerReviews', title: 'Customer Reviews', desc: 'Alert me when a guest leaves a new review.', active: false },
+    { key: 'systemUpdates', title: 'System Updates', desc: 'Stay informed about portal maintenance and features.', active: true },
+  ]);
+
+  const [teamMembers, setTeamMembers] = React.useState<TeamMember[]>([
     { name: 'Alex Sterling', role: 'Owner', email: 'alex@komroung.com', status: 'active', avatar: 'https://i.pravatar.cc/150?u=20' },
     { name: 'Sopheap Kim', role: 'Manager', email: 'sopheap@komroung.com', status: 'active', avatar: 'https://i.pravatar.cc/150?u=21' },
     { name: 'Vannak Som', role: 'Driver', email: 'vannak@komroung.com', status: 'active', avatar: 'https://i.pravatar.cc/150?u=22' },
     { name: 'Rithy Bun', role: 'Driver', email: 'rithy@komroung.com', status: 'pending', avatar: 'https://i.pravatar.cc/150?u=23' },
-  ];
+  ]);
+
+  const [securityPrefs, setSecurityPrefs] = React.useState<SecurityPrefs>({
+    twoFactorEnabled: false,
+    activeSessions: 2,
+    lastPasswordChangeLabel: '3 months ago',
+  });
+
+  const [toast, setToast] = React.useState<string | null>(null);
+  const toastTimer = React.useRef<number | null>(null);
+
+  const showToast = (message: string) => {
+    setToast(message);
+    if (toastTimer.current) window.clearTimeout(toastTimer.current);
+    toastTimer.current = window.setTimeout(() => setToast(null), 2000);
+  };
+
+  React.useEffect(() => {
+    try {
+      const raw = localStorage.getItem(SETTINGS_STORAGE_KEY);
+      if (!raw) return;
+      const parsed = JSON.parse(raw) as Partial<{
+        notificationPrefs: NotificationPref[];
+        teamMembers: TeamMember[];
+        securityPrefs: SecurityPrefs;
+      }>;
+
+      if (Array.isArray(parsed.notificationPrefs)) setNotificationPrefs(parsed.notificationPrefs);
+      if (Array.isArray(parsed.teamMembers)) setTeamMembers(parsed.teamMembers);
+      if (parsed.securityPrefs) setSecurityPrefs((prev) => ({ ...prev, ...parsed.securityPrefs }));
+    } catch {
+      return;
+    }
+  }, []);
+
+  React.useEffect(() => {
+    try {
+      localStorage.setItem(
+        SETTINGS_STORAGE_KEY,
+        JSON.stringify({ notificationPrefs, teamMembers, securityPrefs }),
+      );
+    } catch {
+      // ignore
+    }
+  }, [notificationPrefs, teamMembers, securityPrefs]);
+
+  const toggleNotification = (key: NotificationKey) => {
+    setNotificationPrefs((prev) =>
+      prev.map((p) => (p.key === key ? { ...p, active: !p.active } : p)),
+    );
+    showToast('Notification settings saved');
+  };
+
+  const [isAddMemberOpen, setIsAddMemberOpen] = React.useState(false);
+  const [newMemberDraft, setNewMemberDraft] = React.useState<TeamMember>({
+    name: '',
+    role: 'Manager',
+    email: '',
+    status: 'pending',
+    avatar: 'https://i.pravatar.cc/150?u=invite',
+  });
+
+  const openAddMember = () => {
+    setNewMemberDraft({
+      name: '',
+      role: 'Manager',
+      email: '',
+      status: 'pending',
+      avatar: `https://i.pravatar.cc/150?u=${Date.now()}`,
+    });
+    setIsAddMemberOpen(true);
+  };
+
+  const closeAddMember = () => {
+    setIsAddMemberOpen(false);
+  };
+
+  const addMember = () => {
+    const name = newMemberDraft.name.trim();
+    const email = newMemberDraft.email.trim();
+    if (!name || !email) {
+      showToast('Please enter name and email');
+      return;
+    }
+    const exists = teamMembers.some((m) => m.email.toLowerCase() === email.toLowerCase());
+    if (exists) {
+      showToast('This email is already in the team');
+      return;
+    }
+    setTeamMembers((prev) => [...prev, { ...newMemberDraft, name, email }]);
+    setIsAddMemberOpen(false);
+    showToast('Team member added');
+  };
+
+  const removeMember = (email: string) => {
+    setTeamMembers((prev) => prev.filter((m) => m.email !== email));
+    showToast('Team member removed');
+  };
+
+  const toggleTwoFactor = () => {
+    setSecurityPrefs((prev) => ({ ...prev, twoFactorEnabled: !prev.twoFactorEnabled }));
+    showToast('Security settings saved');
+  };
+
+  const logoutAllDevices = () => {
+    setSecurityPrefs((prev) => ({ ...prev, activeSessions: 1 }));
+    showToast('Logged out from other devices');
+  };
+
+  const [isPasswordOpen, setIsPasswordOpen] = React.useState(false);
+  const [passwordDraft, setPasswordDraft] = React.useState({ current: '', next: '', confirm: '' });
+
+  const openPassword = () => {
+    setPasswordDraft({ current: '', next: '', confirm: '' });
+    setIsPasswordOpen(true);
+  };
+
+  const closePassword = () => {
+    setIsPasswordOpen(false);
+  };
+
+  const savePassword = () => {
+    if (!passwordDraft.next || passwordDraft.next.length < 6) {
+      showToast('Password must be at least 6 characters');
+      return;
+    }
+    if (passwordDraft.next !== passwordDraft.confirm) {
+      showToast('Passwords do not match');
+      return;
+    }
+    setSecurityPrefs((prev) => ({
+      ...prev,
+      lastPasswordChangeLabel: 'Just now',
+    }));
+    setIsPasswordOpen(false);
+    showToast('Password updated');
+  };
 
   const quickLinks = [
     { icon: MapPin, title: 'Destinations', subtitle: 'Manage properties and rooms', path: '/destinations' },
@@ -114,6 +282,12 @@ const Settings = () => {
           <p className="text-sm text-slate-500 mt-1">Manage your business information and team access.</p>
         </div>
       </div>
+
+      {toast && (
+        <div className="rounded-2xl border border-emerald-200 dark:border-emerald-900/40 bg-emerald-50 dark:bg-emerald-900/10 px-4 py-3 text-sm font-bold text-emerald-700 dark:text-emerald-300">
+          {toast}
+        </div>
+      )}
 
    
 
@@ -322,7 +496,10 @@ const Settings = () => {
             <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm overflow-hidden">
               <div className="p-6 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between">
                 <h4 className="font-bold">Team Members</h4>
-                <button className="px-4 py-2 bg-blue-600 text-white rounded-xl flex items-center gap-2 font-bold text-xs hover:bg-blue-700 transition-all shadow-lg shadow-blue-500/20">
+                <button
+                  onClick={openAddMember}
+                  className="px-4 py-2 bg-blue-600 text-white rounded-xl flex items-center gap-2 font-bold text-xs hover:bg-blue-700 transition-all shadow-lg shadow-blue-500/20"
+                >
                   <Plus size={16} /> Add Member
                 </button>
               </div>
@@ -361,9 +538,18 @@ const Settings = () => {
                           </span>
                         </td>
                         <td className="px-6 py-4 text-right">
-                          <button className="p-2 text-slate-400 hover:text-blue-600 transition-all">
-                            <MoreHorizontal size={18} />
-                          </button>
+                          {member.role !== 'Owner' ? (
+                            <button
+                              onClick={() => removeMember(member.email)}
+                              className="px-3 py-1.5 rounded-xl border border-slate-200 dark:border-slate-700 text-xs font-bold text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-900/10 transition-colors"
+                            >
+                              Remove
+                            </button>
+                          ) : (
+                            <button className="p-2 text-slate-400 hover:text-blue-600 transition-all" title="Owner account">
+                              <MoreHorizontal size={18} />
+                            </button>
+                          )}
                         </td>
                       </tr>
                     ))}
@@ -377,21 +563,19 @@ const Settings = () => {
             <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm p-8 space-y-8">
               <h4 className="font-bold text-lg">Notification Preferences</h4>
               <div className="space-y-6">
-                {[
-                  { title: 'New Bookings', desc: 'Receive alerts when a new booking is confirmed.', active: true },
-                  { title: 'Payment Payouts', desc: 'Get notified when a withdrawal is processed.', active: true },
-                  { title: 'Customer Reviews', desc: 'Alert me when a guest leaves a new review.', active: false },
-                  { title: 'System Updates', desc: 'Stay informed about portal maintenance and features.', active: true },
-                ].map((item, i) => (
+                {notificationPrefs.map((item, i) => (
                   <div key={i} className="flex items-center justify-between">
                     <div className="max-w-md">
                       <p className="text-sm font-bold">{item.title}</p>
                       <p className="text-xs text-slate-500 mt-1 font-medium">{item.desc}</p>
                     </div>
-                    <button className={cn(
+                    <button
+                      onClick={() => toggleNotification(item.key)}
+                      className={cn(
                       "w-12 h-6 rounded-full relative transition-all duration-300",
                       item.active ? "bg-blue-600" : "bg-slate-200 dark:bg-slate-700"
-                    )}>
+                    )}
+                    >
                       <div className={cn(
                         "absolute top-1 w-4 h-4 bg-white rounded-full transition-all duration-300",
                         item.active ? "left-7" : "left-1"
@@ -417,22 +601,32 @@ const Settings = () => {
                       <p className="text-xs text-slate-500 mt-1 font-medium">Add an extra layer of security to your account.</p>
                     </div>
                   </div>
-                  <button className="px-4 py-2 bg-blue-600 text-white rounded-lg text-xs font-bold hover:bg-blue-700 transition-all">Enable</button>
+                  <button
+                    onClick={toggleTwoFactor}
+                    className={cn(
+                      "px-4 py-2 rounded-lg text-xs font-bold transition-all",
+                      securityPrefs.twoFactorEnabled
+                        ? "bg-emerald-600 text-white hover:bg-emerald-700"
+                        : "bg-blue-600 text-white hover:bg-blue-700",
+                    )}
+                  >
+                    {securityPrefs.twoFactorEnabled ? 'Enabled' : 'Enable'}
+                  </button>
                 </div>
                 <div className="space-y-4">
                   <div className="flex items-center justify-between py-4 border-b border-slate-100 dark:border-slate-800">
                     <div>
                       <p className="text-sm font-bold">Password</p>
-                      <p className="text-xs text-slate-500 mt-1 font-medium">Last changed 3 months ago</p>
+                      <p className="text-xs text-slate-500 mt-1 font-medium">Last changed {securityPrefs.lastPasswordChangeLabel}</p>
                     </div>
-                    <button className="text-xs font-bold text-blue-600 hover:underline">Update Password</button>
+                    <button onClick={openPassword} className="text-xs font-bold text-blue-600 hover:underline">Update Password</button>
                   </div>
                   <div className="flex items-center justify-between py-4">
                     <div>
                       <p className="text-sm font-bold">Active Sessions</p>
-                      <p className="text-xs text-slate-500 mt-1 font-medium">You are currently logged in on 2 devices</p>
+                      <p className="text-xs text-slate-500 mt-1 font-medium">You are currently logged in on {securityPrefs.activeSessions} devices</p>
                     </div>
-                    <button className="text-xs font-bold text-rose-600 hover:underline">Log Out All Devices</button>
+                    <button onClick={logoutAllDevices} className="text-xs font-bold text-rose-600 hover:underline">Log Out All Devices</button>
                   </div>
                 </div>
               </div>
@@ -440,6 +634,130 @@ const Settings = () => {
           )}
         </main>
       </div>
+
+      {isAddMemberOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 px-4">
+          <div className="w-full max-w-lg rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-xl overflow-hidden">
+            <div className="px-6 py-4 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between">
+              <h3 className="text-lg font-bold">Add Team Member</h3>
+              <button onClick={closeAddMember} className="text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-slate-100">✕</button>
+            </div>
+            <div className="p-6 space-y-4">
+              <div className="space-y-2">
+                <label className="text-[10px] uppercase font-bold tracking-widest text-slate-400">Name</label>
+                <input
+                  value={newMemberDraft.name}
+                  onChange={(e) => setNewMemberDraft((prev) => ({ ...prev, name: e.target.value }))}
+                  className="w-full px-3 py-2.5 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-sm focus:bg-white dark:focus:bg-slate-900 focus:ring-2 focus:ring-blue-600/10 transition-all font-medium"
+                  placeholder="Full name"
+                />
+              </div>
+              <div className="space-y-2">
+                <label className="text-[10px] uppercase font-bold tracking-widest text-slate-400">Email</label>
+                <input
+                  value={newMemberDraft.email}
+                  onChange={(e) => setNewMemberDraft((prev) => ({ ...prev, email: e.target.value }))}
+                  className="w-full px-3 py-2.5 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-sm focus:bg-white dark:focus:bg-slate-900 focus:ring-2 focus:ring-blue-600/10 transition-all font-medium"
+                  placeholder="email@company.com"
+                />
+              </div>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <label className="text-[10px] uppercase font-bold tracking-widest text-slate-400">Role</label>
+                  <select
+                    value={newMemberDraft.role}
+                    onChange={(e) => setNewMemberDraft((prev) => ({ ...prev, role: e.target.value }))}
+                    className="w-full px-3 py-2.5 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-sm focus:bg-white dark:focus:bg-slate-900 focus:ring-2 focus:ring-blue-600/10 transition-all font-bold"
+                  >
+                    <option value="Manager">Manager</option>
+                    <option value="Driver">Driver</option>
+                    <option value="Staff">Staff</option>
+                  </select>
+                </div>
+                <div className="space-y-2">
+                  <label className="text-[10px] uppercase font-bold tracking-widest text-slate-400">Status</label>
+                  <select
+                    value={newMemberDraft.status}
+                    onChange={(e) => setNewMemberDraft((prev) => ({ ...prev, status: e.target.value as TeamMember['status'] }))}
+                    className="w-full px-3 py-2.5 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-sm focus:bg-white dark:focus:bg-slate-900 focus:ring-2 focus:ring-blue-600/10 transition-all font-bold"
+                  >
+                    <option value="pending">Pending</option>
+                    <option value="active">Active</option>
+                  </select>
+                </div>
+              </div>
+            </div>
+            <div className="px-6 py-4 border-t border-slate-200 dark:border-slate-800 flex justify-end gap-2">
+              <button
+                onClick={closeAddMember}
+                className="px-4 py-2 rounded-xl border border-slate-200 dark:border-slate-700 text-xs font-bold text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={addMember}
+                className="px-4 py-2 rounded-xl bg-blue-600 text-white text-xs font-bold hover:bg-blue-700 transition-colors shadow-lg shadow-blue-500/20"
+              >
+                Add
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {isPasswordOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 px-4">
+          <div className="w-full max-w-lg rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-xl overflow-hidden">
+            <div className="px-6 py-4 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between">
+              <h3 className="text-lg font-bold">Update Password</h3>
+              <button onClick={closePassword} className="text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-slate-100">✕</button>
+            </div>
+            <div className="p-6 space-y-4">
+              <div className="space-y-2">
+                <label className="text-[10px] uppercase font-bold tracking-widest text-slate-400">Current password</label>
+                <input
+                  type="password"
+                  value={passwordDraft.current}
+                  onChange={(e) => setPasswordDraft((prev) => ({ ...prev, current: e.target.value }))}
+                  className="w-full px-3 py-2.5 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-sm focus:bg-white dark:focus:bg-slate-900 focus:ring-2 focus:ring-blue-600/10 transition-all font-medium"
+                />
+              </div>
+              <div className="space-y-2">
+                <label className="text-[10px] uppercase font-bold tracking-widest text-slate-400">New password</label>
+                <input
+                  type="password"
+                  value={passwordDraft.next}
+                  onChange={(e) => setPasswordDraft((prev) => ({ ...prev, next: e.target.value }))}
+                  className="w-full px-3 py-2.5 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-sm focus:bg-white dark:focus:bg-slate-900 focus:ring-2 focus:ring-blue-600/10 transition-all font-medium"
+                />
+              </div>
+              <div className="space-y-2">
+                <label className="text-[10px] uppercase font-bold tracking-widest text-slate-400">Confirm new password</label>
+                <input
+                  type="password"
+                  value={passwordDraft.confirm}
+                  onChange={(e) => setPasswordDraft((prev) => ({ ...prev, confirm: e.target.value }))}
+                  className="w-full px-3 py-2.5 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-sm focus:bg-white dark:focus:bg-slate-900 focus:ring-2 focus:ring-blue-600/10 transition-all font-medium"
+                />
+              </div>
+            </div>
+            <div className="px-6 py-4 border-t border-slate-200 dark:border-slate-800 flex justify-end gap-2">
+              <button
+                onClick={closePassword}
+                className="px-4 py-2 rounded-xl border border-slate-200 dark:border-slate-700 text-xs font-bold text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={savePassword}
+                className="px-4 py-2 rounded-xl bg-blue-600 text-white text-xs font-bold hover:bg-blue-700 transition-colors shadow-lg shadow-blue-500/20"
+              >
+                Save
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

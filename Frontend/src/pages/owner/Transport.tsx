@@ -14,6 +14,8 @@ import {
   Train,
   Car
 } from 'lucide-react';
+import { NotificationDropdown, type AdminNotification } from '../../components/common/NotificationDropdown';
+import { cn } from '../../utils/utils';
 
 interface TransportService {
   id: string;
@@ -31,6 +33,9 @@ const Transport = () => {
   const [searchTerm, setSearchTerm] = React.useState('');
   const [activeTab, setActiveTab] = React.useState('all');
   const [currentPage, setCurrentPage] = React.useState(1);
+  const [isNotificationsOpen, setIsNotificationsOpen] = React.useState(false);
+  const [hasUnreadNotifications, setHasUnreadNotifications] = React.useState(true);
+  const [viewing, setViewing] = React.useState<TransportService | null>(null);
   const [editing, setEditing] = React.useState<TransportService | null>(null);
   const [editForm, setEditForm] = React.useState({
     name: '',
@@ -43,6 +48,87 @@ const Transport = () => {
   });
 
   const editPhotoInputRef = React.useRef<HTMLInputElement | null>(null);
+
+  React.useEffect(() => {
+    const saved = localStorage.getItem('ownerTransportHasUnreadNotifications');
+    if (saved === 'false') {
+      setHasUnreadNotifications(false);
+    }
+  }, []);
+
+  const toggleNotifications = () => {
+    setIsNotificationsOpen((prev) => {
+      const next = !prev;
+      if (next) {
+        setHasUnreadNotifications(false);
+        localStorage.setItem('ownerTransportHasUnreadNotifications', 'false');
+      }
+      return next;
+    });
+  };
+
+  const activeTransportPromotion = React.useMemo(() => {
+    try {
+      const stored = JSON.parse(localStorage.getItem('ownerPromotions') || '[]');
+      const promos = Array.isArray(stored) ? stored : [];
+      const active = promos.filter(
+        (p: any) => p?.serviceCategory === 'transport' && (p?.status === 'active' || !p?.status),
+      );
+      return active.length > 0 ? active[0] : null;
+    } catch {
+      return null;
+    }
+  }, []);
+
+  const computeDiscountedPrice = (basePrice?: number) => {
+    if (typeof basePrice !== 'number') return { finalPrice: undefined as number | undefined, hasDiscount: false };
+    const discount = typeof activeTransportPromotion?.discount === 'string' ? activeTransportPromotion.discount : '';
+    if (!discount) return { finalPrice: basePrice, hasDiscount: false };
+
+    const trimmed = discount.trim();
+    if (trimmed.endsWith('%')) {
+      const pct = parseFloat(trimmed.replace('%', ''));
+      if (!Number.isFinite(pct)) return { finalPrice: basePrice, hasDiscount: false };
+      const finalPrice = Math.max(0, basePrice - basePrice * (pct / 100));
+      return { finalPrice, hasDiscount: true };
+    }
+
+    if (trimmed.startsWith('$')) {
+      const amt = parseFloat(trimmed.replace('$', ''));
+      if (!Number.isFinite(amt)) return { finalPrice: basePrice, hasDiscount: false };
+      const finalPrice = Math.max(0, basePrice - amt);
+      return { finalPrice, hasDiscount: true };
+    }
+
+    return { finalPrice: basePrice, hasDiscount: false };
+  };
+
+  const transportNotifications: AdminNotification[] = [
+    {
+      id: 'transport-1',
+      title: 'New transport booking',
+      description: 'A customer booked “Shared Shuttle • PP — Siem Reap”.',
+      time: '5 mins ago',
+      type: 'booking',
+      read: false,
+    },
+    {
+      id: 'transport-2',
+      title: 'Route timing question',
+      description: 'New message about pickup time for “Private SUV • PP — Kampot”.',
+      time: '1 hour ago',
+      type: 'system',
+      read: true,
+    },
+    {
+      id: 'transport-3',
+      title: 'Maintenance reminder',
+      description: 'Vehicle “Premium Van (PP)” is due for scheduled maintenance.',
+      time: 'Yesterday',
+      type: 'alert',
+      read: true,
+    },
+  ];
 
   const initialTransportServices: TransportService[] = [
     {
@@ -177,6 +263,14 @@ const Transport = () => {
 
   const closeEdit = () => {
     setEditing(null);
+  };
+
+  const openDetails = (service: TransportService) => {
+    setViewing(service);
+  };
+
+  const closeDetails = () => {
+    setViewing(null);
   };
 
   const saveEdit = () => {
@@ -368,10 +462,24 @@ const Transport = () => {
               <Plus size={20} className="mr-2" />
               Add New Transport
             </button>
-            <button className="p-2 text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-slate-100 relative">
-              <Bell size={20} />
-              <span className="absolute top-1 right-1 w-2 h-2 bg-red-500 rounded-full"></span>
-            </button>
+            <div className="relative">
+              <button
+                onClick={toggleNotifications}
+                className="p-2 text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-slate-100 relative"
+                aria-label="Open notifications"
+              >
+                <Bell size={20} />
+                {hasUnreadNotifications && (
+                  <span className="absolute top-1 right-1 w-2 h-2 bg-red-500 rounded-full"></span>
+                )}
+              </button>
+              <NotificationDropdown
+                isOpen={isNotificationsOpen}
+                onClose={() => setIsNotificationsOpen(false)}
+                notifications={transportNotifications}
+                onNotificationClick={() => setIsNotificationsOpen(false)}
+              />
+            </div>
           </div>
         </div>
       </div>
@@ -404,6 +512,7 @@ const Transport = () => {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 mb-8">
           {paginatedServices.map((service) => {
             const TypeIcon = getTypeIcon(service.type);
+            const { finalPrice, hasDiscount } = computeDiscountedPrice(service.price_per_KM);
             return (
               <div key={service.id} className="bg-white dark:bg-slate-900 rounded-lg border border-slate-200 dark:border-slate-800 shadow-sm hover:shadow-md transition-shadow">
                 <div className="relative">
@@ -415,6 +524,11 @@ const Transport = () => {
                   <div className={`absolute top-3 right-3 px-2 py-1 rounded-full text-xs font-medium ${getTypeColor(service.type)}`}>
                     {service.type}
                   </div>
+                  {activeTransportPromotion?.discount && (
+                    <div className="absolute top-3 left-3 px-2 py-1 rounded-full text-[10px] font-bold bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-300">
+                      {activeTransportPromotion.discount}
+                    </div>
+                  )}
                 </div>
                 <div className="p-4">
                   <h3 className="font-semibold text-slate-900 dark:text-slate-100 mb-2">{service.name}</h3>
@@ -429,7 +543,10 @@ const Transport = () => {
                   </div>
                   {typeof service.price_per_KM === 'number' && (
                     <div className="text-sm font-semibold text-slate-900 dark:text-slate-100 mb-2">
-                      ${service.price_per_KM.toFixed(2)} / km
+                      {hasDiscount && (
+                        <span className="text-xs text-slate-400 line-through mr-2">${service.price_per_KM.toFixed(2)}</span>
+                      )}
+                      ${(finalPrice ?? service.price_per_KM).toFixed(2)} / km
                     </div>
                   )}
                   <p className="text-sm text-slate-600 dark:text-slate-300 mb-4">{service.details}</p>
@@ -447,11 +564,18 @@ const Transport = () => {
                       >
                         <Trash2 size={16} />
                       </button>
-                      <button className="p-2 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 transition-colors">
+                      <button
+                        onClick={() => openDetails(service)}
+                        className="p-2 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 transition-colors"
+                        aria-label="View transport details"
+                      >
                         <Clock size={16} />
                       </button>
                     </div>
-                    <button className="px-3 py-1 bg-blue-600 text-white text-sm rounded hover:bg-blue-700 transition-colors">
+                    <button
+                      onClick={() => openDetails(service)}
+                      className="px-3 py-1 bg-blue-600 text-white text-sm rounded hover:bg-blue-700 transition-colors"
+                    >
                       View Details
                     </button>
                   </div>
@@ -614,19 +738,87 @@ const Transport = () => {
                 </div>
               </div>
             </div>
-            <div className="px-6 py-4 border-t border-slate-200 dark:border-slate-800 flex justify-end gap-3 bg-white dark:bg-slate-900 sticky bottom-0">
-              <button
-                onClick={closeEdit}
-                className="px-4 py-2 rounded-lg border border-slate-300 dark:border-slate-700 text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800"
-              >
-                Cancel
-              </button>
-              <button
-                onClick={saveEdit}
-                className="px-4 py-2 rounded-lg bg-blue-600 text-white hover:bg-blue-700"
-              >
-                Save
-              </button>
+            <div className="px-6 py-4 border-t border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 sticky bottom-0">
+              <div className="flex justify-end gap-3">
+                <button
+                  onClick={closeEdit}
+                  className="px-4 py-2 rounded-lg text-sm font-semibold border border-slate-300 dark:border-slate-700 text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={saveEdit}
+                  className="px-4 py-2 rounded-lg text-sm font-semibold bg-blue-600 text-white hover:bg-blue-700"
+                >
+                  Save Changes
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {viewing && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 px-4">
+          <div className="w-full max-w-2xl max-h-[85vh] rounded-xl bg-white dark:bg-slate-900 shadow-xl border border-slate-200 dark:border-slate-800 flex flex-col overflow-hidden">
+            <div className="px-6 py-4 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between">
+              <h3 className="text-lg font-semibold text-slate-900 dark:text-slate-100">Transport Details</h3>
+              <button onClick={closeDetails} className="text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-slate-100">✕</button>
+            </div>
+
+            <div className="p-6 overflow-y-auto flex-1">
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                <div className="w-full aspect-video rounded-xl overflow-hidden border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-800">
+                  <img alt={viewing.name} src={viewing.image} className="w-full h-full object-cover" />
+                </div>
+
+                <div className="space-y-3">
+                  <div>
+                    <h4 className="text-xl font-bold text-slate-900 dark:text-slate-100">{viewing.name}</h4>
+                    <p className="text-sm text-slate-500 dark:text-slate-400">{viewing.route}</p>
+                  </div>
+
+                  <div className="flex flex-wrap gap-2">
+                    <span className={cn("px-2.5 py-1 rounded-full text-xs font-semibold", getTypeColor(viewing.type))}>
+                      {viewing.type}
+                    </span>
+                    <span className={cn("px-2.5 py-1 rounded-full text-xs font-semibold", getStatusColor(viewing.status))}>
+                      {viewing.status}
+                    </span>
+                  </div>
+
+                  {typeof viewing.price_per_KM === 'number' && (
+                    <div className="text-sm font-semibold text-slate-900 dark:text-slate-100">
+                      ${viewing.price_per_KM.toFixed(2)} / km
+                    </div>
+                  )}
+
+                  <div>
+                    <p className="text-xs font-semibold text-slate-600 dark:text-slate-300 mb-1">Details</p>
+                    <p className="text-sm text-slate-700 dark:text-slate-200 leading-relaxed">{viewing.details}</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div className="px-6 py-4 border-t border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 sticky bottom-0">
+              <div className="flex justify-end gap-3">
+                <button
+                  onClick={closeDetails}
+                  className="px-4 py-2 rounded-lg text-sm font-semibold border border-slate-300 dark:border-slate-700 text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800"
+                >
+                  Close
+                </button>
+                <button
+                  onClick={() => {
+                    closeDetails();
+                    openEdit(viewing);
+                  }}
+                  className="px-4 py-2 rounded-lg text-sm font-semibold bg-blue-600 text-white hover:bg-blue-700"
+                >
+                  Edit
+                </button>
+              </div>
             </div>
           </div>
         </div>
