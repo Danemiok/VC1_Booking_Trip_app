@@ -12,10 +12,13 @@ import {
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { cn } from '@/src/utils/utils';
+import { apiRequest } from '@/src/services/api';
 
 const AddProperty = () => {
   const navigate = useNavigate();
   const [step, setStep] = React.useState(1);
+  const [isLoading, setIsLoading] = React.useState(false);
+  const [submitError, setSubmitError] = React.useState<string>('');
   const [formData, setFormData] = React.useState({
     name: '',
     type: 'Boutique Hotel',
@@ -81,29 +84,42 @@ const AddProperty = () => {
     }));
   };
 
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
     if (!validateStep(4)) return;
 
-    const newProperty = {
-      id: Date.now().toString(),
-      name: formData.name,
-      location: formData.location,
-      price: parseFloat(formData.price),
-      rating: formData.rating ? parseFloat(formData.rating) : 0,
-      status: formData.status,
-      image: formData.images[0] || 'https://picsum.photos/seed/newproperty/800/600',
-      images: formData.images,
-      type: formData.type,
-      description: formData.description,
-      address: formData.address,
-      totalBookings: 0
-    };
+    setIsLoading(true);
+    setSubmitError('');
 
-    const existingProperties = JSON.parse(localStorage.getItem('properties') || '[]');
-    const updatedProperties = [...existingProperties, newProperty];
-    localStorage.setItem('properties', JSON.stringify(updatedProperties));
+    try {
+      const destinationData = {
+        name: formData.name,
+        type: formData.type,
+        description: formData.description,
+        location: formData.location,
+        address: formData.address,
+        price: parseFloat(formData.price),
+        image: formData.images[0] || 'https://picsum.photos/seed/newproperty/800/600',
+        images: formData.images.length > 0 ? formData.images : null,
+        rating: formData.rating ? parseFloat(formData.rating) : 0,
+        status: formData.status,
+      };
 
-    navigate('/destinations');
+      const response = await apiRequest('/destinations', {
+        method: 'POST',
+        body: JSON.stringify(destinationData),
+      });
+
+      if (response.success) {
+        navigate('/destinations');
+      } else {
+        setSubmitError(response.message || 'Failed to create destination');
+      }
+    } catch (error: any) {
+      setSubmitError(error.message || 'Error creating destination. Please check your connection.');
+      console.error('Error:', error);
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   const handleNextStep = () => {
@@ -369,6 +385,11 @@ const AddProperty = () => {
 
         {step === 4 && (
           <div className="p-8 space-y-8">
+            {submitError && (
+              <div className="bg-red-50 dark:bg-red-900/10 border border-red-200 dark:border-red-800 rounded-2xl p-4 text-red-800 dark:text-red-200">
+                {submitError}
+              </div>
+            )}
             <div className="bg-blue-50 dark:bg-blue-900/10 border border-blue-200 dark:border-blue-800 rounded-2xl p-6">
               <h4 className="font-bold text-lg text-blue-900 dark:text-blue-100 mb-4">Property Review</h4>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -439,18 +460,19 @@ const AddProperty = () => {
 
         <div className="p-8 bg-slate-50 dark:bg-slate-800/50 border-t border-slate-100 dark:border-slate-800 flex justify-between items-center">
           <button 
-            disabled={step === 1}
+            disabled={step === 1 || isLoading}
             onClick={() => setStep(s => s - 1)}
             className="px-6 py-2.5 text-sm font-bold text-slate-500 hover:text-slate-900 dark:hover:text-slate-100 disabled:opacity-30 transition-all"
           >
             Back
           </button>
           <button 
+            disabled={isLoading}
             onClick={() => step < 4 ? handleNextStep() : handleSubmit()}
-            className="px-8 py-2.5 bg-blue-600 text-white rounded-xl font-bold text-sm hover:bg-blue-700 transition-all shadow-lg shadow-blue-500/20 active:scale-95 flex items-center gap-2"
+            className="px-8 py-2.5 bg-blue-600 text-white rounded-xl font-bold text-sm hover:bg-blue-700 disabled:opacity-50 transition-all shadow-lg shadow-blue-500/20 active:scale-95 flex items-center gap-2"
           >
-            {step === 4 ? 'Publish Property' : 'Continue'}
-            <ChevronRight size={18} />
+            {isLoading ? 'Publishing...' : (step === 4 ? 'Publish Property' : 'Continue')}
+            {!isLoading && <ChevronRight size={18} />}
           </button>
         </div>
       </div>
