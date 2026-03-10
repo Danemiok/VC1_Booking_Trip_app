@@ -8,11 +8,14 @@ import { AdminNotification } from '../components/common/NotificationDropdown';
 import { Login } from '../pages/auth/Login';
 import { Register } from '../pages/auth/Register';
 import VisitorHome from '../pages/public/VisitorHome';
-import CustomerDashboard from '../pages/customer/Dashboard';
-import Destinations from '../pages/customer/Destinations';
-import TripPlanner from '../pages/customer/TripPlanner';
-import BookingHistory from '../pages/customer/BookingHistory';
-import GroupInvite from '../pages/customer/GroupInvite';
+import { Dashboard as CustomerDashboard } from '../pages/customer/Dashboard';
+import { Destinations } from '../pages/customer/Destinations';
+import { HotelDetails } from '../pages/customer/HotelDetails';
+import { TripPlanner } from '../pages/customer/TripPlanner';
+import { BookingHistory } from '../pages/customer/BookingHistory';
+import { GroupInvite } from '../pages/customer/GroupInvite';
+import { Rentals } from '../pages/customer/Rentals';
+import { Activities } from '../pages/customer/Activities';
 import Payment from '../pages/customer/Payment';
 import OwnerDashboard from '../pages/owner/Dashboard';
 import OwnerDestinations from '../pages/owner/Destinations';
@@ -62,9 +65,9 @@ interface AppRoutesProps {
   selectedHotel: any | null;
   setSelectedHotel: (hotel: any | null) => void;
   selectedActivityIds: number[];
-  setSelectedActivityIds: (ids: number[]) => void;
+  setSelectedActivityIds: React.Dispatch<React.SetStateAction<number[]>>;
   tripData: any;
-  setTripData: (data: any) => void;
+  setTripData: React.Dispatch<React.SetStateAction<any>>;
 }
 
 type AdminView =
@@ -360,8 +363,52 @@ const AdminShell: React.FC<{ view: string; setView: (view: string) => void; onLo
   );
 };
 
-export const AppRoutes: React.FC<AppRoutesProps> = ({ view, setView }) => {
+export const AppRoutes: React.FC<AppRoutesProps> = ({ view, setView, onSelectRecommendation, onSelectDestination, onPromotionsClick, onHotelsClick, onRentalsClick, onActivitiesClick, notifications, onMarkAsRead, onMarkAllAsRead, activeProfileTab, selectedHotel, setSelectedHotel, selectedActivityIds, setSelectedActivityIds, tripData, setTripData }) => {
   const { user, logout } = useAuth();
+
+  const handleSelectHotel = (hotel: any) => {
+    setSelectedHotel(hotel);
+    setView('hotel-details');
+  };
+
+  const handleReserveHotel = (selection: any) => {
+    setTripData((prev: any) => {
+      const next = { ...(prev || {}) };
+      next.hotel = {
+        ...(next.hotel || {}),
+        name: selectedHotel?.name ?? next.hotel?.name,
+        location: selectedHotel?.location ?? next.hotel?.location,
+        image: selectedHotel?.image ?? next.hotel?.image,
+        roomType: selection?.roomType ?? next.hotel?.roomType,
+        guests: String(selection?.guests ?? next.hotel?.guests ?? prev?.guests ?? '2 Adults'),
+        nights: selection?.nights ?? next.hotel?.nights,
+        price: selection?.totalPrice ?? selection?.roomSubtotal ?? next.hotel?.price,
+        dailyPrice: selection?.nightlyPrice ?? next.hotel?.dailyPrice,
+        status: 'Reserved',
+      };
+      return next;
+    });
+    setView('trip-planner');
+  };
+
+  const handleSelectVehicle = (vehicle: any) => {
+    if (!vehicle) return;
+    setTripData((prev: any) => {
+      const next = { ...(prev || {}) };
+      next.rental = {
+        ...(next.rental || {}),
+        name: vehicle?.name ?? next.rental?.name,
+        features: vehicle?.type ?? next.rental?.features,
+        image: vehicle?.image ?? next.rental?.image,
+        dailyPrice: vehicle?.price ?? next.rental?.dailyPrice,
+        price: typeof vehicle?.price === 'number' ? vehicle.price : next.rental?.price,
+        isBooked: true,
+        status: 'Pending',
+      };
+      return next;
+    });
+    setView('trip-planner');
+  };
 
   if (user?.role === 'admin') {
     return <AdminShell view={view} setView={setView} onLogout={logout} />;
@@ -390,25 +437,87 @@ export const AppRoutes: React.FC<AppRoutesProps> = ({ view, setView }) => {
       );
     case 'hotels':
     case 'destinations':
+      return (
+        <Destinations
+          tripData={tripData}
+          onBack={() => setView('landing')}
+          onSelectHotel={handleSelectHotel}
+        />
+      );
     case 'hotel-details':
-      return <Destinations />;
+      return (
+        <HotelDetails
+          tripData={tripData}
+          hotel={selectedHotel}
+          onBack={() => setView('hotels')}
+          onReserve={handleReserveHotel}
+        />
+      );
     case 'rentals':
+      return <Rentals onBack={() => setView('trip-planner')} onSelectVehicle={handleSelectVehicle} />;
     case 'activities':
+      return <Activities />;
     case 'promotions':
     case 'trip-planner':
     case 'group-planning':
-      return <TripPlanner />;
+      return (
+        <TripPlanner
+          tripData={tripData}
+          setTripData={setTripData}
+          selectedActivityIds={selectedActivityIds}
+          setSelectedActivityIds={setSelectedActivityIds}
+          onBack={() => setView('landing')}
+          onHotelClick={onHotelsClick}
+          onExploreHotel={onHotelsClick}
+          onRentalClick={onRentalsClick}
+          onActivitiesClick={onActivitiesClick}
+          onProceedToBooking={() => setView('bookings')}
+        />
+      );
     case 'bookings':
-      return <BookingHistory />;
+      return (
+        <BookingHistory
+          onPaymentClick={() => setView('payment')}
+          onHotelClick={onHotelsClick}
+          onRentalClick={onRentalsClick}
+          onGroupPlanningClick={onActivitiesClick}
+          selectedActivityIds={selectedActivityIds}
+          setSelectedActivityIds={setSelectedActivityIds}
+          tripData={tripData}
+          setTripData={setTripData}
+        />
+      );
     case 'group-invite':
       return <GroupInvite />;
     case 'payment':
-      return <Payment />;
+      return <Payment tripData={tripData} selectedActivityIds={selectedActivityIds} onBackToHome={() => setView('landing')} />;
     case 'customer-dashboard':
-      return user ? <CustomerDashboard /> : <VisitorHome />;
+      return user ? (
+        <CustomerDashboard
+          tripData={tripData}
+          onSelectRecommendation={onSelectRecommendation}
+          onSelectDestination={onSelectDestination}
+          onPromotionsClick={onPromotionsClick}
+          onHotelsClick={onHotelsClick}
+          onRentalsClick={onRentalsClick}
+          onActivitiesClick={onActivitiesClick}
+        />
+      ) : (
+        <VisitorHome />
+      );
     case 'landing':
     default:
       if (!user) return <VisitorHome />;
-      return <CustomerDashboard />;
+      return (
+        <CustomerDashboard
+          tripData={tripData}
+          onSelectRecommendation={onSelectRecommendation}
+          onSelectDestination={onSelectDestination}
+          onPromotionsClick={onPromotionsClick}
+          onHotelsClick={onHotelsClick}
+          onRentalsClick={onRentalsClick}
+          onActivitiesClick={onActivitiesClick}
+        />
+      );
   }
 };
