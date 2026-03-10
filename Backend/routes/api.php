@@ -4,6 +4,7 @@ use App\Http\Controllers\Auth\LoginController;
 use App\Http\Controllers\Auth\LogoutController;
 use App\Http\Controllers\Auth\RegisterController;
 use App\Http\Controllers\AuthController;
+use App\Http\Controllers\Owner\DestinationController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
@@ -37,8 +38,17 @@ Route::middleware(['auth:sanctum', 'role:customer'])->get('/customer/access', fu
     return response()->json(['message' => 'Customer access granted']);
 });
 
-Route::middleware(['auth:sanctum', 'role:owner'])->get('/owner/access', function () {
-    return response()->json(['message' => 'Owner access granted']);
+Route::middleware(['auth:sanctum', 'role:owner'])->group(function () {
+    Route::get('/owner/access', function () {
+        return response()->json(['message' => 'Owner access granted']);
+    });
+    
+    // Owner destinations routes
+    Route::apiResource('destinations', DestinationController::class);
 });
 
+// Public destinations route for customers
+Route::get('/destinations/public/all', [DestinationController::class, 'getAllPublic']);
+
 Route::apiResource('users', AuthController::class);
+

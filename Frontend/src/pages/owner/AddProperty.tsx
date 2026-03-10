@@ -27,7 +27,7 @@ const AddProperty = () => {
     address: '',
     price: '',
     images: [] as string[],
-    status: 'draft',
+    status: 'active',
     rating: ''
   });
 
@@ -443,7 +443,7 @@ const AddProperty = () => {
               <ul className="space-y-2 text-sm text-amber-800 dark:text-amber-200">
                 <li className="flex items-start gap-2">
                   <CheckCircle2 size={16} className="mt-0.5 flex-shrink-0" />
-                  <span>Your property will be visible to travelers immediately after publishing</span>
+                  <span>Your property will be created as active and visible to everyone immediately after publishing</span>
                 </li>
                 <li className="flex items-start gap-2">
                   <CheckCircle2 size={16} className="mt-0.5 flex-shrink-0" />
