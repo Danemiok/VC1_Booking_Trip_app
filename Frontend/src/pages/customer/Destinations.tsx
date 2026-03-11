@@ -96,6 +96,9 @@ const buildRoomOptions = (nightlyRate: number): RoomOption[] => [
   }
 ];
 
+const getGoogleMapsSearchUrl = (query: string): string =>
+  `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(query)}`;
+
 export const Destinations: React.FC<HotelsPageProps> = ({ tripData, onBack, onSelectHotel }) => {
   const ITEMS_PER_PAGE = 4;
   const [priceRange, setPriceRange] = useState(2000);
@@ -221,6 +224,20 @@ export const Destinations: React.FC<HotelsPageProps> = ({ tripData, onBack, onSe
     (currentPage - 1) * ITEMS_PER_PAGE,
     currentPage * ITEMS_PER_PAGE
   );
+
+  const openMapForQuery = (query: string) => {
+    const trimmedQuery = query.trim();
+    if (!trimmedQuery) return;
+    window.open(getGoogleMapsSearchUrl(trimmedQuery), '_blank', 'noopener,noreferrer');
+  };
+
+  const openMapForHotel = (hotel: any) => {
+    const hotelName = String(hotel?.name || '').trim();
+    const hotelLocation = String(hotel?.location || '').trim();
+    const query = [hotelName, hotelLocation].filter(Boolean).join(', ');
+    if (!query) return;
+    openMapForQuery(query);
+  };
 
   const handlePageChange = (nextPage: number) => {
     const safePage = Math.min(Math.max(nextPage, 1), totalPages);
@@ -399,7 +416,21 @@ export const Destinations: React.FC<HotelsPageProps> = ({ tripData, onBack, onSe
             </div>
 
             {/* Map Preview */}
-            <div className="relative rounded-3xl overflow-hidden aspect-square group cursor-pointer">
+            <div
+              className="relative rounded-3xl overflow-hidden aspect-square group cursor-pointer"
+              onClick={() => {
+                const fallbackQuery = searchQuery.trim() || tripData?.location || tripData?.destination || '';
+                openMapForQuery(String(fallbackQuery || 'Cambodia'));
+              }}
+              role="button"
+              tabIndex={0}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter' || e.key === ' ') {
+                  const fallbackQuery = searchQuery.trim() || tripData?.location || tripData?.destination || '';
+                  openMapForQuery(String(fallbackQuery || 'Cambodia'));
+                }
+              }}
+            >
               <img 
                 src="https://images.unsplash.com/photo-1524661135-423995f22d0b?auto=format&fit=crop&q=80&w=800" 
                 alt="Map Preview" 
@@ -505,10 +536,14 @@ export const Destinations: React.FC<HotelsPageProps> = ({ tripData, onBack, onSe
                         >
                           {hotel.name}
                         </h3>
-                        <div className="flex items-center gap-2 text-slate-400 mb-6">
+                        <button
+                          type="button"
+                          onClick={() => openMapForHotel(hotel)}
+                          className="flex items-center gap-2 text-slate-400 mb-6 hover:text-blue-600 transition-colors text-left"
+                        >
                           <MapPin className="w-3 h-3" />
                           <span className="text-[10px] font-bold uppercase tracking-widest">{hotel.location}</span>
-                        </div>
+                        </button>
                         
                         <p className="text-sm text-slate-500 dark:text-slate-400 leading-relaxed mb-8 line-clamp-2">
                           {hotel.description || ''}

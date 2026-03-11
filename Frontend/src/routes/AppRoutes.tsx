@@ -14,6 +14,7 @@ import { HotelDetails } from '../pages/customer/HotelDetails';
 import { TripPlanner } from '../pages/customer/TripPlanner';
 import { BookingHistory } from '../pages/customer/BookingHistory';
 import { GroupInvite } from '../pages/customer/GroupInvite';
+import { GroupPlanning } from '../pages/customer/GroupPlanning';
 import { Rentals } from '../pages/customer/Rentals';
 import { Activities } from '../pages/customer/Activities';
 import { Profile } from '../pages/customer/Profile';
@@ -533,7 +534,6 @@ export const AppRoutes: React.FC<AppRoutesProps> = ({ view, setView, onSelectRec
       );
     case 'promotions':
     case 'trip-planner':
-    case 'group-planning':
       return (
         <TripPlanner
           tripData={tripData}
@@ -549,6 +549,17 @@ export const AppRoutes: React.FC<AppRoutesProps> = ({ view, setView, onSelectRec
             if (!requireAuth()) return;
             setView('bookings');
           }}
+        />
+      );
+    case 'group-planning':
+      if (isGuest) {
+        setView('login');
+        return null;
+      }
+      return (
+        <GroupPlanning
+          onBack={() => setView('bookings')}
+          tripTitle={tripData?.title}
         />
       );
     case 'bookings':
@@ -640,7 +651,10 @@ export const AppRoutes: React.FC<AppRoutesProps> = ({ view, setView, onSelectRec
           }}
           onHotelClick={onHotelsClick}
           onRentalClick={onRentalsClick}
-          onGroupPlanningClick={onActivitiesClick}
+          onGroupPlanningClick={() => {
+            if (!requireAuth()) return;
+            setView('group-planning');
+          }}
           selectedActivityIds={selectedActivityIds}
           setSelectedActivityIds={setSelectedActivityIds}
           tripData={tripData}
