@@ -490,23 +490,10 @@ export const GroupPlanning: React.FC<GroupPlanningProps> = ({ onBack, tripTitle 
 
   const handleAddActivity = () => {
     if (!newActivity.time || !newActivity.activity || !groupId) return;
-    const item: ItineraryItem = {
-      id: createId(),
-      time: newActivity.time,
-      activity: newActivity.activity,
-      location: newActivity.location,
-      votes: 0
-    };
-
-    setItinerary((prev) => {
-      const next = [...prev, item];
-      const groups = loadGroupsFromStorage();
-      const group = groups[groupId];
-      if (group) {
-        upsertGroupInStorage({ ...group, itinerary: next });
-      }
-      socketService.getSocket()?.emit('itinerary-updated', next);
-      return next;
+    socketService.getSocket()?.emit('update-itinerary', {
+      groupId,
+      email: userEmail,
+      item: newActivity
     });
     setIsAddingActivity(false);
     setNewActivity({ time: '', activity: '', location: '' });
@@ -514,25 +501,12 @@ export const GroupPlanning: React.FC<GroupPlanningProps> = ({ onBack, tripTitle 
 
   const handleCreatePoll = () => {
     if (!newPoll.question || !groupId) return;
-    const poll: Poll = {
-      id: createId(),
+    socketService.getSocket()?.emit('create-poll', {
+      groupId,
+      email: userEmail,
       question: newPoll.question,
-      options: newPoll.options
-        .filter((o) => o.trim())
-        .map((text) => ({ id: createId(), text, votes: 0 }))
-    };
-
-    setPolls((prev) => {
-      const next = [...prev, poll];
-      const groups = loadGroupsFromStorage();
-      const group = groups[groupId];
-      if (group) {
-        upsertGroupInStorage({ ...group, polls: next });
-      }
-      return next;
+      options: newPoll.options.filter(o => o.trim())
     });
-
-    socketService.getSocket()?.emit('poll-created', poll);
     setIsCreatingPoll(false);
     setNewPoll({ question: '', options: ['', ''] });
   };
@@ -569,7 +543,7 @@ export const GroupPlanning: React.FC<GroupPlanningProps> = ({ onBack, tripTitle 
                 <input 
                   type="text" 
                   value={accessCode}
-                  onChange={(e) => setAccessCode(normalizeAccessCode(e.target.value))}
+                  onChange={(e) => setAccessCode(e.target.value.toUpperCase())}
                   placeholder="ENTER CODE"
                   className="w-full px-6 py-4 bg-slate-50 dark:bg-white/5 border border-slate-100 dark:border-white/5 rounded-2xl text-center font-mono text-xl tracking-[0.5em] outline-none focus:ring-2 focus:ring-blue-500 transition-all"
                 />
