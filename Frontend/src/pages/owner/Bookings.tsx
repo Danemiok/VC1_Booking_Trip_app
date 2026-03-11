@@ -13,17 +13,58 @@ import {
   CheckCircle2,
   Clock,
   XCircle,
-  PlusCircle
+  X
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { cn } from '@/src/utils/utils';
+import { bookingService } from '@/src/services/bookingService';
 
 const Bookings = () => {
   const navigate = useNavigate();
   const [serviceFilter, setServiceFilter] = React.useState<'all' | 'hotel' | 'transport'>('all');
   const [dateRange, setDateRange] = React.useState<'last1' | 'last3' | 'last7' | 'all'>('last7');
   const [currentPage, setCurrentPage] = React.useState(1);
-  const pageSize = 5;
+  const [bookings, setBookings] = React.useState([]);
+  const [stats, setStats] = React.useState({
+    totalBookings: '1,240',
+    activeGuests: '42',
+    pendingPayments: '$1,450'
+  });
+  const [loading, setLoading] = React.useState(true);
+  const [searchTerm, setSearchTerm] = React.useState('');
+  const [exportLoading, setExportLoading] = React.useState(false);
+  const [error, setError] = React.useState<string | null>(null);
+  const [successMessage, setSuccessMessage] = React.useState<string | null>(null);
+  
+  // NEW: Filter modal state
+  const [showFilterModal, setShowFilterModal] = React.useState(false);
+  const [tempFilters, setTempFilters] = React.useState({
+    status: 'all' as 'all' | 'paid' | 'pending' | 'canceled',
+    minAmount: '',
+    maxAmount: '',
+    guestName: '',
+    bookingId: ''
+  });
+  const [activeFilters, setActiveFilters] = React.useState({
+    status: 'all' as 'all' | 'paid' | 'pending' | 'canceled',
+    minAmount: '',
+    maxAmount: '',
+    guestName: '',
+    bookingId: ''
+  });
+  
+  const pageSize = 10;
+
+  // Auto-hide messages after 3 seconds
+  React.useEffect(() => {
+    if (error || successMessage) {
+      const timer = setTimeout(() => {
+        setError(null);
+        setSuccessMessage(null);
+      }, 3000);
+      return () => clearTimeout(timer);
+    }
+  }, [error, successMessage]);
 
   const formatDate = (d: Date) =>
     d.toLocaleDateString('en-US', { month: 'short', day: '2-digit', year: 'numeric' });
@@ -36,13 +77,230 @@ const Bookings = () => {
 
   const now = new Date();
 
-  const bookings = [
-    { id: 'BK-9921', guest: 'John Doe', service: 'Mekong Villa', route: 'Phnom Penh', dateStart: formatDate(addDays(now, -1)), dateEnd: formatDate(addDays(now, 1)), pax: 2, amount: 185.00, status: 'paid', category: 'hotel' as const },
-    { id: 'BK-9922', guest: 'Jane Smith', service: 'Shared Shuttle', route: 'PP — Siem Reap', date: formatDate(addDays(now, -1)), time: '08:00 AM', pax: 1, amount: 15.00, status: 'pending', category: 'transport' as const },
-    { id: 'BK-9923', guest: 'Robert Brown', service: 'Luxury Retreat', route: 'Koh Rong', dateStart: formatDate(addDays(now, -3)), dateEnd: formatDate(addDays(now, -1)), pax: 4, amount: 680.00, status: 'paid', category: 'hotel' as const },
-    { id: 'BK-9924', guest: 'Emily Davis', service: 'Private SUV', route: 'PP — Kampot', date: formatDate(addDays(now, -7)), time: '09:15 AM', pax: 3, amount: 85.00, status: 'canceled', category: 'transport' as const },
-    { id: 'BK-9925', guest: 'Michael Wilson', service: 'Boutique Stay', route: 'Siem Reap', dateStart: formatDate(addDays(now, -10)), dateEnd: formatDate(addDays(now, -8)), pax: 2, amount: 120.00, status: 'paid', category: 'hotel' as const },
+  // REALISTIC CUSTOMER BOOKING DATA
+  const mockCustomerBookings = [
+    // Hotel Bookings
+    { 
+      id: 'BK-1001', 
+      guest: 'Sophia Martinez', 
+      service: 'Angkor Paradise Hotel', 
+      route: 'Siem Reap - City Center', 
+      dateStart: formatDate(addDays(now, 2)), 
+      dateEnd: formatDate(addDays(now, 5)), 
+      pax: 2, 
+      amount: 450.00, 
+      status: 'paid', 
+      category: 'hotel',
+      roomType: 'Deluxe Double',
+      customerEmail: 'sophia.m@email.com',
+    },
+    { 
+      id: 'BK-1002', 
+      guest: 'James Johnson', 
+      service: 'The Bale Phnom Penh', 
+      route: 'Phnom Penh - Riverside', 
+      dateStart: formatDate(addDays(now, 1)), 
+      dateEnd: formatDate(addDays(now, 3)), 
+      pax: 1, 
+      amount: 320.50, 
+      status: 'pending', 
+      category: 'hotel',
+      roomType: 'Executive Suite',
+      customerEmail: 'james.j@email.com',
+    },
+    { 
+      id: 'BK-1003', 
+      guest: 'Linda Chen', 
+      service: 'Song Saa Private Island', 
+      route: 'Koh Rong - Private Island', 
+      dateStart: formatDate(addDays(now, -2)), 
+      dateEnd: formatDate(addDays(now, 2)), 
+      pax: 2, 
+      amount: 1250.00, 
+      status: 'paid', 
+      category: 'hotel',
+      roomType: 'Overwater Villa',
+      customerEmail: 'linda.c@email.com',
+    },
+    { 
+      id: 'BK-1004', 
+      guest: 'David Miller', 
+      service: 'Raffles Hotel Le Royal', 
+      route: 'Phnom Penh - Central', 
+      dateStart: formatDate(addDays(now, -5)), 
+      dateEnd: formatDate(addDays(now, -2)), 
+      pax: 2, 
+      amount: 890.00, 
+      status: 'paid', 
+      category: 'hotel',
+      roomType: 'Colonial Suite',
+      customerEmail: 'david.m@email.com',
+    },
+    { 
+      id: 'BK-1005', 
+      guest: 'Sarah Williams', 
+      service: 'Templation Hotel', 
+      route: 'Siem Reap - Angkor', 
+      dateStart: formatDate(addDays(now, -7)), 
+      dateEnd: formatDate(addDays(now, -4)), 
+      pax: 3, 
+      amount: 675.00, 
+      status: 'canceled', 
+      category: 'hotel',
+      roomType: 'Family Room',
+      customerEmail: 'sarah.w@email.com',
+    },
+    { 
+      id: 'BK-1006', 
+      guest: 'John Smith', 
+      service: 'Rosewood Phnom Penh', 
+      route: 'Phnom Penh - Riverside', 
+      dateStart: formatDate(addDays(now, 3)), 
+      dateEnd: formatDate(addDays(now, 6)), 
+      pax: 2, 
+      amount: 780.00, 
+      status: 'pending', 
+      category: 'hotel',
+      roomType: 'Premier Room',
+      customerEmail: 'john.s@email.com',
+    },
+
+    // Transport Bookings
+    { 
+      id: 'TB-2001', 
+      guest: 'Michael Brown', 
+      service: 'Private SUV - Toyota Camry', 
+      route: 'Phnom Penh → Siem Reap', 
+      date: formatDate(addDays(now, 1)), 
+      time: '08:00 AM', 
+      pax: 3, 
+      amount: 180.00, 
+      status: 'paid', 
+      category: 'transport',
+      vehicleType: 'SUV - 4 seats',
+      customerEmail: 'michael.b@email.com',
+    },
+    { 
+      id: 'TB-2002', 
+      guest: 'Emma Davis', 
+      service: 'Luxury Minivan - Toyota Hiace', 
+      route: 'Siem Reap → Phnom Penh', 
+      date: formatDate(addDays(now, 2)), 
+      time: '02:00 PM', 
+      pax: 7, 
+      amount: 250.00, 
+      status: 'pending', 
+      category: 'transport',
+      vehicleType: 'Minivan - 7 seats',
+      customerEmail: 'emma.d@email.com',
+    },
+    { 
+      id: 'TB-2003', 
+      guest: 'Robert Wilson', 
+      service: 'Private Car - Lexus ES', 
+      route: 'Phnom Penh → Kampot', 
+      date: formatDate(addDays(now, -1)), 
+      time: '09:15 AM', 
+      pax: 2, 
+      amount: 120.00, 
+      status: 'paid', 
+      category: 'transport',
+      vehicleType: 'Luxury Sedan',
+      customerEmail: 'robert.w@email.com',
+    },
+    { 
+      id: 'TB-2004', 
+      guest: 'Jennifer Lee', 
+      service: 'Shared Shuttle - Minibus', 
+      route: 'Siem Reap → Battambang', 
+      date: formatDate(addDays(now, -3)), 
+      time: '07:30 AM', 
+      pax: 1, 
+      amount: 25.00, 
+      status: 'paid', 
+      category: 'transport',
+      vehicleType: 'Shuttle Bus',
+      customerEmail: 'jennifer.l@email.com',
+    },
+    { 
+      id: 'TB-2005', 
+      guest: 'Thomas Anderson', 
+      service: 'Private SUV - Fortuner', 
+      route: 'Phnom Penh → Sihanoukville', 
+      date: formatDate(addDays(now, -8)), 
+      time: '06:00 AM', 
+      pax: 4, 
+      amount: 220.00, 
+      status: 'canceled', 
+      category: 'transport',
+      vehicleType: 'SUV - 7 seats',
+      customerEmail: 'thomas.a@email.com',
+    },
+    { 
+      id: 'TB-2006', 
+      guest: 'Patricia White', 
+      service: 'Luxury Car - Mercedes', 
+      route: 'Siem Reap → Phnom Penh', 
+      date: formatDate(addDays(now, 4)), 
+      time: '10:00 AM', 
+      pax: 2, 
+      amount: 210.00, 
+      status: 'pending', 
+      category: 'transport',
+      vehicleType: 'Luxury Sedan',
+      customerEmail: 'patricia.w@email.com',
+    },
   ];
+
+  // Fetch bookings from backend
+  const fetchBookings = React.useCallback(async () => {
+    try {
+      setLoading(true);
+      setError(null);
+      const filters = {
+        service: serviceFilter !== 'all' ? serviceFilter : undefined,
+        date_range: dateRange,
+        search: searchTerm || undefined,
+        status: activeFilters.status !== 'all' ? activeFilters.status : undefined,
+        min_amount: activeFilters.minAmount || undefined,
+        max_amount: activeFilters.maxAmount || undefined,
+        guest_name: activeFilters.guestName || undefined,
+        booking_id: activeFilters.bookingId || undefined
+      };
+      
+      const response = await bookingService.getBookings(filters);
+      setBookings(response.data || mockCustomerBookings);
+    } catch (error) {
+      console.error('Error fetching bookings:', error);
+      setBookings(mockCustomerBookings);
+    } finally {
+      setLoading(false);
+    }
+  }, [serviceFilter, dateRange, searchTerm, activeFilters]);
+
+  // Fetch booking statistics
+  const fetchStats = React.useCallback(async () => {
+    try {
+      const response = await bookingService.getBookingStats();
+      setStats({
+        totalBookings: response.total_bookings || '1,240',
+        activeGuests: response.active_guests || '42',
+        pendingPayments: response.pending_payments || '$1,450'
+      });
+    } catch (error) {
+      console.error('Error fetching stats:', error);
+    }
+  }, []);
+
+  // Initial data fetch
+  React.useEffect(() => {
+    fetchBookings();
+    fetchStats();
+  }, [fetchBookings, fetchStats]);
+
+  React.useEffect(() => {
+    setCurrentPage(1);
+  }, [serviceFilter, dateRange, searchTerm, activeFilters]);
 
   const parseBookingDate = (value: string) => {
     const d = new Date(value);
@@ -61,13 +319,52 @@ const Bookings = () => {
     return d >= cutoff;
   };
 
+  // Filter bookings based on ALL filters
   const filteredBookings = bookings
-    .filter((b) => (serviceFilter === 'all' ? true : b.category === serviceFilter))
-    .filter((b) => isWithinSelectedRange(b.category === 'hotel' ? (b as any).dateStart : (b as any).date));
-
-  React.useEffect(() => {
-    setCurrentPage(1);
-  }, [serviceFilter, dateRange]);
+    .filter((b: any) => (serviceFilter === 'all' ? true : b.category === serviceFilter))
+    .filter((b: any) => {
+      const dateToCheck = b.category === 'hotel' ? b.dateStart : b.date;
+      return isWithinSelectedRange(dateToCheck);
+    })
+    .filter((b: any) => {
+      if (!searchTerm) return true;
+      const term = searchTerm.toLowerCase();
+      return (
+        b.id.toLowerCase().includes(term) ||
+        b.guest.toLowerCase().includes(term) ||
+        b.service.toLowerCase().includes(term) ||
+        b.route.toLowerCase().includes(term)
+      );
+    })
+    // NEW: Apply advanced filters
+    .filter((b: any) => {
+      // Filter by status
+      if (activeFilters.status !== 'all' && b.status !== activeFilters.status) {
+        return false;
+      }
+      
+      // Filter by guest name
+      if (activeFilters.guestName && !b.guest.toLowerCase().includes(activeFilters.guestName.toLowerCase())) {
+        return false;
+      }
+      
+      // Filter by booking ID
+      if (activeFilters.bookingId && !b.id.toLowerCase().includes(activeFilters.bookingId.toLowerCase())) {
+        return false;
+      }
+      
+      // Filter by min amount
+      if (activeFilters.minAmount && b.amount < parseFloat(activeFilters.minAmount)) {
+        return false;
+      }
+      
+      // Filter by max amount
+      if (activeFilters.maxAmount && b.amount > parseFloat(activeFilters.maxAmount)) {
+        return false;
+      }
+      
+      return true;
+    });
 
   const totalPages = Math.max(1, Math.ceil(filteredBookings.length / pageSize));
   const safeCurrentPage = Math.min(currentPage, totalPages);
@@ -93,13 +390,141 @@ const Bookings = () => {
     return items;
   };
 
+  const handleSearch = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setSearchTerm(e.target.value);
+  };
+
+  // NEW: Filter modal functions
+  const openFilterModal = () => {
+    setTempFilters({ ...activeFilters });
+    setShowFilterModal(true);
+  };
+
+  const closeFilterModal = () => {
+    setShowFilterModal(false);
+  };
+
+  const applyFilters = () => {
+    setActiveFilters({ ...tempFilters });
+    setShowFilterModal(false);
+    setCurrentPage(1);
+    setSuccessMessage('Filters applied successfully');
+  };
+
+  const clearFilters = () => {
+    const clearedFilters = {
+      status: 'all' as const,
+      minAmount: '',
+      maxAmount: '',
+      guestName: '',
+      bookingId: ''
+    };
+    setTempFilters(clearedFilters);
+    setActiveFilters(clearedFilters);
+    setShowFilterModal(false);
+    setCurrentPage(1);
+    setSuccessMessage('Filters cleared');
+  };
+
+  const handleExport = async () => {
+    try {
+      setExportLoading(true);
+      setError(null);
+      
+      // Create CSV from filtered bookings
+      const headers = ['Booking ID', 'Guest Name', 'Service', 'Route', 'Date', 'Pax', 'Amount', 'Status', 'Email'];
+      const csvData = filteredBookings.map((b: any) => [
+        b.id,
+        b.guest,
+        b.service,
+        b.route,
+        b.category === 'hotel' ? `${b.dateStart} to ${b.dateEnd}` : `${b.date} ${b.time}`,
+        b.pax,
+        `$${b.amount}`,
+        b.status,
+        b.customerEmail || '',
+      ]);
+      
+      const csvContent = [headers.join(','), ...csvData.map(row => row.join(','))].join('\n');
+      const blob = new Blob([csvContent], { type: 'text/csv' });
+      
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `bookings-${new Date().toISOString().split('T')[0]}.csv`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      window.URL.revokeObjectURL(url);
+      
+      setSuccessMessage('Export completed successfully');
+    } catch (error) {
+      console.error('Export error:', error);
+      setError('Failed to export bookings');
+    } finally {
+      setExportLoading(false);
+    }
+  };
+
+  const handleViewBookingDetails = (booking: any) => {
+    navigate(`/bookings/${booking.id}`, { state: { booking } });
+  };
+
+  const getStatusIcon = (status: string) => {
+    switch(status) {
+      case 'paid': return <CheckCircle2 size={12} />;
+      case 'pending': return <Clock size={12} />;
+      case 'canceled': return <XCircle size={12} />;
+      default: return <Clock size={12} />;
+    }
+  };
+
+  const getStatusColor = (status: string) => {
+    switch(status) {
+      case 'paid': return "bg-emerald-50 dark:bg-emerald-900/20 text-emerald-600";
+      case 'pending': return "bg-amber-50 dark:bg-amber-900/20 text-amber-600";
+      case 'canceled': return "bg-rose-50 dark:bg-rose-900/20 text-rose-600";
+      default: return "bg-slate-50 dark:bg-slate-900/20 text-slate-600";
+    }
+  };
+
+  // Count active filters
+  const activeFilterCount = Object.values(activeFilters).filter(val => val !== 'all' && val !== '').length;
+
   return (
     <div className="p-8 space-y-8 max-w-[1600px] mx-auto">
+      {/* Top Search Bar */}
+      <div className="flex items-center justify-between">
+        <div className="relative w-96">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 size-4" />
+          <input 
+            className="w-full pl-10 pr-4 py-2.5 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl text-sm focus:ring-2 focus:ring-blue-600/10 focus:border-blue-600 transition-all" 
+            placeholder="Search businesses, owners, or destinations..." 
+            type="text"
+            value={searchTerm}
+            onChange={handleSearch}
+          />
+        </div>
+      </div>
+
+      {/* Message Notifications */}
+      {error && (
+        <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg relative" role="alert">
+          <span className="block sm:inline">{error}</span>
+        </div>
+      )}
+      {successMessage && (
+        <div className="bg-green-50 border border-green-200 text-green-700 px-4 py-3 rounded-lg relative" role="alert">
+          <span className="block sm:inline">{successMessage}</span>
+        </div>
+      )}
+
+      {/* Statistics Cards */}
       <section className="grid grid-cols-1 md:grid-cols-3 gap-6">
         {[
-          { label: 'Total Bookings', value: '1,240', icon: Calendar, color: 'blue' },
-          { label: 'Active Guests', value: '42', icon: Users, color: 'emerald' },
-          { label: 'Pending Payments', value: '$1,450', icon: CreditCard, color: 'amber' },
+          { label: 'TOTAL BOOKINGS', value: stats.totalBookings, icon: Calendar, color: 'blue' },
+          { label: 'ACTIVE GUESTS', value: stats.activeGuests, icon: Users, color: 'emerald' },
+          { label: 'PENDING PAYMENTS', value: stats.pendingPayments, icon: CreditCard, color: 'amber' },
         ].map((stat, i) => (
           <div key={i} className="bg-white dark:bg-slate-900 p-6 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm">
             <div className="flex items-center gap-4">
@@ -120,7 +545,9 @@ const Bookings = () => {
         ))}
       </section>
 
+      {/* Bookings Table Section */}
       <section className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm overflow-hidden">
+        {/* Filters Bar */}
         <div className="p-6 border-b border-slate-100 dark:border-slate-800 flex flex-col md:flex-row md:items-center justify-between gap-4">
           <div className="relative flex-1 max-w-md">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 size-4" />
@@ -128,9 +555,12 @@ const Bookings = () => {
               className="w-full pl-10 pr-4 py-2 bg-slate-50 dark:bg-slate-800 border-transparent focus:bg-white dark:focus:bg-slate-900 focus:ring-2 focus:ring-blue-600/10 rounded-xl text-sm transition-all" 
               placeholder="Search Booking ID, Guest Name..." 
               type="text"
+              value={searchTerm}
+              onChange={handleSearch}
             />
           </div>
           <div className="flex flex-col sm:flex-row gap-3 sm:items-center sm:justify-end">
+            {/* Service Filter Tabs */}
             <div className="bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl p-1 flex items-center gap-1">
               <button
                 onClick={() => setServiceFilter('all')}
@@ -167,6 +597,7 @@ const Bookings = () => {
               </button>
             </div>
 
+            {/* Date Range Filter */}
             <div className="relative">
               <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={16} />
               <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400" size={16} />
@@ -175,131 +606,300 @@ const Bookings = () => {
                 onChange={(e) => setDateRange(e.target.value as any)}
                 className="appearance-none pl-10 pr-10 py-2 text-xs font-bold bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 border border-slate-200 dark:border-slate-700 rounded-xl hover:bg-slate-50 dark:hover:bg-slate-700/40 transition-colors"
               >
-                <option value="last1" className="bg-white text-slate-900 dark:bg-slate-800 dark:text-slate-100">Last 1 Days</option>
+                <option value="last1" className="bg-white text-slate-900 dark:bg-slate-800 dark:text-slate-100">Last 1 Day</option>
                 <option value="last3" className="bg-white text-slate-900 dark:bg-slate-800 dark:text-slate-100">Last 3 Days</option>
                 <option value="last7" className="bg-white text-slate-900 dark:bg-slate-800 dark:text-slate-100">Last 7 Days</option>
                 <option value="all" className="bg-white text-slate-900 dark:bg-slate-800 dark:text-slate-100">All time</option>
               </select>
             </div>
 
+            {/* Action Buttons */}
             <div className="flex gap-2">
-              <button className="px-4 py-2 text-xs font-bold bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl flex items-center gap-2 hover:bg-slate-50 transition-colors">
-                <Filter size={16} /> Filter
-              </button>
-              <button className="px-4 py-2 text-xs font-bold bg-blue-600 text-white rounded-xl flex items-center gap-2 hover:bg-blue-700 transition-colors shadow-lg shadow-blue-500/20">
-                <Download size={16} /> Export CSV
-              </button>
-            </div>
-          </div>
-        </div>
-
-        <div className="overflow-x-auto">
-          <table className="w-full text-left">
-            <thead>
-              <tr className="bg-slate-50/50 dark:bg-slate-800/30 text-[10px] uppercase font-bold tracking-widest text-slate-500">
-                <th className="px-6 py-4">Booking ID</th>
-                <th className="px-6 py-4">Guest Name</th>
-                <th className="px-6 py-4">Service & Route</th>
-                <th className="px-6 py-4">Date & Time</th>
-                <th className="px-6 py-4">Pax</th>
-                <th className="px-6 py-4">Amount</th>
-                <th className="px-6 py-4">Status</th>
-                <th className="px-6 py-4 text-right">Actions</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
-              {paginatedBookings.map((booking) => (
-                <tr key={booking.id} className="hover:bg-slate-50/30 dark:hover:bg-slate-800/30 transition-colors group">
-                  <td className="px-6 py-4 font-bold text-sm text-blue-600">{booking.id}</td>
-                  <td className="px-6 py-4 font-bold text-sm">{booking.guest}</td>
-                  <td className="px-6 py-4">
-                    <p className="text-sm font-medium">{booking.service}</p>
-                    <p className="text-[10px] text-slate-400 font-bold uppercase tracking-wider">{booking.route}</p>
-                  </td>
-                  <td className="px-6 py-4">
-                    {booking.category === 'hotel' ? (
-                      <>
-                        <p className="text-sm font-medium">{(booking as any).dateStart}</p>
-                        <p className="text-[10px] text-slate-400 font-bold uppercase tracking-wider">End: {(booking as any).dateEnd}</p>
-                      </>
-                    ) : (
-                      <>
-                        <p className="text-sm font-medium">{(booking as any).date}</p>
-                        <p className="text-[10px] text-slate-400 font-bold uppercase tracking-wider">{(booking as any).time}</p>
-                      </>
-                    )}
-                  </td>
-                  <td className="px-6 py-4 text-sm font-bold">{booking.pax}</td>
-                  <td className="px-6 py-4 text-sm font-bold">${booking.amount.toFixed(2)}</td>
-                  <td className="px-6 py-4">
-                    <span className={cn(
-                      "inline-flex items-center gap-1.5 px-2.5 py-1 text-[11px] font-bold rounded-full",
-                      booking.status === 'paid' ? "bg-emerald-50 dark:bg-emerald-900/20 text-emerald-600" :
-                      booking.status === 'pending' ? "bg-amber-50 dark:bg-amber-900/20 text-amber-600" :
-                      "bg-rose-50 dark:bg-rose-900/20 text-rose-600"
-                    )}>
-                      {booking.status === 'paid' ? <CheckCircle2 size={12} /> : booking.status === 'pending' ? <Clock size={12} /> : <XCircle size={12} />}
-                      {booking.status.charAt(0).toUpperCase() + booking.status.slice(1)}
-                    </span>
-                  </td>
-                  <td className="px-6 py-4 text-right">
-                    <button className="p-2 text-slate-400 hover:text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded-lg transition-all">
-                      <MoreHorizontal size={18} />
-                    </button>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-
-        <div className="px-6 py-4 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between">
-          <p className="text-xs text-slate-500 font-medium">
-            Showing {filteredBookings.length === 0 ? 0 : startIndex + 1} to {Math.min(startIndex + pageSize, filteredBookings.length)} of {filteredBookings.length} results
-          </p>
-          <div className="flex items-center gap-2">
-            <button
-              className="p-2 text-slate-400 hover:text-blue-600 disabled:opacity-30"
-              disabled={safeCurrentPage === 1}
-              onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
-              aria-label="Previous page"
-            >
-              <ChevronLeft size={20} />
-            </button>
-            <div className="flex gap-1">
-              {getPageItems().map((page, i) =>
-                page === '...' ? (
-                  <span key={`dots-${i}`} className="w-8 h-8 inline-flex items-center justify-center text-xs font-bold text-slate-400">
-                    ...
+              {/* Filter Button with Active Count */}
+              <button 
+                onClick={openFilterModal}
+                className={cn(
+                  "px-4 py-2 text-xs font-bold rounded-xl flex items-center gap-2 transition-colors relative",
+                  activeFilterCount > 0 
+                    ? "bg-blue-600 text-white shadow-lg shadow-blue-500/20" 
+                    : "bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 hover:bg-slate-50"
+                )}
+              >
+                <Filter size={16} /> 
+                Filter
+                {activeFilterCount > 0 && (
+                  <span className="absolute -top-2 -right-2 w-5 h-5 bg-red-500 text-white text-[10px] rounded-full flex items-center justify-center">
+                    {activeFilterCount}
                   </span>
-                ) : (
-                  <button
-                    key={page}
-                    onClick={() => setCurrentPage(page)}
-                    className={cn(
-                      "w-8 h-8 rounded-lg text-xs font-bold transition-all",
-                      page === safeCurrentPage
-                        ? "bg-blue-600 text-white shadow-md shadow-blue-500/20"
-                        : "text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-800"
-                    )}
-                    aria-label={`Page ${page}`}
-                    aria-current={page === safeCurrentPage ? 'page' : undefined}
-                  >
-                    {page}
-                  </button>
-                )
-              )}
+                )}
+              </button>
+              
+              <button 
+                onClick={handleExport}
+                disabled={exportLoading}
+                className="px-4 py-2 text-xs font-bold bg-blue-600 text-white rounded-xl flex items-center gap-2 hover:bg-blue-700 transition-colors shadow-lg shadow-blue-500/20 disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                <Download size={16} /> 
+                {exportLoading ? 'Exporting...' : 'Export CSV'}
+              </button>
             </div>
-            <button
-              className="p-2 text-slate-400 hover:text-blue-600 disabled:opacity-30"
-              disabled={safeCurrentPage === totalPages}
-              onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
-              aria-label="Next page"
-            >
-              <ChevronRight size={20} />
-            </button>
           </div>
         </div>
+
+        {/* Filter Modal */}
+        {showFilterModal && (
+          <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50" onClick={closeFilterModal}>
+            <div className="bg-white dark:bg-slate-900 rounded-2xl p-6 max-w-md w-full mx-4" onClick={(e) => e.stopPropagation()}>
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="text-lg font-bold">Advanced Filters</h3>
+                <button onClick={closeFilterModal} className="p-1 hover:bg-slate-100 rounded-lg">
+                  <X size={20} />
+                </button>
+              </div>
+
+              <div className="space-y-4">
+                {/* Status Filter */}
+                <div>
+                  <label className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-2 block">
+                    Booking Status
+                  </label>
+                  <div className="grid grid-cols-3 gap-2">
+                    {(['all', 'paid', 'pending', 'canceled'] as const).map((status) => (
+                      <button
+                        key={status}
+                        onClick={() => setTempFilters({ ...tempFilters, status })}
+                        className={cn(
+                          "px-3 py-2 text-xs font-bold rounded-lg capitalize transition-colors",
+                          tempFilters.status === status
+                            ? status === 'all' ? "bg-blue-600 text-white" :
+                              status === 'paid' ? "bg-emerald-600 text-white" :
+                              status === 'pending' ? "bg-amber-600 text-white" :
+                              "bg-rose-600 text-white"
+                            : "bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400"
+                        )}
+                      >
+                        {status}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Booking ID Filter */}
+                <div>
+                  <label className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-2 block">
+                    Booking ID
+                  </label>
+                  <input
+                    type="text"
+                    value={tempFilters.bookingId}
+                    onChange={(e) => setTempFilters({ ...tempFilters, bookingId: e.target.value })}
+                    placeholder="e.g., BK-1001"
+                    className="w-full px-4 py-2 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-sm"
+                  />
+                </div>
+
+                {/* Guest Name Filter */}
+                <div>
+                  <label className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-2 block">
+                    Guest Name
+                  </label>
+                  <input
+                    type="text"
+                    value={tempFilters.guestName}
+                    onChange={(e) => setTempFilters({ ...tempFilters, guestName: e.target.value })}
+                    placeholder="Enter guest name"
+                    className="w-full px-4 py-2 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-sm"
+                  />
+                </div>
+
+                {/* Amount Range Filter */}
+                <div>
+                  <label className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-2 block">
+                    Amount Range ($)
+                  </label>
+                  <div className="grid grid-cols-2 gap-2">
+                    <input
+                      type="number"
+                      value={tempFilters.minAmount}
+                      onChange={(e) => setTempFilters({ ...tempFilters, minAmount: e.target.value })}
+                      placeholder="Min"
+                      className="w-full px-4 py-2 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-sm"
+                    />
+                    <input
+                      type="number"
+                      value={tempFilters.maxAmount}
+                      onChange={(e) => setTempFilters({ ...tempFilters, maxAmount: e.target.value })}
+                      placeholder="Max"
+                      className="w-full px-4 py-2 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-sm"
+                    />
+                  </div>
+                </div>
+              </div>
+
+              {/* Modal Actions */}
+              <div className="flex gap-3 mt-6">
+                <button
+                  onClick={clearFilters}
+                  className="flex-1 px-4 py-2 border border-slate-200 dark:border-slate-700 rounded-xl text-sm font-bold hover:bg-slate-50 transition-colors"
+                >
+                  Clear All
+                </button>
+                <button
+                  onClick={applyFilters}
+                  className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-xl text-sm font-bold hover:bg-blue-700 transition-colors"
+                >
+                  Apply Filters
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Loading State */}
+        {loading ? (
+          <div className="flex justify-center items-center py-20">
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+          </div>
+        ) : (
+          <>
+            {/* Bookings Table */}
+            <div className="overflow-x-auto">
+              <table className="w-full text-left">
+                <thead>
+                  <tr className="bg-slate-50/50 dark:bg-slate-800/30 text-[10px] uppercase font-bold tracking-widest text-slate-500">
+                    <th className="px-6 py-4">BOOKING ID</th>
+                    <th className="px-6 py-4">GUEST NAME</th>
+                    <th className="px-6 py-4">SERVICE & ROUTE</th>
+                    <th className="px-6 py-4">DATE & TIME</th>
+                    <th className="px-6 py-4">PAX</th>
+                    <th className="px-6 py-4">AMOUNT</th>
+                    <th className="px-6 py-4">STATUS</th>
+                    <th className="px-6 py-4 text-right">ACTIONS</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
+                  {paginatedBookings.length > 0 ? (
+                    paginatedBookings.map((booking: any) => (
+                      <tr 
+                        key={booking.id} 
+                        className="hover:bg-slate-50/30 dark:hover:bg-slate-800/30 transition-colors group cursor-pointer"
+                        onClick={() => handleViewBookingDetails(booking)}
+                      >
+                        <td className="px-6 py-4 font-bold text-sm text-blue-600">{booking.id}</td>
+                        <td className="px-6 py-4">
+                          <div>
+                            <p className="font-bold text-sm">{booking.guest}</p>
+                            <p className="text-[10px] text-slate-400">{booking.customerEmail || ''}</p>
+                          </div>
+                        </td>
+                        <td className="px-6 py-4">
+                          <p className="text-sm font-medium">{booking.service}</p>
+                          <p className="text-[10px] text-slate-400 font-bold uppercase tracking-wider">{booking.route}</p>
+                          {booking.roomType && (
+                            <p className="text-[10px] text-slate-400">{booking.roomType}</p>
+                          )}
+                          {booking.vehicleType && (
+                            <p className="text-[10px] text-slate-400">{booking.vehicleType}</p>
+                          )}
+                        </td>
+                        <td className="px-6 py-4">
+                          {booking.category === 'hotel' ? (
+                            <>
+                              <p className="text-sm font-medium">{booking.dateStart}</p>
+                              <p className="text-[10px] text-slate-400 font-bold">to {booking.dateEnd}</p>
+                            </>
+                          ) : (
+                            <>
+                              <p className="text-sm font-medium">{booking.date}</p>
+                              <p className="text-[10px] text-slate-400 font-bold">{booking.time}</p>
+                            </>
+                          )}
+                        </td>
+                        <td className="px-6 py-4 text-sm font-bold">{booking.pax}</td>
+                        <td className="px-6 py-4 text-sm font-bold">${booking.amount.toFixed(2)}</td>
+                        <td className="px-6 py-4">
+                          <span className={cn(
+                            "inline-flex items-center gap-1.5 px-2.5 py-1 text-[11px] font-bold rounded-full",
+                            getStatusColor(booking.status)
+                          )}>
+                            {getStatusIcon(booking.status)}
+                            {booking.status.charAt(0).toUpperCase() + booking.status.slice(1)}
+                          </span>
+                        </td>
+                        <td className="px-6 py-4 text-right">
+                          <button 
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleViewBookingDetails(booking);
+                            }}
+                            className="p-2 text-slate-400 hover:text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded-lg transition-all"
+                          >
+                            <MoreHorizontal size={18} />
+                          </button>
+                        </td>
+                      </tr>
+                    ))
+                  ) : (
+                    <tr>
+                      <td colSpan={8} className="px-6 py-12 text-center text-slate-500">
+                        No bookings found
+                      </td>
+                    </tr>
+                  )}
+                </tbody>
+              </table>
+            </div>
+
+            {/* Pagination */}
+            <div className="px-6 py-4 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between">
+              <p className="text-xs text-slate-500 font-medium">
+                Showing {filteredBookings.length === 0 ? 0 : startIndex + 1} to {Math.min(startIndex + pageSize, filteredBookings.length)} of {filteredBookings.length} results
+              </p>
+              <div className="flex items-center gap-2">
+                <button
+                  className="p-2 text-slate-400 hover:text-blue-600 disabled:opacity-30"
+                  disabled={safeCurrentPage === 1}
+                  onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
+                  aria-label="Previous page"
+                >
+                  <ChevronLeft size={20} />
+                </button>
+                <div className="flex gap-1">
+                  {getPageItems().map((page, i) =>
+                    page === '...' ? (
+                      <span key={`dots-${i}`} className="w-8 h-8 inline-flex items-center justify-center text-xs font-bold text-slate-400">
+                        ...
+                      </span>
+                    ) : (
+                      <button
+                        key={page}
+                        onClick={() => setCurrentPage(page)}
+                        className={cn(
+                          "w-8 h-8 rounded-lg text-xs font-bold transition-all",
+                          page === safeCurrentPage
+                            ? "bg-blue-600 text-white shadow-md shadow-blue-500/20"
+                            : "text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-800"
+                        )}
+                        aria-label={`Page ${page}`}
+                        aria-current={page === safeCurrentPage ? 'page' : undefined}
+                      >
+                        {page}
+                      </button>
+                    )
+                  )}
+                </div>
+                <button
+                  className="p-2 text-slate-400 hover:text-blue-600 disabled:opacity-30"
+                  disabled={safeCurrentPage === totalPages}
+                  onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
+                  aria-label="Next page"
+                >
+                  <ChevronRight size={20} />
+                </button>
+              </div>
+            </div>
+          </>
+        )}
       </section>
     </div>
   );
