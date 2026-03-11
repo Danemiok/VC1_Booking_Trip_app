@@ -12,3 +12,5 @@ export { HotelDetails } from './HotelDetails';
 export { DestinationPlanner } from './DestinationPlanner';
 export { GroupPlanning } from './GroupPlanning';
 export { ScanToPay } from './ScanTopay';
+export { BookTrip } from './BookTrip';
+export { CustomerBookings } from './CustomerBookings';

@@ -18,9 +18,13 @@ import {
 import { useNavigate } from 'react-router-dom';
 import { cn } from '@/src/utils/utils';
 import { bookingService } from '@/src/services/bookingService';
+import { useAuth } from '../../context/AuthContext';
 
 const Bookings = () => {
   const navigate = useNavigate();
+  const { user, token, isAuthenticated, logout } = useAuth();
+  const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://127.0.0.1:8000/api';
+  
   const [serviceFilter, setServiceFilter] = React.useState<'all' | 'hotel' | 'transport'>('all');
   const [dateRange, setDateRange] = React.useState<'last1' | 'last3' | 'last7' | 'all'>('last7');
   const [currentPage, setCurrentPage] = React.useState(1);
@@ -33,10 +37,12 @@ const Bookings = () => {
   const [loading, setLoading] = React.useState(true);
   const [searchTerm, setSearchTerm] = React.useState('');
   const [exportLoading, setExportLoading] = React.useState(false);
-  const [error, setError] = React.useState<string | null>(null);
+  const [authError, setAuthError] = React.useState<string | null>(null);
+  const [pageError, setPageError] = React.useState<string | null>(null);
   const [successMessage, setSuccessMessage] = React.useState<string | null>(null);
+  const [authChecking, setAuthChecking] = React.useState(true);
   
-  // NEW: Filter modal state
+  // Filter modal state
   const [showFilterModal, setShowFilterModal] = React.useState(false);
   const [tempFilters, setTempFilters] = React.useState({
     status: 'all' as 'all' | 'paid' | 'pending' | 'canceled',
@@ -55,16 +61,128 @@ const Bookings = () => {
   
   const pageSize = 10;
 
-  // Auto-hide messages after 3 seconds
+  // Debug localStorage on mount
   React.useEffect(() => {
-    if (error || successMessage) {
+    console.log('🔍 ===== DEBUG INFO =====');
+    console.log('Auth Context - isAuthenticated:', isAuthenticated);
+    console.log('Auth Context - user:', user);
+    console.log('Auth Context - token exists:', !!token);
+    console.log('localStorage - auth_token:', localStorage.getItem('auth_token'));
+    console.log('localStorage - user:', localStorage.getItem('user'));
+    
+    try {
+      const userStr = localStorage.getItem('user');
+      if (userStr) {
+        const parsedUser = JSON.parse(userStr);
+        console.log('Parsed user from storage:', parsedUser);
+        console.log('User role from storage:', parsedUser.role);
+      }
+    } catch (e) {
+      console.error('Error parsing user from storage:', e);
+    }
+    console.log('🔍 =====================');
+  }, []);
+
+  // Check if user is owner
+  React.useEffect(() => {
+    const checkAccess = async () => {
+      setAuthChecking(true);
+      setAuthError(null);
+      
+      // First check if authenticated
+      if (!isAuthenticated || !token) {
+        console.log('❌ Not authenticated');
+        setAuthError('Please log in to access this page');
+        setTimeout(() => navigate('/login'), 3000);
+        setAuthChecking(false);
+        return;
+      }
+
+      try {
+        // Verify with backend
+        const response = await fetch(`${API_BASE_URL}/auth/user`, {
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Accept': 'application/json',
+          },
+        });
+
+        if (response.ok) {
+          const data = await response.json();
+          console.log('✅ Backend user verification:', data);
+          
+          const userRole = data.user?.role || data.role;
+          const nextView = data.next_view;
+          
+          // Check if user is owner
+          if (userRole === 'owner' || userRole === 'admin' || nextView === 'owner-dashboard') {
+            console.log('✅ Access granted - User is owner');
+          } else {
+            console.log('❌ Access denied - User is not owner');
+            setAuthError('You do not have permission to access this page');
+            setTimeout(() => navigate('/dashboard'), 3000);
+          }
+        } else {
+          console.log('❌ Backend verification failed');
+          setAuthError('Session expired. Please log in again.');
+          logout();
+          setTimeout(() => navigate('/login'), 3000);
+        }
+      } catch (error) {
+        console.error('❌ Error verifying user:', error);
+        setAuthError('Authentication error');
+      } finally {
+        setAuthChecking(false);
+      }
+    };
+
+    checkAccess();
+  }, [isAuthenticated, token, navigate, logout]);
+
+  // Test API connection
+  React.useEffect(() => {
+    if (!isAuthenticated) return;
+    
+    const testAPI = async () => {
+      try {
+        console.log('🧪 ===== TESTING API CONNECTION =====');
+        console.log(`🧪 Fetching from: ${API_BASE_URL}/bookings`);
+        
+        const response = await fetch(`${API_BASE_URL}/bookings`, {
+          headers: {
+            'Authorization': token ? `Bearer ${token}` : '',
+            'Accept': 'application/json',
+          },
+        });
+        
+        console.log('🧪 Response status:', response.status);
+        
+        const data = await response.json();
+        console.log('🧪 API Response Data:', data);
+        
+        if (data.data && data.data.length > 0) {
+          console.log(`✅ SUCCESS: Found ${data.data.length} bookings in database`);
+        } else {
+          console.log('❌ No bookings found in database');
+        }
+      } catch (error) {
+        console.error('❌ API TEST FAILED:', error);
+      }
+    };
+    
+    testAPI();
+  }, [isAuthenticated, token]);
+
+  // Auto-hide messages
+  React.useEffect(() => {
+    if (pageError || successMessage) {
       const timer = setTimeout(() => {
-        setError(null);
+        setPageError(null);
         setSuccessMessage(null);
       }, 3000);
       return () => clearTimeout(timer);
     }
-  }, [error, successMessage]);
+  }, [pageError, successMessage]);
 
   const formatDate = (d: Date) =>
     d.toLocaleDateString('en-US', { month: 'short', day: '2-digit', year: 'numeric' });
@@ -77,9 +195,8 @@ const Bookings = () => {
 
   const now = new Date();
 
-  // REALISTIC CUSTOMER BOOKING DATA
+  // Mock data as fallback
   const mockCustomerBookings = [
-    // Hotel Bookings
     { 
       id: 'BK-1001', 
       guest: 'Sophia Martinez', 
@@ -109,64 +226,6 @@ const Bookings = () => {
       customerEmail: 'james.j@email.com',
     },
     { 
-      id: 'BK-1003', 
-      guest: 'Linda Chen', 
-      service: 'Song Saa Private Island', 
-      route: 'Koh Rong - Private Island', 
-      dateStart: formatDate(addDays(now, -2)), 
-      dateEnd: formatDate(addDays(now, 2)), 
-      pax: 2, 
-      amount: 1250.00, 
-      status: 'paid', 
-      category: 'hotel',
-      roomType: 'Overwater Villa',
-      customerEmail: 'linda.c@email.com',
-    },
-    { 
-      id: 'BK-1004', 
-      guest: 'David Miller', 
-      service: 'Raffles Hotel Le Royal', 
-      route: 'Phnom Penh - Central', 
-      dateStart: formatDate(addDays(now, -5)), 
-      dateEnd: formatDate(addDays(now, -2)), 
-      pax: 2, 
-      amount: 890.00, 
-      status: 'paid', 
-      category: 'hotel',
-      roomType: 'Colonial Suite',
-      customerEmail: 'david.m@email.com',
-    },
-    { 
-      id: 'BK-1005', 
-      guest: 'Sarah Williams', 
-      service: 'Templation Hotel', 
-      route: 'Siem Reap - Angkor', 
-      dateStart: formatDate(addDays(now, -7)), 
-      dateEnd: formatDate(addDays(now, -4)), 
-      pax: 3, 
-      amount: 675.00, 
-      status: 'canceled', 
-      category: 'hotel',
-      roomType: 'Family Room',
-      customerEmail: 'sarah.w@email.com',
-    },
-    { 
-      id: 'BK-1006', 
-      guest: 'John Smith', 
-      service: 'Rosewood Phnom Penh', 
-      route: 'Phnom Penh - Riverside', 
-      dateStart: formatDate(addDays(now, 3)), 
-      dateEnd: formatDate(addDays(now, 6)), 
-      pax: 2, 
-      amount: 780.00, 
-      status: 'pending', 
-      category: 'hotel',
-      roomType: 'Premier Room',
-      customerEmail: 'john.s@email.com',
-    },
-
-    // Transport Bookings
-    { 
       id: 'TB-2001', 
       guest: 'Michael Brown', 
       service: 'Private SUV - Toyota Camry', 
@@ -180,83 +239,15 @@ const Bookings = () => {
       vehicleType: 'SUV - 4 seats',
       customerEmail: 'michael.b@email.com',
     },
-    { 
-      id: 'TB-2002', 
-      guest: 'Emma Davis', 
-      service: 'Luxury Minivan - Toyota Hiace', 
-      route: 'Siem Reap → Phnom Penh', 
-      date: formatDate(addDays(now, 2)), 
-      time: '02:00 PM', 
-      pax: 7, 
-      amount: 250.00, 
-      status: 'pending', 
-      category: 'transport',
-      vehicleType: 'Minivan - 7 seats',
-      customerEmail: 'emma.d@email.com',
-    },
-    { 
-      id: 'TB-2003', 
-      guest: 'Robert Wilson', 
-      service: 'Private Car - Lexus ES', 
-      route: 'Phnom Penh → Kampot', 
-      date: formatDate(addDays(now, -1)), 
-      time: '09:15 AM', 
-      pax: 2, 
-      amount: 120.00, 
-      status: 'paid', 
-      category: 'transport',
-      vehicleType: 'Luxury Sedan',
-      customerEmail: 'robert.w@email.com',
-    },
-    { 
-      id: 'TB-2004', 
-      guest: 'Jennifer Lee', 
-      service: 'Shared Shuttle - Minibus', 
-      route: 'Siem Reap → Battambang', 
-      date: formatDate(addDays(now, -3)), 
-      time: '07:30 AM', 
-      pax: 1, 
-      amount: 25.00, 
-      status: 'paid', 
-      category: 'transport',
-      vehicleType: 'Shuttle Bus',
-      customerEmail: 'jennifer.l@email.com',
-    },
-    { 
-      id: 'TB-2005', 
-      guest: 'Thomas Anderson', 
-      service: 'Private SUV - Fortuner', 
-      route: 'Phnom Penh → Sihanoukville', 
-      date: formatDate(addDays(now, -8)), 
-      time: '06:00 AM', 
-      pax: 4, 
-      amount: 220.00, 
-      status: 'canceled', 
-      category: 'transport',
-      vehicleType: 'SUV - 7 seats',
-      customerEmail: 'thomas.a@email.com',
-    },
-    { 
-      id: 'TB-2006', 
-      guest: 'Patricia White', 
-      service: 'Luxury Car - Mercedes', 
-      route: 'Siem Reap → Phnom Penh', 
-      date: formatDate(addDays(now, 4)), 
-      time: '10:00 AM', 
-      pax: 2, 
-      amount: 210.00, 
-      status: 'pending', 
-      category: 'transport',
-      vehicleType: 'Luxury Sedan',
-      customerEmail: 'patricia.w@email.com',
-    },
   ];
 
   // Fetch bookings from backend
   const fetchBookings = React.useCallback(async () => {
+    if (!isAuthenticated) return;
+    
     try {
       setLoading(true);
-      setError(null);
+      setPageError(null);
       const filters = {
         service: serviceFilter !== 'all' ? serviceFilter : undefined,
         date_range: dateRange,
@@ -268,42 +259,69 @@ const Bookings = () => {
         booking_id: activeFilters.bookingId || undefined
       };
       
+      console.log('📡 FetchBookings - Calling API with filters:', filters);
+      
       const response = await bookingService.getBookings(filters);
-      setBookings(response.data || mockCustomerBookings);
+      
+      console.log('📡 FetchBookings - Response:', response);
+      
+      if (response.data && response.data.length > 0) {
+        console.log(`✅ FetchBookings - Got ${response.data.length} REAL bookings from API`);
+        setBookings(response.data);
+      } else {
+        console.log('⚠️ FetchBookings - No real data, using mock data');
+        setBookings(mockCustomerBookings);
+      }
     } catch (error) {
-      console.error('Error fetching bookings:', error);
+      console.error('❌ FetchBookings - Error:', error);
+      setPageError('Failed to load bookings. Showing sample data.');
       setBookings(mockCustomerBookings);
     } finally {
       setLoading(false);
     }
-  }, [serviceFilter, dateRange, searchTerm, activeFilters]);
+  }, [serviceFilter, dateRange, searchTerm, activeFilters, isAuthenticated]);
 
   // Fetch booking statistics
   const fetchStats = React.useCallback(async () => {
+    if (!isAuthenticated) return;
+    
     try {
+      console.log('📊 FetchStats - Getting booking stats');
       const response = await bookingService.getBookingStats();
+      console.log('📊 FetchStats - Response:', response);
+      
       setStats({
         totalBookings: response.total_bookings || '1,240',
         activeGuests: response.active_guests || '42',
         pendingPayments: response.pending_payments || '$1,450'
       });
     } catch (error) {
-      console.error('Error fetching stats:', error);
+      console.error('❌ FetchStats - Error:', error);
     }
-  }, []);
+  }, [isAuthenticated]);
 
   // Initial data fetch
   React.useEffect(() => {
-    fetchBookings();
-    fetchStats();
-  }, [fetchBookings, fetchStats]);
+    if (isAuthenticated) {
+      console.log('🔄 Initial data fetch triggered');
+      fetchBookings();
+      fetchStats();
+    }
+  }, [isAuthenticated, fetchBookings, fetchStats]);
 
   React.useEffect(() => {
-    setCurrentPage(1);
-  }, [serviceFilter, dateRange, searchTerm, activeFilters]);
+    if (isAuthenticated) {
+      console.log('🔄 Filters changed, resetting to page 1');
+      setCurrentPage(1);
+    }
+  }, [serviceFilter, dateRange, searchTerm, activeFilters, isAuthenticated]);
 
-  const parseBookingDate = (value: string) => {
-    const d = new Date(value);
+  const parseBookingDate = (value: any) => {
+    if (!value) return null;
+    if (value instanceof Date) {
+      return Number.isNaN(value.getTime()) ? null : value;
+    }
+    const d = new Date(String(value));
     return Number.isNaN(d.getTime()) ? null : d;
   };
 
@@ -323,48 +341,43 @@ const Bookings = () => {
   const filteredBookings = bookings
     .filter((b: any) => (serviceFilter === 'all' ? true : b.category === serviceFilter))
     .filter((b: any) => {
-      const dateToCheck = b.category === 'hotel' ? b.dateStart : b.date;
+      // Prefer createdAt for date-range filtering (booking dates may be non-ISO / missing year)
+      const dateToCheck = b.createdAt ?? b.created_at ?? (b.category === 'hotel' ? b.dateStart : b.date);
       return isWithinSelectedRange(dateToCheck);
     })
     .filter((b: any) => {
       if (!searchTerm) return true;
       const term = searchTerm.toLowerCase();
       return (
-        b.id.toLowerCase().includes(term) ||
-        b.guest.toLowerCase().includes(term) ||
-        b.service.toLowerCase().includes(term) ||
-        b.route.toLowerCase().includes(term)
+        String(b.id ?? '').toLowerCase().includes(term) ||
+        String(b.guest ?? '').toLowerCase().includes(term) ||
+        String(b.service ?? '').toLowerCase().includes(term) ||
+        String(b.route ?? '').toLowerCase().includes(term)
       );
     })
-    // NEW: Apply advanced filters
     .filter((b: any) => {
-      // Filter by status
       if (activeFilters.status !== 'all' && b.status !== activeFilters.status) {
         return false;
       }
-      
-      // Filter by guest name
-      if (activeFilters.guestName && !b.guest.toLowerCase().includes(activeFilters.guestName.toLowerCase())) {
+      if (
+        activeFilters.guestName &&
+        !String(b.guest ?? '').toLowerCase().includes(activeFilters.guestName.toLowerCase())
+      ) {
         return false;
       }
-      
-      // Filter by booking ID
-      if (activeFilters.bookingId && !b.id.toLowerCase().includes(activeFilters.bookingId.toLowerCase())) {
+      if (activeFilters.bookingId && !String(b.id ?? '').toLowerCase().includes(activeFilters.bookingId.toLowerCase())) {
         return false;
       }
-      
-      // Filter by min amount
-      if (activeFilters.minAmount && b.amount < parseFloat(activeFilters.minAmount)) {
+      if (activeFilters.minAmount && Number(b.amount ?? 0) < parseFloat(activeFilters.minAmount)) {
         return false;
       }
-      
-      // Filter by max amount
-      if (activeFilters.maxAmount && b.amount > parseFloat(activeFilters.maxAmount)) {
+      if (activeFilters.maxAmount && Number(b.amount ?? 0) > parseFloat(activeFilters.maxAmount)) {
         return false;
       }
-      
       return true;
     });
+
+  console.log('📊 Current filteredBookings count:', filteredBookings.length);
 
   const totalPages = Math.max(1, Math.ceil(filteredBookings.length / pageSize));
   const safeCurrentPage = Math.min(currentPage, totalPages);
@@ -394,7 +407,6 @@ const Bookings = () => {
     setSearchTerm(e.target.value);
   };
 
-  // NEW: Filter modal functions
   const openFilterModal = () => {
     setTempFilters({ ...activeFilters });
     setShowFilterModal(true);
@@ -429,9 +441,8 @@ const Bookings = () => {
   const handleExport = async () => {
     try {
       setExportLoading(true);
-      setError(null);
+      setPageError(null);
       
-      // Create CSV from filtered bookings
       const headers = ['Booking ID', 'Guest Name', 'Service', 'Route', 'Date', 'Pax', 'Amount', 'Status', 'Email'];
       const csvData = filteredBookings.map((b: any) => [
         b.id,
@@ -460,7 +471,7 @@ const Bookings = () => {
       setSuccessMessage('Export completed successfully');
     } catch (error) {
       console.error('Export error:', error);
-      setError('Failed to export bookings');
+      setPageError('Failed to export bookings');
     } finally {
       setExportLoading(false);
     }
@@ -488,8 +499,41 @@ const Bookings = () => {
     }
   };
 
-  // Count active filters
+  const formatMoney = (value: any) => {
+    const n = Number(value);
+    if (Number.isFinite(n)) return n.toFixed(2);
+    return '0.00';
+  };
+
   const activeFilterCount = Object.values(activeFilters).filter(val => val !== 'all' && val !== '').length;
+
+  // Show loading while checking auth
+  if (authChecking) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+      </div>
+    );
+  }
+
+  // Show error if not authenticated or not owner
+  if (!isAuthenticated || authError) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="bg-red-50 border border-red-200 text-red-700 px-6 py-4 rounded-2xl max-w-md text-center">
+          <XCircle className="w-12 h-12 mx-auto mb-4 text-red-600" />
+          <h2 className="text-xl font-bold mb-2">Access Denied</h2>
+          <p>{authError || 'Please log in to access this page'}</p>
+          <button 
+            onClick={() => navigate('/login')}
+            className="mt-4 px-6 py-2 bg-blue-600 text-white rounded-xl hover:bg-blue-700"
+          >
+            Go to Login
+          </button>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="p-8 space-y-8 max-w-[1600px] mx-auto">
@@ -508,9 +552,9 @@ const Bookings = () => {
       </div>
 
       {/* Message Notifications */}
-      {error && (
+      {pageError && (
         <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg relative" role="alert">
-          <span className="block sm:inline">{error}</span>
+          <span className="block sm:inline">{pageError}</span>
         </div>
       )}
       {successMessage && (
@@ -615,7 +659,6 @@ const Bookings = () => {
 
             {/* Action Buttons */}
             <div className="flex gap-2">
-              {/* Filter Button with Active Count */}
               <button 
                 onClick={openFilterModal}
                 className={cn(
@@ -816,7 +859,7 @@ const Bookings = () => {
                           )}
                         </td>
                         <td className="px-6 py-4 text-sm font-bold">{booking.pax}</td>
-                        <td className="px-6 py-4 text-sm font-bold">${booking.amount.toFixed(2)}</td>
+                        <td className="px-6 py-4 text-sm font-bold">${formatMoney(booking.amount)}</td>
                         <td className="px-6 py-4">
                           <span className={cn(
                             "inline-flex items-center gap-1.5 px-2.5 py-1 text-[11px] font-bold rounded-full",

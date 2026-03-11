@@ -17,6 +17,8 @@ import { GroupInvite } from '../pages/customer/GroupInvite';
 import { Rentals } from '../pages/customer/Rentals';
 import { Activities } from '../pages/customer/Activities';
 import { Profile } from '../pages/customer/Profile';
+import { BookTrip } from '../pages/customer/BookTrip';
+import { CustomerBookings } from '../pages/customer/CustomerBookings';
 import Payment from '../pages/customer/Payment';
 import OwnerDashboard from '../pages/owner/Dashboard';
 import OwnerDestinations from '../pages/owner/Destinations';
@@ -367,6 +369,7 @@ const AdminShell: React.FC<{ view: string; setView: (view: string) => void; onLo
 export const AppRoutes: React.FC<AppRoutesProps> = ({ view, setView, onSelectRecommendation, onSelectDestination, onPromotionsClick, onHotelsClick, onRentalsClick, onActivitiesClick, notifications, onMarkAsRead, onMarkAllAsRead, activeProfileTab, selectedHotel, setSelectedHotel, selectedActivityIds, setSelectedActivityIds, tripData, setTripData }) => {
   const { user, logout } = useAuth();
   const isGuest = !user;
+  const location = useLocation();
 
   const requireAuth = React.useCallback(() => {
     if (isGuest) {
@@ -421,6 +424,27 @@ export const AppRoutes: React.FC<AppRoutesProps> = ({ view, setView, onSelectRec
     });
     setView('trip-planner');
   };
+
+  const customerBookingRoute =
+    location.pathname === '/customer/book' || location.pathname === '/customer/bookings';
+
+  if (customerBookingRoute) {
+    if (isGuest) {
+      return (
+        <Login
+          onSwitchToRegister={() => setView('register')}
+          onBack={() => setView('landing')}
+          onSuccess={(nextView) => setView(nextView)}
+        />
+      );
+    }
+
+    if (user?.role !== 'customer') {
+      return <VisitorHome />;
+    }
+
+    return location.pathname === '/customer/book' ? <BookTrip /> : <CustomerBookings />;
+  }
 
   if (user?.role === 'admin') {
     return <AdminShell view={view} setView={setView} onLogout={logout} />;
