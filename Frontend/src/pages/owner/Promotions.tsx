@@ -14,27 +14,73 @@ import {
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { cn } from '@/src/utils/utils';
+import { getPromotions } from '@/src/services/promotionService';
 
 type PromotionServiceCategory = 'hotel' | 'transport';
 
 type PromotionStatus = 'active' | 'scheduled' | 'expired';
 
 type Promotion = {
-  id: string;
+  id: number;
   name: string;
   type: string;
-  discount: string;
+  discount_value: number;
+  discount_type: string;
+  discount?: string;
   status: PromotionStatus;
   reach: string;
   conversions: string;
   end: string;
-  serviceCategory?: PromotionServiceCategory;
+  end_date?: string;
+  service_category?: PromotionServiceCategory;
+  created_at?: string;
 };
 
 const Promotions = () => {
   const navigate = useNavigate();
   const [categoryFilter, setCategoryFilter] = React.useState<'all' | PromotionServiceCategory>('all');
   const [searchTerm, setSearchTerm] = React.useState('');
+  const [promotions, setPromotions] = React.useState<Promotion[]>([]);
+  const [loading, setLoading] = React.useState(true);
+
+  // Fetch promotions from database on mount
+  React.useEffect(() => {
+    const fetchPromotions = async () => {
+      try {
+        const data = await getPromotions();
+        // Transform database data to match frontend format
+        const transformedPromotions = data.map((p: any) => ({
+          ...p,
+          id: p.id,
+          name: p.title,
+          title: p.title,
+          discount: p.discount,
+          type: p.type,
+          status: p.is_active ? 'active' : 'expired',
+          reach: '-',
+          conversions: '-',
+          end: p.expiry || '-',
+          end_date: p.expiry,
+          service_category: 'hotel',
+          created_at: p.created_at,
+        }));
+        setPromotions(transformedPromotions);
+      } catch (error) {
+        console.error('Failed to fetch promotions:', error);
+        // Fallback to localStorage if API fails
+        try {
+          const stored = JSON.parse(localStorage.getItem('ownerPromotions') || '[]');
+          setPromotions(Array.isArray(stored) ? stored : []);
+        } catch {
+          setPromotions([]);
+        }
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchPromotions();
+  }, []);
 
   const campaigns: Promotion[] = [
     { id: 'PROM-001', name: 'Water Festival Special', type: 'Discount', discount: '20%', status: 'active', reach: '12.4k', conversions: '840', end: 'Nov 15, 2024' },
@@ -58,10 +104,12 @@ const Promotions = () => {
 
   const filteredPromotions = React.useMemo(() => {
     const q = searchTerm.trim().toLowerCase();
-    return allPromotions
-      .filter((p) => (categoryFilter === 'all' ? true : p.serviceCategory === categoryFilter))
+    // Use database promotions if available, otherwise fallback to campaigns
+    const sourcePromotions = promotions.length > 0 ? promotions : allPromotions;
+    return sourcePromotions
+      .filter((p) => (categoryFilter === 'all' ? true : p.service_category === categoryFilter))
       .filter((p) => (q ? `${p.name} ${p.id}`.toLowerCase().includes(q) : true));
-  }, [allPromotions, categoryFilter, searchTerm]);
+  }, [promotions, allPromotions, categoryFilter, searchTerm]);
 
   const stats = React.useMemo(() => {
     const activeCount = filteredPromotions.filter((p) => p.status === 'active').length;

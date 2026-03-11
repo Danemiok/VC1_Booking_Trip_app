@@ -5,6 +5,7 @@ use App\Http\Controllers\Auth\LogoutController;
 use App\Http\Controllers\Auth\RegisterController;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\Owner\DestinationController;
+use App\Http\Controllers\Owner\PromotionController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
@@ -45,6 +46,9 @@ Route::middleware(['auth:sanctum', 'role:owner'])->group(function () {
     
     // Owner destinations routes
     Route::apiResource('destinations', DestinationController::class);
+    
+    // Owner promotions routes
+    Route::apiResource('promotions', PromotionController::class);
 });
 
 // Public destinations route for customers

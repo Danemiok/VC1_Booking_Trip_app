@@ -12,6 +12,7 @@ import {
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { cn } from '@/src/utils/utils';
+import { createPromotion } from '@/src/services/promotionService';
 
 type PromotionServiceCategory = 'hotel' | 'transport';
 
@@ -50,7 +51,7 @@ const CreatePromotion = () => {
     return v;
   };
 
-  const launchCampaign = () => {
+  const launchCampaign = async () => {
     if (!promotionType) {
       setStep(1);
       return;
@@ -60,25 +61,39 @@ const CreatePromotion = () => {
       return;
     }
 
-    const next = {
-      id: `PROM-${Math.floor(100000 + Math.random() * 900000)}`,
-      name: campaignName.trim(),
-      type: promotionType,
-      discount: formatDiscount(),
-      status: 'active',
-      reach: '-',
-      conversions: '-',
-      end: endDate || '-',
-      serviceCategory,
-      createdAt: new Date().toISOString(),
-    };
-
     try {
-      const stored = JSON.parse(localStorage.getItem('ownerPromotions') || '[]');
-      const arr = Array.isArray(stored) ? stored : [];
-      localStorage.setItem('ownerPromotions', JSON.stringify([next, ...arr]));
-    } catch {
-      localStorage.setItem('ownerPromotions', JSON.stringify([next]));
+      // Save to database via API
+      await createPromotion({
+        title: campaignName.trim(),
+        type: promotionType,
+        discount: formatDiscount(),
+        description: '',
+        is_active: true,
+        expiry: endDate || null,
+      });
+    } catch (error) {
+      console.error('Failed to create promotion:', error);
+      // Fallback to localStorage if API fails
+      const next = {
+        id: `PROM-${Math.floor(100000 + Math.random() * 900000)}`,
+        name: campaignName.trim(),
+        type: promotionType,
+        discount: formatDiscount(),
+        status: 'active',
+        reach: '-',
+        conversions: '-',
+        end: endDate || '-',
+        serviceCategory,
+        createdAt: new Date().toISOString(),
+      };
+
+      try {
+        const stored = JSON.parse(localStorage.getItem('ownerPromotions') || '[]');
+        const arr = Array.isArray(stored) ? stored : [];
+        localStorage.setItem('ownerPromotions', JSON.stringify([next, ...arr]));
+      } catch {
+        localStorage.setItem('ownerPromotions', JSON.stringify([next]));
+      }
     }
 
     navigate('/promotions');
