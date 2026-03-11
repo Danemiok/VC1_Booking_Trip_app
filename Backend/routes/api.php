@@ -32,7 +32,7 @@ Route::prefix('auth')->group(function () {
 
             $user = $request->user();
 
-            $nextView = match ($user?->role) {
+            $nextView = match ($user->role) {
                 'admin' => 'admin-dashboard',
                 'owner' => 'owner-dashboard',
                 default => 'customer-dashboard',
