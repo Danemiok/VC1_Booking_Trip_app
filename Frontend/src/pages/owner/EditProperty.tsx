@@ -15,10 +15,65 @@ import {
 } from 'lucide-react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { cn } from '@/src/utils/utils';
+import { apiRequest } from '@/src/services/api';
+
+type DestinationStatus = 'active' | 'draft';
+
+interface DestinationApiRecord {
+  id: string | number;
+  name?: string;
+  type?: string;
+  description?: string | null;
+  location?: string;
+  address?: string | null;
+  price?: number | string | null;
+  image?: string | null;
+  images?: string[] | null;
+  rating?: number | string | null;
+  total_bookings?: number | null;
+  totalBookings?: number | null;
+  status?: DestinationStatus;
+}
+
+const DEFAULT_IMAGE = 'https://picsum.photos/seed/updatedproperty/800/600';
+
+const toNumber = (value: number | string | null | undefined, fallback = 0) => {
+  const parsed = typeof value === 'number' ? value : parseFloat(String(value ?? ''));
+  return Number.isFinite(parsed) ? parsed : fallback;
+};
+
+const getErrorMessage = (error: any, fallback: string) => {
+  if (typeof error?.data?.message === 'string' && error.data.message.trim()) return error.data.message;
+  if (typeof error?.message === 'string' && error.message.trim()) return error.message;
+  return fallback;
+};
+
+const normalizePropertyData = (propertyData?: DestinationApiRecord | null) => {
+  const imageList = Array.isArray(propertyData?.images)
+    ? propertyData.images.filter((image): image is string => typeof image === 'string' && image.trim().length > 0)
+    : [];
+  const image = (typeof propertyData?.image === 'string' && propertyData.image.trim()) || imageList[0] || DEFAULT_IMAGE;
+  const totalBookings = Math.max(0, toNumber(propertyData?.total_bookings ?? propertyData?.totalBookings, 0));
+
+  return {
+    id: propertyData?.id ? String(propertyData.id) : '',
+    name: propertyData?.name?.trim() || '',
+    type: propertyData?.type?.trim() || 'Boutique Hotel',
+    description: propertyData?.description?.trim() || '',
+    location: propertyData?.location?.trim() || '',
+    address: propertyData?.address?.trim() || propertyData?.location?.trim() || '',
+    price: propertyData?.price !== null && propertyData?.price !== undefined ? String(propertyData.price) : '',
+    images: imageList.length > 0 ? imageList : [image],
+    status: propertyData?.status === 'active' ? 'active' as const : 'draft' as const,
+    totalBookings,
+    rating: propertyData?.rating !== null && propertyData?.rating !== undefined ? String(propertyData.rating) : '',
+  };
+};
 
 const EditProperty = () => {
   const navigate = useNavigate();
   const location = useLocation();
+  const propertyId = React.useMemo(() => location.pathname.split('/').pop() ?? '', [location.pathname]);
   const [step, setStep] = React.useState(1);
   const [formData, setFormData] = React.useState({
     id: '',
@@ -36,52 +91,67 @@ const EditProperty = () => {
 
   const [errors, setErrors] = React.useState<Record<string, string>>({});
   const [showDeleteModal, setShowDeleteModal] = React.useState(false);
+  const [isLoading, setIsLoading] = React.useState(true);
+  const [isSubmitting, setIsSubmitting] = React.useState(false);
+  const [isDeleting, setIsDeleting] = React.useState(false);
+  const [loadError, setLoadError] = React.useState('');
+  const [submitError, setSubmitError] = React.useState('');
+  const [deleteError, setDeleteError] = React.useState('');
 
   React.useEffect(() => {
-    // Get property data from location state or localStorage
-    const propertyData = location.state?.property;
-    if (propertyData) {
-      setFormData({
-        id: propertyData.id,
-        name: propertyData.name || '',
-        type: propertyData.type || 'Boutique Hotel',
-        description: propertyData.description || '',
-        location: propertyData.location || '',
-        address: propertyData.address || propertyData.location || '',
-        price: propertyData.price?.toString() || '',
-        images: propertyData.images || [propertyData.image] || [],
-        status: propertyData.status || 'draft',
-        totalBookings: propertyData.totalBookings || 0,
-        rating: propertyData.rating?.toString?.() || ''
-      });
-    } else {
-      // Fallback to localStorage if no state passed
-      const properties = JSON.parse(localStorage.getItem('properties') || '[]');
-      const defaultProperties = [
-        { id: '1', name: 'Mekong Riverside Villa', location: 'Phnom Penh, Cambodia', price: 185, rating: 4.9, status: 'active', image: 'https://picsum.photos/seed/villa1/800/600', totalBookings: 24 },
-        { id: '2', name: 'Koh Rong Luxury Retreat', location: 'Koh Rong, Sihanoukville', price: 340, rating: 4.8, status: 'active', image: 'https://picsum.photos/seed/villa2/800/600', totalBookings: 18 },
-      ];
-      const allProperties = [...defaultProperties, ...properties];
-      const propertyId = location.pathname.split('/').pop();
-      const property = allProperties.find(p => p.id === propertyId);
-      
-      if (property) {
-        setFormData({
-          id: property.id,
-          name: property.name,
-          type: property.type || 'Boutique Hotel',
-          description: property.description || '',
-          location: property.location,
-          address: property.address || property.location,
-          price: property.price?.toString() || '',
-          images: property.images || [property.image] || [],
-          status: property.status,
-          totalBookings: property.totalBookings || 0,
-          rating: property.rating?.toString?.() || ''
-        });
+    let isMounted = true;
+
+    const propertyFromState = location.state?.property as DestinationApiRecord | undefined;
+
+    if (propertyFromState?.id) {
+      if (isMounted) {
+        setFormData(normalizePropertyData(propertyFromState));
+        setLoadError('');
+        setIsLoading(false);
       }
+      return () => {
+        isMounted = false;
+      };
     }
-  }, [location]);
+
+    if (!propertyId) {
+      setLoadError('Property not found.');
+      setIsLoading(false);
+      return () => {
+        isMounted = false;
+      };
+    }
+
+    const loadProperty = async () => {
+      setIsLoading(true);
+      setLoadError('');
+
+      try {
+        const response = await apiRequest(`/destinations/${propertyId}`);
+        if (!response?.data) {
+          throw new Error('Property not found.');
+        }
+
+        if (isMounted) {
+          setFormData(normalizePropertyData(response.data));
+        }
+      } catch (error) {
+        if (isMounted) {
+          setLoadError(getErrorMessage(error, 'Failed to load property details. Please try again.'));
+        }
+      } finally {
+        if (isMounted) {
+          setIsLoading(false);
+        }
+      }
+    };
+
+    void loadProperty();
+
+    return () => {
+      isMounted = false;
+    };
+  }, [location.state, propertyId]);
 
   const steps = [
     { id: 1, label: 'Basic Info', icon: Info },
@@ -141,41 +211,63 @@ const EditProperty = () => {
     }));
   };
 
-  const handleUpdate = () => {
+  const handleUpdate = async () => {
     if (!validateStep(4)) return;
 
-    const updatedProperty = {
-      id: formData.id,
-      name: formData.name,
-      location: formData.location,
-      price: parseFloat(formData.price),
-      rating: formData.rating ? parseFloat(formData.rating) : 0,
-      status: formData.status,
-      image: formData.images[0] || 'https://picsum.photos/seed/updatedproperty/800/600',
-      images: formData.images,
-      type: formData.type,
-      description: formData.description,
-      address: formData.address,
-      totalBookings: formData.totalBookings
-    };
+    if (!formData.id) {
+      setSubmitError('Property not found.');
+      return;
+    }
 
-    // Update in localStorage
-    const existingProperties = JSON.parse(localStorage.getItem('properties') || '[]');
-    const updatedProperties = existingProperties.map(p => 
-      p.id === formData.id ? updatedProperty : p
-    );
-    localStorage.setItem('properties', JSON.stringify(updatedProperties));
+    setIsSubmitting(true);
+    setSubmitError('');
 
-    navigate('/destinations');
+    try {
+      await apiRequest(`/destinations/${formData.id}`, {
+        method: 'PUT',
+        body: JSON.stringify({
+          name: formData.name,
+          type: formData.type,
+          description: formData.description,
+          location: formData.location,
+          address: formData.address,
+          price: parseFloat(formData.price),
+          image: formData.images[0] || DEFAULT_IMAGE,
+          images: formData.images,
+          rating: formData.rating ? parseFloat(formData.rating) : 0,
+          status: formData.status,
+        }),
+      });
+
+      navigate('/destinations');
+    } catch (error) {
+      setSubmitError(getErrorMessage(error, 'Failed to update property. Please try again.'));
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
-  const handleDelete = () => {
-    // Remove from localStorage
-    const existingProperties = JSON.parse(localStorage.getItem('properties') || '[]');
-    const updatedProperties = existingProperties.filter(p => p.id !== formData.id);
-    localStorage.setItem('properties', JSON.stringify(updatedProperties));
+  const handleDelete = async () => {
+    if (!formData.id) {
+      setDeleteError('Property not found.');
+      return;
+    }
 
-    navigate('/destinations');
+    setIsDeleting(true);
+    setDeleteError('');
+
+    try {
+      await apiRequest(`/destinations/${formData.id}`, {
+        method: 'DELETE',
+      });
+
+      setShowDeleteModal(false);
+      navigate('/destinations');
+    } catch (error) {
+      setDeleteError(getErrorMessage(error, 'Failed to delete property. Please try again.'));
+    } finally {
+      setIsDeleting(false);
+    }
   };
 
   const handleNextStep = () => {
@@ -183,6 +275,35 @@ const EditProperty = () => {
       setStep(s => s + 1);
     }
   };
+
+  if (isLoading) {
+    return (
+      <div className="p-8 max-w-[1000px] mx-auto">
+        <div className="rounded-2xl border border-slate-200 bg-white px-6 py-16 text-center text-slate-500 shadow-sm dark:border-slate-800 dark:bg-slate-900 dark:text-slate-400">
+          Loading property details...
+        </div>
+      </div>
+    );
+  }
+
+  if (loadError || !formData.id) {
+    return (
+      <div className="p-8 max-w-[1000px] mx-auto">
+        <div className="rounded-2xl border border-red-200 bg-red-50 px-6 py-10 text-center shadow-sm dark:border-red-900/30 dark:bg-red-900/20">
+          <h3 className="text-2xl font-bold text-red-700 dark:text-red-300">Unable to load property</h3>
+          <p className="mt-3 text-sm text-red-600 dark:text-red-200">
+            {loadError || 'Property not found.'}
+          </p>
+          <button
+            onClick={() => navigate('/destinations')}
+            className="mt-6 rounded-xl bg-blue-600 px-5 py-2.5 text-sm font-semibold text-white transition hover:bg-blue-700"
+          >
+            Back to Destinations
+          </button>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="p-8 max-w-[1000px] mx-auto space-y-8">
@@ -202,10 +323,11 @@ const EditProperty = () => {
         </div>
         <button
           onClick={() => setShowDeleteModal(true)}
+          disabled={isSubmitting || isDeleting}
           className="flex items-center px-4 py-2 bg-red-600 text-white font-medium rounded-lg hover:bg-red-700 transition-colors"
         >
           <Trash2 size={18} className="mr-2" />
-          Delete Property
+          {isDeleting ? 'Deleting...' : 'Delete Property'}
         </button>
       </div>
 
@@ -234,6 +356,12 @@ const EditProperty = () => {
 
       {/* Form Content */}
       <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm overflow-hidden">
+        {submitError && (
+          <div className="mx-8 mt-8 rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700 dark:border-red-900/30 dark:bg-red-900/20 dark:text-red-300">
+            {submitError}
+          </div>
+        )}
+
         {/* Step 1: Basic Info */}
         {step === 1 && (
           <div className="p-8 space-y-8">
@@ -479,17 +607,20 @@ const EditProperty = () => {
         {/* Navigation */}
         <div className="p-8 bg-slate-50 dark:bg-slate-800/50 border-t border-slate-100 dark:border-slate-800 flex justify-between items-center">
           <button 
-            disabled={step === 1}
+            disabled={step === 1 || isSubmitting || isDeleting}
             onClick={() => setStep(s => s - 1)}
             className="px-6 py-2.5 text-sm font-bold text-slate-500 hover:text-slate-900 dark:hover:text-slate-100 disabled:opacity-30 transition-all"
           >
             Back
           </button>
           <button 
+            disabled={isSubmitting || isDeleting}
             onClick={() => step < 4 ? handleNextStep() : handleUpdate()}
-            className="px-8 py-2.5 bg-blue-600 text-white rounded-xl font-bold text-sm hover:bg-blue-700 transition-all shadow-lg shadow-blue-500/20 active:scale-95 flex items-center gap-2"
+            className="px-8 py-2.5 bg-blue-600 text-white rounded-xl font-bold text-sm hover:bg-blue-700 disabled:opacity-50 transition-all shadow-lg shadow-blue-500/20 active:scale-95 flex items-center gap-2"
           >
-            {step === 4 ? (
+            {isSubmitting ? (
+              <>Saving...</>
+            ) : step === 4 ? (
               <>
                 <Save size={18} />
                 Update Property
@@ -522,18 +653,31 @@ const EditProperty = () => {
             </p>
             <div className="flex gap-3">
               <button
-                onClick={() => setShowDeleteModal(false)}
+                onClick={() => {
+                  setShowDeleteModal(false);
+                  setDeleteError('');
+                }}
+                disabled={isDeleting}
                 className="flex-1 px-4 py-2 bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 rounded-lg font-medium hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors"
               >
                 Cancel
               </button>
+              {deleteError && (
+                <div className="mb-0 hidden" />
+              )}
               <button
                 onClick={handleDelete}
-                className="flex-1 px-4 py-2 bg-red-600 text-white rounded-lg font-medium hover:bg-red-700 transition-colors"
+                disabled={isDeleting}
+                className="flex-1 px-4 py-2 bg-red-600 text-white rounded-lg font-medium hover:bg-red-700 disabled:opacity-50 transition-colors"
               >
-                Delete Property
+                {isDeleting ? 'Deleting...' : 'Delete Property'}
               </button>
             </div>
+            {deleteError && (
+              <div className="mt-4 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700 dark:border-red-900/30 dark:bg-red-900/20 dark:text-red-300">
+                {deleteError}
+              </div>
+            )}
           </div>
         </div>
       )}
