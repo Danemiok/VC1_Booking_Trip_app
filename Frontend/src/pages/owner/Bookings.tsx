@@ -28,19 +28,45 @@ const Bookings = () => {
   const [serviceFilter, setServiceFilter] = React.useState<'all' | 'hotel' | 'transport'>('all');
   const [dateRange, setDateRange] = React.useState<'last1' | 'last3' | 'last7' | 'all'>('last7');
   const [currentPage, setCurrentPage] = React.useState(1);
-  const [bookings, setBookings] = React.useState([]);
+  const [bookings, setBookings] = React.useState<any[]>([]);
   const [stats, setStats] = React.useState({
     totalBookings: '1,240',
     activeGuests: '42',
     pendingPayments: '$1,450'
   });
-  const [loading, setLoading] = React.useState(true);
+  const [loading, setLoading] = React.useState(false);
   const [searchTerm, setSearchTerm] = React.useState('');
   const [exportLoading, setExportLoading] = React.useState(false);
   const [authError, setAuthError] = React.useState<string | null>(null);
   const [pageError, setPageError] = React.useState<string | null>(null);
   const [successMessage, setSuccessMessage] = React.useState<string | null>(null);
-  const [authChecking, setAuthChecking] = React.useState(true);
+
+  const BOOKINGS_CACHE_KEY = 'owner_bookings_cache_v1';
+  const STATS_CACHE_KEY = 'owner_booking_stats_cache_v1';
+
+  // Load cached data immediately for faster refresh UX
+  React.useEffect(() => {
+    try {
+      const cachedBookings = localStorage.getItem(BOOKINGS_CACHE_KEY);
+      if (cachedBookings) {
+        const parsed = JSON.parse(cachedBookings);
+        if (Array.isArray(parsed) && parsed.length > 0) {
+          setBookings(parsed);
+          setLoading(false);
+        }
+      }
+
+      const cachedStats = localStorage.getItem(STATS_CACHE_KEY);
+      if (cachedStats) {
+        const parsed = JSON.parse(cachedStats);
+        if (parsed && typeof parsed === 'object') {
+          setStats((prev) => ({ ...prev, ...parsed }));
+        }
+      }
+    } catch {
+      // ignore cache errors
+    }
+  }, []);
   
   // Filter modal state
   const [showFilterModal, setShowFilterModal] = React.useState(false);
@@ -58,6 +84,11 @@ const Bookings = () => {
     guestName: '',
     bookingId: ''
   });
+
+  const [openActionBookingId, setOpenActionBookingId] = React.useState<string | null>(null);
+  const [selectedBooking, setSelectedBooking] = React.useState<any | null>(null);
+  const [showBookingModal, setShowBookingModal] = React.useState(false);
+  const [updatingBookingId, setUpdatingBookingId] = React.useState<string | null>(null);
   
   const pageSize = 10;
 
@@ -86,7 +117,6 @@ const Bookings = () => {
   // Check if user is owner
   React.useEffect(() => {
     const checkAccess = async () => {
-      setAuthChecking(true);
       setAuthError(null);
       
       // First check if authenticated
@@ -94,7 +124,6 @@ const Bookings = () => {
         console.log('❌ Not authenticated');
         setAuthError('Please log in to access this page');
         setTimeout(() => navigate('/login'), 3000);
-        setAuthChecking(false);
         return;
       }
 
@@ -130,9 +159,8 @@ const Bookings = () => {
         }
       } catch (error) {
         console.error('❌ Error verifying user:', error);
-        setAuthError('Authentication error');
-      } finally {
-        setAuthChecking(false);
+        setAuthError(null);
+        setPageError('Backend not reachable. Showing cached data (if available).');
       }
     };
 
@@ -141,6 +169,7 @@ const Bookings = () => {
 
   // Test API connection
   React.useEffect(() => {
+    return;
     if (!isAuthenticated) return;
     
     const testAPI = async () => {
@@ -268,6 +297,11 @@ const Bookings = () => {
       if (response.data && response.data.length > 0) {
         console.log(`✅ FetchBookings - Got ${response.data.length} REAL bookings from API`);
         setBookings(response.data);
+        try {
+          localStorage.setItem(BOOKINGS_CACHE_KEY, JSON.stringify(response.data));
+        } catch {
+          // ignore cache write errors
+        }
       } else {
         console.log('⚠️ FetchBookings - No real data, using mock data');
         setBookings(mockCustomerBookings);
@@ -290,11 +324,18 @@ const Bookings = () => {
       const response = await bookingService.getBookingStats();
       console.log('📊 FetchStats - Response:', response);
       
-      setStats({
+      const nextStats = {
         totalBookings: response.total_bookings || '1,240',
         activeGuests: response.active_guests || '42',
         pendingPayments: response.pending_payments || '$1,450'
-      });
+      };
+
+      setStats(nextStats);
+      try {
+        localStorage.setItem(STATS_CACHE_KEY, JSON.stringify(nextStats));
+      } catch {
+        // ignore cache write errors
+      }
     } catch (error) {
       console.error('❌ FetchStats - Error:', error);
     }
@@ -477,8 +518,50 @@ const Bookings = () => {
     }
   };
 
-  const handleViewBookingDetails = (booking: any) => {
-    navigate(`/bookings/${booking.id}`, { state: { booking } });
+  const openBookingDetails = (booking: any) => {
+    setSelectedBooking(booking);
+    setShowBookingModal(true);
+    setOpenActionBookingId(null);
+  };
+
+  const closeBookingDetails = () => {
+    setShowBookingModal(false);
+    setSelectedBooking(null);
+  };
+
+  const updateBookingStatus = async (booking: any, nextStatus: 'paid' | 'pending' | 'canceled') => {
+    if (!booking?.id) return;
+
+    try {
+      setUpdatingBookingId(booking.id);
+      setPageError(null);
+      setSuccessMessage(null);
+
+      const result = await bookingService.updateBookingStatus(booking.id, nextStatus);
+      const updated = result?.data ?? { ...booking, status: nextStatus };
+
+      setBookings((prev) => {
+        const next = prev.map((b) => (b?.id === booking.id ? { ...b, ...updated } : b));
+        try {
+          localStorage.setItem(BOOKINGS_CACHE_KEY, JSON.stringify(next));
+        } catch {
+          // ignore cache write errors
+        }
+        return next;
+      });
+
+      setSelectedBooking((prev) => (prev?.id === booking.id ? { ...prev, ...updated } : prev));
+      setSuccessMessage(result?.message || `Booking ${booking.id} updated to ${nextStatus}`);
+
+      // Refresh stats (status changes affect dashboard counts)
+      fetchStats();
+    } catch (error: any) {
+      console.error('Update booking status error:', error);
+      setPageError(error?.message || 'Failed to update booking status');
+    } finally {
+      setUpdatingBookingId(null);
+      setOpenActionBookingId(null);
+    }
   };
 
   const getStatusIcon = (status: string) => {
@@ -506,15 +589,6 @@ const Bookings = () => {
   };
 
   const activeFilterCount = Object.values(activeFilters).filter(val => val !== 'all' && val !== '').length;
-
-  // Show loading while checking auth
-  if (authChecking) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
-      </div>
-    );
-  }
 
   // Show error if not authenticated or not owner
   if (!isAuthenticated || authError) {
@@ -798,6 +872,128 @@ const Bookings = () => {
           </div>
         )}
 
+        {/* Booking Details Modal */}
+        {showBookingModal && selectedBooking && (
+          <div
+            className="fixed inset-0 bg-black/50 flex items-center justify-center z-50"
+            onClick={closeBookingDetails}
+            role="dialog"
+            aria-modal="true"
+            aria-label="Booking details"
+          >
+            <div
+              className="bg-white dark:bg-slate-900 rounded-2xl p-6 max-w-2xl w-full mx-4 shadow-xl"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <div className="flex items-start justify-between gap-4">
+                <div>
+                  <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Booking</p>
+                  <h3 className="text-xl font-bold text-slate-900 dark:text-slate-100">{selectedBooking.id}</h3>
+                  <div className="mt-2">
+                    <span
+                      className={cn(
+                        "inline-flex items-center gap-1.5 px-2.5 py-1 text-[11px] font-bold rounded-full",
+                        getStatusColor(selectedBooking.status),
+                      )}
+                    >
+                      {getStatusIcon(selectedBooking.status)}
+                      {String(selectedBooking.status || 'pending').charAt(0).toUpperCase() +
+                        String(selectedBooking.status || 'pending').slice(1)}
+                    </span>
+                  </div>
+                </div>
+                <button
+                  type="button"
+                  onClick={closeBookingDetails}
+                  className="p-2 text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-xl transition-colors"
+                  aria-label="Close"
+                >
+                  <X size={18} />
+                </button>
+              </div>
+
+              <div className="mt-6 grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div className="rounded-xl border border-slate-200 dark:border-slate-800 p-4">
+                  <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Guest</p>
+                  <p className="mt-1 text-sm font-bold">{selectedBooking.guest}</p>
+                  {selectedBooking.customerEmail && (
+                    <p className="mt-0.5 text-xs text-slate-500">{selectedBooking.customerEmail}</p>
+                  )}
+                  {selectedBooking.customerPhone && (
+                    <p className="mt-0.5 text-xs text-slate-500">{selectedBooking.customerPhone}</p>
+                  )}
+                </div>
+
+                <div className="rounded-xl border border-slate-200 dark:border-slate-800 p-4">
+                  <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Service</p>
+                  <p className="mt-1 text-sm font-bold">{selectedBooking.service}</p>
+                  <p className="mt-0.5 text-xs text-slate-500">{selectedBooking.route}</p>
+                  {selectedBooking.roomType && <p className="mt-0.5 text-xs text-slate-500">{selectedBooking.roomType}</p>}
+                  {selectedBooking.vehicleType && (
+                    <p className="mt-0.5 text-xs text-slate-500">{selectedBooking.vehicleType}</p>
+                  )}
+                </div>
+
+                <div className="rounded-xl border border-slate-200 dark:border-slate-800 p-4">
+                  <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Date & Time</p>
+                  {selectedBooking.category === 'hotel' ? (
+                    <p className="mt-1 text-sm font-bold">
+                      {selectedBooking.dateStart} <span className="text-slate-400 font-bold text-xs">to</span> {selectedBooking.dateEnd}
+                    </p>
+                  ) : (
+                    <p className="mt-1 text-sm font-bold">
+                      {selectedBooking.date} <span className="text-slate-400 font-bold text-xs">{selectedBooking.time}</span>
+                    </p>
+                  )}
+                </div>
+
+                <div className="rounded-xl border border-slate-200 dark:border-slate-800 p-4">
+                  <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Payment</p>
+                  <p className="mt-1 text-sm font-bold">${formatMoney(selectedBooking.amount)}</p>
+                  <p className="mt-0.5 text-xs text-slate-500">{selectedBooking.pax} pax</p>
+                  {selectedBooking.paymentMethod && (
+                    <p className="mt-0.5 text-xs text-slate-500">Method: {selectedBooking.paymentMethod}</p>
+                  )}
+                </div>
+              </div>
+
+              {selectedBooking.specialRequests && (
+                <div className="mt-4 rounded-xl border border-slate-200 dark:border-slate-800 p-4">
+                  <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Special Requests</p>
+                  <p className="mt-1 text-sm text-slate-700 dark:text-slate-300">{selectedBooking.specialRequests}</p>
+                </div>
+              )}
+
+              <div className="mt-6 flex flex-col sm:flex-row gap-3 sm:justify-end">
+                <button
+                  type="button"
+                  onClick={() => updateBookingStatus(selectedBooking, 'pending')}
+                  disabled={updatingBookingId === selectedBooking.id || selectedBooking.status === 'pending'}
+                  className="px-4 py-2 rounded-xl text-sm font-bold border border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-800 disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  Mark Pending
+                </button>
+                <button
+                  type="button"
+                  onClick={() => updateBookingStatus(selectedBooking, 'paid')}
+                  disabled={updatingBookingId === selectedBooking.id || selectedBooking.status === 'paid'}
+                  className="px-4 py-2 rounded-xl text-sm font-bold bg-emerald-600 text-white hover:bg-emerald-700 disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  Mark Paid
+                </button>
+                <button
+                  type="button"
+                  onClick={() => updateBookingStatus(selectedBooking, 'canceled')}
+                  disabled={updatingBookingId === selectedBooking.id || selectedBooking.status === 'canceled'}
+                  className="px-4 py-2 rounded-xl text-sm font-bold bg-rose-600 text-white hover:bg-rose-700 disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  Cancel Booking
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
         {/* Loading State */}
         {loading ? (
           <div className="flex justify-center items-center py-20">
@@ -826,7 +1022,7 @@ const Bookings = () => {
                       <tr 
                         key={booking.id} 
                         className="hover:bg-slate-50/30 dark:hover:bg-slate-800/30 transition-colors group cursor-pointer"
-                        onClick={() => handleViewBookingDetails(booking)}
+                        onClick={() => openBookingDetails(booking)}
                       >
                         <td className="px-6 py-4 font-bold text-sm text-blue-600">{booking.id}</td>
                         <td className="px-6 py-4">
@@ -869,16 +1065,75 @@ const Bookings = () => {
                             {booking.status.charAt(0).toUpperCase() + booking.status.slice(1)}
                           </span>
                         </td>
-                        <td className="px-6 py-4 text-right">
-                          <button 
+                        <td className="px-6 py-4 text-right relative">
+                          <button
+                            type="button"
                             onClick={(e) => {
                               e.stopPropagation();
-                              handleViewBookingDetails(booking);
+                              setOpenActionBookingId((prev) => (prev === booking.id ? null : booking.id));
                             }}
                             className="p-2 text-slate-400 hover:text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded-lg transition-all"
+                            aria-label="Booking actions"
                           >
                             <MoreHorizontal size={18} />
                           </button>
+
+                          {openActionBookingId === booking.id && (
+                            <div className="absolute right-6 top-12 z-10 w-44 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 shadow-lg overflow-hidden">
+                              <button
+                                type="button"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  openBookingDetails(booking);
+                                }}
+                                className="w-full text-left px-3 py-2 text-xs font-bold hover:bg-slate-50 dark:hover:bg-slate-800/70 transition-colors"
+                              >
+                                View Details
+                              </button>
+
+                              {booking.status !== 'paid' && (
+                                <button
+                                  type="button"
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    updateBookingStatus(booking, 'paid');
+                                  }}
+                                  disabled={updatingBookingId === booking.id}
+                                  className="w-full text-left px-3 py-2 text-xs font-bold text-emerald-700 dark:text-emerald-400 hover:bg-emerald-50 dark:hover:bg-emerald-950/30 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                                >
+                                  Mark Paid
+                                </button>
+                              )}
+
+                              {booking.status !== 'pending' && (
+                                <button
+                                  type="button"
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    updateBookingStatus(booking, 'pending');
+                                  }}
+                                  disabled={updatingBookingId === booking.id}
+                                  className="w-full text-left px-3 py-2 text-xs font-bold text-amber-700 dark:text-amber-400 hover:bg-amber-50 dark:hover:bg-amber-950/30 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                                >
+                                  Mark Pending
+                                </button>
+                              )}
+
+                              {booking.status !== 'canceled' && (
+                                <button
+                                  type="button"
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    updateBookingStatus(booking, 'canceled');
+                                  }}
+                                  disabled={updatingBookingId === booking.id}
+                                  className="w-full text-left px-3 py-2 text-xs font-bold text-rose-700 dark:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/40 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                                >
+                                  Cancel Booking
+                                </button>
+                              )}
+                            </div>
+                          )}
                         </td>
                       </tr>
                     ))

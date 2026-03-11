@@ -89,6 +89,23 @@ export const bookingService = {
     }
   },
 
+  // Update booking status (owner/admin)
+  updateBookingStatus: async (bookingId, status) => {
+    if (!bookingId) throw new Error('bookingId is required');
+    if (!status) throw new Error('status is required');
+
+    const response = await apiRequest(`/bookings/${encodeURIComponent(bookingId)}/status`, {
+      method: 'PATCH',
+      body: JSON.stringify({ status }),
+    });
+
+    return {
+      success: response?.success ?? true,
+      message: response?.message,
+      data: response?.data ?? response,
+    };
+  },
+
   // Export bookings to CSV
   exportBookings: async (filters = {}) => {
     try {
