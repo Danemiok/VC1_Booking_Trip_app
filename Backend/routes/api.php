@@ -16,8 +16,8 @@ use App\Http\Controllers\Customer\MessageController as CustomerMessageController
 |--------------------------------------------------------------------------
 */
 use App\Http\Controllers\Owner\DestinationController;
-use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Route;
+// use Illuminate\Http\Request;
+// use Illuminate\Support\Facades\Route;
 
 Route::prefix('auth')->group(function () {
 
