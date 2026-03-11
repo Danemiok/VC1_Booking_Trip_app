@@ -14,7 +14,10 @@ class PromotionController extends Controller
      */
     public function index()
     {
-        $promotions = Promotion::orderBy('created_at', 'desc')->get();
+        $userId = auth()->id();
+        $promotions = Promotion::where('owner_id', $userId)
+            ->orderBy('created_at', 'desc')
+            ->get();
         
         return response()->json([
             'success' => true,
@@ -39,6 +42,14 @@ class PromotionController extends Controller
             'is_active' => 'nullable|boolean',
         ]);
 
+        // Provide default value for image if not provided
+        if (!isset($validated['image'])) {
+            $validated['image'] = '';
+        }
+
+        // Add owner_id from authenticated user
+        $validated['owner_id'] = auth()->id();
+
         $promotion = Promotion::create($validated);
 
         return response()->json([
@@ -53,7 +64,8 @@ class PromotionController extends Controller
      */
     public function show(string $id)
     {
-        $promotion = Promotion::findOrFail($id);
+        $userId = auth()->id();
+        $promotion = Promotion::where('owner_id', $userId)->findOrFail($id);
 
         return response()->json([
             'success' => true,
@@ -66,7 +78,8 @@ class PromotionController extends Controller
      */
     public function update(Request $request, string $id)
     {
-        $promotion = Promotion::findOrFail($id);
+        $userId = auth()->id();
+        $promotion = Promotion::where('owner_id', $userId)->findOrFail($id);
 
         $validated = $request->validate([
             'title' => 'sometimes|string|max:255',
@@ -94,7 +107,8 @@ class PromotionController extends Controller
      */
     public function destroy(string $id)
     {
-        $promotion = Promotion::findOrFail($id);
+        $userId = auth()->id();
+        $promotion = Promotion::where('owner_id', $userId)->findOrFail($id);
 
         $promotion->delete();
 

@@ -15,6 +15,7 @@ class Promotion extends Model
      * @var array<int, string>
      */
     protected $fillable = [
+        'owner_id',
         'title',
         'description',
         'discount',
