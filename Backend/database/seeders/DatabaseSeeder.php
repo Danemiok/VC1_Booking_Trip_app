@@ -40,5 +40,10 @@ class DatabaseSeeder extends Seeder
                 'role' => 'owner',
             ]
         );
+
+        // Seed destinations
+        $this->call([
+            DestinationSeeder::class,
+        ]);
     }
 }
