@@ -16,6 +16,7 @@ import { BookingHistory } from '../pages/customer/BookingHistory';
 import { GroupInvite } from '../pages/customer/GroupInvite';
 import { Rentals } from '../pages/customer/Rentals';
 import { Activities } from '../pages/customer/Activities';
+import { Profile } from '../pages/customer/Profile';
 import Payment from '../pages/customer/Payment';
 import OwnerDashboard from '../pages/owner/Dashboard';
 import OwnerDestinations from '../pages/owner/Destinations';
@@ -365,6 +366,15 @@ const AdminShell: React.FC<{ view: string; setView: (view: string) => void; onLo
 
 export const AppRoutes: React.FC<AppRoutesProps> = ({ view, setView, onSelectRecommendation, onSelectDestination, onPromotionsClick, onHotelsClick, onRentalsClick, onActivitiesClick, notifications, onMarkAsRead, onMarkAllAsRead, activeProfileTab, selectedHotel, setSelectedHotel, selectedActivityIds, setSelectedActivityIds, tripData, setTripData }) => {
   const { user, logout } = useAuth();
+  const isGuest = !user;
+
+  const requireAuth = React.useCallback(() => {
+    if (isGuest) {
+      setView('login');
+      return false;
+    }
+    return true;
+  }, [isGuest, setView]);
 
   const handleSelectHotel = (hotel: any) => {
     setSelectedHotel(hotel);
@@ -372,6 +382,7 @@ export const AppRoutes: React.FC<AppRoutesProps> = ({ view, setView, onSelectRec
   };
 
   const handleReserveHotel = (selection: any) => {
+    if (!requireAuth()) return;
     setTripData((prev: any) => {
       const next = { ...(prev || {}) };
       next.hotel = {
@@ -393,6 +404,7 @@ export const AppRoutes: React.FC<AppRoutesProps> = ({ view, setView, onSelectRec
 
   const handleSelectVehicle = (vehicle: any) => {
     if (!vehicle) return;
+    if (!requireAuth()) return;
     setTripData((prev: any) => {
       const next = { ...(prev || {}) };
       next.rental = {
@@ -435,6 +447,59 @@ export const AppRoutes: React.FC<AppRoutesProps> = ({ view, setView, onSelectRec
           onSuccess={(nextView) => setView(nextView)}
         />
       );
+    case 'profile':
+      if (isGuest) {
+        return (
+          <div className="min-h-[70vh] px-4 sm:px-6 lg:px-8 pt-28 pb-20">
+            <div className="max-w-5xl mx-auto">
+              <div className="relative overflow-hidden rounded-[3rem] border border-slate-200/60 dark:border-white/10 bg-white dark:bg-slate-950 shadow-2xl">
+                <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_right,rgba(37,99,235,0.18),transparent_55%)]" />
+                <div className="relative p-8 sm:p-12">
+                  <div className="inline-flex items-center rounded-full bg-blue-600/10 text-blue-700 dark:text-blue-300 px-3 py-1 text-[10px] font-bold tracking-widest uppercase">
+                    Profile
+                  </div>
+                  <h1 className="mt-4 text-3xl sm:text-4xl font-extrabold tracking-tight text-slate-900 dark:text-white">
+                    Login required to view your profile
+                  </h1>
+                  <p className="mt-3 text-slate-600 dark:text-slate-300 max-w-2xl">
+                    Please login to update your personal information, notifications, and security settings.
+                  </p>
+
+                  <div className="mt-8 flex flex-col sm:flex-row gap-3">
+                    <button
+                      onClick={() => setView('login')}
+                      className="px-6 py-4 rounded-2xl bg-blue-600 hover:bg-blue-700 text-white font-bold shadow-[0_18px_40px_rgba(37,99,235,0.28)] transition-all"
+                    >
+                      Login
+                    </button>
+                    <button
+                      onClick={() => setView('register')}
+                      className="px-6 py-4 rounded-2xl bg-slate-900 hover:bg-slate-800 dark:bg-white dark:hover:bg-slate-100 text-white dark:text-slate-900 font-bold transition-all"
+                    >
+                      Create account
+                    </button>
+                    <button
+                      onClick={() => setView('landing')}
+                      className="px-6 py-4 rounded-2xl bg-slate-100 hover:bg-slate-200 dark:bg-white/10 dark:hover:bg-white/15 text-slate-800 dark:text-slate-200 font-bold transition-all"
+                    >
+                      Back to Home
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        );
+      }
+
+      return (
+        <Profile
+          initialTab={activeProfileTab}
+          notifications={notifications}
+          onMarkAsRead={onMarkAsRead}
+          onMarkAllAsRead={onMarkAllAsRead}
+        />
+      );
     case 'hotels':
     case 'destinations':
       return (
@@ -456,7 +521,16 @@ export const AppRoutes: React.FC<AppRoutesProps> = ({ view, setView, onSelectRec
     case 'rentals':
       return <Rentals onBack={() => setView('trip-planner')} onSelectVehicle={handleSelectVehicle} />;
     case 'activities':
-      return <Activities />;
+      return (
+        <Activities
+          onBack={() => setView('trip-planner')}
+          onRequireLogin={() => setView('login')}
+          onConfirmBooking={() => setView('bookings')}
+          isAuthenticated={!isGuest}
+          selectedActivityIds={selectedActivityIds}
+          setSelectedActivityIds={setSelectedActivityIds}
+        />
+      );
     case 'promotions':
     case 'trip-planner':
     case 'group-planning':
@@ -471,13 +545,99 @@ export const AppRoutes: React.FC<AppRoutesProps> = ({ view, setView, onSelectRec
           onExploreHotel={onHotelsClick}
           onRentalClick={onRentalsClick}
           onActivitiesClick={onActivitiesClick}
-          onProceedToBooking={() => setView('bookings')}
+          onProceedToBooking={() => {
+            if (!requireAuth()) return;
+            setView('bookings');
+          }}
         />
       );
     case 'bookings':
+      if (isGuest) {
+        return (
+          <div className="min-h-[70vh] px-4 sm:px-6 lg:px-8 pt-28 pb-20">
+            <div className="max-w-5xl mx-auto">
+              <div className="relative overflow-hidden rounded-[3rem] border border-slate-200/60 dark:border-white/10 bg-white dark:bg-slate-950 shadow-2xl">
+                <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_right,rgba(37,99,235,0.18),transparent_55%)]" />
+                <div className="absolute inset-0 bg-[radial-gradient(circle_at_bottom_left,rgba(16,185,129,0.12),transparent_55%)]" />
+
+                <div className="relative p-8 sm:p-12">
+                  <div className="flex flex-col lg:flex-row lg:items-center gap-10">
+                    <div className="flex-1">
+                      <div className="inline-flex items-center rounded-full bg-blue-600/10 text-blue-700 dark:text-blue-300 px-3 py-1 text-[10px] font-bold tracking-widest uppercase">
+                        Bookings
+                      </div>
+                      <h1 className="mt-4 text-3xl sm:text-4xl font-extrabold tracking-tight text-slate-900 dark:text-white">
+                        Login required to view your bookings
+                      </h1>
+                      <p className="mt-3 text-slate-600 dark:text-slate-300 max-w-xl">
+                        You can browse hotels, rentals, and activities as a guest, but to confirm and manage bookings you’ll need an account.
+                      </p>
+
+                      <div className="mt-8 flex flex-col sm:flex-row gap-3">
+                        <button
+                          onClick={() => setView('login')}
+                          className="px-6 py-4 rounded-2xl bg-blue-600 hover:bg-blue-700 text-white font-bold shadow-[0_18px_40px_rgba(37,99,235,0.28)] transition-all"
+                        >
+                          Login to continue
+                        </button>
+                        <button
+                          onClick={() => setView('register')}
+                          className="px-6 py-4 rounded-2xl bg-slate-900 hover:bg-slate-800 dark:bg-white dark:hover:bg-slate-100 text-white dark:text-slate-900 font-bold transition-all"
+                        >
+                          Create account
+                        </button>
+                        <button
+                          onClick={() => setView('landing')}
+                          className="px-6 py-4 rounded-2xl bg-slate-100 hover:bg-slate-200 dark:bg-white/10 dark:hover:bg-white/15 text-slate-800 dark:text-slate-200 font-bold transition-all"
+                        >
+                          Back to Home
+                        </button>
+                      </div>
+                    </div>
+
+                    <div className="w-full lg:w-[360px]">
+                      <div className="rounded-[2.5rem] p-[1px] bg-gradient-to-br from-blue-600/40 via-slate-900/40 to-emerald-500/30">
+                        <div className="rounded-[2.45rem] bg-slate-900 dark:bg-slate-950 p-7 border border-white/10">
+                          <p className="text-xs font-bold text-slate-200">What you can do now</p>
+                          <div className="mt-4 space-y-3">
+                            <div className="flex items-start gap-3">
+                              <div className="mt-0.5 w-2.5 h-2.5 rounded-full bg-emerald-400" />
+                              <p className="text-sm text-slate-300">Browse hotels and view details</p>
+                            </div>
+                            <div className="flex items-start gap-3">
+                              <div className="mt-0.5 w-2.5 h-2.5 rounded-full bg-emerald-400" />
+                              <p className="text-sm text-slate-300">Explore rentals and activities</p>
+                            </div>
+                            <div className="flex items-start gap-3">
+                              <div className="mt-0.5 w-2.5 h-2.5 rounded-full bg-amber-400" />
+                              <p className="text-sm text-slate-300">Booking & payment require login</p>
+                            </div>
+                          </div>
+
+                          <div className="mt-6">
+                            <button
+                              onClick={() => setView('hotels')}
+                              className="w-full px-5 py-3 rounded-2xl bg-white/10 hover:bg-white/15 text-slate-100 font-bold transition-all"
+                            >
+                              Browse Hotels
+                            </button>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        );
+      }
       return (
         <BookingHistory
-          onPaymentClick={() => setView('payment')}
+          onPaymentClick={() => {
+            if (!requireAuth()) return;
+            setView('payment');
+          }}
           onHotelClick={onHotelsClick}
           onRentalClick={onRentalsClick}
           onGroupPlanningClick={onActivitiesClick}
@@ -490,9 +650,10 @@ export const AppRoutes: React.FC<AppRoutesProps> = ({ view, setView, onSelectRec
     case 'group-invite':
       return <GroupInvite />;
     case 'payment':
+      if (isGuest) return <VisitorHome />;
       return <Payment tripData={tripData} selectedActivityIds={selectedActivityIds} onBackToHome={() => setView('landing')} />;
     case 'customer-dashboard':
-      return user ? (
+      return (
         <CustomerDashboard
           tripData={tripData}
           onSelectRecommendation={onSelectRecommendation}
@@ -502,12 +663,9 @@ export const AppRoutes: React.FC<AppRoutesProps> = ({ view, setView, onSelectRec
           onRentalsClick={onRentalsClick}
           onActivitiesClick={onActivitiesClick}
         />
-      ) : (
-        <VisitorHome />
       );
     case 'landing':
     default:
-      if (!user) return <VisitorHome />;
       return (
         <CustomerDashboard
           tripData={tripData}
