@@ -2,7 +2,35 @@ import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Search, Filter, Plus, Star, MapPin, Edit, Trash2, X } from 'lucide-react';
 
-const PropertyCard = ({ property, navigate, onDelete }: any) => (
+const PropertyCard = ({ property, navigate, onDelete, activePromotion }: any) => {
+  const basePrice = typeof property.price === 'number' ? property.price : undefined;
+  const discount = typeof activePromotion?.discount === 'string' ? activePromotion.discount : '';
+
+  const computePrice = () => {
+    if (typeof basePrice !== 'number') return { finalPrice: undefined, hasDiscount: false };
+    if (!discount) return { finalPrice: basePrice, hasDiscount: false };
+
+    const trimmed = discount.trim();
+    if (trimmed.endsWith('%')) {
+      const pct = parseFloat(trimmed.replace('%', ''));
+      if (!Number.isFinite(pct)) return { finalPrice: basePrice, hasDiscount: false };
+      const finalPrice = Math.max(0, basePrice - basePrice * (pct / 100));
+      return { finalPrice, hasDiscount: true };
+    }
+
+    if (trimmed.startsWith('$')) {
+      const amt = parseFloat(trimmed.replace('$', ''));
+      if (!Number.isFinite(amt)) return { finalPrice: basePrice, hasDiscount: false };
+      const finalPrice = Math.max(0, basePrice - amt);
+      return { finalPrice, hasDiscount: true };
+    }
+
+    return { finalPrice: basePrice, hasDiscount: false };
+  };
+
+  const { finalPrice, hasDiscount } = computePrice();
+
+  return (
   <div 
     className="bg-white dark:bg-gray-800 rounded-lg shadow-lg overflow-hidden transform hover:scale-105 transition-transform duration-300 cursor-pointer"
     onClick={() => navigate(`/destinations/${property.id}`, { state: { property } })}
@@ -51,10 +79,27 @@ const PropertyCard = ({ property, navigate, onDelete }: any) => (
           <p className="text-sm text-gray-500 dark:text-gray-400">Total Bookings</p>
           <p className="text-lg font-bold text-blue-600 dark:text-blue-400">{property.totalBookings || 0}</p>
         </div>
+        <div className="text-right">
+          {activePromotion && (
+            <span className="inline-flex items-center px-2 py-1 rounded-full text-[10px] font-bold bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-300 mb-1">
+              {activePromotion.discount}
+            </span>
+          )}
+          {typeof basePrice === 'number' && (
+            <div>
+              {hasDiscount && (
+                <p className="text-xs text-gray-400 line-through">${basePrice.toFixed(0)}</p>
+              )}
+              <p className="text-lg font-bold text-gray-900 dark:text-white">${(finalPrice ?? basePrice).toFixed(0)}</p>
+              <p className="text-[10px] text-gray-500 dark:text-gray-400 font-semibold">per night</p>
+            </div>
+          )}
+        </div>
       </div>
     </div>
   </div>
-);
+  );
+};
 
 const Destinations = () => {
   const navigate = useNavigate();
@@ -75,6 +120,19 @@ const Destinations = () => {
     const storedProperties = JSON.parse(localStorage.getItem('properties') || '[]');
     if (storedProperties.length > 0) {
       setProperties(prev => [...prev, ...storedProperties]);
+    }
+  }, []);
+
+  const activeHotelPromotion = React.useMemo(() => {
+    try {
+      const stored = JSON.parse(localStorage.getItem('ownerPromotions') || '[]');
+      const promos = Array.isArray(stored) ? stored : [];
+      const hotelActive = promos.filter(
+        (p: any) => p?.serviceCategory === 'hotel' && (p?.status === 'active' || !p?.status),
+      );
+      return hotelActive.length > 0 ? hotelActive[0] : null;
+    } catch {
+      return null;
     }
   }, []);
 
@@ -179,7 +237,13 @@ const Destinations = () => {
         {/* Property Grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
           {filteredProperties.map(property => (
-            <PropertyCard key={property.id} property={property} navigate={navigate} onDelete={handleDelete} />
+            <PropertyCard
+              key={property.id}
+              property={property}
+              navigate={navigate}
+              onDelete={handleDelete}
+              activePromotion={activeHotelPromotion}
+            />
           ))}
         </div>
 
