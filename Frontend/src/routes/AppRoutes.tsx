@@ -18,6 +18,7 @@ import { GroupPlanning } from '../pages/customer/GroupPlanning';
 import { Rentals } from '../pages/customer/Rentals';
 import { Activities } from '../pages/customer/Activities';
 import { Profile } from '../pages/customer/Profile';
+import { Promotions } from '../pages/customer/Promotions';
 import Payment from '../pages/customer/Payment';
 import OwnerDashboard from '../pages/owner/Dashboard';
 import OwnerDestinations from '../pages/owner/Destinations';
@@ -71,6 +72,15 @@ interface AppRoutesProps {
   tripData: any;
   setTripData: React.Dispatch<React.SetStateAction<any>>;
 }
+
+type ClaimedPromotion = {
+  id: number;
+  title: string;
+  discount: string;
+  code: string;
+  originalPrice: string;
+  promoPrice: string;
+};
 
 type AdminView =
   | 'dashboard'
@@ -533,6 +543,18 @@ export const AppRoutes: React.FC<AppRoutesProps> = ({ view, setView, onSelectRec
         />
       );
     case 'promotions':
+      return (
+        <Promotions
+          onBack={() => setView('landing')}
+          onClaim={(promotion: ClaimedPromotion) => {
+            setTripData((prev) => ({
+              ...prev,
+              promotion
+            }));
+            setView('trip-planner');
+          }}
+        />
+      );
     case 'trip-planner':
       return (
         <TripPlanner
