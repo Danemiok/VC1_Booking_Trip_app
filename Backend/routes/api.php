@@ -17,6 +17,7 @@ use App\Http\Controllers\Customer\MessageController as CustomerMessageController
 */
 use App\Http\Controllers\Owner\DestinationController;
 use App\Http\Controllers\Owner\PromotionController;
+use App\Http\Controllers\Api\BookingController; // ADD THIS
 
 Route::prefix('auth')->group(function () {
 
@@ -34,6 +35,7 @@ Route::prefix('auth')->group(function () {
             $nextView = match ($user?->role) {
                 'admin' => 'admin-dashboard',
                 'owner' => 'owner-dashboard',
+                'customer' => 'customer-dashboard',
                 default => 'customer-dashboard',
             };
 
@@ -64,7 +66,7 @@ Route::middleware(['auth:sanctum', 'role:customer'])->group(function () {
 });
 
 Route::middleware(['auth:sanctum', 'role:owner'])->group(function () {
-    Route::get('/owner/access', function () {
+        Route::get('/owner/access', function () {
         return response()->json(['message' => 'Owner access granted']);
     });
     
@@ -73,6 +75,46 @@ Route::middleware(['auth:sanctum', 'role:owner'])->group(function () {
     
     // Owner promotions routes
     Route::apiResource('promotions', PromotionController::class);
+});
+
+
+
+// PROTECTED ROUTES (require authentication)
+Route::middleware(['auth:sanctum'])->group(function () {
+    // Customer booking routes
+    Route::middleware(['role:customer,admin'])->group(function () {
+        Route::post('/bookings', [BookingController::class, 'store']);
+        Route::get('/bookings/customer/{customerId}', [BookingController::class, 'customerBookings']);
+
+        // Backwards-compatible aliases
+        Route::get('/customer/bookings', [BookingController::class, 'myBookings']);
+        Route::post('/customer/bookings', [BookingController::class, 'store']);
+    });
+
+    // Owner routes - accessible by owners and admins
+    Route::middleware(['role:owner,admin'])->group(function () {
+        Route::get('/bookings', [BookingController::class, 'index']);
+        Route::get('/bookings/stats', [BookingController::class, 'stats']);
+        Route::get('/bookings/export', [BookingController::class, 'export']);
+        Route::patch('/bookings/{id}/status', [BookingController::class, 'updateStatus']);
+    });
+    
+    // Admin only routes
+    Route::middleware(['role:admin'])->group(function () {
+        Route::get('/admin/access', function () {
+            return response()->json(['message' => 'Admin access granted']);
+        });
+    });
+    
+    // Customer routes
+    Route::middleware(['role:customer'])->get('/customer/access', function () {
+        return response()->json(['message' => 'Customer access granted']);
+    });
+    
+    // Owner routes
+    Route::middleware(['role:owner'])->get('/owner/access', function () {
+        return response()->json(['message' => 'Owner access granted']);
+    });
 });
 
 /*
