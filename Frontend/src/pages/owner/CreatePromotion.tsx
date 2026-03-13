@@ -17,11 +17,6 @@ import { createPromotion } from '@/src/services/promotionService';
 type PromotionServiceCategory = 'hotel' | 'transport';
 
 type PromotionType = 'Percentage Discount' | 'Fixed Amount Off' | 'Bundle Offer' | 'Early Bird Special';
-
-type PromotionServiceCategory = 'hotel' | 'transport';
-
-type PromotionType = 'Percentage Discount' | 'Fixed Amount Off' | 'Bundle Offer' | 'Early Bird Special';
-
 const CreatePromotion = () => {
   const navigate = useNavigate();
   const [step, setStep] = React.useState(1);
@@ -30,11 +25,8 @@ const CreatePromotion = () => {
   const [serviceCategory, setServiceCategory] = React.useState<PromotionServiceCategory>('hotel');
   const [campaignName, setCampaignName] = React.useState('');
   const [discountValue, setDiscountValue] = React.useState('');
-<<<<<<< HEAD
   const [promoCode, setPromoCode] = React.useState('');
   const [promoColor, setPromoColor] = React.useState('#3B82F6'); // Default blue
-=======
->>>>>>> rika-feature
   const [startDate, setStartDate] = React.useState('');
   const [endDate, setEndDate] = React.useState('');
 
@@ -60,11 +52,7 @@ const CreatePromotion = () => {
     return v;
   };
 
-<<<<<<< HEAD
-  const launchCampaign = async () => {
-=======
   const launchCampaign = () => {
->>>>>>> rika-feature
     if (!promotionType) {
       setStep(1);
       return;
@@ -74,19 +62,6 @@ const CreatePromotion = () => {
       return;
     }
 
-<<<<<<< HEAD
-    // Save to database via API (no localStorage fallback)
-    await createPromotion({
-      title: campaignName.trim(),
-      type: promotionType,
-      discount: formatDiscount(),
-      description: '',
-      is_active: true,
-      expiry: endDate || null,
-      code: promoCode.trim() || null,
-      color: promoColor || '#3B82F6',
-    });
-=======
     const next = {
       id: `PROM-${Math.floor(100000 + Math.random() * 900000)}`,
       name: campaignName.trim(),
@@ -107,7 +82,6 @@ const CreatePromotion = () => {
     } catch {
       localStorage.setItem('ownerPromotions', JSON.stringify([next]));
     }
->>>>>>> rika-feature
 
     navigate('/promotions');
   };
@@ -245,7 +219,6 @@ const CreatePromotion = () => {
                     type="date"
                     value={endDate}
                     onChange={(e) => setEndDate(e.target.value)}
-<<<<<<< HEAD
                     className="w-full px-4 py-3 bg-slate-50 dark:bg-slate-800 border-transparent rounded-xl text-sm focus:bg-white dark:focus:bg-slate-900 focus focus:ring-blue-600/10:ring-2 transition-all font-medium"
                   />
                 </div>
@@ -275,11 +248,6 @@ const CreatePromotion = () => {
                     />
                   </div>
                 </div>
-=======
-                    className="w-full px-4 py-3 bg-slate-50 dark:bg-slate-800 border-transparent rounded-xl text-sm focus:bg-white dark:focus:bg-slate-900 focus:ring-2 focus:ring-blue-600/10 transition-all font-medium"
-                  />
-                </div>
->>>>>>> rika-feature
               </div>
             </div>
           </div>

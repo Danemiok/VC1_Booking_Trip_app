@@ -1,36 +1,23 @@
-<<<<<<< HEAD
 
 import { MapPin, Search, Star } from 'lucide-react';
 import { apiRequest } from '@/src/services/api';
 import React, { useEffect, useState } from 'react';
 import { motion } from 'motion/react';
 
-=======
-import React, { useEffect, useState } from 'react';
-import { motion } from 'motion/react';
->>>>>>> rika-feature
 import { 
   ChevronLeft, 
   ChevronRight, 
   Filter, 
   SlidersHorizontal, 
-<<<<<<< HEAD
 
   Heart, 
 
-=======
-  Search, 
-  MapPin, 
-  Heart, 
-  Star, 
->>>>>>> rika-feature
   Waves, 
   Users, 
   CheckCircle2 
 } from 'lucide-react';
 import { ALL_HOTELS } from '../../data/hotels';
 
-<<<<<<< HEAD
 type DestinationStatus = 'active' | 'draft';
 
 interface DestinationApiRecord {
@@ -218,8 +205,6 @@ export default function Destinations() {
 }
 
 
-=======
->>>>>>> rika-feature
 interface HotelsPageProps {
   tripData?: any;
   onBack: () => void;
@@ -301,14 +286,10 @@ const buildRoomOptions = (nightlyRate: number): RoomOption[] => [
   }
 ];
 
-<<<<<<< HEAD
 const getGoogleMapsSearchUrl = (query: string): string =>
   `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(query)}`;
 
 export const Hotels: React.FC<HotelsPageProps> = ({ tripData, onBack, onSelectHotel }) => {
-=======
-export const Destinations: React.FC<HotelsPageProps> = ({ tripData, onBack, onSelectHotel }) => {
->>>>>>> rika-feature
   const ITEMS_PER_PAGE = 4;
   const [priceRange, setPriceRange] = useState(2000);
   const [searchQuery, setSearchQuery] = useState('');
@@ -434,7 +415,6 @@ export const Destinations: React.FC<HotelsPageProps> = ({ tripData, onBack, onSe
     currentPage * ITEMS_PER_PAGE
   );
 
-<<<<<<< HEAD
   const openMapForQuery = (query: string) => {
     const trimmedQuery = query.trim();
     if (!trimmedQuery) return;
@@ -449,8 +429,6 @@ export const Destinations: React.FC<HotelsPageProps> = ({ tripData, onBack, onSe
     openMapForQuery(query);
   };
 
-=======
->>>>>>> rika-feature
   const handlePageChange = (nextPage: number) => {
     const safePage = Math.min(Math.max(nextPage, 1), totalPages);
     setCurrentPage(safePage);
@@ -628,7 +606,6 @@ export const Destinations: React.FC<HotelsPageProps> = ({ tripData, onBack, onSe
             </div>
 
             {/* Map Preview */}
-<<<<<<< HEAD
             <div
               className="relative rounded-3xl overflow-hidden aspect-square group cursor-pointer"
               onClick={() => {
@@ -644,9 +621,6 @@ export const Destinations: React.FC<HotelsPageProps> = ({ tripData, onBack, onSe
                 }
               }}
             >
-=======
-            <div className="relative rounded-3xl overflow-hidden aspect-square group cursor-pointer">
->>>>>>> rika-feature
               <img 
                 src="https://images.unsplash.com/photo-1524661135-423995f22d0b?auto=format&fit=crop&q=80&w=800" 
                 alt="Map Preview" 
@@ -752,7 +726,6 @@ export const Destinations: React.FC<HotelsPageProps> = ({ tripData, onBack, onSe
                         >
                           {hotel.name}
                         </h3>
-<<<<<<< HEAD
                         <button
                           type="button"
                           onClick={() => openMapForHotel(hotel)}
@@ -761,12 +734,6 @@ export const Destinations: React.FC<HotelsPageProps> = ({ tripData, onBack, onSe
                           <MapPin className="w-3 h-3" />
                           <span className="text-[10px] font-bold uppercase tracking-widest">{hotel.location}</span>
                         </button>
-=======
-                        <div className="flex items-center gap-2 text-slate-400 mb-6">
-                          <MapPin className="w-3 h-3" />
-                          <span className="text-[10px] font-bold uppercase tracking-widest">{hotel.location}</span>
-                        </div>
->>>>>>> rika-feature
                         
                         <p className="text-sm text-slate-500 dark:text-slate-400 leading-relaxed mb-8 line-clamp-2">
                           {hotel.description || ''}
@@ -921,7 +888,3 @@ export const Destinations: React.FC<HotelsPageProps> = ({ tripData, onBack, onSe
     </div>
   );
 };
-<<<<<<< HEAD
-=======
-
->>>>>>> rika-feature

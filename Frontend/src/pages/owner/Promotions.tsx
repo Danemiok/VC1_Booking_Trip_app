@@ -36,27 +36,11 @@ type Promotion = {
   created_at?: string;
 };
 
-type PromotionServiceCategory = 'hotel' | 'transport';
-
-type PromotionStatus = 'active' | 'scheduled' | 'expired';
-
-type Promotion = {
-  id: string;
-  name: string;
-  type: string;
-  discount: string;
-  status: PromotionStatus;
-  reach: string;
-  conversions: string;
-  end: string;
-  serviceCategory?: PromotionServiceCategory;
-};
 
 const Promotions = () => {
   const navigate = useNavigate();
   const [categoryFilter, setCategoryFilter] = React.useState<'all' | PromotionServiceCategory>('all');
   const [searchTerm, setSearchTerm] = React.useState('');
-<<<<<<< HEAD
   const [promotions, setPromotions] = React.useState<Promotion[]>([]);
   const [loading, setLoading] = React.useState(true);
 
@@ -101,52 +85,6 @@ const Promotions = () => {
       .filter((p) => (categoryFilter === 'all' ? true : p.service_category === categoryFilter))
       .filter((p) => (q ? `${p.name} ${p.id}`.toLowerCase().includes(q) : true));
   }, [promotions, categoryFilter, searchTerm]);
-
-  const stats = React.useMemo(() => {
-    const activeCount = filteredPromotions.filter((p) => p.status === 'active').length;
-    const totalReach = filteredPromotions.reduce((sum, p) => {
-      const v = String(p.reach ?? '').toLowerCase();
-      const num = parseFloat(v.replace(/[a-z]/g, ''));
-      if (Number.isNaN(num)) return sum;
-      const multiplier = v.includes('k') ? 1000 : v.includes('m') ? 1000000 : 1;
-      return sum + num * multiplier;
-    }, 0);
-    const formattedReach = totalReach >= 1000 ? `${(totalReach / 1000).toFixed(1)}k` : totalReach.toFixed(0);
-    return {
-      activeCount,
-      formattedReach,
-      avgConversion: '8.4%',
-    };
-  }, [filteredPromotions]);
-=======
-
-  const campaigns: Promotion[] = [
-    { id: 'PROM-001', name: 'Water Festival Special', type: 'Discount', discount: '20%', status: 'active', reach: '12.4k', conversions: '840', end: 'Nov 15, 2024' },
-    { id: 'PROM-002', name: 'Early Bird Siem Reap', type: 'Fixed Price', discount: '$15 Off', status: 'active', reach: '8.2k', conversions: '320', end: 'Dec 01, 2024' },
-    { id: 'PROM-003', name: 'Weekend Beach Getaway', type: 'Bundle', discount: 'Free Drink', status: 'scheduled', reach: '-', conversions: '-', end: 'Nov 20, 2024' },
-    { id: 'PROM-004', name: 'Mondulkiri Adventure', type: 'Discount', discount: '15%', status: 'expired', reach: '15.1k', conversions: '1.2k', end: 'Oct 15, 2024' },
-  ];
->>>>>>> rika-feature
-
-  const storedPromotions: Promotion[] = React.useMemo(() => {
-    try {
-      const parsed = JSON.parse(localStorage.getItem('ownerPromotions') || '[]');
-      return Array.isArray(parsed) ? parsed : [];
-    } catch {
-      return [];
-    }
-  }, []);
-
-  const allPromotions = React.useMemo<Promotion[]>(() => {
-    return [...storedPromotions, ...campaigns];
-  }, [storedPromotions]);
-
-  const filteredPromotions = React.useMemo(() => {
-    const q = searchTerm.trim().toLowerCase();
-    return allPromotions
-      .filter((p) => (categoryFilter === 'all' ? true : p.serviceCategory === categoryFilter))
-      .filter((p) => (q ? `${p.name} ${p.id}`.toLowerCase().includes(q) : true));
-  }, [allPromotions, categoryFilter, searchTerm]);
 
   const stats = React.useMemo(() => {
     const activeCount = filteredPromotions.filter((p) => p.status === 'active').length;
@@ -281,11 +219,7 @@ const Promotions = () => {
                   </td>
                   <td className="px-6 py-4">
                     <span className="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">
-<<<<<<< HEAD
                       {campaign.service_category ? campaign.service_category : 'hotel'}
-=======
-                      {campaign.serviceCategory ? campaign.serviceCategory : 'hotel'}
->>>>>>> rika-feature
                     </span>
                   </td>
                   <td className="px-6 py-4">
