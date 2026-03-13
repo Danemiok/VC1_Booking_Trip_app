@@ -21,7 +21,7 @@ type PromotionServiceCategory = 'hotel' | 'transport';
 type PromotionStatus = 'active' | 'scheduled' | 'expired';
 
 type Promotion = {
-  id: number;
+  id: string | number;
   name: string;
   type: string;
   discount_value: number;
@@ -61,19 +61,15 @@ const Promotions = () => {
           conversions: '-',
           end: p.expiry || '-',
           end_date: p.expiry,
+          code: p.code || '',
+          color: p.color || '#3B82F6',
           service_category: 'hotel',
           created_at: p.created_at,
         }));
         setPromotions(transformedPromotions);
       } catch (error) {
         console.error('Failed to fetch promotions:', error);
-        // Fallback to localStorage if API fails
-        try {
-          const stored = JSON.parse(localStorage.getItem('ownerPromotions') || '[]');
-          setPromotions(Array.isArray(stored) ? stored : []);
-        } catch {
-          setPromotions([]);
-        }
+        setPromotions([]);
       } finally {
         setLoading(false);
       }
@@ -82,34 +78,12 @@ const Promotions = () => {
     fetchPromotions();
   }, []);
 
-  const campaigns: Promotion[] = [
-    { id: 'PROM-001', name: 'Water Festival Special', type: 'Discount', discount: '20%', status: 'active', reach: '12.4k', conversions: '840', end: 'Nov 15, 2024' },
-    { id: 'PROM-002', name: 'Early Bird Siem Reap', type: 'Fixed Price', discount: '$15 Off', status: 'active', reach: '8.2k', conversions: '320', end: 'Dec 01, 2024' },
-    { id: 'PROM-003', name: 'Weekend Beach Getaway', type: 'Bundle', discount: 'Free Drink', status: 'scheduled', reach: '-', conversions: '-', end: 'Nov 20, 2024' },
-    { id: 'PROM-004', name: 'Mondulkiri Adventure', type: 'Discount', discount: '15%', status: 'expired', reach: '15.1k', conversions: '1.2k', end: 'Oct 15, 2024' },
-  ];
-
-  const storedPromotions: Promotion[] = React.useMemo(() => {
-    try {
-      const parsed = JSON.parse(localStorage.getItem('ownerPromotions') || '[]');
-      return Array.isArray(parsed) ? parsed : [];
-    } catch {
-      return [];
-    }
-  }, []);
-
-  const allPromotions = React.useMemo<Promotion[]>(() => {
-    return [...storedPromotions, ...campaigns];
-  }, [storedPromotions]);
-
   const filteredPromotions = React.useMemo(() => {
     const q = searchTerm.trim().toLowerCase();
-    // Use database promotions if available, otherwise fallback to campaigns
-    const sourcePromotions = promotions.length > 0 ? promotions : allPromotions;
-    return sourcePromotions
+    return promotions
       .filter((p) => (categoryFilter === 'all' ? true : p.service_category === categoryFilter))
       .filter((p) => (q ? `${p.name} ${p.id}`.toLowerCase().includes(q) : true));
-  }, [promotions, allPromotions, categoryFilter, searchTerm]);
+  }, [promotions, categoryFilter, searchTerm]);
 
   const stats = React.useMemo(() => {
     const activeCount = filteredPromotions.filter((p) => p.status === 'active').length;
@@ -244,7 +218,7 @@ const Promotions = () => {
                   </td>
                   <td className="px-6 py-4">
                     <span className="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">
-                      {campaign.serviceCategory ? campaign.serviceCategory : 'hotel'}
+                      {campaign.service_category ? campaign.service_category : 'hotel'}
                     </span>
                   </td>
                   <td className="px-6 py-4">

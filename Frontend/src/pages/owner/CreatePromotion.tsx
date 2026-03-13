@@ -26,6 +26,8 @@ const CreatePromotion = () => {
   const [serviceCategory, setServiceCategory] = React.useState<PromotionServiceCategory>('hotel');
   const [campaignName, setCampaignName] = React.useState('');
   const [discountValue, setDiscountValue] = React.useState('');
+  const [promoCode, setPromoCode] = React.useState('');
+  const [promoColor, setPromoColor] = React.useState('#3B82F6'); // Default blue
   const [startDate, setStartDate] = React.useState('');
   const [endDate, setEndDate] = React.useState('');
 
@@ -61,40 +63,17 @@ const CreatePromotion = () => {
       return;
     }
 
-    try {
-      // Save to database via API
-      await createPromotion({
-        title: campaignName.trim(),
-        type: promotionType,
-        discount: formatDiscount(),
-        description: '',
-        is_active: true,
-        expiry: endDate || null,
-      });
-    } catch (error) {
-      console.error('Failed to create promotion:', error);
-      // Fallback to localStorage if API fails
-      const next = {
-        id: `PROM-${Math.floor(100000 + Math.random() * 900000)}`,
-        name: campaignName.trim(),
-        type: promotionType,
-        discount: formatDiscount(),
-        status: 'active',
-        reach: '-',
-        conversions: '-',
-        end: endDate || '-',
-        serviceCategory,
-        createdAt: new Date().toISOString(),
-      };
-
-      try {
-        const stored = JSON.parse(localStorage.getItem('ownerPromotions') || '[]');
-        const arr = Array.isArray(stored) ? stored : [];
-        localStorage.setItem('ownerPromotions', JSON.stringify([next, ...arr]));
-      } catch {
-        localStorage.setItem('ownerPromotions', JSON.stringify([next]));
-      }
-    }
+    // Save to database via API (no localStorage fallback)
+    await createPromotion({
+      title: campaignName.trim(),
+      type: promotionType,
+      discount: formatDiscount(),
+      description: '',
+      is_active: true,
+      expiry: endDate || null,
+      code: promoCode.trim() || null,
+      color: promoColor || '#3B82F6',
+    });
 
     navigate('/promotions');
   };
@@ -232,8 +211,34 @@ const CreatePromotion = () => {
                     type="date"
                     value={endDate}
                     onChange={(e) => setEndDate(e.target.value)}
-                    className="w-full px-4 py-3 bg-slate-50 dark:bg-slate-800 border-transparent rounded-xl text-sm focus:bg-white dark:focus:bg-slate-900 focus:ring-2 focus:ring-blue-600/10 transition-all font-medium"
+                    className="w-full px-4 py-3 bg-slate-50 dark:bg-slate-800 border-transparent rounded-xl text-sm focus:bg-white dark:focus:bg-slate-900 focus focus:ring-blue-600/10:ring-2 transition-all font-medium"
                   />
+                </div>
+                <div className="space-y-2">
+                  <label className="text-[10px] uppercase font-bold tracking-widest text-slate-400">Promo Code (Optional)</label>
+                  <input
+                    value={promoCode}
+                    onChange={(e) => setPromoCode(e.target.value)}
+                    className="w-full px-4 py-3 bg-slate-50 dark:bg-slate-800 border-transparent rounded-xl text-sm focus:bg-white dark:focus:bg-slate-900 focus:ring-2 focus:ring-blue-600/10 transition-all font-medium"
+                    placeholder="e.g. SUMMER2024"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <label className="text-[10px] uppercase font-bold tracking-widest text-slate-400">Badge Color</label>
+                  <div className="flex items-center gap-3">
+                    <input
+                      type="color"
+                      value={promoColor}
+                      onChange={(e) => setPromoColor(e.target.value)}
+                      className="w-12 h-12 rounded-xl border-0 cursor-pointer"
+                    />
+                    <input
+                      value={promoColor}
+                      onChange={(e) => setPromoColor(e.target.value)}
+                      className="flex-1 px-4 py-3 bg-slate-50 dark:bg-slate-800 border-transparent rounded-xl text-sm focus:bg-white dark:focus:bg-slate-900 focus:ring-2 focus:ring-blue-600/10 transition-all font-medium"
+                      placeholder="#3B82F6"
+                    />
+                  </div>
                 </div>
               </div>
             </div>
