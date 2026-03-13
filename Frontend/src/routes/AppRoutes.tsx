@@ -9,24 +9,18 @@ import { Login } from '../pages/auth/Login';
 import { Register } from '../pages/auth/Register';
 import VisitorHome from '../pages/public/VisitorHome';
 import { Dashboard as CustomerDashboard } from '../pages/customer/Dashboard';
-import { Destinations } from '../pages/customer/Destinations';
+import Destinations from '../pages/customer/Destinations';
 import { HotelDetails } from '../pages/customer/HotelDetails';
 import { TripPlanner } from '../pages/customer/TripPlanner';
 import { BookingHistory } from '../pages/customer/BookingHistory';
 import { GroupInvite } from '../pages/customer/GroupInvite';
-<<<<<<< HEAD
 import { GroupPlanning } from '../pages/customer/GroupPlanning';
 import { Rentals } from '../pages/customer/Rentals';
 import { Activities } from '../pages/customer/Activities';
 import { Profile } from '../pages/customer/Profile';
 import { Promotions } from '../pages/customer/Promotions';
-=======
-import { Rentals } from '../pages/customer/Rentals';
-import { Activities } from '../pages/customer/Activities';
-import { Profile } from '../pages/customer/Profile';
 import { BookTrip } from '../pages/customer/BookTrip';
 import { CustomerBookings } from '../pages/customer/CustomerBookings';
->>>>>>> rika-feature
 import Payment from '../pages/customer/Payment';
 import OwnerDashboard from '../pages/owner/Dashboard';
 import OwnerDestinations from '../pages/owner/Destinations';
@@ -386,10 +380,7 @@ const AdminShell: React.FC<{ view: string; setView: (view: string) => void; onLo
 export const AppRoutes: React.FC<AppRoutesProps> = ({ view, setView, onSelectRecommendation, onSelectDestination, onPromotionsClick, onHotelsClick, onRentalsClick, onActivitiesClick, notifications, onMarkAsRead, onMarkAllAsRead, activeProfileTab, selectedHotel, setSelectedHotel, selectedActivityIds, setSelectedActivityIds, tripData, setTripData }) => {
   const { user, logout } = useAuth();
   const isGuest = !user;
-<<<<<<< HEAD
-=======
   const location = useLocation();
->>>>>>> rika-feature
 
   const requireAuth = React.useCallback(() => {
     if (isGuest) {
@@ -444,8 +435,6 @@ export const AppRoutes: React.FC<AppRoutesProps> = ({ view, setView, onSelectRec
     });
     setView('trip-planner');
   };
-<<<<<<< HEAD
-=======
 
   const customerBookingRoute =
     location.pathname === '/customer/book' || location.pathname === '/customer/bookings';
@@ -467,7 +456,6 @@ export const AppRoutes: React.FC<AppRoutesProps> = ({ view, setView, onSelectRec
 
     return location.pathname === '/customer/book' ? <BookTrip /> : <CustomerBookings />;
   }
->>>>>>> rika-feature
 
   if (user?.role === 'admin') {
     return <AdminShell view={view} setView={setView} onLogout={logout} />;
@@ -610,7 +598,6 @@ export const AppRoutes: React.FC<AppRoutesProps> = ({ view, setView, onSelectRec
         />
       );
     case 'group-planning':
-<<<<<<< HEAD
       if (isGuest) {
         setView('login');
         return null;
@@ -619,23 +606,6 @@ export const AppRoutes: React.FC<AppRoutesProps> = ({ view, setView, onSelectRec
         <GroupPlanning
           onBack={() => setView('bookings')}
           tripTitle={tripData?.title}
-=======
-      return (
-        <TripPlanner
-          tripData={tripData}
-          setTripData={setTripData}
-          selectedActivityIds={selectedActivityIds}
-          setSelectedActivityIds={setSelectedActivityIds}
-          onBack={() => setView('landing')}
-          onHotelClick={onHotelsClick}
-          onExploreHotel={onHotelsClick}
-          onRentalClick={onRentalsClick}
-          onActivitiesClick={onActivitiesClick}
-          onProceedToBooking={() => {
-            if (!requireAuth()) return;
-            setView('bookings');
-          }}
->>>>>>> rika-feature
         />
       );
     case 'bookings':
@@ -727,14 +697,10 @@ export const AppRoutes: React.FC<AppRoutesProps> = ({ view, setView, onSelectRec
           }}
           onHotelClick={onHotelsClick}
           onRentalClick={onRentalsClick}
-<<<<<<< HEAD
           onGroupPlanningClick={() => {
             if (!requireAuth()) return;
             setView('group-planning');
           }}
-=======
-          onGroupPlanningClick={onActivitiesClick}
->>>>>>> rika-feature
           selectedActivityIds={selectedActivityIds}
           setSelectedActivityIds={setSelectedActivityIds}
           tripData={tripData}

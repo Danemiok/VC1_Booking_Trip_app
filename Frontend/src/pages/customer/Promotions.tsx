@@ -21,11 +21,8 @@ interface Promotion {
   expiry: string;
   code: string;
   color: string;
-<<<<<<< HEAD
   originalPrice: string;
   promoPrice: string;
-=======
->>>>>>> rika-feature
 }
 
 const promotions: Promotion[] = [
@@ -38,13 +35,9 @@ const promotions: Promotion[] = [
     image: "https://images.unsplash.com/photo-1542314831-068cd1dbfeeb?auto=format&fit=crop&q=80&w=800",
     expiry: "Ends in 12 days",
     code: "RAFFLES25",
-<<<<<<< HEAD
     color: "bg-blue-600",
     originalPrice: "$320/night",
     promoPrice: "$240/night"
-=======
-    color: "bg-blue-600"
->>>>>>> rika-feature
   },
   {
     id: 2,
@@ -55,13 +48,9 @@ const promotions: Promotion[] = [
     image: "https://images.unsplash.com/photo-1544551763-46a013bb70d5?auto=format&fit=crop&q=80&w=800",
     expiry: "Ends in 5 days",
     code: "ISLANDVIP",
-<<<<<<< HEAD
     color: "bg-emerald-600",
     originalPrice: "$28/seat",
     promoPrice: "$28/seat + VIP"
-=======
-    color: "bg-emerald-600"
->>>>>>> rika-feature
   },
   {
     id: 3,
@@ -72,13 +61,9 @@ const promotions: Promotion[] = [
     image: "https://images.unsplash.com/photo-1500048993953-d23a436266cf?auto=format&fit=crop&q=80&w=800",
     expiry: "Limited time",
     code: "SUNRISE15",
-<<<<<<< HEAD
     color: "bg-orange-600",
     originalPrice: "$120",
     promoPrice: "$102"
-=======
-    color: "bg-orange-600"
->>>>>>> rika-feature
   },
   {
     id: 4,
@@ -89,13 +74,9 @@ const promotions: Promotion[] = [
     image: "https://images.unsplash.com/photo-1581852017103-68ac65514cf7?auto=format&fit=crop&q=80&w=800",
     expiry: "Ends in 20 days",
     code: "ECOSTAY",
-<<<<<<< HEAD
     color: "bg-cyan-600",
     originalPrice: "$180/night",
     promoPrice: "$120/night (avg)"
-=======
-    color: "bg-cyan-600"
->>>>>>> rika-feature
   },
   {
     id: 5,
@@ -106,13 +87,9 @@ const promotions: Promotion[] = [
     image: "https://images.unsplash.com/photo-1596394516093-501ba68a0ba6?auto=format&fit=crop&q=80&w=800",
     expiry: "Ongoing",
     code: "TRANSFER10",
-<<<<<<< HEAD
     color: "bg-indigo-600",
     originalPrice: "$55",
     promoPrice: "$49.50"
-=======
-    color: "bg-indigo-600"
->>>>>>> rika-feature
   },
   {
     id: 6,
@@ -123,23 +100,15 @@ const promotions: Promotion[] = [
     image: "https://images.unsplash.com/photo-1596394516093-501ba68a0ba6?auto=format&fit=crop&q=80&w=800",
     expiry: "Ends in 8 days",
     code: "KEPFEAST",
-<<<<<<< HEAD
     color: "bg-red-600",
     originalPrice: "$140/night",
     promoPrice: "$140/night + platter"
-=======
-    color: "bg-red-600"
->>>>>>> rika-feature
   }
 ];
 
 interface PromotionsProps {
   onBack: () => void;
-<<<<<<< HEAD
   onClaim: (promotion: Promotion) => void;
-=======
-  onClaim: () => void;
->>>>>>> rika-feature
 }
 
 export const Promotions: React.FC<PromotionsProps> = ({ onBack, onClaim }) => {
@@ -318,7 +287,6 @@ export const Promotions: React.FC<PromotionsProps> = ({ onBack, onClaim }) => {
                   <p className="text-slate-500 dark:text-slate-400 text-sm leading-relaxed mb-6 flex-1">
                     {promo.description}
                   </p>
-<<<<<<< HEAD
 
                   <div className="flex items-center justify-between mb-6">
                     <div>
@@ -333,8 +301,6 @@ export const Promotions: React.FC<PromotionsProps> = ({ onBack, onClaim }) => {
                       <p className="text-sm font-extrabold text-blue-600 dark:text-blue-400 mt-1">{promo.discount}</p>
                     </div>
                   </div>
-=======
->>>>>>> rika-feature
                   
                   <div className="flex items-center gap-2 text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-6">
                     <Clock className="w-3.5 h-3.5" />
@@ -354,11 +320,7 @@ export const Promotions: React.FC<PromotionsProps> = ({ onBack, onClaim }) => {
                       </div>
                     </div>
                     <button 
-<<<<<<< HEAD
                       onClick={() => onClaim(promo)}
-=======
-                      onClick={onClaim}
->>>>>>> rika-feature
                       className="w-full bg-slate-900 dark:bg-blue-600 hover:bg-slate-800 dark:hover:bg-blue-700 text-white py-4 rounded-2xl font-bold text-sm transition-all flex items-center justify-center gap-2 group/btn"
                     >
                       Claim Now

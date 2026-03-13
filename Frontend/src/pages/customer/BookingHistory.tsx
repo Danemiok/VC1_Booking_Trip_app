@@ -25,11 +25,8 @@ import {
   Save
 } from 'lucide-react';
 import { AVAILABLE_ACTIVITIES } from '../../data/activities';
-<<<<<<< HEAD
-=======
 import { bookingService } from '@/src/services/bookingService'; // Add this import
 import { useAuth } from '../../context/AuthContext';
->>>>>>> rika-feature
 
 interface BookingHistoryProps {
   onPaymentClick: () => void;
@@ -53,10 +50,6 @@ export const BookingHistory: React.FC<BookingHistoryProps> = ({
   setTripData
 }) => {
   const availableActivities = AVAILABLE_ACTIVITIES;
-<<<<<<< HEAD
-=======
-  const { user } = useAuth();
->>>>>>> rika-feature
 
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [isCopied, setIsCopied] = useState(false);
@@ -66,14 +59,11 @@ export const BookingHistory: React.FC<BookingHistoryProps> = ({
     guests: tripData.guests
   });
 
-<<<<<<< HEAD
-=======
   // Add states for booking submission
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [bookingError, setBookingError] = useState<string | null>(null);
   const [bookingSuccess, setBookingSuccess] = useState(false);
 
->>>>>>> rika-feature
   const selectedActivities = availableActivities.filter(a => 
     selectedActivityIds?.includes(a.id) || false
   );
@@ -88,107 +78,6 @@ export const BookingHistory: React.FC<BookingHistoryProps> = ({
     total: tripData.hotel.price + (tripData.rental.isBooked ? tripData.rental.price : 0) + activitiesTotal + ((tripData.hotel.price + (tripData.rental.isBooked ? tripData.rental.price : 0) + activitiesTotal) * 0.05) + 5.00
   };
 
-<<<<<<< HEAD
-=======
-  // Function to save booking to database
-  const saveBookingToDatabase = async () => {
-    try {
-      setIsSubmitting(true);
-      setBookingError(null);
-      
-      // Parse dates from "Mar 15 - Mar 18" format
-      const dates = tripData.dates.split(' - ');
-      const startDate = dates[0];
-      const endDate = dates[1] || dates[0];
-      
-      // Get current year
-      const currentYear = new Date().getFullYear();
-      
-      // Format dates properly for database (assuming format like "Mar 15")
-      const formatDateForDB = (dateStr: string) => {
-        return `${dateStr}, ${currentYear}`;
-      };
-      
-      // Create booking ID
-      const bookingId = `BK-${Date.now().toString().slice(-4)}`;
-      
-      // Prefer authenticated user info so "guest" matches the users table name
-      const guestName = user?.name || tripData.guestName || 'Guest User';
-      const guestEmail = user?.email || tripData.customerEmail || 'guest@example.com';
-      const guestPhone = user?.phone || tripData.customerPhone || '+855 12 345 678';
-      
-      // Prepare booking data for database
-      const bookingPayload = {
-        id: bookingId,
-        guest: guestName,
-        service: tripData.hotel.name,
-        route: tripData.hotel.location,
-        dateStart: formatDateForDB(startDate),
-        dateEnd: formatDateForDB(endDate),
-        date: null,
-        time: null,
-        pax: parseInt(tripData.guests) || 2,
-        amount: financialSummary.total,
-        status: 'pending',
-        category: 'hotel',
-        roomType: tripData.hotel.roomType,
-        vehicleType: tripData.rental.isBooked ? tripData.rental.name : null,
-        customerEmail: guestEmail,
-        customerPhone: guestPhone,
-        specialRequests: '',
-        paymentMethod: 'credit_card',
-        createdAt: new Date().toISOString(),
-        // Additional info for reference
-        rental: tripData.rental.isBooked ? {
-          name: tripData.rental.name,
-          price: tripData.rental.price,
-          pickup: tripData.rental.pickup
-        } : null,
-        activities: selectedActivities.map(a => ({
-          id: a.id,
-          name: a.name,
-          price: a.price,
-          guests: a.guests
-        })),
-        reference: tripData.reference,
-        totalAmount: financialSummary.total,
-        nights: tripData.hotel.nights,
-        guests: tripData.guests
-      };
-
-      console.log('📤 Sending booking to database:', bookingPayload);
-
-      // Send to backend
-      const response = await bookingService.createBooking(bookingPayload);
-      
-      console.log('✅ Booking saved successfully:', response);
-      setBookingSuccess(true);
-      
-      // Auto-hide success message after 5 seconds
-      setTimeout(() => {
-        setBookingSuccess(false);
-      }, 5000);
-      
-      return true;
-    } catch (error) {
-      console.error('❌ Error saving booking:', error);
-      setBookingError('Failed to save booking. Please try again.');
-      return false;
-    } finally {
-      setIsSubmitting(false);
-    }
-  };
-
-  // Handle payment and save
-  const handlePaymentAndSave = async () => {
-    const saved = await saveBookingToDatabase();
-    if (saved) {
-      // Proceed to payment after successful save
-      onPaymentClick();
-    }
-  };
-
->>>>>>> rika-feature
   const toggleRentalBooking = (e: React.MouseEvent) => {
     e.stopPropagation();
     setTripData((prev: any) => ({
@@ -236,29 +125,17 @@ export const BookingHistory: React.FC<BookingHistoryProps> = ({
 
     // Header
     doc.setFontSize(22);
-<<<<<<< HEAD
     doc.setTextColor(15, 23, 42); // slate-900
-=======
-    doc.setTextColor(15, 23, 42);
->>>>>>> rika-feature
     doc.text("Trip Summary", margin, y);
     y += 12;
 
     doc.setFontSize(16);
-<<<<<<< HEAD
     doc.setTextColor(37, 99, 235); // blue-600
-=======
-    doc.setTextColor(37, 99, 235);
->>>>>>> rika-feature
     doc.text(`${tripData.title} ${tripData.emoji}`, margin, y);
     y += 10;
 
     doc.setFontSize(10);
-<<<<<<< HEAD
     doc.setTextColor(100, 116, 139); // slate-500
-=======
-    doc.setTextColor(100, 116, 139);
->>>>>>> rika-feature
     doc.text(`Reference: ${tripData.reference}`, margin, y);
     y += 15;
 
@@ -272,11 +149,7 @@ export const BookingHistory: React.FC<BookingHistoryProps> = ({
 
     // Hotel Section
     doc.setFontSize(14);
-<<<<<<< HEAD
     doc.setTextColor(234, 88, 12); // orange-600
-=======
-    doc.setTextColor(234, 88, 12);
->>>>>>> rika-feature
     doc.text("Hotel Accommodation", margin, y);
     y += 8;
     doc.setFontSize(11);
@@ -354,10 +227,7 @@ export const BookingHistory: React.FC<BookingHistoryProps> = ({
     doc.save(`trip-summary-${tripData.reference.replace('#', '')}.pdf`);
     } catch (err) {
       console.error('Failed to generate PDF:', err);
-<<<<<<< HEAD
       // Fallback: copy trip summary to clipboard
-=======
->>>>>>> rika-feature
       const shareText = `Trip Summary - ${tripData.title}
 Dates: ${tripData.dates}
 Guests: ${tripData.guests}
@@ -400,8 +270,6 @@ Booked via Cambodia Travel`;
     <div className="min-h-screen bg-slate-50 dark:bg-slate-950 pt-24 pb-20 px-4 sm:px-6 lg:px-8">
       <div className="max-w-7xl mx-auto">
         
-<<<<<<< HEAD
-=======
         {/* Success Message */}
         {bookingSuccess && (
           <motion.div
@@ -425,7 +293,6 @@ Booked via Cambodia Travel`;
           </motion.div>
         )}
         
->>>>>>> rika-feature
         {/* Review Banner */}
         <motion.div 
           initial={{ opacity: 0, y: -20 }}
@@ -670,11 +537,7 @@ Booked via Cambodia Travel`;
               </div>
               <div className="space-y-4">
                 {availableActivities.map((activity) => {
-<<<<<<< HEAD
-                  const isSelected = selectedActivityIds.includes(activity.id);
-=======
                   const isSelected = selectedActivityIds?.includes(activity.id) || false;
->>>>>>> rika-feature
                   return (
                     <div 
                       key={activity.id} 
@@ -732,11 +595,7 @@ Booked via Cambodia Travel`;
                   <span className="font-bold text-slate-900 dark:text-white">${financialSummary.rental.toLocaleString(undefined, {minimumFractionDigits: 2})}</span>
                 </div>
                 <div className="flex justify-between text-sm">
-<<<<<<< HEAD
                   <span className="text-slate-400">Activities ({selectedActivityIds.length} selected)</span>
-=======
-                  <span className="text-slate-400">Activities ({selectedActivityIds?.length || 0} selected)</span>
->>>>>>> rika-feature
                   <span className="font-bold text-slate-900 dark:text-white">${financialSummary.activities.toLocaleString(undefined, {minimumFractionDigits: 2})}</span>
                 </div>
                 <div className="flex justify-between text-sm">
@@ -759,20 +618,6 @@ Booked via Cambodia Travel`;
                 </p>
               </div>
 
-<<<<<<< HEAD
-              <div className="space-y-3 mb-8">
-                <button 
-                  onClick={onPaymentClick}
-                  className="w-full flex items-center justify-center gap-3 py-4 bg-blue-600 text-white rounded-xl font-bold hover:bg-blue-700 transition-colors"
-                >
-                  <Landmark className="w-5 h-5" /> Pay with ABA
-                </button>
-                <button 
-                  onClick={onPaymentClick}
-                  className="w-full flex items-center justify-center gap-3 py-4 bg-blue-800 text-white rounded-xl font-bold hover:bg-blue-900 transition-colors"
-                >
-                  <CreditCard className="w-5 h-5" /> Pay with ACLEDA
-=======
               {/* Updated payment buttons with save functionality */}
               <div className="space-y-3 mb-8">
                 <button 
@@ -806,7 +651,6 @@ Booked via Cambodia Travel`;
                       <CreditCard className="w-5 h-5" /> Pay with ACLEDA
                     </>
                   )}
->>>>>>> rika-feature
                 </button>
               </div>
 
@@ -981,3 +825,5 @@ Booked via Cambodia Travel`;
     </div>
   );
 };
+
+export default BookingHistory

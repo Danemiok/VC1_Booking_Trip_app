@@ -19,10 +19,7 @@ import {
 } from 'lucide-react';
 import { 
   format, 
-<<<<<<< HEAD
   parse,
-=======
->>>>>>> rika-feature
   startOfMonth, 
   endOfMonth, 
   startOfWeek, 
@@ -81,7 +78,6 @@ const DESTINATION_OPTIONS = [
 
 const parseDateValue = (value: unknown): Date | null => {
   if (!value) return null;
-<<<<<<< HEAD
   if (value instanceof Date) {
     return Number.isNaN(value.getTime()) ? null : value;
   }
@@ -103,12 +99,6 @@ const parseDateFromString = (value: string, fallbackYear: number): Date | null =
   return Number.isNaN(native.getTime()) ? null : native;
 };
 
-=======
-  const parsed = value instanceof Date ? value : new Date(value as string | number);
-  return Number.isNaN(parsed.getTime()) ? null : parsed;
-};
-
->>>>>>> rika-feature
 const getDateRangeFromTripData = (tripData: any): { start: Date | null; end: Date | null } => {
   const startFromState = parseDateValue(tripData?.startDate);
   const endFromState = parseDateValue(tripData?.endDate);
@@ -119,14 +109,6 @@ const getDateRangeFromTripData = (tripData: any): { start: Date | null; end: Dat
   const rawDateRange = String(tripData?.dates || '');
   const dateParts = rawDateRange.split(' - ');
   if (dateParts.length === 2) {
-<<<<<<< HEAD
-    const guessedYear = new Date().getFullYear();
-    const endFromString = parseDateFromString(dateParts[1], guessedYear);
-    const yearForStart = endFromString?.getFullYear() ?? guessedYear;
-    const startFromString = parseDateFromString(dateParts[0], yearForStart);
-
-    if (startFromString && endFromString) return { start: startFromString, end: endFromString };
-=======
     const endFromString = parseDateValue(dateParts[1]);
     let startFromString = parseDateValue(dateParts[0]);
 
@@ -137,7 +119,6 @@ const getDateRangeFromTripData = (tripData: any): { start: Date | null; end: Dat
     if (startFromString && endFromString) {
       return { start: startFromString, end: endFromString };
     }
->>>>>>> rika-feature
   }
 
   return { start: null, end: null };
@@ -174,7 +155,6 @@ export const TripPlanner: React.FC<TripPlannerProps> = ({
     tripData.destination ||
     DESTINATION_OPTIONS[0];
 
-<<<<<<< HEAD
   const hotelSelected = Boolean(tripData?.hotel?.name) && Number(tripData?.hotel?.price || 0) > 0;
   const rentalSelected = Boolean(tripData?.rental?.name) && Number(tripData?.rental?.price || 0) > 0;
 
@@ -205,11 +185,6 @@ export const TripPlanner: React.FC<TripPlannerProps> = ({
   const promoDiscountAmount = promoPercent && promoPercent > 0 && baseTotal > 0 ? baseTotal * (promoPercent / 100) : 0;
   const totalAfterPromo = Math.max(0, baseTotal - promoDiscountAmount);
 
-=======
-  const selectedActivities = AVAILABLE_ACTIVITIES.filter(a => selectedActivityIds.includes(a.id));
-  const suggestedActivities = AVAILABLE_ACTIVITIES.filter(a => !selectedActivityIds.includes(a.id)).slice(0, 3);
-
->>>>>>> rika-feature
   useEffect(() => {
     const destinationName = tripData.destination?.name || tripData.hotel.location.split(',')[0] || DESTINATION_OPTIONS[0].name;
     setLocation(destinationName);
@@ -601,13 +576,8 @@ export const TripPlanner: React.FC<TripPlannerProps> = ({
                   <p className="text-sm text-slate-400">{tripData.hotel.roomType}</p>
                 </div>
                 <div className="text-right">
-<<<<<<< HEAD
                   <p className="text-xl font-bold text-blue-600">${(hotelSelected ? (tripData.hotel.dailyPrice || 0) : 0).toFixed(2)}<span className="text-[10px] text-slate-400 font-normal ml-1">/night</span></p>
                   <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Total: ${(hotelSelected ? tripData.hotel.price : 0).toFixed(2)}</p>
-=======
-                  <p className="text-xl font-bold text-blue-600">${(tripData.hotel.dailyPrice || 0).toFixed(2)}<span className="text-[10px] text-slate-400 font-normal ml-1">/night</span></p>
-                  <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Total: ${tripData.hotel.price.toFixed(2)}</p>
->>>>>>> rika-feature
                 </div>
               </div>
             </section>
@@ -745,7 +715,6 @@ export const TripPlanner: React.FC<TripPlannerProps> = ({
                   </div>
                   <span className="font-bold">{activeDestinationOption.name}</span>
                 </div>
-<<<<<<< HEAD
                 <div className="h-px bg-white/10 dark:bg-slate-200/70" />
                 <div className="flex justify-between items-center">
                   <div className="flex flex-col">
@@ -753,32 +722,17 @@ export const TripPlanner: React.FC<TripPlannerProps> = ({
                     <span className="text-[10px] text-white/40 dark:text-slate-400">${(hotelSelected ? (tripData.hotel.dailyPrice || 0) : 0).toFixed(2)} /night</span>
                   </div>
                   <span className="font-bold">${(hotelSelected ? tripData.hotel.price : 0).toFixed(2)}</span>
-=======
-                <div className="flex justify-between items-center">
-                  <div className="flex flex-col">
-                    <span className="text-white/60 dark:text-slate-500 text-sm">Hotel</span>
-                    <span className="text-[10px] text-white/40 dark:text-slate-400">${(tripData.hotel.dailyPrice || 0).toFixed(2)} /night</span>
-                  </div>
-                  <span className="font-bold">${tripData.hotel.price.toFixed(2)}</span>
->>>>>>> rika-feature
                 </div>
                 <div className="flex justify-between items-center">
                   <div className="flex flex-col">
                     <span className="text-white/60 dark:text-slate-500 text-sm">Rental</span>
-<<<<<<< HEAD
                     <span className="text-[10px] text-white/40 dark:text-slate-400">${(rentalSelected ? (tripData.rental.dailyPrice || 0) : 0).toFixed(2)} /day</span>
                   </div>
                   <span className="font-bold">${(rentalSelected ? tripData.rental.price : 0).toFixed(2)}</span>
-=======
-                    <span className="text-[10px] text-white/40 dark:text-slate-400">${(tripData.rental.dailyPrice || 0).toFixed(2)} /day</span>
-                  </div>
-                  <span className="font-bold">${tripData.rental.isBooked ? tripData.rental.price.toFixed(2) : '0.00'}</span>
->>>>>>> rika-feature
                 </div>
                 <div className="flex justify-between items-center">
                   <div className="flex flex-col">
                     <span className="text-white/60 dark:text-slate-500 text-sm">Activities</span>
-<<<<<<< HEAD
                     <span className="text-[10px] text-white/40 dark:text-slate-400">{activitiesSelected ? `${selectedActivities.length} items` : 'No activities'}</span>
                   </div>
                   <span className="font-bold">${(activitiesSelected ? selectedActivitiesTotal : 0).toFixed(2)}</span>
@@ -831,32 +785,13 @@ export const TripPlanner: React.FC<TripPlannerProps> = ({
                       ${(promotion ? totalAfterPromo : baseTotal).toFixed(2)}
                     </span>
                   </div>
-=======
-                    <span className="text-[10px] text-white/40 dark:text-slate-400">{selectedActivities.length} items</span>
-                  </div>
-                  <span className="font-bold">${selectedActivities.reduce((sum, a) => sum + (a.price * a.guests), 0).toFixed(2)}</span>
-                </div>
-                <div className="pt-6 border-t border-white/10 dark:border-slate-100 flex justify-between items-center">
-                  <span className="text-lg font-bold">Total Est.</span>
-                  <span className="text-3xl font-bold text-blue-400 dark:text-blue-600">
-                    ${(
-                      tripData.hotel.price + 
-                      (tripData.rental.isBooked ? tripData.rental.price : 0) + 
-                      selectedActivities.reduce((sum, a) => sum + (a.price * a.guests), 0)
-                    ).toFixed(2)}
-                  </span>
->>>>>>> rika-feature
                 </div>
               </div>
 
               <button 
                 onClick={onProceedToBooking}
-<<<<<<< HEAD
                 disabled={baseTotal <= 0}
                 className="w-full bg-blue-600 disabled:bg-white/10 disabled:text-white/40 dark:disabled:bg-slate-100/60 dark:disabled:text-slate-500 text-white py-4 rounded-2xl font-bold flex items-center justify-center gap-2 hover:bg-blue-700 disabled:hover:bg-white/10 transition-all mb-4"
-=======
-                className="w-full bg-blue-600 text-white py-4 rounded-2xl font-bold flex items-center justify-center gap-2 hover:bg-blue-700 transition-all mb-4"
->>>>>>> rika-feature
               >
                 Proceed to Booking <ArrowRight className="w-5 h-5" />
               </button>

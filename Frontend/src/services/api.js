@@ -1,9 +1,5 @@
-<<<<<<< HEAD
 import { getAuthToken } from './authService';
 
-=======
-// Use your existing apiRequest function
->>>>>>> rika-feature
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL ?? 'http://127.0.0.1:8000/api';
 
 const AUTH_TOKEN_KEY = 'auth_token';
@@ -17,19 +13,6 @@ function getStoredAuthToken() {
 }
 
 export async function apiRequest(path, options = {}) {
-<<<<<<< HEAD
-  const token = getAuthToken();
-  
-  const headers = {
-    Accept: 'application/json',
-    'Content-Type': 'application/json',
-    ...(token ? { Authorization: `Bearer ${token}` } : {}),
-    ...(options.headers ?? {}),
-  };
-
-  const response = await fetch(`${API_BASE_URL}${path}`, {
-    headers,
-=======
   const token = getStoredAuthToken();
   const hasAuthHeader = Boolean(
     options?.headers &&
@@ -43,7 +26,6 @@ export async function apiRequest(path, options = {}) {
       ...(token && !hasAuthHeader ? { Authorization: `Bearer ${token}` } : {}),
       ...(options.headers ?? {}),
     },
->>>>>>> rika-feature
     ...options,
   });
 

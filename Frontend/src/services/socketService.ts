@@ -32,17 +32,12 @@ class SocketServiceStub {
     }
   }
 
-<<<<<<< HEAD
   connect(): SocketServiceStub {
     return this;
   }
 
   getSocket(): SocketServiceStub {
     return this;
-=======
-  connect(): void {
-    // Stub: no-op
->>>>>>> rika-feature
   }
 
   disconnect(): void {

@@ -1,10 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { format, addDays } from 'date-fns';
-<<<<<<< HEAD
-=======
 import { Link } from 'react-router-dom';
->>>>>>> rika-feature
 import { 
   Search, 
   Calendar, 
@@ -36,11 +33,8 @@ import {
   isAfter
 } from 'date-fns';
 import { ALL_HOTELS } from '../../data/hotels';
-<<<<<<< HEAD
-=======
 import { useAuth } from '../../context/AuthContext';
 import { bookingService } from '@/src/services/bookingService';
->>>>>>> rika-feature
 
 // --- Sub-components (could be further split) ---
 const normalizeSearchText = (value: string): string =>
@@ -1023,8 +1017,6 @@ export const Dashboard: React.FC<DashboardProps> = ({
   const [searchQuery, setSearchQuery] = useState('');
   const [searchResults, setSearchResults] = useState<any[]>([]);
   const [hasSearched, setHasSearched] = useState(false);
-<<<<<<< HEAD
-=======
   const { user, isAuthenticated } = useAuth();
   const [myBookings, setMyBookings] = useState<any[]>([]);
   const [myBookingsLoading, setMyBookingsLoading] = useState(false);
@@ -1050,7 +1042,6 @@ export const Dashboard: React.FC<DashboardProps> = ({
 
     run();
   }, [isAuthenticated, user?.id, user?.role]);
->>>>>>> rika-feature
 
   useEffect(() => {
     setLocation(String(tripData?.destination?.name || ''));
@@ -1096,8 +1087,6 @@ export const Dashboard: React.FC<DashboardProps> = ({
         setLocation={setLocation}
         tripData={tripData}
       />
-<<<<<<< HEAD
-=======
 
       <section className="py-10 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto">
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
@@ -1186,7 +1175,6 @@ export const Dashboard: React.FC<DashboardProps> = ({
           </div>
         </div>
       </section>
->>>>>>> rika-feature
       
       <AnimatePresence>
         {hasSearched && (
