@@ -5,29 +5,23 @@ namespace App\Http\Controllers\Owner;
 use App\Http\Controllers\Controller;
 use App\Models\Promotion;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Auth;
 
 class PromotionController extends Controller
 {
-    /**
-     * Display a listing of the resource.
-     */
     public function index()
     {
         $userId = auth()->id();
+
         $promotions = Promotion::where('owner_id', $userId)
             ->orderBy('created_at', 'desc')
             ->get();
-        
+
         return response()->json([
             'success' => true,
             'data' => $promotions
         ]);
     }
 
-    /**
-     * Store a newly created resource in storage.
-     */
     public function store(Request $request)
     {
         $validated = $request->validate([
@@ -35,19 +29,10 @@ class PromotionController extends Controller
             'description' => 'nullable|string',
             'discount' => 'required|string',
             'type' => 'required|string',
-            'image' => 'nullable|string',
             'expiry' => 'nullable|date',
-            'code' => 'nullable|string',
-            'color' => 'nullable|string',
             'is_active' => 'nullable|boolean',
         ]);
 
-        // Provide default value for image if not provided
-        if (!isset($validated['image'])) {
-            $validated['image'] = '';
-        }
-
-        // Add owner_id from authenticated user
         $validated['owner_id'] = auth()->id();
 
         $promotion = Promotion::create($validated);
@@ -59,12 +44,10 @@ class PromotionController extends Controller
         ], 201);
     }
 
-    /**
-     * Display the specified resource.
-     */
     public function show(string $id)
     {
         $userId = auth()->id();
+
         $promotion = Promotion::where('owner_id', $userId)->findOrFail($id);
 
         return response()->json([
@@ -73,12 +56,10 @@ class PromotionController extends Controller
         ]);
     }
 
-    /**
-     * Update the specified resource in storage.
-     */
     public function update(Request $request, string $id)
     {
         $userId = auth()->id();
+
         $promotion = Promotion::where('owner_id', $userId)->findOrFail($id);
 
         $validated = $request->validate([
@@ -86,10 +67,7 @@ class PromotionController extends Controller
             'description' => 'nullable|string',
             'discount' => 'sometimes|string',
             'type' => 'sometimes|string',
-            'image' => 'nullable|string',
             'expiry' => 'nullable|date',
-            'code' => 'nullable|string',
-            'color' => 'nullable|string',
             'is_active' => 'nullable|boolean',
         ]);
 
@@ -102,12 +80,10 @@ class PromotionController extends Controller
         ]);
     }
 
-    /**
-     * Remove the specified resource from storage.
-     */
     public function destroy(string $id)
     {
         $userId = auth()->id();
+
         $promotion = Promotion::where('owner_id', $userId)->findOrFail($id);
 
         $promotion->delete();
