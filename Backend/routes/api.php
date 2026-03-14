@@ -17,6 +17,8 @@ use App\Http\Controllers\Customer\MessageController as CustomerMessageController
 */
 use App\Http\Controllers\Owner\DestinationController;
 use App\Http\Controllers\Owner\PromotionController;
+// use Illuminate\Http\Request;
+// use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Api\BookingController; // ADD THIS
 
 Route::prefix('auth')->group(function () {
@@ -32,7 +34,7 @@ Route::prefix('auth')->group(function () {
 
             $user = $request->user();
 
-            $nextView = match ($user?->role) {
+            $nextView = match ($user->role) {
                 'admin' => 'admin-dashboard',
                 'owner' => 'owner-dashboard',
                 'customer' => 'customer-dashboard',
@@ -123,7 +125,7 @@ Route::middleware(['auth:sanctum'])->group(function () {
 |--------------------------------------------------------------------------
 */
 
-Route::middleware('auth:sanctum')->apiResource('users', AuthController::class);
+Route::middleware(['auth:sanctum', 'role:admin'])->apiResource('users', AuthController::class);
 
 /*
 |--------------------------------------------------------------------------

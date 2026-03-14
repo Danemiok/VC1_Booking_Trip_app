@@ -11,6 +11,21 @@ use Laravel\Sanctum\PersonalAccessToken;
 
 class BookingController extends Controller
 {
+    private function ensureRole(Request $request, array $roles)
+    {
+        $user = $request->user();
+
+        if (! $user) {
+            return response()->json(['message' => 'Unauthenticated'], 401);
+        }
+
+        if (! in_array($user->role, $roles, true)) {
+            return response()->json(['message' => 'Forbidden'], 403);
+        }
+
+        return null;
+    }
+
     private function resolveUserFromBearerToken(Request $request)
     {
         $token = $request->bearerToken();
@@ -33,6 +48,11 @@ class BookingController extends Controller
      */
     public function index(Request $request)
     {
+        $guard = $this->ensureRole($request, ['owner', 'admin']);
+        if ($guard) {
+            return $guard;
+        }
+
         try {
             Log::info('Fetching bookings with filters:', $request->all());
             
@@ -245,6 +265,11 @@ class BookingController extends Controller
      */
     public function stats(Request $request)
     {
+        $guard = $this->ensureRole($request, ['owner', 'admin']);
+        if ($guard) {
+            return $guard;
+        }
+
         try {
             $totalBookings = Booking::count();
             $activeGuests = Booking::where('status', 'paid')->sum('pax');
@@ -270,6 +295,11 @@ class BookingController extends Controller
      */
     public function export(Request $request)
     {
+        $guard = $this->ensureRole($request, ['owner', 'admin']);
+        if ($guard) {
+            return $guard;
+        }
+
         try {
             $query = Booking::query();
 
@@ -328,6 +358,11 @@ class BookingController extends Controller
      */
     public function updateStatus(Request $request, $id)
     {
+        $guard = $this->ensureRole($request, ['owner', 'admin']);
+        if ($guard) {
+            return $guard;
+        }
+
         try {
             $booking = Booking::find($id);
             

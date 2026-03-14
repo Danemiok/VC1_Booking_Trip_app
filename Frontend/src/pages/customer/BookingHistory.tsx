@@ -50,6 +50,7 @@ export const BookingHistory: React.FC<BookingHistoryProps> = ({
   setTripData
 }) => {
   const availableActivities = AVAILABLE_ACTIVITIES;
+  const { user } = useAuth();
 
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [isCopied, setIsCopied] = useState(false);
@@ -76,6 +77,104 @@ export const BookingHistory: React.FC<BookingHistoryProps> = ({
     taxes: (tripData.hotel.price + (tripData.rental.isBooked ? tripData.rental.price : 0) + activitiesTotal) * 0.05,
     serviceFee: 5.00,
     total: tripData.hotel.price + (tripData.rental.isBooked ? tripData.rental.price : 0) + activitiesTotal + ((tripData.hotel.price + (tripData.rental.isBooked ? tripData.rental.price : 0) + activitiesTotal) * 0.05) + 5.00
+  };
+
+  // Function to save booking to database
+  const saveBookingToDatabase = async () => {
+    try {
+      setIsSubmitting(true);
+      setBookingError(null);
+      
+      // Parse dates from "Mar 15 - Mar 18" format
+      const dates = tripData.dates.split(' - ');
+      const startDate = dates[0];
+      const endDate = dates[1] || dates[0];
+      
+      // Get current year
+      const currentYear = new Date().getFullYear();
+      
+      // Format dates properly for database (assuming format like "Mar 15")
+      const formatDateForDB = (dateStr: string) => {
+        return `${dateStr}, ${currentYear}`;
+      };
+      
+      // Create booking ID
+      const bookingId = `BK-${Date.now().toString().slice(-4)}`;
+      
+      // Prefer authenticated user info so "guest" matches the users table name
+      const guestName = user?.name || tripData.guestName || 'Guest User';
+      const guestEmail = user?.email || tripData.customerEmail || 'guest@example.com';
+      const guestPhone = user?.phone || tripData.customerPhone || '+855 12 345 678';
+      
+      // Prepare booking data for database
+      const bookingPayload = {
+        id: bookingId,
+        guest: guestName,
+        service: tripData.hotel.name,
+        route: tripData.hotel.location,
+        dateStart: formatDateForDB(startDate),
+        dateEnd: formatDateForDB(endDate),
+        date: null,
+        time: null,
+        pax: parseInt(tripData.guests) || 2,
+        amount: financialSummary.total,
+        status: 'pending',
+        category: 'hotel',
+        roomType: tripData.hotel.roomType,
+        vehicleType: tripData.rental.isBooked ? tripData.rental.name : null,
+        customerEmail: guestEmail,
+        customerPhone: guestPhone,
+        specialRequests: '',
+        paymentMethod: 'credit_card',
+        createdAt: new Date().toISOString(),
+        // Additional info for reference
+        rental: tripData.rental.isBooked ? {
+          name: tripData.rental.name,
+          price: tripData.rental.price,
+          pickup: tripData.rental.pickup
+        } : null,
+        activities: selectedActivities.map(a => ({
+          id: a.id,
+          name: a.name,
+          price: a.price,
+          guests: a.guests
+        })),
+        reference: tripData.reference,
+        totalAmount: financialSummary.total,
+        nights: tripData.hotel.nights,
+        guests: tripData.guests
+      };
+
+      console.log('📤 Sending booking to database:', bookingPayload);
+
+      // Send to backend
+      const response = await bookingService.createBooking(bookingPayload);
+      
+      console.log('✅ Booking saved successfully:', response);
+      setBookingSuccess(true);
+      
+      // Auto-hide success message after 5 seconds
+      setTimeout(() => {
+        setBookingSuccess(false);
+      }, 5000);
+      
+      return true;
+    } catch (error) {
+      console.error('❌ Error saving booking:', error);
+      setBookingError('Failed to save booking. Please try again.');
+      return false;
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  // Handle payment and save
+  const handlePaymentAndSave = async () => {
+    const saved = await saveBookingToDatabase();
+    if (saved) {
+      // Proceed to payment after successful save
+      onPaymentClick();
+    }
   };
 
   const toggleRentalBooking = (e: React.MouseEvent) => {

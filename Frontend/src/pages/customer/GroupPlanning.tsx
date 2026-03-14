@@ -508,6 +508,11 @@ export const GroupPlanning: React.FC<GroupPlanningProps> = ({ onBack, tripTitle 
       socketService.getSocket()?.emit('itinerary-updated', next);
       return next;
     });
+    socketService.getSocket()?.emit('update-itinerary', {
+      groupId,
+      email: userEmail,
+      item: newActivity
+    });
     setIsAddingActivity(false);
     setNewActivity({ time: '', activity: '', location: '' });
   };
