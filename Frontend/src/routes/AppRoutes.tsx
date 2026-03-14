@@ -9,7 +9,7 @@ import { Login } from '../pages/auth/Login';
 import { Register } from '../pages/auth/Register';
 import VisitorHome from '../pages/public/VisitorHome';
 import { Dashboard as CustomerDashboard } from '../pages/customer/Dashboard';
-import Destinations from '../pages/customer/Destinations';
+import { Hotels } from '../pages/customer/Destinations';
 import { HotelDetails } from '../pages/customer/HotelDetails';
 import { TripPlanner } from '../pages/customer/TripPlanner';
 import { BookingHistory } from '../pages/customer/BookingHistory';
@@ -383,7 +383,26 @@ const AdminShell: React.FC<{ view: string; setView: (view: string) => void; onLo
   );
 };
 
-export const AppRoutes: React.FC<AppRoutesProps> = ({ view, setView, onSelectRecommendation, onSelectDestination, onPromotionsClick, onHotelsClick, onRentalsClick, onActivitiesClick, notifications, onMarkAsRead, onMarkAllAsRead, activeProfileTab, selectedHotel, setSelectedHotel, selectedActivityIds, setSelectedActivityIds, tripData, setTripData }) => {
+export const AppRoutes: React.FC<AppRoutesProps> = ({
+  view,
+  setView,
+  onSelectRecommendation,
+  onSelectDestination,
+  onPromotionsClick,
+  onHotelsClick,
+  onRentalsClick,
+  onActivitiesClick,
+  notifications,
+  onMarkAsRead,
+  onMarkAllAsRead,
+  activeProfileTab,
+  selectedHotel,
+  setSelectedHotel,
+  selectedActivityIds,
+  setSelectedActivityIds,
+  tripData,
+  setTripData,
+}) => {
   const { user, logout } = useAuth();
   const isGuest = !user;
   const location = useLocation();
@@ -542,7 +561,13 @@ export const AppRoutes: React.FC<AppRoutesProps> = ({ view, setView, onSelectRec
         />
       );
     case 'hotels':
-  
+      return (
+        <Hotels
+          tripData={tripData}
+          onBack={() => setView('trip-planner')}
+          onSelectHotel={handleSelectHotel}
+        />
+      );
     case 'hotel-details':
       return (
         <HotelDetails
