@@ -7,7 +7,6 @@ use App\Http\Controllers\Auth\LoginController;
 use App\Http\Controllers\Auth\LogoutController;
 use App\Http\Controllers\Auth\RegisterController;
 use App\Http\Controllers\AuthController;
-<<<<<<< HEAD
 use App\Http\Controllers\Owner\MessageController;
 use App\Http\Controllers\Customer\MessageController as CustomerMessageController;
 
@@ -19,11 +18,7 @@ use App\Http\Controllers\Customer\MessageController as CustomerMessageController
 use App\Http\Controllers\Owner\DestinationController;
 // use Illuminate\Http\Request;
 // use Illuminate\Support\Facades\Route;
-=======
 use App\Http\Controllers\Api\BookingController; // ADD THIS
-use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Route;
->>>>>>> rika-feature
 
 Route::prefix('auth')->group(function () {
 
@@ -53,28 +48,6 @@ Route::prefix('auth')->group(function () {
     });
 });
 
-<<<<<<< HEAD
-/*
-|--------------------------------------------------------------------------
-| Role Protected Routes
-|--------------------------------------------------------------------------
-*/
-
-Route::middleware(['auth:sanctum', 'role:admin'])->group(function () {
-    Route::get('/admin/access', function () {
-        return response()->json(['message' => 'Admin access granted']);
-    });
-});
-
-Route::middleware(['auth:sanctum', 'role:customer'])->group(function () {
-    Route::get('/customer/access', function () {
-        return response()->json(['message' => 'Customer access granted']);
-    });
-});
-
-Route::middleware(['auth:sanctum', 'role:owner'])->group(function () {
-    Route::get('/owner/access', function () {
-=======
 // PROTECTED ROUTES (require authentication)
 Route::middleware(['auth:sanctum'])->group(function () {
     // Customer booking routes
@@ -109,7 +82,6 @@ Route::middleware(['auth:sanctum'])->group(function () {
     
     // Owner routes
     Route::middleware(['role:owner'])->get('/owner/access', function () {
->>>>>>> rika-feature
         return response()->json(['message' => 'Owner access granted']);
     });
 });
