@@ -618,14 +618,28 @@ Booked via Cambodia Travel`;
                 </p>
               </div>
 
-              {/* Updated payment buttons with save functionality */}
               <div className="space-y-3 mb-8">
                 <button 
-                  onClick={handlePaymentAndSave}
+                  onClick={onPaymentClick}
+                  className="w-full flex items-center justify-center gap-3 py-4 bg-blue-600 text-white rounded-xl font-bold hover:bg-blue-700 transition-colors"
+                >
+                  <Landmark className="w-5 h-5" /> Pay with ABA
+                </button>
+                <button 
+                  onClick={onPaymentClick}
+                  className="w-full flex items-center justify-center gap-3 py-4 bg-blue-800 text-white rounded-xl font-bold hover:bg-blue-900 transition-colors"
+                >
+                  <CreditCard className="w-5 h-5" /> Pay with ACLEDA
+                </button>
+              </div>
+
+              <div className="space-y-3 mb-8">
+                <button 
+                  
                   disabled={isSubmitting}
                   className="w-full flex items-center justify-center gap-3 py-4 bg-blue-600 text-white rounded-xl font-bold hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                 >
-                  {isSubmitting ? (
+                  {isSubmitting ? ( 
                     <>
                       <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div>
                       Processing...
@@ -636,8 +650,9 @@ Booked via Cambodia Travel`;
                     </>
                   )}
                 </button>
+
                 <button 
-                  onClick={handlePaymentAndSave}
+                  
                   disabled={isSubmitting}
                   className="w-full flex items-center justify-center gap-3 py-4 bg-blue-800 text-white rounded-xl font-bold hover:bg-blue-900 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                 >

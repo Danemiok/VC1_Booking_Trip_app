@@ -536,14 +536,7 @@ export const AppRoutes: React.FC<AppRoutesProps> = ({ view, setView, onSelectRec
         />
       );
     case 'hotels':
-    case 'destinations':
-      return (
-        <Destinations
-          tripData={tripData}
-          onBack={() => setView('landing')}
-          onSelectHotel={handleSelectHotel}
-        />
-      );
+  
     case 'hotel-details':
       return (
         <HotelDetails

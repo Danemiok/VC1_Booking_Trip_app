@@ -2,8 +2,7 @@ import React, { useState } from 'react';
 import { AnimatePresence, motion } from 'motion/react';
 import { Navbar } from './components/layout/Navbar';
 import { Footer } from './components/layout/Footer';
-// import { RecommendationModal } from './components/common/RecommendationModal';
-// import { DestinationModal } from './components/common/DestinationModal';
+
 import { AppRoutes } from './routes/AppRoutes';
 import { Login } from './pages/auth/Login';
 import { Register } from './pages/auth/Register';
@@ -219,29 +218,18 @@ const AppContent = () => {
         )}
       </AnimatePresence>
 
-      {/* <AnimatePresence>
-        {selectedRecommendation && (
-          <RecommendationModal 
-            item={selectedRecommendation} 
-            onClose={() => setSelectedRecommendation(null)} 
-          />
-        )}
-        {selectedDestination && (
-          <DestinationModal 
-            dest={selectedDestination} 
-            onClose={() => setSelectedDestination(null)} 
-          />
-        )}
-      </AnimatePresence> */}
     </div>
   );
 };
 
 const App = () => {
   return (
-    <ThemeProvider>
-      <AppContent />
-    </ThemeProvider>
+    <>
+        <ThemeProvider>
+        <AppContent />
+      </ThemeProvider>
+      
+    </>
   );
 };
 
