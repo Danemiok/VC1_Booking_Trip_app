@@ -92,7 +92,7 @@ Route::middleware(['auth:sanctum'])->group(function () {
 |--------------------------------------------------------------------------
 */
 
-Route::middleware('auth:sanctum')->apiResource('users', AuthController::class);
+Route::middleware(['auth:sanctum', 'role:admin'])->apiResource('users', AuthController::class);
 
 /*
 |--------------------------------------------------------------------------

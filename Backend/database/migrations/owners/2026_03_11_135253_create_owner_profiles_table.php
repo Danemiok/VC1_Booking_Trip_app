@@ -6,14 +6,16 @@ use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
 {
-    /**
-     * Run the migrations.
-     */
     public function up(): void
     {
         Schema::create('owner_profiles', function (Blueprint $table) {
-            $table->id('owner_id');
-            $table->string('user_id')->unique();
+            // Primary key
+            $table->bigIncrements('owner_id');
+
+            // Foreign key column (must match users.id type)
+            $table->unsignedBigInteger('user_id')->unique();
+
+            // Owner profile fields
             $table->string('name')->nullable();
             $table->string('avatar')->nullable();
             $table->string('bio')->nullable();
@@ -31,16 +33,16 @@ return new class extends Migration
             $table->string('bank_account_holder')->nullable();
             $table->timestamp('verified_at')->nullable();
             $table->string('verification_document')->nullable();
-            $table->timestamp('created_at')->nullable();
-            $table->timestamp('updated_at')->nullable();
-            $table->timestamp('deleted_at')->nullable();
+
+            // Foreign key constraint
+            $table->foreign('user_id')->references('id')->on('users')->onDelete('cascade');
+
+            // Laravel timestamps + soft deletes
             $table->timestamps();
+            $table->softDeletes(); // creates deleted_at
         });
     }
 
-    /**
-     * Reverse the migrations.
-     */
     public function down(): void
     {
         Schema::dropIfExists('owner_profiles');

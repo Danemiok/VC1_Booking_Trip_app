@@ -20,11 +20,8 @@ return new class extends Migration
             $table->string('bio')->nullable();
             $table->string('date_of_birth')->nullable();
             $table->string('gender')->nullable();
-            $table->timestamp('created_at')->nullable();
-            $table->timestamp('updated_at')->nullable();
-            $table->timestamp('deleted_at')->nullable();
-            
             $table->timestamps();
+            $table->softDeletes();
         });
     }
 

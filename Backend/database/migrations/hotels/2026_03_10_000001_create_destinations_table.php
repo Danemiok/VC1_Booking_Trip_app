@@ -6,14 +6,20 @@ use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
 {
-    /**
-     * Run the migrations.
-     */
     public function up(): void
     {
         Schema::create('destinations', function (Blueprint $table) {
-            $table->id('destination_id');
-            $table->foreignId('user_id')->constrained()->onDelete('cascade');
+            $table->bigIncrements('destination_id');
+
+            // This column references users.id correctly
+            $table->unsignedBigInteger('user_id');
+
+            // Foreign key constraint
+            $table->foreign('user_id')
+                  ->references('id')
+                  ->on('users')
+                  ->onDelete('cascade');
+
             $table->string('name');
             $table->string('type')->default('Boutique Hotel');
             $table->text('description')->nullable();
@@ -29,9 +35,6 @@ return new class extends Migration
         });
     }
 
-    /**
-     * Reverse the migrations.
-     */
     public function down(): void
     {
         Schema::dropIfExists('destinations');
