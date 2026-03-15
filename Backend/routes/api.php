@@ -4,6 +4,7 @@ use App\Http\Controllers\Auth\LoginController;
 use App\Http\Controllers\Auth\LogoutController;
 use App\Http\Controllers\Auth\RegisterController;
 use App\Http\Controllers\AuthController;
+use App\Http\Controllers\Owner\TransportController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
@@ -29,6 +30,8 @@ Route::prefix('auth')->group(function () {
     });
 });
 
+Route::get('/transports', [TransportController::class, 'publicIndex']);
+
 Route::middleware(['auth:sanctum', 'role:admin'])->get('/admin/access', function () {
     return response()->json(['message' => 'Admin access granted']);
 });
@@ -40,5 +43,9 @@ Route::middleware(['auth:sanctum', 'role:customer'])->get('/customer/access', fu
 Route::middleware(['auth:sanctum', 'role:owner'])->get('/owner/access', function () {
     return response()->json(['message' => 'Owner access granted']);
 });
+
+Route::middleware(['auth:sanctum', 'role:owner'])->get('/owner/transports', [TransportController::class, 'index']);
+Route::middleware(['auth:sanctum', 'role:owner'])->post('/owner/transports', [TransportController::class, 'store']);
+Route::middleware(['auth:sanctum', 'role:owner'])->delete('/owner/transports/{transport}', [TransportController::class, 'destroy']);
 
 Route::apiResource('users', AuthController::class);
