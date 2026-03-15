@@ -2,9 +2,20 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
 class Promotion extends Model
 {
-    // Promotion model placeholder
+    use HasFactory;
+
+    protected $fillable = [
+        'owner_id',
+        'title',
+        'description',
+        'discount',
+        'type',
+        'expiry',
+        'is_active'
+    ];
 }
