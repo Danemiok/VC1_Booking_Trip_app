@@ -33,7 +33,13 @@ export const Login: React.FC<LoginProps> = ({ onSwitchToRegister, onBack, onSucc
       onSuccess(result.nextView);
     } catch (error: any) {
       console.error('❌ Login error:', error);
-      setErrorMessage(error?.data?.message ?? 'Login failed');
+      const fieldErrors = error?.data?.errors;
+      if (fieldErrors) {
+        const firstError = Object.values(fieldErrors)[0] as string[] | string | undefined;
+        setErrorMessage(Array.isArray(firstError) ? firstError[0] : 'Login failed');
+      } else {
+        setErrorMessage(error?.data?.message ?? 'Login failed');
+      }
     } finally {
       setIsSubmitting(false);
     }

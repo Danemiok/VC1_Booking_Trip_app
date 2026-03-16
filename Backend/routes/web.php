@@ -23,7 +23,20 @@ Route::get('/', function () {
 });
 
 Route::get('/dashboard', function () {
-    return Inertia::render('Dashboard');
+    $user = auth()->user();
+    
+    if (!$user) {
+        return redirect('/login');
+    }
+    
+    $nextView = match ($user->role) {
+        'admin' => 'admin-dashboard',
+        'owner' => 'owner-dashboard', 
+        'customer' => 'customer-dashboard',
+        default => 'customer-dashboard',
+    };
+    
+    return Inertia::render($nextView);
 })->middleware(['auth', 'verified'])->name('dashboard');
 
 Route::middleware('auth')->group(function () {
@@ -32,4 +45,4 @@ Route::middleware('auth')->group(function () {
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
 });
 
-require __DIR__.'/auth.php';
+// require __DIR__.'/auth.php';
