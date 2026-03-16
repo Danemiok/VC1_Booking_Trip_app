@@ -1,17 +1,32 @@
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL ?? 'http://127.0.0.1:8000/api';
+const RAW_API_BASE_URL = import.meta.env.VITE_API_BASE_URL ?? 'http://127.0.0.1:8000/api';
 
-const AUTH_TOKEN_KEY = 'auth_token';
-
-function getStoredAuthToken() {
-  try {
-    return localStorage.getItem(AUTH_TOKEN_KEY);
-  } catch {
-    return null;
+const normalizeApiBaseUrl = (value) => {
+  const trimmed = String(value ?? '').trim();
+  const withoutTrailingSlash = trimmed.replace(/\/+$/, '');
+  if (withoutTrailingSlash.endsWith('/api')) {
+    return withoutTrailingSlash;
   }
+  return `${withoutTrailingSlash}/api`;
+};
+
+export const API_BASE_URL = normalizeApiBaseUrl(RAW_API_BASE_URL);
+
+let authToken = null;
+
+export function getApiAuthToken() {
+  return authToken;
+}
+
+export function setApiAuthToken(token) {
+  authToken = token ?? null;
+}
+
+export function clearApiAuthToken() {
+  authToken = null;
 }
 
 export async function apiRequest(path, options = {}) {
-  const token = getStoredAuthToken();
+  const token = getApiAuthToken();
   const hasAuthHeader = Boolean(
     options?.headers &&
       Object.keys(options.headers).some((key) => key.toLowerCase() === 'authorization'),

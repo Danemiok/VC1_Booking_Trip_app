@@ -1,40 +1,29 @@
-import { apiRequest } from './api';
+import { apiRequest, clearApiAuthToken, getApiAuthToken, setApiAuthToken } from './api';
 
-const AUTH_TOKEN_KEY = 'auth_token';
-const AUTH_USER_KEY = 'auth_user';
+let cachedUser = null;
 
 export function getAuthToken() {
-  return localStorage.getItem(AUTH_TOKEN_KEY);
+  return getApiAuthToken();
 }
 
 export function setAuthToken(token) {
-  localStorage.setItem(AUTH_TOKEN_KEY, token);
+  setApiAuthToken(token);
 }
 
 export function clearAuthToken() {
-  localStorage.removeItem(AUTH_TOKEN_KEY);
+  clearApiAuthToken();
 }
 
 export function getAuthUser() {
-  const raw = localStorage.getItem(AUTH_USER_KEY);
-
-  if (!raw) {
-    return null;
-  }
-
-  try {
-    return JSON.parse(raw);
-  } catch {
-    return null;
-  }
+  return cachedUser;
 }
 
 export function setAuthUser(user) {
-  localStorage.setItem(AUTH_USER_KEY, JSON.stringify(user));
+  cachedUser = user ?? null;
 }
 
 export function clearAuthUser() {
-  localStorage.removeItem(AUTH_USER_KEY);
+  cachedUser = null;
 }
 
 export function getUserRole() {

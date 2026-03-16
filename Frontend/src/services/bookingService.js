@@ -1,6 +1,5 @@
-import { apiRequest } from './api';
-
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://127.0.0.1:8000/api';
+import { apiRequest, API_BASE_URL } from './api';
+import { getAuthToken } from './authService';
 
 export const bookingService = {
   // Get all bookings (for owner page)
@@ -117,13 +116,12 @@ export const bookingService = {
       
       console.log('📥 Exporting bookings to CSV');
       
+      const token = getAuthToken();
       const response = await fetch(`${API_BASE_URL}/bookings/export${queryString}`, {
         method: 'GET',
         headers: {
           'Accept': 'text/csv',
-          ...(localStorage.getItem('auth_token')
-            ? { Authorization: `Bearer ${localStorage.getItem('auth_token')}` }
-            : {}),
+          ...(token ? { Authorization: `Bearer ${token}` } : {}),
         },
       });
       

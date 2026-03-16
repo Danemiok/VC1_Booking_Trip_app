@@ -31,6 +31,7 @@ import OwnerPromotions from '../pages/owner/Promotions';
 import OwnerCreatePromotion from '../pages/owner/CreatePromotion';
 import OwnerAnalytics from '../pages/owner/Analytics';
 import OwnerFinancials from '../pages/owner/Financials';
+import OwnerProfile from '../pages/owner/Profile';
 import OwnerSettings from '../pages/owner/Settings';
 import OwnerRegisterVehicle from '../pages/owner/RegisterVehicle';
 import OwnerPropertyDetail from '../pages/owner/PropertyDetail';
@@ -126,6 +127,7 @@ const getOwnerTitle = (pathname: string): string => {
   if (pathname.startsWith('/promotions')) return 'Promotions';
   if (pathname.startsWith('/analytics')) return 'Analytics';
   if (pathname.startsWith('/financials')) return 'Financials';
+  if (pathname.startsWith('/profile')) return 'Profile';
   if (pathname.startsWith('/settings')) return 'Settings';
   if (pathname.startsWith('/destinations')) return 'Destinations';
   return 'Overview Dashboard';
@@ -154,6 +156,7 @@ const OwnerShell: React.FC<{ onLogout: () => void }> = ({ onLogout }) => {
     if (path.startsWith('/promotions')) return <OwnerPromotions />;
     if (path.startsWith('/analytics')) return <OwnerAnalytics />;
     if (path.startsWith('/financials')) return <OwnerFinancials />;
+    if (path.startsWith('/profile')) return <OwnerProfile />;
     if (path.startsWith('/settings')) return <OwnerSettings />;
 
     return <OwnerDashboard />;

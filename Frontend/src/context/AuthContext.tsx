@@ -6,6 +6,7 @@ import {
   logout as logoutRequest,
   register as registerRequest,
   setAuthUser,
+  setAuthToken,
   authService,
 } from '../services/authService';
 
@@ -84,8 +85,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   // Debug log on mount and when auth state changes
   useEffect(() => {
     console.log('🔍 AuthProvider initialized');
-    console.log('📦 Token from storage:', getAuthToken());
-    console.log('👤 User from storage:', getAuthUser());
+    console.log('📦 Token from memory:', getAuthToken());
+    console.log('👤 User from memory:', getAuthUser());
     console.log('🔑 isAuthenticated:', !!getAuthToken());
   }, []);
 
@@ -110,7 +111,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       const responseToken = data?.access_token;
       
       if (responseToken) {
-        console.log('✅ Token received and stored');
+        console.log('✅ Token received and cached');
+        setAuthToken(responseToken);
         setToken(responseToken);
       } else {
         console.warn('⚠️ No token in response');
@@ -125,6 +127,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       }
       
       setUser(nextUser);
+      setAuthUser(nextUser);
       
       console.log('✅ Login successful:', {
         user: nextUser,
@@ -155,7 +158,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       const responseToken = data?.access_token;
       
       if (responseToken) {
-        console.log('✅ Token received and stored');
+        console.log('✅ Token received and cached');
+        setAuthToken(responseToken);
         setToken(responseToken);
       }
       
@@ -168,6 +172,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       }
       
       setUser(nextUser);
+      setAuthUser(nextUser);
       
       console.log('✅ Register successful:', {
         user: nextUser,
@@ -195,7 +200,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     } finally {
       setUser(null);
       setToken(null);
-      // authService.logout already clears storage
+      // authService.logout already clears cached auth data
       console.log('✅ Logged out successfully');
     }
   };
