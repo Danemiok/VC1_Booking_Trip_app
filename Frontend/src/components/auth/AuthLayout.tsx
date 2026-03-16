@@ -13,21 +13,21 @@ interface Slide {
 const slides: Slide[] = [
   {
     id: 1,
-    title: "Your Adventure Awaits",
-    subtitle: "Discover amazing destinations with Komrong Travel.",
-    image: "https://images.unsplash.com/photo-1507525428034-b723a9ce6890?auto=format&fit=crop&q=80&w=2000"
+    title: "Explore the Wonders of Cambodia",
+    subtitle: "Start your unforgettable journey through Cambodia’s rich culture and natural beauty.",
+    image: "https://images.unsplash.com/photo-1545569341-9eb8b30979d9?auto=format&fit=crop&q=80&w=2000"
   },
   {
     id: 2,
-    title: "Paradise Islands",
-    subtitle: "Experience pristine beaches and crystal waters.",
-    image: "https://images.unsplash.com/photo-1506905925346-21bda4d32df4?auto=format&fit=crop&q=80&w=2000"
+    title: "Discover Angkor Wat",
+    subtitle: "Experience the breathtaking sunrise and ancient temples of Angkor.",
+    image: "https://images.unsplash.com/photo-1589395937772-f6705e04d7f4?auto=format&fit=crop&q=80&w=2000"
   },
   {
     id: 3,
-    title: "Ancient Wonders",
-    subtitle: "Explore historic civilizations and cultural heritage.",
-    image: "https://images.unsplash.com/photo-1569660072562-47a003366792?auto=format&fit=crop&q=80&w=2000"
+    title: "Cambodian Nature Adventure",
+    subtitle: "From tropical islands to lush jungles, Cambodia is full of adventure.",
+    image: "https://images.unsplash.com/photo-1500530855697-b586d89ba3ee?auto=format&fit=crop&q=80&w=2000"
   }
 ];
 
@@ -64,10 +64,11 @@ export const AuthLayout: React.FC<AuthLayoutProps> = ({
     setCurrentSlide(index);
   };
 
-  useEffect(() => {
-    const timer = setInterval(nextSlide, 5000);
-    return () => clearInterval(timer);
-  }, []);
+  // Auto-advance removed - carousel is now frozen
+  // useEffect(() => {
+  //   const timer = setInterval(nextSlide, 5000);
+  //   return () => clearInterval(timer);
+  // }, []);
   return (
     <div className="flex min-h-screen items-center justify-center p-4 transition-colors duration-300">
       <div
@@ -91,6 +92,10 @@ export const AuthLayout: React.FC<AuthLayoutProps> = ({
                   src={slides[currentSlide].image}
                   alt={slides[currentSlide].title}
                   className="w-full h-full object-cover"
+                  onError={(e) => {
+                    const target = e.target as HTMLImageElement;
+                    target.src = "https://images.unsplash.com/photo-1559827260-dc66d52bef19?auto=format&fit=crop&q=80&w=2000";
+                  }}
                 />
                 <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/30 to-transparent" />
                 
@@ -99,8 +104,12 @@ export const AuthLayout: React.FC<AuthLayoutProps> = ({
                     <div className="w-12 h-12 bg-white rounded-full flex items-center justify-center shadow-lg overflow-hidden">
                       <img 
                         src="/logos/logoBookingTrip.png"
-                        alt="Logo" 
-                        className="w-full h-full object-cover"
+                        alt="Komrong Logo" 
+                        className="w-full h-full object-contain p-1"
+                        onError={(e) => {
+                          const target = e.target as HTMLImageElement;
+                          target.src = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' fill='%230052CC'/%3E%3Ctext x='50' y='50' text-anchor='middle' dy='.3em' fill='white' font-family='Arial' font-size='40' font-weight='bold'%3EK%3C/text%3E%3C/svg%3E";
+                        }}
                       />
                     </div>
                     <span className="text-white font-bold text-xl">Komrong</span>
