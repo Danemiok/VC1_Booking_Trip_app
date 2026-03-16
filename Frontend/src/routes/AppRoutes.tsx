@@ -9,14 +9,18 @@ import { Login } from '../pages/auth/Login';
 import { Register } from '../pages/auth/Register';
 import VisitorHome from '../pages/public/VisitorHome';
 import { Dashboard as CustomerDashboard } from '../pages/customer/Dashboard';
-import { Destinations } from '../pages/customer/Destinations';
+import { Hotels } from '../pages/customer/Destinations';
 import { HotelDetails } from '../pages/customer/HotelDetails';
 import { TripPlanner } from '../pages/customer/TripPlanner';
 import { BookingHistory } from '../pages/customer/BookingHistory';
 import { GroupInvite } from '../pages/customer/GroupInvite';
+import { GroupPlanning } from '../pages/customer/GroupPlanning';
 import { Rentals } from '../pages/customer/Rentals';
 import { Activities } from '../pages/customer/Activities';
 import { Profile } from '../pages/customer/Profile';
+import { Promotions } from '../pages/customer/Promotions';
+import { BookTrip } from '../pages/customer/BookTrip';
+import { CustomerBookings } from '../pages/customer/CustomerBookings';
 import Payment from '../pages/customer/Payment';
 import OwnerDashboard from '../pages/owner/Dashboard';
 import OwnerDestinations from '../pages/owner/Destinations';
@@ -70,6 +74,15 @@ interface AppRoutesProps {
   tripData: any;
   setTripData: React.Dispatch<React.SetStateAction<any>>;
 }
+
+type ClaimedPromotion = {
+  id: number;
+  title: string;
+  discount: string;
+  code: string;
+  originalPrice: string;
+  promoPrice: string;
+};
 
 type AdminView =
   | 'dashboard'
@@ -364,9 +377,29 @@ const AdminShell: React.FC<{ view: string; setView: (view: string) => void; onLo
   );
 };
 
-export const AppRoutes: React.FC<AppRoutesProps> = ({ view, setView, onSelectRecommendation, onSelectDestination, onPromotionsClick, onHotelsClick, onRentalsClick, onActivitiesClick, notifications, onMarkAsRead, onMarkAllAsRead, activeProfileTab, selectedHotel, setSelectedHotel, selectedActivityIds, setSelectedActivityIds, tripData, setTripData }) => {
+export const AppRoutes: React.FC<AppRoutesProps> = ({
+  view,
+  setView,
+  onSelectRecommendation,
+  onSelectDestination,
+  onPromotionsClick,
+  onHotelsClick,
+  onRentalsClick,
+  onActivitiesClick,
+  notifications,
+  onMarkAsRead,
+  onMarkAllAsRead,
+  activeProfileTab,
+  selectedHotel,
+  setSelectedHotel,
+  selectedActivityIds,
+  setSelectedActivityIds,
+  tripData,
+  setTripData,
+}) => {
   const { user, logout } = useAuth();
   const isGuest = !user;
+  const location = useLocation();
 
   const requireAuth = React.useCallback(() => {
     if (isGuest) {
@@ -421,6 +454,27 @@ export const AppRoutes: React.FC<AppRoutesProps> = ({ view, setView, onSelectRec
     });
     setView('trip-planner');
   };
+
+  const customerBookingRoute =
+    location.pathname === '/customer/book' || location.pathname === '/customer/bookings';
+
+  if (customerBookingRoute) {
+    if (isGuest) {
+      return (
+        <Login
+          onSwitchToRegister={() => setView('register')}
+          onBack={() => setView('landing')}
+          onSuccess={(nextView) => setView(nextView)}
+        />
+      );
+    }
+
+    if (user?.role !== 'customer') {
+      return <VisitorHome />;
+    }
+
+    return location.pathname === '/customer/book' ? <BookTrip /> : <CustomerBookings />;
+  }
 
   if (user?.role === 'admin') {
     return <AdminShell view={view} setView={setView} onLogout={logout} />;
@@ -501,11 +555,10 @@ export const AppRoutes: React.FC<AppRoutesProps> = ({ view, setView, onSelectRec
         />
       );
     case 'hotels':
-    case 'destinations':
       return (
-        <Destinations
+        <Hotels
           tripData={tripData}
-          onBack={() => setView('landing')}
+          onBack={() => setView('trip-planner')}
           onSelectHotel={handleSelectHotel}
         />
       );
@@ -532,8 +585,19 @@ export const AppRoutes: React.FC<AppRoutesProps> = ({ view, setView, onSelectRec
         />
       );
     case 'promotions':
+      return (
+        <Promotions
+          onBack={() => setView('landing')}
+          onClaim={(promotion: ClaimedPromotion) => {
+            setTripData((prev) => ({
+              ...prev,
+              promotion
+            }));
+            setView('trip-planner');
+          }}
+        />
+      );
     case 'trip-planner':
-    case 'group-planning':
       return (
         <TripPlanner
           tripData={tripData}
@@ -549,6 +613,17 @@ export const AppRoutes: React.FC<AppRoutesProps> = ({ view, setView, onSelectRec
             if (!requireAuth()) return;
             setView('bookings');
           }}
+        />
+      );
+    case 'group-planning':
+      if (isGuest) {
+        setView('login');
+        return null;
+      }
+      return (
+        <GroupPlanning
+          onBack={() => setView('bookings')}
+          tripTitle={tripData?.title}
         />
       );
     case 'bookings':
@@ -640,7 +715,10 @@ export const AppRoutes: React.FC<AppRoutesProps> = ({ view, setView, onSelectRec
           }}
           onHotelClick={onHotelsClick}
           onRentalClick={onRentalsClick}
-          onGroupPlanningClick={onActivitiesClick}
+          onGroupPlanningClick={() => {
+            if (!requireAuth()) return;
+            setView('group-planning');
+          }}
           selectedActivityIds={selectedActivityIds}
           setSelectedActivityIds={setSelectedActivityIds}
           tripData={tripData}

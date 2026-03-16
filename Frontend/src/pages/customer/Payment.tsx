@@ -596,20 +596,10 @@ export const Payment: React.FC<PaymentProps> = ({ tripData, onBackToHome, select
                   </div>
                   <button 
                     onClick={handlePayment}
-                    disabled={paymentStatus === 'processing'}
-                    className="flex items-center gap-3 px-8 py-4 bg-blue-600 text-white rounded-2xl font-bold hover:bg-blue-700 transition-all shadow-lg shadow-blue-200 dark:shadow-none group disabled:opacity-70 disabled:cursor-not-allowed"
+                    className="flex items-center gap-3 px-8 py-4 bg-blue-600 text-white rounded-2xl font-bold hover:bg-blue-700 transition-all shadow-lg shadow-blue-200 dark:shadow-none group"
                   >
-                    {paymentStatus === 'processing' ? (
-                      <>
-                        <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                        Processing...
-                      </>
-                    ) : (
-                      <>
-                        Pay Now ${bookingData.pricing.total.toFixed(2)}
-                        <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
-                      </>
-                    )}
+                    {selectedMethod === 'aba' ? 'Scan QR Code' : 'Pay Now'} ${bookingData.pricing.total.toFixed(2)}
+                    <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
                   </button>
                 </div>
               </div>

@@ -41,9 +41,16 @@ class DatabaseSeeder extends Seeder
             ]
         );
 
-        // Seed destinations
-        $this->call([
-            DestinationSeeder::class,
+        User::factory()->create([
+            'name' => 'Owner 1',
+            'email' => 'owner1@test.com',
+            'role' => 'owner'
+        ]);
+
+        User::factory()->create([
+            'name' => 'Customer 1',
+            'email' => 'customer1@test.com',
+            'role' => 'customer'
         ]);
     }
 }

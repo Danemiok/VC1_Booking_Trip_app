@@ -2,8 +2,7 @@ import React, { useState } from 'react';
 import { AnimatePresence, motion } from 'motion/react';
 import { Navbar } from './components/layout/Navbar';
 import { Footer } from './components/layout/Footer';
-// import { RecommendationModal } from './components/common/RecommendationModal';
-// import { DestinationModal } from './components/common/DestinationModal';
+
 import { AppRoutes } from './routes/AppRoutes';
 import { Login } from './pages/auth/Login';
 import { Register } from './pages/auth/Register';
@@ -22,7 +21,7 @@ const AppContent = () => {
   const [selectedRecommendation, setSelectedRecommendation] = useState<any | null>(null);
   const [selectedDestination, setSelectedDestination] = useState<any | null>(null);
   const [selectedHotel, setSelectedHotel] = useState<any | null>(null);
-  const [selectedActivityIds, setSelectedActivityIds] = useState<number[]>([1, 2]);
+  const [selectedActivityIds, setSelectedActivityIds] = useState<number[]>([]);
   const isAdminUser = user?.role === 'admin';
   const isOwnerUser = user?.role === 'owner';
   
@@ -47,19 +46,22 @@ const AppContent = () => {
       location: "1 Vithei Charles de Gaulle, Siem Reap, Cambodia",
       roomType: "Landmark Garden View Room",
       guests: "2 Adults",
-      price: 2450.00,
+      dailyPrice: 350.00,
+      price: 0.00,
       nights: 7,
-      status: "Reserved",
+      status: "Not booked",
+      isBooked: false,
       image: "https://images.unsplash.com/photo-1542314831-068cd1dbfeeb?auto=format&fit=crop&q=80&w=800"
     },
     rental: {
       name: "Lexus LX570 SUV",
       pickup: "Siem Reap Angkor International (SAI)",
       features: "Automatic • Premium Interior",
-      price: 560.00,
+      dailyPrice: 80.00,
+      price: 0.00,
       days: 7,
-      status: "Pending",
-      isBooked: true,
+      status: "Not booked",
+      isBooked: false,
       image: "https://images.unsplash.com/photo-1619767886558-efdc259cde1a?auto=format&fit=crop&q=80&w=800"
     }
   });
@@ -216,29 +218,18 @@ const AppContent = () => {
         )}
       </AnimatePresence>
 
-      {/* <AnimatePresence>
-        {selectedRecommendation && (
-          <RecommendationModal 
-            item={selectedRecommendation} 
-            onClose={() => setSelectedRecommendation(null)} 
-          />
-        )}
-        {selectedDestination && (
-          <DestinationModal 
-            dest={selectedDestination} 
-            onClose={() => setSelectedDestination(null)} 
-          />
-        )}
-      </AnimatePresence> */}
     </div>
   );
 };
 
 const App = () => {
   return (
-    <ThemeProvider>
-      <AppContent />
-    </ThemeProvider>
+    <>
+        <ThemeProvider>
+        <AppContent />
+      </ThemeProvider>
+      
+    </>
   );
 };
 
