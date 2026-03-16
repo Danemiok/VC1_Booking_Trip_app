@@ -65,10 +65,10 @@ export const AuthLayout: React.FC<AuthLayoutProps> = ({
   };
 
   // Auto-advance removed - carousel is now frozen
-  // useEffect(() => {
-  //   const timer = setInterval(nextSlide, 5000);
-  //   return () => clearInterval(timer);
-  // }, []);
+  useEffect(() => {
+    const timer = setInterval(nextSlide, 3000);
+    return () => clearInterval(timer);
+  }, []);
   return (
     <div className="flex min-h-screen items-center justify-center p-4 transition-colors duration-300">
       <div
