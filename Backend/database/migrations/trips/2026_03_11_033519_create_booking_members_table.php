@@ -13,7 +13,14 @@ return new class extends Migration
     {
         Schema::create('booking_members', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('booking_id')->constrained()->onDelete('cascade');
+
+            // Use unsignedBigInteger + explicit foreign key
+            $table->unsignedBigInteger('booking_id');
+            $table->foreign('booking_id')
+                  ->references('id')              // <-- change to booking_id if your bookings table uses booking_id as PK
+                  ->on('hotel_bookings')          // <-- change to your actual booking table name
+                  ->onDelete('cascade');
+
             $table->string('first_name');
             $table->string('last_name');
             $table->string('email')->nullable();

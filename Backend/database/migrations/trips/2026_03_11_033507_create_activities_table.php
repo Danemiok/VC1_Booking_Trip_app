@@ -13,7 +13,13 @@ return new class extends Migration
     {
         Schema::create('activities', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('destination_id')->constrained()->onDelete('cascade');
+
+            $table->unsignedBigInteger('destination_id');
+            $table->foreign('destination_id')
+                ->references('destination_id')
+                ->on('destinations')
+                ->onDelete('cascade');
+
             $table->string('name');
             $table->text('description')->nullable();
             $table->string('type')->default('Tour');
