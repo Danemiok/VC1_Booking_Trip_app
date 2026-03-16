@@ -72,7 +72,7 @@ export async function apiRequest(path, options = {}) {
   }
 
   if (!response.ok) {
-    const error = new Error(data?.message ?? 'Request faileddddddddddd');
+    const error = new Error(data?.message ?? 'Request failed');
     error.status = response.status;
     error.data = data;
     throw error;
