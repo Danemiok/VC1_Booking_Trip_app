@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Owner;
 use App\Http\Controllers\Controller;
 use App\Models\Transport;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 
 class TransportController extends Controller
@@ -38,25 +39,20 @@ class TransportController extends Controller
     {
         $validated = $request->validate([
             'service_name' => ['required', 'string', 'max:255'],
-            'transport_type' => ['nullable', 'in:Car Rental,Shuttle,Bus,Other'],
+            'transport_type' => ['nullable', 'in:Car Rental,Train,Bus,Other'],
             'price_per_km' => ['required', 'numeric', 'min:0'],
             'route_description' => ['nullable', 'string'],
             'service_details' => ['nullable', 'string'],
             'vehicle_photo_url' => ['nullable', 'string', 'max:500'],
-            'vehicle_photo' => ['nullable', 'image', 'max:5120'],
+            'vehicle_photo' => ['nullable', 'image', 'max:10240'],
             'status' => ['nullable', 'in:active,inactive,pending'],
         ]);
 
         $photoPath = $validated['vehicle_photo_url'] ?? null;
         if ($request->hasFile('vehicle_photo')) {
             $file = $request->file('vehicle_photo');
-            $dir = public_path('uploads');
-            if (!is_dir($dir)) {
-                mkdir($dir, 0755, true);
-            }
-            $filename = Str::uuid()->toString() . '.' . $file->getClientOriginalExtension();
-            $file->move($dir, $filename);
-            $photoPath = 'uploads/' . $filename;
+            $storedPath = $file->storePublicly('uploads/transports', 'public');
+            $photoPath = Storage::url($storedPath);
         }
 
         $transport = Transport::create([
@@ -97,6 +93,57 @@ class TransportController extends Controller
 
         return response()->json([
             'message' => 'Transport deleted successfully',
+        ]);
+    }
+
+    public function update(Request $request, Transport $transport)
+    {
+        if ($transport->owner_id !== $request->user()->id) {
+            return response()->json([
+                'message' => 'You are not allowed to update this transport.',
+            ], 403);
+        }
+
+        $validated = $request->validate([
+            'service_name' => ['required', 'string', 'max:255'],
+            'transport_type' => ['nullable', 'in:Car Rental,Train,Bus,Other'],
+            'price_per_km' => ['required', 'numeric', 'min:0'],
+            'route_description' => ['nullable', 'string'],
+            'service_details' => ['nullable', 'string'],
+            'vehicle_photo_url' => ['nullable', 'string', 'max:500'],
+            'vehicle_photo' => ['nullable', 'image', 'max:10240'],
+            'status' => ['nullable', 'in:active,inactive,pending'],
+        ]);
+
+        $photoPath = $validated['vehicle_photo_url'] ?? $transport->vehicle_photo_url;
+        if ($request->hasFile('vehicle_photo')) {
+            $file = $request->file('vehicle_photo');
+            $storedPath = $file->storePublicly('uploads/transports', 'public');
+            $photoPath = Storage::url($storedPath);
+
+            $oldPhoto = $transport->vehicle_photo_url;
+            if ($oldPhoto && !str_starts_with($oldPhoto, 'http')) {
+                $relativePath = ltrim($oldPhoto, '/');
+                $fullPath = public_path($relativePath);
+                if (is_file($fullPath)) {
+                    @unlink($fullPath);
+                }
+            }
+        }
+
+        $transport->update([
+            'service_name' => $validated['service_name'],
+            'transport_type' => $validated['transport_type'] ?? $transport->transport_type ?? 'Car Rental',
+            'price_per_km' => $validated['price_per_km'],
+            'route_description' => $validated['route_description'] ?? null,
+            'service_details' => $validated['service_details'] ?? null,
+            'vehicle_photo_url' => $photoPath,
+            'status' => $validated['status'] ?? $transport->status ?? 'pending',
+        ]);
+
+        return response()->json([
+            'message' => 'Transport updated successfully',
+            'data' => $transport,
         ]);
     }
 }
