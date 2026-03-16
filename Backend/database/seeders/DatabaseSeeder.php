@@ -47,10 +47,13 @@ class DatabaseSeeder extends Seeder
             'role' => 'owner'
         ]);
 
-        User::factory()->create([
+User::factory()->create([
             'name' => 'Customer 1',
             'email' => 'customer1@test.com',
             'role' => 'customer'
         ]);
+
+$this->call(HotelSeeder::class);
     }
+
 }

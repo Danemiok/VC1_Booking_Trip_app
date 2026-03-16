@@ -16,7 +16,7 @@ import {
   Users, 
   CheckCircle2 
 } from 'lucide-react';
-import { ALL_HOTELS } from '../../data/hotels';
+import { getHotels, type Hotel } from '../../data/hotels';
 
 type DestinationStatus = 'active' | 'draft';
 
@@ -241,6 +241,13 @@ const parseGuestCount = (guestLabel: unknown): number => {
   return totalGuests > 0 ? totalGuests : 2;
 };
 
+const formatHotelDate = (value?: string): string => {
+  if (!value) return 'Unknown date';
+  const parsed = new Date(value);
+  if (Number.isNaN(parsed.getTime())) return 'Unknown date';
+  return parsed.toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' });
+};
+
 const getTripNights = (tripData?: any): number => {
   const start = tripData?.startDate ? new Date(tripData.startDate) : null;
   const end = tripData?.endDate ? new Date(tripData.endDate) : null;
@@ -298,6 +305,9 @@ export const Hotels: React.FC<HotelsPageProps> = ({ tripData, onBack, onSelectHo
   const [selectedRoomByHotel, setSelectedRoomByHotel] = useState<Record<number, string>>({});
   const [guestsByHotel, setGuestsByHotel] = useState<Record<number, number>>({});
   const [currentPage, setCurrentPage] = useState(1);
+  const [hotels, setHotels] = useState<Hotel[]>([]);
+  const [hotelsLoading, setHotelsLoading] = useState(true);
+  const [hotelsError, setHotelsError] = useState('');
 
   const language = (() => {
     try {
@@ -379,7 +389,26 @@ export const Hotels: React.FC<HotelsPageProps> = ({ tripData, onBack, onSelectHo
     return (isKhmer ? km : en)[key] ?? key;
   };
   
-  const hotels = ALL_HOTELS;
+  useEffect(() => {
+    let cancelled = false;
+    setHotelsLoading(true);
+    setHotelsError('');
+
+    getHotels()
+      .then((data) => {
+        if (!cancelled) setHotels(data);
+      })
+      .catch(() => {
+        if (!cancelled) setHotelsError('Failed to load hotels.');
+      })
+      .finally(() => {
+        if (!cancelled) setHotelsLoading(false);
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, []);
   const defaultGuests = parseGuestCount(tripData?.guests);
   const tripNights = getTripNights(tripData);
 
@@ -659,7 +688,23 @@ export const Hotels: React.FC<HotelsPageProps> = ({ tripData, onBack, onSelectHo
               transition={{ duration: 0.2 }}
               className="space-y-12"
             >
-              {filteredHotels.length > 0 ? (
+              {hotelsLoading ? (
+                <div className="text-center py-20 bg-slate-50 dark:bg-slate-800/50 rounded-[2rem] border-2 border-dashed border-slate-200 dark:border-slate-700">
+                  <div className="bg-slate-100 dark:bg-slate-800 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <Search className="w-8 h-8 text-slate-400" />
+                  </div>
+                  <h3 className="text-xl font-bold text-slate-900 dark:text-white mb-2">Loading hotels</h3>
+                  <p className="text-slate-500 dark:text-slate-400">Fetching the latest listings.</p>
+                </div>
+              ) : hotelsError ? (
+                <div className="text-center py-20 bg-red-50 dark:bg-red-900/20 rounded-[2rem] border-2 border-dashed border-red-200 dark:border-red-800">
+                  <div className="bg-red-100 dark:bg-red-900/40 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <Search className="w-8 h-8 text-red-400" />
+                  </div>
+                  <h3 className="text-xl font-bold text-red-700 dark:text-red-200 mb-2">Unable to load hotels</h3>
+                  <p className="text-red-600/80 dark:text-red-300/80">{hotelsError}</p>
+                </div>
+              ) : filteredHotels.length > 0 ? (
                 paginatedHotels.map((hotel) => {
                   const roomOptions = buildRoomOptions(parsePrice(hotel.price));
                   const defaultRoom = roomOptions[0];
@@ -726,6 +771,9 @@ export const Hotels: React.FC<HotelsPageProps> = ({ tripData, onBack, onSelectHo
                         >
                           {hotel.name}
                         </h3>
+                        <div className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">
+                          {hotel.owner?.name ? `Owner: ${hotel.owner.name}` : 'Owner: Unknown'} · {formatHotelDate(hotel.created_at)}
+                        </div>
                         <button
                           type="button"
                           onClick={() => openMapForHotel(hotel)}

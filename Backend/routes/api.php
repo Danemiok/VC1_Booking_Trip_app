@@ -17,9 +17,22 @@ use App\Http\Controllers\Customer\MessageController as CustomerMessageController
 */
 use App\Http\Controllers\Owner\DestinationController;
 use App\Http\Controllers\Owner\PromotionController;
+use App\Http\Controllers\Owner\AccommodationController;
 // use Illuminate\Http\Request;
 // use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Api\BookingController; // ADD THIS
+use App\Http\Controllers\Api\HotelSelectionController;
+use App\Http\Controllers\Api\HotelController;
+
+/*
+|--------------------------------------------------------------------------
+| Public Routes (No Authentication Required)
+|--------------------------------------------------------------------------
+*/
+
+// Get all active hotels for customers
+Route::get('/hotels/public', [HotelController::class, 'index']);
+Route::get('/hotels-public', [HotelController::class, 'index']);
 
 Route::prefix('auth')->group(function () {
 
@@ -77,6 +90,7 @@ Route::middleware(['auth:sanctum', 'role:owner'])->group(function () {
     
     // Owner promotions routes
     Route::apiResource('promotions', PromotionController::class);
+    Route::apiResource('hotels', AccommodationController::class);
 });
 
 
@@ -91,6 +105,12 @@ Route::middleware(['auth:sanctum'])->group(function () {
         // Backwards-compatible aliases
         Route::get('/customer/bookings', [BookingController::class, 'myBookings']);
         Route::post('/customer/bookings', [BookingController::class, 'store']);
+
+        // Customer hotel selection routes
+        Route::apiResource('hotel-selections', HotelSelectionController::class);
+        Route::get('/hotel-selections/status/{status}', [HotelSelectionController::class, 'getByStatus']);
+        Route::post('/hotel-selections/{hotelSelection}/confirm', [HotelSelectionController::class, 'confirm']);
+        Route::post('/hotel-selections/{hotelSelection}/cancel', [HotelSelectionController::class, 'cancel']);
     });
 
     // Owner routes - accessible by owners and admins
