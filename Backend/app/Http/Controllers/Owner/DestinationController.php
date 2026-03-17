@@ -80,22 +80,47 @@ class DestinationController extends Controller
     /**
      * Get a specific destination
      */
-    public function show($id): JsonResponse
+    public function show($destination): JsonResponse
     {
         try {
-            $destination = Destination::where('user_id', auth()->id())
-                ->findOrFail($id);
+            \Log::info('Show destination - Parameter received:', ['destination' => $destination]);
+
+            if (is_null($destination) || $destination === '' || $destination === 'undefined') {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Invalid destination ID'
+                ], 400);
+            }
+
+            if (!is_numeric($destination)) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Invalid destination ID format'
+                ], 400);
+            }
+
+            $destinationModel = Destination::find((int)$destination);
+
+            if (!$destinationModel) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Destination not found'
+                ], 404);
+            }
+
+            // Verify ownership
+            if ($destinationModel->user_id != auth()->id()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Unauthorized'
+                ], 403);
+            }
 
             return response()->json([
                 'success' => true,
-                'data' => $destination,
+                'data' => $destinationModel,
                 'message' => 'Destination retrieved successfully'
             ]);
-        } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Destination not found'
-            ], 404);
         } catch (\Exception $e) {
             return response()->json([
                 'success' => false,
@@ -107,11 +132,43 @@ class DestinationController extends Controller
     /**
      * Update a destination
      */
-    public function update(Request $request, $id): JsonResponse
+    public function update(Request $request, $destination): JsonResponse
     {
         try {
-            $destination = Destination::where('user_id', auth()->id())
-                ->findOrFail($id);
+            \Log::info('Update destination - Parameter received:', ['destination' => $destination]);
+
+            $id = $destination;
+
+            if (is_null($id) || $id === '' || $id === 'undefined') {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Invalid destination ID'
+                ], 400);
+            }
+
+            if (!is_numeric($id)) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Invalid destination ID format'
+                ], 400);
+            }
+
+            $destinationModel = Destination::find((int)$id);
+
+            if (!$destinationModel) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Destination not found'
+                ], 404);
+            }
+
+            // Verify ownership
+            if ($destinationModel->user_id != auth()->id()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Unauthorized - You do not own this destination'
+                ], 403);
+            }
 
             $validated = $request->validate([
                 'name' => 'string|max:255',
@@ -127,18 +184,13 @@ class DestinationController extends Controller
                 'status' => 'in:draft,active'
             ]);
 
-            $destination->update($validated);
+            $destinationModel->update($validated);
 
             return response()->json([
                 'success' => true,
-                'data' => $destination,
+                'data' => $destinationModel->fresh(),
                 'message' => 'Destination updated successfully'
             ]);
-        } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Destination not found'
-            ], 404);
         } catch (\Illuminate\Validation\ValidationException $e) {
             return response()->json([
                 'success' => false,
@@ -156,24 +208,61 @@ class DestinationController extends Controller
     /**
      * Delete a destination
      */
-    public function destroy($id): JsonResponse
+    public function destroy($destination): JsonResponse
     {
         try {
-            $destination = Destination::where('user_id', auth()->id())
-                ->findOrFail($id);
+            \Log::info('Delete destination - Raw parameter received:', ['destination' => $destination, 'type' => gettype($destination)]);
 
-            $destination->delete();
+            // Handle the ID parameter more carefully
+            $id = $destination;
+            
+            \Log::info('Delete destination - Processing ID:', ['id' => $id]);
+
+            if (is_null($id) || $id === '' || $id === 'undefined') {
+                \Log::error('Delete destination - Invalid ID received:', ['id' => $id]);
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Invalid destination ID'
+                ], 400);
+            }
+
+            if (!is_numeric($id)) {
+                \Log::error('Delete destination - ID not numeric:', ['id' => $id, 'type' => gettype($id)]);
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Invalid destination ID format'
+                ], 400);
+            }
+
+            $destinationModel = Destination::find((int)$id);
+
+            if (!$destinationModel) {
+                \Log::warning('Delete destination - Destination not found:', ['id' => $id]);
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Destination not found'
+                ], 404);
+            }
+
+            // Verify ownership
+            if ($destinationModel->user_id != auth()->id()) {
+                \Log::warning('Delete destination - Unauthorized:', ['id' => $id, 'owner_id' => $destinationModel->user_id, 'auth_id' => auth()->id()]);
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Unauthorized - You do not own this destination'
+                ], 403);
+            }
+
+            $destinationModel->delete();
+
+            \Log::info('Delete destination - Success:', ['id' => $id]);
 
             return response()->json([
                 'success' => true,
                 'message' => 'Destination deleted successfully'
             ]);
-        } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Destination not found'
-            ], 404);
         } catch (\Exception $e) {
+            \Log::error('Delete destination - Exception:', ['error' => $e->getMessage(), 'trace' => $e->getTraceAsString()]);
             return response()->json([
                 'success' => false,
                 'message' => 'Failed to delete destination: ' . $e->getMessage()

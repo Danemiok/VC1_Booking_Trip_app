@@ -636,16 +636,26 @@ const Destinations = () => {
   const confirmDelete = async () => {
     if (!propertyToDelete) return;
 
+    console.log('🗑️ Confirming delete for destination:', {
+      id: propertyToDelete.id,
+      name: propertyToDelete.name,
+      type: typeof propertyToDelete.id
+    });
+
     setIsDeleting(true);
     setDeleteError('');
 
     try {
-      await apiRequest(`/destinations/${propertyToDelete.id}`, { method: 'DELETE' });
+      const deleteUrl = `/destinations/${propertyToDelete.id}`;
+      console.log('📍 Delete URL:', deleteUrl);
+      
+      await apiRequest(deleteUrl, { method: 'DELETE' });
       setProperties((previous) => previous.filter((item) => item.id !== propertyToDelete.id));
       setFeedbackMessage('Destination deleted successfully.');
       setShowDeleteModal(false);
       setPropertyToDelete(null);
     } catch (error) {
+      console.error('❌ Delete error:', error);
       setDeleteError(getErrorMessage(error, 'Failed to delete destination. Please try again.'));
     } finally {
       setIsDeleting(false);
