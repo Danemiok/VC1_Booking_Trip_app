@@ -294,22 +294,17 @@ const Bookings = () => {
       
       console.log('📡 FetchBookings - Response:', response);
       
-      if (response.data && response.data.length > 0) {
-        console.log(`✅ FetchBookings - Got ${response.data.length} REAL bookings from API`);
-        setBookings(response.data);
-        try {
-          localStorage.setItem(BOOKINGS_CACHE_KEY, JSON.stringify(response.data));
-        } catch {
-          // ignore cache write errors
-        }
-      } else {
-        console.log('⚠️ FetchBookings - No real data, using mock data');
-        setBookings(mockCustomerBookings);
+      const next = Array.isArray(response.data) ? response.data : [];
+      console.log(`✅ FetchBookings - Got ${next.length} bookings from API`);
+      setBookings(next);
+      try {
+        localStorage.setItem(BOOKINGS_CACHE_KEY, JSON.stringify(next));
+      } catch {
+        // ignore cache write errors
       }
     } catch (error) {
       console.error('❌ FetchBookings - Error:', error);
-      setPageError('Failed to load bookings. Showing sample data.');
-      setBookings(mockCustomerBookings);
+      setPageError('Failed to load bookings. Showing cached data (if available).');
     } finally {
       setLoading(false);
     }

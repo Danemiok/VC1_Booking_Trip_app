@@ -7,10 +7,61 @@ use App\Models\Booking;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Schema;
 use Laravel\Sanctum\PersonalAccessToken;
 
 class BookingController extends Controller
 {
+    private function hasBookingColumn(string $column): bool
+    {
+        static $columns = null;
+
+        if ($columns === null) {
+            $columns = Schema::getColumnListing('bookings');
+        }
+
+        return in_array($column, $columns, true);
+    }
+
+    private function toFrontendBooking(Booking $booking): array
+    {
+        $createdAt = $booking->created_at
+            ? $booking->created_at->toIso8601String()
+            : ($booking->createdAt ? $booking->createdAt->toIso8601String() : null);
+
+        return [
+            'id' => $booking->id,
+            'guest' => $booking->guest,
+            'service' => $booking->service,
+            'route' => $booking->route,
+            'category' => $booking->category,
+            'dateStart' => $booking->date_start ?? $booking->dateStart,
+            'dateEnd' => $booking->date_end ?? $booking->dateEnd,
+            'date' => $booking->date,
+            'time' => $booking->time,
+            'pax' => $booking->pax,
+            'amount' => $booking->amount,
+            'status' => $booking->status,
+            'roomType' => $booking->room_type ?? $booking->roomType,
+            'vehicleType' => $booking->vehicle_type ?? $booking->vehicleType,
+            'customerEmail' => $booking->customer_email ?? $booking->customerEmail,
+            'customerPhone' => $booking->customer_phone ?? $booking->customerPhone,
+            'specialRequests' => $booking->special_requests ?? $booking->specialRequests,
+            'paymentMethod' => $booking->payment_method ?? $booking->paymentMethod,
+            'createdAt' => $createdAt,
+            // Extras (safe to ignore by the UI if unused)
+            'guests' => $booking->guests,
+            'nights' => $booking->nights,
+            'totalAmount' => $booking->total_amount,
+            'rental' => $booking->rental,
+            'activities' => $booking->activities,
+            'reference' => $booking->reference,
+            'user_id' => $booking->user_id,
+            'destination_id' => $booking->destination_id,
+            'transport_id' => $booking->transport_id,
+            'user' => $booking->relationLoaded('user') ? $booking->user : null,
+        ];
+    }
     private function ensureRole(Request $request, array $roles)
     {
         $user = $request->user();
@@ -90,7 +141,12 @@ class BookingController extends Controller
                       ->orWhere('guest', 'like', "%{$search}%")
                       ->orWhere('service', 'like', "%{$search}%")
                       ->orWhere('route', 'like', "%{$search}%")
-                      ->orWhere('customerEmail', 'like', "%{$search}%");
+                      ->orWhere('customer_email', 'like', "%{$search}%");
+
+                    // Legacy column (older schema)
+                    if ($this->hasBookingColumn('customerEmail')) {
+                        $q->orWhere('customerEmail', 'like', "%{$search}%");
+                    }
                 });
             }
 
@@ -98,16 +154,28 @@ class BookingController extends Controller
                 $days = $request->date_range === 'last7' ? 7 : 
                        ($request->date_range === 'last3' ? 3 : 1);
                 $cutoff = now()->subDays($days);
-                $query->where('createdAt', '>=', $cutoff);
+                $query->where(function ($q) use ($cutoff) {
+                    $q->where('created_at', '>=', $cutoff);
+
+                    // Legacy column (older schema)
+                    if ($this->hasBookingColumn('createdAt')) {
+                        $q->orWhere('createdAt', '>=', $cutoff);
+                    }
+                });
             }
 
-            $bookings = $query->orderBy('createdAt', 'desc')->get();
+            $query->orderByDesc('created_at');
+            if ($this->hasBookingColumn('createdAt')) {
+                $query->orderByDesc('createdAt');
+            }
+
+            $bookings = $query->get();
 
             Log::info('Found ' . $bookings->count() . ' bookings');
 
             return response()->json([
                 'success' => true,
-                'data' => $bookings
+                'data' => $bookings->map(fn (Booking $b) => $this->toFrontendBooking($b)),
             ]);
         } catch (\Exception $e) {
             Log::error('Error fetching bookings: ' . $e->getMessage());
@@ -130,12 +198,17 @@ class BookingController extends Controller
             $bookings = Booking::query()
                 ->with(['user:id,name,email,role'])
                 ->where('user_id', $user->id)
-                ->orderBy('createdAt', 'desc')
-                ->get();
+                ->orderByDesc('created_at');
+
+            if ($this->hasBookingColumn('createdAt')) {
+                $bookings->orderByDesc('createdAt');
+            }
+
+            $bookings = $bookings->get();
 
             return response()->json([
                 'success' => true,
-                'data' => $bookings,
+                'data' => $bookings->map(fn (Booking $b) => $this->toFrontendBooking($b)),
             ]);
         } catch (\Exception $e) {
             Log::error('Error fetching customer bookings: ' . $e->getMessage());
@@ -166,12 +239,17 @@ class BookingController extends Controller
             $bookings = Booking::query()
                 ->with(['user:id,name,email,role'])
                 ->where('user_id', $customerId)
-                ->orderBy('createdAt', 'desc')
-                ->get();
+                ->orderByDesc('created_at');
+
+            if ($this->hasBookingColumn('createdAt')) {
+                $bookings->orderByDesc('createdAt');
+            }
+
+            $bookings = $bookings->get();
 
             return response()->json([
                 'success' => true,
-                'data' => $bookings,
+                'data' => $bookings->map(fn (Booking $b) => $this->toFrontendBooking($b)),
             ]);
         } catch (\Exception $e) {
             Log::error('Error fetching bookings by customer: ' . $e->getMessage());
@@ -195,8 +273,20 @@ class BookingController extends Controller
             $user = $request->user() ?? $this->resolveUserFromBearerToken($request);
             $category = (string) $request->input('category', '');
             $isTripBooking = $category === 'trip';
-            
-            $validator = Validator::make($request->all(), [
+
+            // Accept both camelCase (frontend) and snake_case (DB) field names.
+            $payload = $request->all();
+            $payload['customerEmail'] = $payload['customerEmail'] ?? $payload['customer_email'] ?? null;
+            $payload['customerPhone'] = $payload['customerPhone'] ?? $payload['customer_phone'] ?? null;
+            $payload['dateStart'] = $payload['dateStart'] ?? $payload['date_start'] ?? null;
+            $payload['dateEnd'] = $payload['dateEnd'] ?? $payload['date_end'] ?? null;
+            $payload['roomType'] = $payload['roomType'] ?? $payload['room_type'] ?? null;
+            $payload['vehicleType'] = $payload['vehicleType'] ?? $payload['vehicle_type'] ?? null;
+            $payload['paymentMethod'] = $payload['paymentMethod'] ?? $payload['payment_method'] ?? null;
+            $payload['specialRequests'] = $payload['specialRequests'] ?? $payload['special_requests'] ?? null;
+            $payload['totalAmount'] = $payload['totalAmount'] ?? $payload['total_amount'] ?? null;
+
+            $validator = Validator::make($payload, [
                 'id' => 'required|string|unique:bookings,id',
                 'guest' => $user ? 'nullable|string' : 'required|string',
                 'service' => 'required|string',
@@ -220,26 +310,60 @@ class BookingController extends Controller
                 ], 422);
             }
 
-            // Add user_id if user is authenticated
-            $data = $request->all();
-            if (isset($data['travel_date']) && (! isset($data['date']) || ! $data['date'])) {
-                $data['date'] = $data['travel_date'];
-            }
-            if (! isset($data['amount']) || $data['amount'] === null || $data['amount'] === '') {
-                $data['amount'] = 0;
-            }
-            if ($user) {
-                $data['user_id'] = $user->id;
-
-                // Ensure booking "guest" matches the authenticated user's name
-                if (isset($user->name) && $user->name) {
-                    $data['guest'] = $user->name;
-                }
+            $amount = $payload['amount'] ?? 0;
+            if ($amount === null || $amount === '') {
+                $amount = 0;
             }
 
-            if (! isset($data['createdAt']) || ! $data['createdAt']) {
-                $data['createdAt'] = now()->toIso8601String();
+            $guestName = $payload['guest'] ?? null;
+            if ($user && isset($user->name) && $user->name) {
+                $guestName = $user->name;
             }
+
+            $createdAtRaw = $payload['createdAt'] ?? $payload['created_at'] ?? null;
+            $createdAt = $createdAtRaw ? \Illuminate\Support\Carbon::parse($createdAtRaw) : now();
+            $createdAtIso = $createdAt->toIso8601String();
+
+            // Store into snake_case columns (matches the provided SQL schema),
+            // while still accepting the frontend's camelCase payload.
+            $data = [
+                'id' => $payload['id'],
+                'user_id' => $user ? $user->id : ($payload['user_id'] ?? null),
+                'guest' => $guestName,
+                'customer_email' => $payload['customerEmail'] ?? null,
+                'customer_phone' => $payload['customerPhone'] ?? null,
+                'service' => $payload['service'],
+                'route' => $payload['route'],
+                'category' => $payload['category'],
+                'date_start' => $payload['dateStart'] ?? null,
+                'date_end' => $payload['dateEnd'] ?? null,
+                'date' => $payload['date'] ?? ($payload['travel_date'] ?? null),
+                'time' => $payload['time'] ?? null,
+                'pax' => (int) ($payload['pax'] ?? 1),
+                'guests' => $payload['guests'] ?? null,
+                'nights' => $payload['nights'] ?? null,
+                'room_type' => $payload['roomType'] ?? null,
+                'vehicle_type' => $payload['vehicleType'] ?? null,
+                'amount' => $amount,
+                'total_amount' => $payload['totalAmount'] ?? null,
+                'payment_method' => $payload['paymentMethod'] ?? null,
+                'status' => $payload['status'],
+                'rental' => $payload['rental'] ?? null,
+                'activities' => $payload['activities'] ?? null,
+                'reference' => $payload['reference'] ?? null,
+                'special_requests' => $payload['specialRequests'] ?? null,
+                'destination_id' => $payload['destination_id'] ?? null,
+                'transport_id' => $payload['transport_id'] ?? null,
+                'created_at' => $createdAt,
+                'updated_at' => now(),
+                // Keep legacy createdAt for older consumers (harmless if column exists)
+                'createdAt' => $createdAtIso,
+            ];
+
+            // Not all deployments have the same `bookings` table columns (some use a pure MySQL schema).
+            // Filter out any keys that don't exist to avoid "Unknown column" SQL errors.
+            $allowed = array_flip(Schema::getColumnListing('bookings'));
+            $data = array_intersect_key($data, $allowed);
 
             // Create booking
             $booking = Booking::create($data);
@@ -249,7 +373,7 @@ class BookingController extends Controller
             return response()->json([
                 'success' => true,
                 'message' => 'Booking created successfully',
-                'data' => $booking
+                'data' => $this->toFrontendBooking($booking)
             ], 201);
         } catch (\Exception $e) {
             Log::error('Error creating booking: ' . $e->getMessage());
@@ -307,36 +431,42 @@ class BookingController extends Controller
                 $query->where('category', $request->service);
             }
 
-            $bookings = $query->orderBy('createdAt', 'desc')->get();
+            $query->orderByDesc('created_at');
+            if ($this->hasBookingColumn('createdAt')) {
+                $query->orderByDesc('createdAt');
+            }
+
+            $bookings = $query->get();
+            $rows = $bookings->map(fn (Booking $b) => $this->toFrontendBooking($b));
 
             $headers = [
                 'Content-Type' => 'text/csv',
                 'Content-Disposition' => 'attachment; filename="bookings-' . date('Y-m-d') . '.csv"',
             ];
 
-            $callback = function() use ($bookings) {
+            $callback = function() use ($rows) {
                 $file = fopen('php://output', 'w');
                 
                 // Add headers
                 fputcsv($file, ['Booking ID', 'Guest Name', 'Service', 'Route', 'Date', 'Pax', 'Amount', 'Status', 'Email', 'Phone']);
                 
                 // Add data
-                foreach ($bookings as $booking) {
-                    $dateInfo = $booking->category === 'hotel' 
-                        ? ($booking->dateStart ? $booking->dateStart . ' to ' . $booking->dateEnd : '')
-                        : ($booking->date ? $booking->date . ' ' . $booking->time : '');
+                foreach ($rows as $booking) {
+                    $dateInfo = ($booking['category'] ?? '') === 'hotel'
+                        ? (($booking['dateStart'] ?? '') ? ($booking['dateStart'] . ' to ' . ($booking['dateEnd'] ?? '')) : '')
+                        : (($booking['date'] ?? '') ? ($booking['date'] . ' ' . ($booking['time'] ?? '')) : '');
                         
                     fputcsv($file, [
-                        $booking->id,
-                        $booking->guest,
-                        $booking->service,
-                        $booking->route,
+                        $booking['id'] ?? '',
+                        $booking['guest'] ?? '',
+                        $booking['service'] ?? '',
+                        $booking['route'] ?? '',
                         $dateInfo,
-                        $booking->pax,
-                        '$' . number_format($booking->amount, 2),
-                        ucfirst($booking->status),
-                        $booking->customerEmail,
-                        $booking->customerPhone,
+                        $booking['pax'] ?? 0,
+                        '$' . number_format((float) ($booking['amount'] ?? 0), 2),
+                        ucfirst((string) ($booking['status'] ?? 'pending')),
+                        $booking['customerEmail'] ?? '',
+                        $booking['customerPhone'] ?? '',
                     ]);
                 }
                 

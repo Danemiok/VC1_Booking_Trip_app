@@ -50,7 +50,7 @@ export const BookingHistory: React.FC<BookingHistoryProps> = ({
   setTripData
 }) => {
   const availableActivities = AVAILABLE_ACTIVITIES;
-  const { user } = useAuth();
+  const { user, isAuthenticated } = useAuth();
 
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [isCopied, setIsCopied] = useState(false);
@@ -93,13 +93,19 @@ export const BookingHistory: React.FC<BookingHistoryProps> = ({
       // Get current year
       const currentYear = new Date().getFullYear();
       
-      // Format dates properly for database (assuming format like "Mar 15")
-      const formatDateForDB = (dateStr: string) => {
-        return `${dateStr}, ${currentYear}`;
+      const toIsoDate = (dateStr: string) => {
+        const parsed = new Date(`${dateStr} ${currentYear}`);
+        if (Number.isNaN(parsed.getTime())) return null;
+        return parsed.toISOString().split('T')[0];
+      };
+
+      const normalizeDateForDB = (dateStr: string) => {
+        const iso = toIsoDate(dateStr);
+        return iso ?? `${dateStr}, ${currentYear}`;
       };
       
-      // Create booking ID
-      const bookingId = `BK-${Date.now().toString().slice(-4)}`;
+      // Create booking ID (reduce collision risk)
+      const bookingId = `BK-${Date.now()}-${Math.random().toString(16).slice(2, 6)}`;
       
       // Prefer authenticated user info so "guest" matches the users table name
       const guestName = user?.name || tripData.guestName || 'Guest User';
@@ -112,8 +118,8 @@ export const BookingHistory: React.FC<BookingHistoryProps> = ({
         guest: guestName,
         service: tripData.hotel.name,
         route: tripData.hotel.location,
-        dateStart: formatDateForDB(startDate),
-        dateEnd: formatDateForDB(endDate),
+        dateStart: normalizeDateForDB(startDate),
+        dateEnd: normalizeDateForDB(endDate),
         date: null,
         time: null,
         pax: parseInt(tripData.guests) || 2,
@@ -170,6 +176,11 @@ export const BookingHistory: React.FC<BookingHistoryProps> = ({
 
   // Handle payment and save
   const handlePaymentAndSave = async () => {
+    if (isSubmitting) return;
+    if (!isAuthenticated) {
+      setBookingError('Please log in to save your booking to the database.');
+      return;
+    }
     const saved = await saveBookingToDatabase();
     if (saved) {
       // Proceed to payment after successful save
@@ -719,22 +730,7 @@ Booked via Cambodia Travel`;
 
               <div className="space-y-3 mb-8">
                 <button 
-                  onClick={onPaymentClick}
-                  className="w-full flex items-center justify-center gap-3 py-4 bg-blue-600 text-white rounded-xl font-bold hover:bg-blue-700 transition-colors"
-                >
-                  <Landmark className="w-5 h-5" /> Pay with ABA
-                </button>
-                <button 
-                  onClick={onPaymentClick}
-                  className="w-full flex items-center justify-center gap-3 py-4 bg-blue-800 text-white rounded-xl font-bold hover:bg-blue-900 transition-colors"
-                >
-                  <CreditCard className="w-5 h-5" /> Pay with ACLEDA
-                </button>
-              </div>
-
-              <div className="space-y-3 mb-8">
-                <button 
-                  
+                  onClick={handlePaymentAndSave}
                   disabled={isSubmitting}
                   className="w-full flex items-center justify-center gap-3 py-4 bg-blue-600 text-white rounded-xl font-bold hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                 >
@@ -751,7 +747,7 @@ Booked via Cambodia Travel`;
                 </button>
 
                 <button 
-                  
+                  onClick={handlePaymentAndSave}
                   disabled={isSubmitting}
                   className="w-full flex items-center justify-center gap-3 py-4 bg-blue-800 text-white rounded-xl font-bold hover:bg-blue-900 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                 >

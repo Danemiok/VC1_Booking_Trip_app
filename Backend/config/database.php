@@ -38,7 +38,25 @@ return [
         'sqlite' => [
             'driver' => 'sqlite',
             'url' => env('DATABASE_URL'),
-            'database' => env('DB_DATABASE', database_path('database.sqlite')),
+            'database' => (function () {
+                $database = env('DB_DATABASE', database_path('database.sqlite'));
+
+                if (! $database || $database === ':memory:') {
+                    return $database;
+                }
+
+                // When running under `artisan serve`, the PHP built-in server can use a different
+                // working directory. Resolve relative SQLite paths against the Laravel base path
+                // to avoid "database file does not exist" errors.
+                $isAbsoluteWindows = preg_match('/^[A-Za-z]:[\\\\\\/]/', $database) === 1;
+                $isAbsolutePosix = Str::startsWith($database, '/');
+
+                if ($isAbsoluteWindows || $isAbsolutePosix) {
+                    return $database;
+                }
+
+                return base_path($database);
+            })(),
             'prefix' => '',
             'foreign_key_constraints' => env('DB_FOREIGN_KEYS', true),
         ],

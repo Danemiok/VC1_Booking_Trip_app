@@ -9,6 +9,7 @@ use App\Http\Controllers\Auth\RegisterController;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\Owner\MessageController;
 use App\Http\Controllers\Customer\MessageController as CustomerMessageController;
+use Illuminate\Support\Facades\DB;
 
 /*
 |--------------------------------------------------------------------------
@@ -20,6 +21,27 @@ use App\Http\Controllers\Owner\PromotionController;
 // use Illuminate\Http\Request;
 // use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Api\BookingController; // ADD THIS
+
+// Simple health check (useful for confirming API + DB connectivity from the frontend).
+Route::get('/health', function () {
+    try {
+        DB::connection()->getPdo();
+
+        return response()->json([
+            'ok' => true,
+            'db' => true,
+            'driver' => DB::connection()->getDriverName(),
+            'database' => method_exists(DB::connection(), 'getDatabaseName') ? DB::connection()->getDatabaseName() : null,
+            'demo_owner_exists' => \App\Models\User::query()->where('email', 'owner@test.com')->exists(),
+        ]);
+    } catch (\Throwable $e) {
+        return response()->json([
+            'ok' => false,
+            'db' => false,
+            'message' => $e->getMessage(),
+        ], 500);
+    }
+});
 
 Route::prefix('auth')->group(function () {
 
