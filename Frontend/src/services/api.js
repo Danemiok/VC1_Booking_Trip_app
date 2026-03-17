@@ -1,6 +1,14 @@
 import { getAuthToken } from './authService';
 
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL ?? 'http://127.0.0.1:8000/api';
+const RAW_API_BASE_URL = import.meta.env.VITE_API_BASE_URL ?? '/api';
+const BACKEND_ORIGIN = import.meta.env.VITE_BACKEND_ORIGIN;
+const API_BASE_URL = import.meta.env.DEV
+  ? RAW_API_BASE_URL
+  : (
+      RAW_API_BASE_URL.startsWith('/') && BACKEND_ORIGIN
+        ? `${BACKEND_ORIGIN}${RAW_API_BASE_URL}`
+        : RAW_API_BASE_URL
+    );
 
 const AUTH_TOKEN_KEY = 'auth_token';
 
@@ -18,14 +26,23 @@ export async function apiRequest(path, options = {}) {
     options?.headers &&
       Object.keys(options.headers).some((key) => key.toLowerCase() === 'authorization'),
   );
+  const isFormData =
+    typeof FormData !== 'undefined' && options?.body instanceof FormData;
 
+  const headers = {
+    Accept: 'application/json',
+    ...(token && !hasAuthHeader ? { Authorization: `Bearer ${token}` } : {}),
+    ...(options.headers ?? {}),
+  };
+
+  if (!isFormData) {
+    headers['Content-Type'] = 'application/json';
+  }
+
+  const method = (options.method || 'GET').toUpperCase();
   const response = await fetch(`${API_BASE_URL}${path}`, {
-    headers: {
-      Accept: 'application/json',
-      'Content-Type': 'application/json',
-      ...(token && !hasAuthHeader ? { Authorization: `Bearer ${token}` } : {}),
-      ...(options.headers ?? {}),
-    },
+    headers,
+    cache: method === 'GET' ? 'no-store' : undefined,
     ...options,
   });
 

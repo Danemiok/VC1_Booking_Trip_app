@@ -1,6 +1,5 @@
 
 import { MapPin, Search, Star } from 'lucide-react';
-import { apiRequest } from '@/src/services/api';
 import React, { useEffect, useState } from 'react';
 import { motion } from 'motion/react';
 
@@ -16,22 +15,9 @@ import {
   Users, 
   CheckCircle2 
 } from 'lucide-react';
-import { ALL_HOTELS } from '../../data/hotels';
+import { getPublicDestinations } from '../../services/destinationService';
 
 type DestinationStatus = 'active' | 'draft';
-
-interface DestinationApiRecord {
-  id: string | number;
-  name?: string;
-  type?: string;
-  description?: string | null;
-  location?: string;
-  price?: number | string | null;
-  image?: string | null;
-  images?: string[] | null;
-  rating?: number | string | null;
-  status?: DestinationStatus;
-}
 
 interface DestinationItem {
   id: string;
@@ -45,35 +31,10 @@ interface DestinationItem {
   status: DestinationStatus;
 }
 
-const DEFAULT_IMAGE = 'https://picsum.photos/seed/public-destination/800/600';
-
-const toNumber = (value: number | string | null | undefined, fallback = 0) => {
-  const parsed = typeof value === 'number' ? value : parseFloat(String(value ?? ''));
-  return Number.isFinite(parsed) ? parsed : fallback;
-};
-
 const getErrorMessage = (error: any, fallback: string) => {
   if (typeof error?.data?.message === 'string' && error.data.message.trim()) return error.data.message;
   if (typeof error?.message === 'string' && error.message.trim()) return error.message;
   return fallback;
-};
-
-const normalizeDestination = (destination: DestinationApiRecord): DestinationItem => {
-  const imageList = Array.isArray(destination.images)
-    ? destination.images.filter((image): image is string => typeof image === 'string' && image.trim().length > 0)
-    : [];
-
-  return {
-    id: String(destination.id),
-    name: destination.name?.trim() || 'Untitled destination',
-    type: destination.type?.trim() || 'Boutique Hotel',
-    description: destination.description?.trim() || 'Discover this destination and start planning your stay.',
-    location: destination.location?.trim() || 'Unknown location',
-    price: toNumber(destination.price, 0),
-    image: (typeof destination.image === 'string' && destination.image.trim()) || imageList[0] || DEFAULT_IMAGE,
-    rating: toNumber(destination.rating, 0),
-    status: destination.status === 'active' ? 'active' : 'draft',
-  };
 };
 
 export default function Destinations() {
@@ -87,9 +48,18 @@ export default function Destinations() {
     setLoadError('');
 
     try {
-      const response = await apiRequest('/destinations/public/all');
-      const data = Array.isArray(response?.data) ? response.data : [];
-      setDestinations(data.map((item: DestinationApiRecord) => normalizeDestination(item)));
+      const data = await getPublicDestinations();
+      setDestinations(data.map((item: any) => ({
+        id: String(item.id),
+        name: item.name,
+        type: item.type,
+        description: item.description,
+        location: item.location,
+        price: item.price,
+        image: item.image,
+        rating: item.rating,
+        status: item.status === 'active' ? 'active' : 'draft',
+      })));
     } catch (error) {
       setLoadError(getErrorMessage(error, 'Failed to load destinations. Please try again.'));
     } finally {
@@ -298,6 +268,9 @@ export const Hotels: React.FC<HotelsPageProps> = ({ tripData, onBack, onSelectHo
   const [selectedRoomByHotel, setSelectedRoomByHotel] = useState<Record<number, string>>({});
   const [guestsByHotel, setGuestsByHotel] = useState<Record<number, number>>({});
   const [currentPage, setCurrentPage] = useState(1);
+  const [hotels, setHotels] = useState<any[]>([]);
+  const [isLoadingHotels, setIsLoadingHotels] = useState(true);
+  const [hotelsError, setHotelsError] = useState('');
 
   const language = (() => {
     try {
@@ -379,7 +352,25 @@ export const Hotels: React.FC<HotelsPageProps> = ({ tripData, onBack, onSelectHo
     return (isKhmer ? km : en)[key] ?? key;
   };
   
-  const hotels = ALL_HOTELS;
+  useEffect(() => {
+    const loadHotels = async () => {
+      setIsLoadingHotels(true);
+      setHotelsError('');
+
+      try {
+        const data = await getPublicDestinations();
+        setHotels(data);
+      } catch (error) {
+        setHotelsError(getErrorMessage(error, 'Failed to load destinations.'));
+        setHotels([]);
+      } finally {
+        setIsLoadingHotels(false);
+      }
+    };
+
+    loadHotels();
+  }, []);
+
   const defaultGuests = parseGuestCount(tripData?.guests);
   const tripNights = getTripNights(tripData);
 
@@ -652,7 +643,20 @@ export const Hotels: React.FC<HotelsPageProps> = ({ tripData, onBack, onSelectHo
               </div>
             </div>
 
-            <motion.div
+            {isLoadingHotels && (
+              <div className="rounded-2xl border border-slate-200 bg-white px-6 py-10 text-center text-slate-500 shadow-sm dark:border-slate-800 dark:bg-slate-900 dark:text-slate-400">
+                Loading destinations...
+              </div>
+            )}
+
+            {hotelsError && !isLoadingHotels && (
+              <div className="rounded-2xl border border-red-200 bg-red-50 px-6 py-4 text-sm text-red-700 dark:border-red-900/30 dark:bg-red-900/20 dark:text-red-300">
+                {hotelsError}
+              </div>
+            )}
+
+            {!isLoadingHotels && !hotelsError && (
+              <motion.div
               key={`hotel-page-${currentPage}`}
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
@@ -847,7 +851,8 @@ export const Hotels: React.FC<HotelsPageProps> = ({ tripData, onBack, onSelectHo
                   <p className="text-slate-500 dark:text-slate-400">Try searching by hotel name, city, or amenity.</p>
                 </div>
               )}
-            </motion.div>
+              </motion.div>
+            )}
 
             {filteredHotels.length > 0 && (
               <div className="flex items-center justify-center gap-4 pt-12">

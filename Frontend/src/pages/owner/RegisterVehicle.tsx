@@ -20,11 +20,12 @@ const RegisterVehicle = () => {
 
   const [formData, setFormData] = React.useState({
     name: '',
-    type: 'Car Rental' as 'Car Rental' | 'Shuttle' | 'Bus' | 'Other',
+    type: 'Car Rental' as 'Car Rental' | 'Train' | 'Bus' | 'Other',
     status: 'pending' as 'active' | 'inactive' | 'pending',
     route: '',
     details: '',
     price_per_KM: '',
+    is_free: false,
     image: ''
   });
 
@@ -42,7 +43,7 @@ const RegisterVehicle = () => {
 
     if (!formData.name.trim()) newErrors.name = 'Service name is required';
     if (!formData.route.trim()) newErrors.route = 'Route is required';
-    if (!formData.price_per_KM || parseFloat(formData.price_per_KM) <= 0) {
+    if (!formData.is_free && (!formData.price_per_KM || parseFloat(formData.price_per_KM) <= 0)) {
       newErrors.price_per_KM = 'Valid price per KM is required';
     }
 
@@ -65,7 +66,9 @@ const RegisterVehicle = () => {
       const payload = new FormData();
       payload.append('service_name', formData.name.trim());
       payload.append('transport_type', formData.type);
-      payload.append('price_per_km', String(parseFloat(formData.price_per_KM)));
+      const finalPrice = formData.is_free ? 0 : parseFloat(formData.price_per_KM);
+      payload.append('price_per_km', String(finalPrice));
+      payload.append('is_free', formData.is_free ? '1' : '0');
       payload.append('route_description', formData.route.trim());
       if (formData.details.trim()) {
         payload.append('service_details', formData.details.trim());
@@ -147,7 +150,7 @@ const RegisterVehicle = () => {
                       "w-full px-4 py-3 bg-slate-50 dark:bg-slate-800 border-transparent rounded-xl text-sm focus:bg-white dark:focus:bg-slate-900 focus:ring-2 focus:ring-blue-600/10 transition-all font-medium",
                       errors.name && 'border border-red-500'
                     )}
-                    placeholder="e.g. Phnom Penh Airport Shuttle"
+                    placeholder="e.g. Phnom Penh Train Station"
                   />
                   {errors.name && <p className="text-xs text-red-500 mt-1">{errors.name}</p>}
                 </div>
@@ -159,7 +162,7 @@ const RegisterVehicle = () => {
                     className="w-full px-4 py-3 bg-slate-50 dark:bg-slate-800 border-transparent rounded-xl text-sm focus:bg-white dark:focus:bg-slate-900 focus:ring-2 focus:ring-blue-600/10 transition-all font-medium appearance-none"
                   >
                     <option value="Car Rental">Car Rental</option>
-                    <option value="Shuttle">Shuttle</option>
+                    <option value="Train">Train</option>
                     <option value="Bus">Bus</option>
                     <option value="Other">Other</option>
                   </select>
@@ -173,13 +176,35 @@ const RegisterVehicle = () => {
                     min="0"
                     value={formData.price_per_KM}
                     onChange={(e) => setFormData({ ...formData, price_per_KM: e.target.value })}
+                    disabled={formData.is_free}
                     className={cn(
-                      "w-full px-4 py-3 bg-slate-50 dark:bg-slate-800 border-transparent rounded-xl text-sm focus:bg-white dark:focus:bg-slate-900 focus:ring-2 focus:ring-blue-600/10 transition-all font-medium",
+                      "w-full px-4 py-3 bg-slate-50 dark:bg-slate-800 border-transparent rounded-xl text-sm focus:bg-white dark:focus:bg-slate-900 focus:ring-2 focus:ring-blue-600/10 transition-all font-medium disabled:opacity-60 disabled:cursor-not-allowed",
                       errors.price_per_KM && 'border border-red-500'
                     )}
                     placeholder="e.g. 1.50"
                   />
                   {errors.price_per_KM && <p className="text-xs text-red-500 mt-1">{errors.price_per_KM}</p>}
+                </div>
+                <div className="space-y-2">
+                  <label className="text-[10px] uppercase font-bold tracking-widest text-slate-400">Free Transport</label>
+                  <button
+                    type="button"
+                    onClick={() =>
+                      setFormData((prev) => ({
+                        ...prev,
+                        is_free: !prev.is_free,
+                        price_per_KM: !prev.is_free ? '0' : prev.price_per_KM,
+                      }))
+                    }
+                    className={cn(
+                      "w-full px-4 py-3 rounded-xl text-sm font-bold transition-all border",
+                      formData.is_free
+                        ? 'bg-emerald-100 border-emerald-200 text-emerald-700'
+                        : 'bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-200'
+                    )}
+                  >
+                    {formData.is_free ? 'Yes, this transport is free' : 'No, paid transport'}
+                  </button>
                 </div>
                 <div className="space-y-2">
                   <label className="text-[10px] uppercase font-bold tracking-widest text-slate-400">Route</label>

@@ -23,11 +23,12 @@ interface TransportService {
   id: string;
   name: string;
   type: 'Flight' | 'Bus' | 'Train' | 'Car Rental';
-  status: 'Active' | 'Maintenance' | 'Inactive' | 'Pending';
+  status: 'Active' | 'Fixing' | 'Not working' | 'Waiting';
   route: string;
   details: string;
   image: string;
   price_per_KM?: number;
+  is_free?: boolean;
 }
 
 const Transport = () => {
@@ -46,7 +47,9 @@ const Transport = () => {
     details: '',
     status: 'Active' as TransportService['status'],
     price_per_KM: '',
-    image: ''
+    is_free: false,
+    image: '',
+    imageFile: null as File | null
   });
 
   const editPhotoInputRef = React.useRef<HTMLInputElement | null>(null);
@@ -109,7 +112,7 @@ const Transport = () => {
     {
       id: 'transport-1',
       title: 'New transport booking',
-      description: 'A customer booked “Shared Shuttle • PP — Siem Reap”.',
+      description: 'A customer booked “Shared Train • PP — Siem Reap”.',
       time: '5 mins ago',
       type: 'booking',
       read: false,
@@ -156,9 +159,16 @@ const Transport = () => {
           (import.meta.env.VITE_API_BASE_URL?.replace(/\/api$/, '') ?? 'http://127.0.0.1:8001');
         const mapped = (response?.data ?? []).map((item: any) => {
           const rawType = String(item?.transport_type ?? 'Car Rental');
-          const type = rawType === 'Shuttle' ? 'Bus' : rawType === 'Other' ? 'Car Rental' : rawType;
+          const type = rawType === 'Shuttle' ? 'Train' : rawType === 'Other' ? 'Car Rental' : rawType;
           const rawStatus = String(item?.status ?? 'pending');
-          const status = rawStatus === 'active' ? 'Active' : rawStatus === 'inactive' ? 'Inactive' : 'Pending';
+          const status =
+            rawStatus === 'active'
+              ? 'Active'
+              : rawStatus === 'inactive'
+                ? 'Not working'
+                : rawStatus === 'maintenance'
+                  ? 'Fixing'
+                  : 'Waiting';
           const rawImage = String(item?.vehicle_photo_url ?? '');
           const image = rawImage
             ? (rawImage.startsWith('http') ? rawImage : `${backendOrigin}/${rawImage.replace(/^\/+/, '')}`)
@@ -174,6 +184,7 @@ const Transport = () => {
             price_per_KM: typeof item?.price_per_km === 'number'
               ? item.price_per_km
               : (item?.price_per_km ? parseFloat(item.price_per_km) : undefined),
+            is_free: Boolean(item?.is_free ?? item?.isFree ?? false),
           };
         });
 
@@ -197,7 +208,9 @@ const Transport = () => {
       details: service.details,
       status: service.status,
       price_per_KM: typeof service.price_per_KM === 'number' ? service.price_per_KM.toString() : '',
-      image: service.image || ''
+      is_free: Boolean(service.is_free),
+      image: service.image || '',
+      imageFile: null
     });
   };
 
@@ -217,19 +230,96 @@ const Transport = () => {
     if (!editing) return;
 
     const parsedPrice = editForm.price_per_KM.trim() ? parseFloat(editForm.price_per_KM) : undefined;
-    const updatedService: TransportService = {
-      ...editing,
-      name: editForm.name,
-      type: editForm.type,
-      route: editForm.route,
-      details: editForm.details,
-      status: editForm.status,
-      image: editForm.image,
-      price_per_KM: typeof parsedPrice === 'number' && !Number.isNaN(parsedPrice) ? parsedPrice : undefined
+    const finalPrice = editForm.is_free
+      ? 0
+      : (
+          typeof parsedPrice === 'number' && !Number.isNaN(parsedPrice)
+            ? parsedPrice
+            : (typeof editing.price_per_KM === 'number' ? editing.price_per_KM : 0)
+        );
+
+    const token = getAuthToken();
+    if (!token) {
+      setLoadError('Please sign in to update a transport service.');
+      return;
+    }
+
+    const statusMap: Record<TransportService['status'], 'active' | 'inactive' | 'pending'> = {
+      Active: 'active',
+      'Not working': 'inactive',
+      Waiting: 'pending',
+      Fixing: 'inactive',
     };
 
-    setServices(prev => prev.map(s => (s.id === editing.id ? updatedService : s)));
-    closeEdit();
+    const typeMap: Record<TransportService['type'], 'Car Rental' | 'Train' | 'Bus' | 'Other'> = {
+      'Car Rental': 'Car Rental',
+      Train: 'Train',
+      Bus: 'Bus',
+      Flight: 'Other',
+    };
+
+    const formData = new FormData();
+    formData.append('_method', 'PUT');
+    formData.append('service_name', editForm.name);
+    formData.append('transport_type', typeMap[editForm.type] ?? 'Car Rental');
+    formData.append('price_per_km', finalPrice.toString());
+    formData.append('is_free', editForm.is_free ? '1' : '0');
+    formData.append('route_description', editForm.route);
+    formData.append('service_details', editForm.details);
+    formData.append('status', statusMap[editForm.status] ?? 'pending');
+    if (editForm.imageFile) {
+      formData.append('vehicle_photo', editForm.imageFile);
+    }
+
+    apiRequest(`/owner/transports/${editing.id}`, {
+      method: 'POST',
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+      body: formData,
+    })
+      .then((response: any) => {
+        const item = response?.data ?? response;
+        const rawType = String(item?.transport_type ?? editForm.type ?? 'Car Rental');
+        const type = rawType === 'Shuttle' ? 'Train' : rawType === 'Other' ? 'Car Rental' : rawType;
+        const rawStatus = String(item?.status ?? statusMap[editForm.status] ?? 'pending');
+        const status =
+          rawStatus === 'active'
+            ? 'Active'
+            : rawStatus === 'inactive'
+              ? 'Not working'
+              : rawStatus === 'maintenance'
+                ? 'Fixing'
+                : 'Waiting';
+        const rawImage = String(item?.vehicle_photo_url ?? editForm.image ?? '');
+        const backendOrigin =
+          import.meta.env.VITE_BACKEND_ORIGIN ||
+          (import.meta.env.VITE_API_BASE_URL?.replace(/\/api$/, '') ?? 'http://127.0.0.1:8001');
+        const image = rawImage
+          ? (rawImage.startsWith('http') ? rawImage : `${backendOrigin}/${rawImage.replace(/^\/+/, '')}`)
+          : editForm.image;
+
+        const updatedService: TransportService = {
+          ...editing,
+          name: String(item?.service_name ?? editForm.name),
+          type: (type as TransportService['type']) ?? editForm.type,
+          route: String(item?.route_description ?? editForm.route),
+          details: String(item?.service_details ?? editForm.details),
+          status: (status as TransportService['status']) ?? editForm.status,
+          image,
+          price_per_KM: typeof item?.price_per_km === 'number'
+            ? item.price_per_km
+            : (item?.price_per_km ? parseFloat(item.price_per_km) : finalPrice),
+          is_free: Boolean(item?.is_free ?? editForm.is_free),
+        };
+
+        setServices(prev => prev.map(s => (s.id === editing.id ? updatedService : s)));
+        closeEdit();
+      })
+      .catch((error: any) => {
+        const message = error?.data?.message ?? error?.message ?? 'Failed to update transport.';
+        setLoadError(message);
+      });
   };
 
   const onPickEditPhoto = () => {
@@ -241,6 +331,14 @@ const Transport = () => {
     if (!file) return;
     if (!file.type.startsWith('image/')) return;
 
+    if (editForm.image && editForm.image.startsWith('blob:')) {
+      try {
+        URL.revokeObjectURL(editForm.image);
+      } catch {
+        // ignore revoke errors
+      }
+    }
+
     const reader = new FileReader();
     reader.onload = () => {
       const result = reader.result;
@@ -248,6 +346,8 @@ const Transport = () => {
         setEditForm((prev) => ({ ...prev, image: result }));
       }
     };
+    const previewUrl = URL.createObjectURL(file);
+    setEditForm((prev) => ({ ...prev, image: previewUrl, imageFile: file }));
     reader.readAsDataURL(file);
   };
 
@@ -275,12 +375,43 @@ const Transport = () => {
     });
   };
 
+  const tabCounts = React.useMemo(() => {
+    const counts = {
+      all: allServices.length,
+      flights: 0,
+      buses: 0,
+      trains: 0,
+      'car-rentals': 0,
+    };
+
+    allServices.forEach((service) => {
+      switch (service.type) {
+        case 'Flight':
+          counts.flights += 1;
+          break;
+        case 'Bus':
+          counts.buses += 1;
+          break;
+        case 'Train':
+          counts.trains += 1;
+          break;
+        case 'Car Rental':
+          counts['car-rentals'] += 1;
+          break;
+        default:
+          break;
+      }
+    });
+
+    return counts;
+  }, [allServices]);
+
   const tabs = [
-    { id: 'all', label: 'All Services', count: 42 },
-    { id: 'flights', label: 'Flights', count: 15 },
-    { id: 'buses', label: 'Buses', count: 12 },
-    { id: 'trains', label: 'Trains', count: 8 },
-    { id: 'car-rentals', label: 'Car Rentals', count: 7 }
+    { id: 'all', label: 'All Services', count: tabCounts.all },
+    { id: 'flights', label: 'Flights', count: tabCounts.flights },
+    { id: 'buses', label: 'Buses', count: tabCounts.buses },
+    { id: 'trains', label: 'Trains', count: tabCounts.trains },
+    { id: 'car-rentals', label: 'Car Rentals', count: tabCounts['car-rentals'] }
   ];
 
   const getTypeIcon = (type: string) => {
@@ -306,9 +437,9 @@ const Transport = () => {
   const getStatusColor = (status: string) => {
     switch (status) {
       case 'Active': return 'bg-green-100 text-green-800';
-      case 'Maintenance': return 'bg-yellow-100 text-yellow-800';
-      case 'Inactive': return 'bg-red-100 text-red-800';
-      case 'Pending': return 'bg-slate-100 text-slate-800';
+      case 'Fixing': return 'bg-yellow-100 text-yellow-800';
+      case 'Not working': return 'bg-red-100 text-red-800';
+      case 'Waiting': return 'bg-slate-100 text-slate-800';
       default: return 'bg-slate-100 text-slate-800 dark:bg-slate-800 dark:text-slate-200';
     }
   };
@@ -464,7 +595,9 @@ const Transport = () => {
                       {service.route}
                     </div>
                   </div>
-                  {typeof service.price_per_KM === 'number' && (
+                  {service.is_free ? (
+                    <div className="text-sm font-semibold text-emerald-600 dark:text-emerald-400 mb-2">Free</div>
+                  ) : typeof service.price_per_KM === 'number' && (
                     <div className="text-sm font-semibold text-slate-900 dark:text-slate-100 mb-2">
                       {hasDiscount && (
                         <span className="text-xs text-slate-400 line-through mr-2">${service.price_per_KM.toFixed(2)}</span>
@@ -635,8 +768,9 @@ const Transport = () => {
                     className="w-full px-3 py-2 border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                   >
                     <option value="Active">Active</option>
-                    <option value="Maintenance">Maintenance</option>
-                    <option value="Inactive">Inactive</option>
+                    <option value="Fixing">Fixing</option>
+                    <option value="Not working">Not working</option>
+                    <option value="Waiting">Waiting</option>
                   </select>
                 </div>
                 <div className="space-y-1">
@@ -647,9 +781,31 @@ const Transport = () => {
                     min="0"
                     value={editForm.price_per_KM}
                     onChange={(e) => setEditForm({ ...editForm, price_per_KM: e.target.value })}
-                    className="w-full px-3 py-2 border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    disabled={editForm.is_free}
+                    className="w-full px-3 py-2 border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-60 disabled:cursor-not-allowed"
                     placeholder="e.g. 1.50"
                   />
+                </div>
+                <div className="space-y-1">
+                  <label className="text-xs font-medium text-slate-700 dark:text-slate-300">Free Transport</label>
+                  <button
+                    type="button"
+                    onClick={() =>
+                      setEditForm((prev) => ({
+                        ...prev,
+                        is_free: !prev.is_free,
+                        price_per_KM: !prev.is_free ? '0' : prev.price_per_KM,
+                      }))
+                    }
+                    className={cn(
+                      'w-full px-3 py-2 rounded-lg border text-sm font-semibold transition-colors',
+                      editForm.is_free
+                        ? 'bg-emerald-100 border-emerald-200 text-emerald-700'
+                        : 'bg-white dark:bg-slate-800 border-slate-300 dark:border-slate-700 text-slate-700 dark:text-slate-200'
+                    )}
+                  >
+                    {editForm.is_free ? 'Yes, this transport is free' : 'No, paid transport'}
+                  </button>
                 </div>
               </div>
             </div>
@@ -702,7 +858,9 @@ const Transport = () => {
                     </span>
                   </div>
 
-                  {typeof viewing.price_per_KM === 'number' && (
+                  {viewing.is_free ? (
+                    <div className="text-sm font-semibold text-emerald-600 dark:text-emerald-400">Free</div>
+                  ) : typeof viewing.price_per_KM === 'number' && (
                     <div className="text-sm font-semibold text-slate-900 dark:text-slate-100">
                       ${viewing.price_per_KM.toFixed(2)} / km
                     </div>

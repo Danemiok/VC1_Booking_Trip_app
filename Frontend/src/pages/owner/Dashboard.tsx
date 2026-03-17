@@ -159,7 +159,7 @@ const Dashboard = () => {
             </div>
             <div className="space-y-6">
               {[
-                { icon: CalendarCheck, title: 'Booking from Siem Reap', desc: 'Shared Shuttle • 2 Guests', time: '10 mins ago' },
+                { icon: CalendarCheck, title: 'Booking from Siem Reap', desc: 'Shared Train • 2 Guests', time: '10 mins ago' },
                 { icon: CreditCard, title: 'Payout successful', desc: 'ABA Bank • $1,240.00', time: '2 hours ago' },
                 { icon: MessageSquare, title: 'Message from Sopheap', desc: 'Route timing question', time: '5 hours ago' },
                 { icon: Star, title: 'New 5-star review', desc: '"Excellent service!"', time: 'Yesterday' },
