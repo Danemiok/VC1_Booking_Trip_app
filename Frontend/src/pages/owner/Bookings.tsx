@@ -3,6 +3,7 @@ import {
   Search, 
   Download, 
   FileText,
+  Bell,
   MoreHorizontal, 
   Calendar, 
   Users, 
@@ -57,6 +58,21 @@ const Bookings = () => {
   const [authError, setAuthError] = React.useState<string | null>(null);
   const [pageError, setPageError] = React.useState<string | null>(null);
   const [successMessage, setSuccessMessage] = React.useState<string | null>(null);
+
+  type OwnerNotification = {
+    id: number | string;
+    title: string;
+    message?: string | null;
+    bookingId?: string | null;
+    data?: any;
+    readAt?: string | null;
+    createdAt?: string | null;
+  };
+
+  const [showNotifications, setShowNotifications] = React.useState(false);
+  const [notificationsLoading, setNotificationsLoading] = React.useState(false);
+  const [notifications, setNotifications] = React.useState<OwnerNotification[]>([]);
+  const [unreadNotificationCount, setUnreadNotificationCount] = React.useState(0);
 
   const BOOKINGS_CACHE_KEY = 'owner_bookings_cache_v1';
   const STATS_CACHE_KEY = 'owner_booking_stats_cache_v1';
@@ -237,6 +253,18 @@ const Bookings = () => {
   const formatDate = (d: Date) =>
     d.toLocaleDateString('en-US', { month: 'short', day: '2-digit', year: 'numeric' });
 
+  const formatNotificationTime = (iso?: string | null) => {
+    if (!iso) return '';
+    const d = new Date(iso);
+    if (Number.isNaN(d.getTime())) return '';
+    return d.toLocaleString('en-US', {
+      month: 'short',
+      day: '2-digit',
+      hour: '2-digit',
+      minute: '2-digit',
+    });
+  };
+
   const addDays = (base: Date, deltaDays: number) => {
     const next = new Date(base);
     next.setDate(next.getDate() + deltaDays);
@@ -364,6 +392,43 @@ const Bookings = () => {
       fetchStats();
     }
   }, [isAuthenticated, fetchBookings, fetchStats]);
+
+  const fetchOwnerNotifications = React.useCallback(
+    async ({ silent = false } = {}) => {
+      if (!isAuthenticated) return;
+
+      try {
+        if (!silent) setNotificationsLoading(true);
+        const response = await bookingService.getOwnerNotifications({ limit: 25 });
+        const next = Array.isArray(response?.data) ? response.data : [];
+        const nextUnread = Number(
+          response?.unread_count ?? response?.unreadCount ?? next.filter((n: any) => !n?.readAt).length,
+        );
+
+        setNotifications(next);
+        setUnreadNotificationCount(Number.isFinite(nextUnread) ? nextUnread : 0);
+      } catch (error) {
+        console.error('Failed to fetch owner notifications:', error);
+      } finally {
+        if (!silent) setNotificationsLoading(false);
+      }
+    },
+    [isAuthenticated],
+  );
+
+  React.useEffect(() => {
+    if (!isAuthenticated) return;
+
+    fetchOwnerNotifications();
+    const id = window.setInterval(() => fetchOwnerNotifications({ silent: true }), 30000);
+    return () => window.clearInterval(id);
+  }, [isAuthenticated, fetchOwnerNotifications]);
+
+  React.useEffect(() => {
+    if (showNotifications) {
+      fetchOwnerNotifications();
+    }
+  }, [showNotifications, fetchOwnerNotifications]);
 
   React.useEffect(() => {
     if (isAuthenticated) {
@@ -760,6 +825,56 @@ const Bookings = () => {
 
   const openPdfModal = () => setShowPdfModal(true);
   const closePdfModal = () => setShowPdfModal(false);
+
+  const closeNotifications = () => setShowNotifications(false);
+
+  const markNotificationRead = async (notificationId: number | string) => {
+    try {
+      await bookingService.markOwnerNotificationRead(notificationId);
+      setNotifications((prev) =>
+        prev.map((n) =>
+          String(n.id) === String(notificationId)
+            ? { ...n, readAt: n.readAt ?? new Date().toISOString() }
+            : n,
+        ),
+      );
+      setUnreadNotificationCount((c) => Math.max(0, c - 1));
+    } catch (error) {
+      console.error('Failed to mark notification read:', error);
+    }
+  };
+
+  const markAllNotificationsRead = async () => {
+    try {
+      await bookingService.markAllOwnerNotificationsRead();
+      setNotifications((prev) => prev.map((n) => ({ ...n, readAt: n.readAt ?? new Date().toISOString() })));
+      setUnreadNotificationCount(0);
+    } catch (error) {
+      console.error('Failed to mark all notifications read:', error);
+    }
+  };
+
+  const openNotification = async (n: OwnerNotification) => {
+    if (!n) return;
+
+    if (!n.readAt) {
+      await markNotificationRead(n.id);
+    }
+
+    const bookingId = n.bookingId ?? n?.data?.id ?? null;
+    if (bookingId) {
+      const booking = bookings.find((b) => String(b?.id ?? '') === String(bookingId));
+      if (booking) {
+        openBookingDetails(booking);
+        closeNotifications();
+        return;
+      }
+    }
+
+    setSuccessMessage(null);
+    setPageError('Booking details not found in the current list. Try refreshing the page.');
+    closeNotifications();
+  };
 
   const openBookingDetails = (booking: any) => {
     setSelectedBooking(booking);

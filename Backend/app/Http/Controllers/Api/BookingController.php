@@ -4,6 +4,8 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Models\Booking;
+use App\Models\OwnerNotification;
+use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\Log;
@@ -369,6 +371,35 @@ class BookingController extends Controller
             $booking = Booking::create($data);
 
             Log::info('Booking saved successfully! ID: ' . $booking->id);
+
+            // Create owner/admin notifications (best-effort: never fail the booking request because of notifications)
+            try {
+                $snapshot = $this->toFrontendBooking($booking);
+                $guest = (string) ($snapshot['guest'] ?? 'A customer');
+                $service = (string) ($snapshot['service'] ?? 'a service');
+                $route = (string) ($snapshot['route'] ?? '');
+                $amount = (float) ($snapshot['amount'] ?? 0);
+
+                $title = 'New booking: ' . $booking->id;
+                $message = trim($guest . ' booked ' . $service . ($route ? ' (' . $route . ')' : '') . ' • $' . number_format($amount, 2));
+
+                $owners = User::query()
+                    ->whereIn('role', ['owner', 'admin'])
+                    ->get(['id']);
+
+                foreach ($owners as $owner) {
+                    OwnerNotification::create([
+                        'user_id' => $owner->id,
+                        'booking_id' => (string) $booking->id,
+                        'title' => $title,
+                        'message' => $message,
+                        'data' => $snapshot,
+                        'read_at' => null,
+                    ]);
+                }
+            } catch (\Throwable $e) {
+                Log::error('Failed to create owner notification: ' . $e->getMessage());
+            }
 
             return response()->json([
                 'success' => true,

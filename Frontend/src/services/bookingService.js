@@ -118,6 +118,38 @@ export const bookingService = {
     };
   },
 
+  // Owner notifications
+  getOwnerNotifications: async ({ limit = 25, unread = false } = {}) => {
+    const queryParams = new URLSearchParams();
+    if (limit) queryParams.append('limit', String(limit));
+    if (unread) queryParams.append('unread', '1');
+    const queryString = queryParams.toString() ? `?${queryParams.toString()}` : '';
+
+    return apiRequest(`/owner/notifications${queryString}`, {
+      method: 'GET',
+    });
+  },
+
+  getOwnerUnreadNotificationCount: async () => {
+    return apiRequest('/owner/notifications/unread-count', {
+      method: 'GET',
+    });
+  },
+
+  markOwnerNotificationRead: async (notificationId) => {
+    if (!notificationId) throw new Error('notificationId is required');
+
+    return apiRequest(`/owner/notifications/${encodeURIComponent(notificationId)}/read`, {
+      method: 'POST',
+    });
+  },
+
+  markAllOwnerNotificationsRead: async () => {
+    return apiRequest('/owner/notifications/read-all', {
+      method: 'POST',
+    });
+  },
+
   // Export bookings to CSV
   exportBookings: async (filters = {}) => {
     try {

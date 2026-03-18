@@ -21,6 +21,7 @@ use App\Http\Controllers\Owner\PromotionController;
 // use Illuminate\Http\Request;
 // use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Api\BookingController; // ADD THIS
+use App\Http\Controllers\Api\OwnerNotificationController;
 
 // Simple health check (useful for confirming API + DB connectivity from the frontend).
 Route::get('/health', function () {
@@ -121,6 +122,12 @@ Route::middleware(['auth:sanctum'])->group(function () {
         Route::get('/bookings/stats', [BookingController::class, 'stats']);
         Route::get('/bookings/export', [BookingController::class, 'export']);
         Route::patch('/bookings/{id}/status', [BookingController::class, 'updateStatus']);
+
+        // Owner notifications (new bookings, etc.)
+        Route::get('/owner/notifications', [OwnerNotificationController::class, 'index']);
+        Route::get('/owner/notifications/unread-count', [OwnerNotificationController::class, 'unreadCount']);
+        Route::post('/owner/notifications/read-all', [OwnerNotificationController::class, 'markAllRead']);
+        Route::post('/owner/notifications/{id}/read', [OwnerNotificationController::class, 'markRead']);
     });
     
     // Admin only routes
