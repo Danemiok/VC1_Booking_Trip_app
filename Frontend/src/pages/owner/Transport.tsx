@@ -155,8 +155,7 @@ const Transport = () => {
         }) as { data?: any[] };
 
         const backendOrigin =
-          import.meta.env.VITE_BACKEND_ORIGIN ||
-          (import.meta.env.VITE_API_BASE_URL?.replace(/\/api$/, '') ?? 'http://127.0.0.1:8001');
+          import.meta.env.VITE_BACKEND_ORIGIN || 'http://127.0.0.1:8000';
         const mapped = (response?.data ?? []).map((item: any) => {
           const rawType = String(item?.transport_type ?? 'Car Rental');
           const type = rawType === 'Shuttle' ? 'Train' : rawType === 'Other' ? 'Car Rental' : rawType;
@@ -293,8 +292,7 @@ const Transport = () => {
                 : 'Waiting';
         const rawImage = String(item?.vehicle_photo_url ?? editForm.image ?? '');
         const backendOrigin =
-          import.meta.env.VITE_BACKEND_ORIGIN ||
-          (import.meta.env.VITE_API_BASE_URL?.replace(/\/api$/, '') ?? 'http://127.0.0.1:8001');
+          import.meta.env.VITE_BACKEND_ORIGIN || 'http://127.0.0.1:8000';
         const image = rawImage
           ? (rawImage.startsWith('http') ? rawImage : `${backendOrigin}/${rawImage.replace(/^\/+/, '')}`)
           : editForm.image;

@@ -50,8 +50,7 @@ export const Rentals: React.FC<RentalsProps> = ({ onBack, onSelectVehicle }) => 
     try {
       const response = await apiRequest('/transports') as { data?: any[] };
       const backendOrigin =
-        import.meta.env.VITE_BACKEND_ORIGIN ||
-        (import.meta.env.VITE_API_BASE_URL?.replace(/\/api$/, '') ?? 'http://127.0.0.1:8001');
+        import.meta.env.VITE_BACKEND_ORIGIN || 'http://127.0.0.1:8000';
 
       const mapped = (response?.data ?? [])
         .map((item: any) => {

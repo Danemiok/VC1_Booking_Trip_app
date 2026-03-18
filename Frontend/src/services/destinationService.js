@@ -8,8 +8,7 @@ const toNumber = (value, fallback = 0) => {
 };
 
 const getBackendOrigin = () =>
-  import.meta.env.VITE_BACKEND_ORIGIN ||
-  (import.meta.env.VITE_API_BASE_URL?.replace(/\/api$/, '') ?? 'http://127.0.0.1:8001');
+  import.meta.env.VITE_BACKEND_ORIGIN || 'http://127.0.0.1:8000';
 
 const resolveImage = (raw) => {
   const rawImage = typeof raw === 'string' ? raw.trim() : '';
