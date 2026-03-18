@@ -2,9 +2,9 @@ import React, { createContext, useContext, useMemo, useState, useEffect } from '
 import {
   getAuthUser,
   getAuthToken,
-  login as loginRequest,
-  logout as logoutRequest,
-  register as registerRequest,
+  login,
+  logout,
+  register,
   setAuthUser,
   setAuthToken,
   authService,
@@ -103,7 +103,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     console.log('📡 Login attempt for:', payload.email);
     
     try {
-      const data = await loginRequest(payload);
+      const data = await authService.login(payload);
       
       console.log('📡 Login response:', data);
       
@@ -151,7 +151,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     console.log('📡 Register attempt for:', payload.email);
     
     try {
-      const data = await registerRequest(payload);
+      const data = await authService.register(payload);
       
       console.log('📡 Register response:', data);
       
@@ -194,7 +194,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const logout = async () => {
     console.log('👋 Logging out');
     try {
-      await logoutRequest();
+      await authService.logout();
     } catch (error) {
       console.error('Logout error:', error);
     } finally {

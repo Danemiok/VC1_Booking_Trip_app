@@ -157,29 +157,29 @@ export const AuthLayout: React.FC<AuthLayoutProps> = ({
         </div>
 
         {/* Right Side: Form */}
-        <div className={`flex w-full flex-col overflow-y-auto p-7 md:w-1/2 md:p-10 relative ${
+        <div className={`flex w-full flex-col overflow-y-auto p-4 md:w-1/2 md:p-6 relative ${
           isDarkMode ? 'text-white' : 'text-slate-900'
         }`}>
           <button
             onClick={onClose}
-            className={`absolute top-4 right-4 p-2 rounded-full transition-colors ${
+            className={`absolute top-2 right-2 p-1.5 rounded-full transition-colors ${
               isDarkMode ? 'hover:bg-slate-700' : 'hover:bg-gray-100'
             }`}
           >
-            <X className={`w-5 h-5 ${isDarkMode ? 'text-white' : 'text-slate-900'}`} />
+            <X className={`w-4 h-4 ${isDarkMode ? 'text-white' : 'text-slate-900'}`} />
           </button>
           
-          <div className="mb-8 flex flex-col items-center mt-4">
-            <h2 className={`mb-2 text-[32px] font-bold leading-tight ${
+          <div className="mb-4 flex flex-col items-center mt-2">
+            <h2 className={`mb-1 text-2xl font-bold leading-tight ${
               isDarkMode ? 'text-white' : 'text-slate-900'
             }`}>{title}</h2>
-            <p className={`text-center text-base ${
+            <p className={`text-center text-sm ${
               isDarkMode ? 'text-slate-300' : 'text-slate-500'
             }`}>{subtitle}</p>
           </div>
 
           {/* Tab Switcher */}
-          <div className={`relative mb-4 grid grid-cols-2 rounded-xl border p-1 ${
+          <div className={`relative mb-3 grid grid-cols-2 rounded-xl border p-1 ${
             isDarkMode ? 'border-slate-600 bg-slate-700' : 'border-slate-200 bg-slate-100'
           }`}>
           
@@ -195,7 +195,7 @@ export const AuthLayout: React.FC<AuthLayoutProps> = ({
               whileHover={{ scale: activeTab === 'login' ? 1 : 1.015 }}
               whileTap={{ scale: 0.985 }}
               transition={{ type: 'spring', stiffness: 250, damping: 24 }}
-              className={`relative z-10 rounded-lg py-2.5 text-sm font-semibold transition-colors ${
+              className={`relative z-10 rounded-lg py-1.5 text-sm font-semibold transition-colors ${
                 activeTab === 'login'
                   ? 'text-white'
                   : isDarkMode ? 'text-slate-400 hover:text-slate-200' : 'text-slate-500 hover:text-slate-700'
@@ -216,7 +216,7 @@ export const AuthLayout: React.FC<AuthLayoutProps> = ({
               whileHover={{ scale: activeTab === 'register' ? 1 : 1.015 }}
               whileTap={{ scale: 0.985 }}
               transition={{ type: 'spring', stiffness: 250, damping: 24 }}
-              className={`relative z-10 rounded-lg py-2.5 text-sm font-semibold transition-colors ${
+              className={`relative z-10 rounded-lg py-1.5 text-sm font-semibold transition-colors ${
                 activeTab === 'register'
                   ? 'text-white'
                   : isDarkMode ? 'text-slate-400 hover:text-slate-200' : 'text-slate-500 hover:text-slate-700'
@@ -239,41 +239,41 @@ export const AuthLayout: React.FC<AuthLayoutProps> = ({
           </div>
 
           {/* Social Login */}
-          <div className="mt-6">
-            <div className="relative mb-6 flex items-center justify-center">
+          <div className="mt-4">
+            <div className="relative mb-4 flex items-center justify-center">
               <div className={`absolute inset-0 flex items-center ${
                 isDarkMode ? 'border-slate-600' : 'border-slate-200'
               }`}>
                 <div className="w-full border-t"></div>
               </div>
-              <span className={`relative px-4 text-[11px] font-semibold uppercase tracking-[0.2em] ${
+              <span className={`relative px-3 text-[10px] font-semibold uppercase tracking-[0.2em] ${
                 isDarkMode ? 'bg-slate-800 text-slate-400' : 'bg-white text-slate-400'
               }`}>
                 SOCIAL LOGIN
               </span>
             </div>
 
-            <div className="grid grid-cols-2 gap-4">
-              <button className={`flex items-center justify-center gap-3 rounded-xl border px-4 py-3 font-semibold transition-all hover:bg-opacity-10 ${
+            <div className="grid grid-cols-2 gap-3">
+              <button className={`flex items-center justify-center gap-2 rounded-lg border px-3 py-2 text-sm font-semibold transition-all hover:bg-opacity-10 ${
                 isDarkMode 
                   ? 'border-slate-600 text-slate-300 hover:bg-slate-700' 
                   : 'border-slate-200 text-slate-700 hover:bg-slate-50'
               }`}>
-                <img src="https://www.svgrepo.com/show/475656/google-color.svg" alt="Google" className="w-5 h-5" />
+                <img src="https://www.svgrepo.com/show/475656/google-color.svg" alt="Google" className="w-4 h-4" />
                 <span>Google</span>
               </button>
-              <button className={`flex items-center justify-center gap-3 rounded-xl border px-4 py-3 font-semibold transition-all hover:bg-opacity-10 ${
+              <button className={`flex items-center justify-center gap-2 rounded-lg border px-3 py-2 text-sm font-semibold transition-all hover:bg-opacity-10 ${
                 isDarkMode 
                   ? 'border-slate-600 text-slate-300 hover:bg-slate-700' 
                   : 'border-slate-200 text-slate-700 hover:bg-slate-50'
               }`}>
-                <img src="https://www.svgrepo.com/show/475647/facebook-color.svg" alt="Facebook" className="w-5 h-5" />
+                <img src="https://www.svgrepo.com/show/475647/facebook-color.svg" alt="Facebook" className="w-4 h-4" />
                 <span>Facebook</span>
               </button>
             </div>
           </div>
 
-          <div className="mt-6 text-center">
+          <div className="mt-4 text-center">
             <p className={`text-xs leading-relaxed ${
               isDarkMode ? 'text-slate-400' : 'text-slate-500'
             }`}>
