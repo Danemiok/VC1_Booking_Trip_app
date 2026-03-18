@@ -129,7 +129,17 @@ Route::middleware(['auth:sanctum'])->group(function () {
 |--------------------------------------------------------------------------
 */
 
-Route::middleware(['auth:sanctum', 'role:admin'])->apiResource('users', AuthController::class);
+Route::middleware(['auth:sanctum'])->group(function () {
+    Route::match(['put', 'patch'], '/users', [AuthController::class, 'updateSelf']);
+});
+
+if (app()->environment('local')) {
+    // Allow listing users in the browser during local development without auth.
+    Route::get('/users', [AuthController::class, 'index']);
+    Route::middleware(['auth:sanctum'])->apiResource('users', AuthController::class)->except(['index']);
+} else {
+    Route::middleware(['auth:sanctum', 'role:admin'])->apiResource('users', AuthController::class);
+}
 
 /*
 |--------------------------------------------------------------------------
