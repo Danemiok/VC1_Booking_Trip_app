@@ -41,6 +41,15 @@ class DatabaseSeeder extends Seeder
             ]
         );
 
+        User::updateOrCreate(
+            ['email' => 'owner@test.com'],
+            [
+                'name' => 'Owner Test',
+                'password' => Hash::make('password123'),
+                'role' => 'owner',
+            ]
+        );
+
         User::factory()->create([
             'name' => 'Owner 1',
             'email' => 'owner1@test.com',
