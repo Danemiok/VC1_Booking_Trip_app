@@ -6,9 +6,101 @@ use App\Http\Controllers\Controller;
 use App\Models\Destination;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Support\Facades\Validator;
+use Illuminate\Support\Str;
 
 class DestinationController extends Controller
 {
+    private function normalizeImagePath(string $value): ?string
+    {
+        $normalized = str_replace('\\', '/', trim($value));
+
+        if ($normalized === '') {
+            return null;
+        }
+
+        if (preg_match('#^https?://#i', $normalized)) {
+            $path = parse_url($normalized, PHP_URL_PATH) ?? '';
+            $normalized = $path ?: '';
+        }
+
+        if ($normalized === '') {
+            return null;
+        }
+
+        if (str_contains($normalized, '/storage/')) {
+            $normalized = substr($normalized, strpos($normalized, '/storage/') + strlen('/storage/'));
+        }
+
+        $normalized = ltrim($normalized, '/');
+
+        if (str_starts_with($normalized, 'storage/')) {
+            $normalized = substr($normalized, strlen('storage/'));
+        }
+
+        if (str_starts_with($normalized, 'images/') || str_starts_with($normalized, 'destinations/')) {
+            return $normalized;
+        }
+
+        return null;
+    }
+    
+    private function buildPublicImageUrl(?string $value): ?string
+    {
+        if (!$value) {
+            return null;
+        }
+
+        $normalized = str_replace('\\', '/', trim($value));
+
+        if ($normalized === '') {
+            return null;
+        }
+
+        if (preg_match('#^https?:/[^/]#i', $normalized)) {
+            $normalized = preg_replace('#^([a-z]+:)/#i', '$1//', $normalized);
+        }
+
+        if (preg_match('#^https?://#i', $normalized)) {
+            $path = parse_url($normalized, PHP_URL_PATH) ?? '';
+            if ($path && str_contains($path, '/storage/')) {
+                $normalized = substr($path, strpos($path, '/storage/') + strlen('/storage/'));
+            } else {
+                return $normalized;
+            }
+        }
+
+        
+        $relative = ltrim($normalized, '/');
+
+        if (str_starts_with($relative, 'storage/')) {
+            $relative = substr($relative, strlen('storage/'));
+        }
+
+        if (Str::contains($relative, ['..', './', '.\\'])) {
+            return null;
+        }
+
+        $storagePath = public_path('storage');
+        if (is_dir($storagePath) || is_link($storagePath)) {
+            return url('/storage/' . $relative);
+        }
+
+        return url('/api/files/' . $relative);
+    }
+
+    private function formatDestination(Destination $destination): array
+    {
+        $data = $destination->toArray();
+        $data['image'] = $this->buildPublicImageUrl($destination->image);
+        $images = is_array($destination->images) ? $destination->images : [];
+        $data['images'] = array_values(array_filter(array_map(
+            fn ($image) => $this->buildPublicImageUrl(is_string($image) ? $image : ''),
+            $images
+        )));
+
+        return $data;
+    }
     /**
      * Get all destinations for the authenticated owner
      */
@@ -21,7 +113,7 @@ class DestinationController extends Controller
 
             return response()->json([
                 'success' => true,
-                'data' => $destinations,
+                'data' => $destinations->map(fn (Destination $destination) => $this->formatDestination($destination)),
                 'message' => 'Destinations retrieved successfully'
             ]);
         } catch (\Exception $e) {
@@ -38,29 +130,97 @@ class DestinationController extends Controller
     public function store(Request $request): JsonResponse
     {
         try {
-            $validated = $request->validate([
+            $rules = [
                 'name' => 'required|string|max:255',
                 'type' => 'required|string|max:255',
                 'description' => 'nullable|string',
                 'location' => 'required|string|max:255',
                 'address' => 'nullable|string',
                 'price' => 'required|numeric|min:0',
-                'image' => 'nullable|string',
+                'image' => 'nullable',
                 'images' => 'nullable|array',
-                'images.*' => 'string',
+                'images.*' => 'nullable',
                 'rating' => 'nullable|numeric|min:0|max:5',
                 'status' => 'in:draft,active'
-            ]);
+            ];
+
+            $validated = $request->validate($rules);
+
+            if ($request->hasFile('image')) {
+                Validator::make(
+                    ['image' => $request->file('image')],
+                    ['image' => 'image|mimes:jpeg,jpg,png,webp|max:5120']
+                )->validate();
+            }
+
+            $imagesFiles = $request->file('images');
+            if ($imagesFiles) {
+                $imagesFiles = is_array($imagesFiles) ? $imagesFiles : [$imagesFiles];
+                Validator::make(
+                    ['images' => $imagesFiles],
+                    ['images' => 'array', 'images.*' => 'image|mimes:jpeg,jpg,png,webp|max:5120']
+                )->validate();
+            }
+
+            $imageInput = $request->input('image');
+            if (is_string($imageInput) && trim($imageInput) !== '') {
+                Validator::make(
+                    ['image' => $imageInput],
+                    ['image' => 'string']
+                )->validate();
+            }
+
+            $inputImages = $request->input('images');
+            if (is_array($inputImages)) {
+                Validator::make(
+                    ['images' => $inputImages],
+                    ['images' => 'array', 'images.*' => 'nullable|string']
+                )->validate();
+            }
 
             $validated['user_id'] = auth()->id();
             $validated['rating'] = $validated['rating'] ?? 0;
             $validated['total_bookings'] = 0;
 
+            if ($request->hasFile('image')) {
+                $path = $request->file('image')->store('images/destinations', 'public');
+                $validated['image'] = $path;
+            }
+
+            $uploadedImages = [];
+            $imagesFiles = $request->file('images');
+            if ($imagesFiles) {
+                $imagesFiles = is_array($imagesFiles) ? $imagesFiles : [$imagesFiles];
+                foreach ($imagesFiles as $file) {
+                    if (!$file) {
+                        continue;
+                    }
+                    $path = $file->store('images/destinations', 'public');
+                    $uploadedImages[] = $path;
+                }
+            }
+
+            $inputImages = $request->input('images');
+            if (is_array($inputImages)) {
+                foreach ($inputImages as $image) {
+                    if (is_string($image) && trim($image) !== '') {
+                        $normalized = $this->normalizeImagePath($image);
+                        if ($normalized) {
+                            $uploadedImages[] = $normalized;
+                        }
+                    }
+                }
+            }
+
+            if (!empty($uploadedImages)) {
+                $validated['images'] = $uploadedImages;
+            }
+
             $destination = Destination::create($validated);
 
             return response()->json([
                 'success' => true,
-                'data' => $destination,
+                'data' => $this->formatDestination($destination),
                 'message' => 'Destination created successfully'
             ], 201);
         } catch (\Illuminate\Validation\ValidationException $e) {
@@ -118,7 +278,7 @@ class DestinationController extends Controller
 
             return response()->json([
                 'success' => true,
-                'data' => $destinationModel,
+                'data' => $this->formatDestination($destinationModel),
                 'message' => 'Destination retrieved successfully'
             ]);
         } catch (\Exception $e) {
@@ -170,25 +330,107 @@ class DestinationController extends Controller
                 ], 403);
             }
 
-            $validated = $request->validate([
+            $rules = [
                 'name' => 'string|max:255',
                 'type' => 'string|max:255',
                 'description' => 'nullable|string',
                 'location' => 'string|max:255',
                 'address' => 'nullable|string',
                 'price' => 'numeric|min:0',
-                'image' => 'nullable|string',
+                'image' => 'nullable',
                 'images' => 'nullable|array',
-                'images.*' => 'string',
+                'images.*' => 'nullable',
                 'rating' => 'nullable|numeric|min:0|max:5',
                 'status' => 'in:draft,active'
-            ]);
+            ];
+
+            $validated = $request->validate($rules);
+
+            if ($request->hasFile('image')) {
+                Validator::make(
+                    ['image' => $request->file('image')],
+                    ['image' => 'image|mimes:jpeg,jpg,png,webp|max:5120']
+                )->validate();
+            }
+
+            $imagesFiles = $request->file('images');
+            if ($imagesFiles) {
+                $imagesFiles = is_array($imagesFiles) ? $imagesFiles : [$imagesFiles];
+                Validator::make(
+                    ['images' => $imagesFiles],
+                    ['images' => 'array', 'images.*' => 'image|mimes:jpeg,jpg,png,webp|max:5120']
+                )->validate();
+            }
+
+            $imageInput = $request->input('image');
+            if (is_string($imageInput) && trim($imageInput) !== '') {
+                Validator::make(
+                    ['image' => $imageInput],
+                    ['image' => 'string']
+                )->validate();
+            }
+
+            $inputImages = $request->input('images');
+            if (is_array($inputImages)) {
+                Validator::make(
+                    ['images' => $inputImages],
+                    ['images' => 'array', 'images.*' => 'nullable|string']
+                )->validate();
+            }
+
+            if ($request->hasFile('image')) {
+                $path = $request->file('image')->store('images/destinations', 'public');
+                $validated['image'] = $path;
+            } else {
+                $imageInput = $request->input('image');
+                if (is_string($imageInput) && trim($imageInput) !== '') {
+                    $normalized = $this->normalizeImagePath($imageInput);
+                    if ($normalized) {
+                        $validated['image'] = $normalized;
+                    } else {
+                        unset($validated['image']);
+                    }
+                } else {
+                    unset($validated['image']);
+                }
+            }
+
+            $uploadedImages = [];
+            $imagesFiles = $request->file('images');
+            if ($imagesFiles) {
+                $imagesFiles = is_array($imagesFiles) ? $imagesFiles : [$imagesFiles];
+                foreach ($imagesFiles as $file) {
+                    if (!$file) {
+                        continue;
+                    }
+                    $path = $file->store('images/destinations', 'public');
+                    $uploadedImages[] = $path;
+                }
+            }
+
+            $inputImages = $request->input('images');
+            if (is_array($inputImages)) {
+                foreach ($inputImages as $image) {
+                    if (is_string($image) && trim($image) !== '') {
+                        $normalized = $this->normalizeImagePath($image);
+                        if ($normalized) {
+                            $uploadedImages[] = $normalized;
+                        }
+                    }
+                }
+            }
+
+            if (!empty($uploadedImages)) {
+                $validated['images'] = $uploadedImages;
+            } else {
+                unset($validated['images']);
+            }
 
             $destinationModel->update($validated);
 
             return response()->json([
                 'success' => true,
-                'data' => $destinationModel->fresh(),
+                'data' => $this->formatDestination($destinationModel->fresh()),
                 'message' => 'Destination updated successfully'
             ]);
         } catch (\Illuminate\Validation\ValidationException $e) {
@@ -282,7 +524,7 @@ class DestinationController extends Controller
 
             return response()->json([
                 'success' => true,
-                'data' => $destinations,
+                'data' => $destinations->map(fn (Destination $destination) => $this->formatDestination($destination)),
                 'message' => 'Public destinations retrieved successfully'
             ]);
         } catch (\Exception $e) {
@@ -293,4 +535,3 @@ class DestinationController extends Controller
         }
     }
 }
-

@@ -9,6 +9,8 @@ use App\Http\Controllers\Auth\RegisterController;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\Owner\MessageController;
 use App\Http\Controllers\Customer\MessageController as CustomerMessageController;
+use App\Http\Controllers\PublicFileController;
+use App\Http\Controllers\ImageUploadController;
 
 /*
 |--------------------------------------------------------------------------
@@ -29,6 +31,8 @@ use App\Http\Controllers\Api\HotelController;
 | Public Routes (No Authentication Required)
 |--------------------------------------------------------------------------
 */
+
+Route::get('/files/{path}', [PublicFileController::class, 'show'])->where('path', '.*');
 
 // Get all active hotels for customers
 Route::get('/hotels/public', [HotelController::class, 'index']);
@@ -97,6 +101,9 @@ Route::middleware(['auth:sanctum', 'role:owner'])->group(function () {
 
 // PROTECTED ROUTES (require authentication)
 Route::middleware(['auth:sanctum'])->group(function () {
+    // Image Upload
+    Route::post('/upload/image', [ImageUploadController::class, 'upload']);
+
     // Customer booking routes
     Route::middleware(['role:customer,admin'])->group(function () {
         Route::post('/bookings', [BookingController::class, 'store']);

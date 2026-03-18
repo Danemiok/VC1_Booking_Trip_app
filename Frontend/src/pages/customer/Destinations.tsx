@@ -46,6 +46,14 @@ interface DestinationItem {
 }
 
 const DEFAULT_IMAGE = 'https://picsum.photos/seed/public-destination/800/600';
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL ?? 'http://127.0.0.1:8000/api';
+const API_ORIGIN = /^https?:\/\//i.test(API_BASE_URL)
+  ? API_BASE_URL.replace(/\/api\/?$/, '')
+  : '';
+const ASSET_ORIGIN =
+  import.meta.env.VITE_ASSET_ORIGIN ||
+  API_ORIGIN ||
+  (typeof window !== 'undefined' ? window.location.origin : '');
 
 const toNumber = (value: number | string | null | undefined, fallback = 0) => {
   const parsed = typeof value === 'number' ? value : parseFloat(String(value ?? ''));
@@ -58,10 +66,28 @@ const getErrorMessage = (error: any, fallback: string) => {
   return fallback;
 };
 
+const resolveImageUrl = (value?: string | null) => {
+  if (!value) return '';
+  const cleaned = value.replace(/\\/g, '/');
+  const normalizedScheme = cleaned.replace(/^https?:\/(?!\/)/i, (match) => `${match}/`);
+  if (normalizedScheme.startsWith('data:')) return normalizedScheme;
+  if (/^https?:\/\//i.test(normalizedScheme)) return normalizedScheme;
+
+  const normalized = normalizedScheme.startsWith('/') ? normalizedScheme : `/${normalizedScheme}`;
+  if (!ASSET_ORIGIN) return normalized;
+
+  if (normalized.startsWith('/storage/')) return `${ASSET_ORIGIN}${normalized}`;
+  if (normalized.startsWith('/images/')) return `${ASSET_ORIGIN}/storage${normalized}`;
+  if (normalized.startsWith('/destinations/')) return `${ASSET_ORIGIN}/storage${normalized}`;
+
+  return `${ASSET_ORIGIN}${normalized}`;
+};
+
 const normalizeDestination = (destination: DestinationApiRecord): DestinationItem => {
   const imageList = Array.isArray(destination.images)
     ? destination.images.filter((image): image is string => typeof image === 'string' && image.trim().length > 0)
     : [];
+  const resolvedList = imageList.map(resolveImageUrl).filter(Boolean);
 
   return {
     id: String(destination.id),
@@ -70,7 +96,9 @@ const normalizeDestination = (destination: DestinationApiRecord): DestinationIte
     description: destination.description?.trim() || 'Discover this destination and start planning your stay.',
     location: destination.location?.trim() || 'Unknown location',
     price: toNumber(destination.price, 0),
-    image: (typeof destination.image === 'string' && destination.image.trim()) || imageList[0] || DEFAULT_IMAGE,
+    image:
+      resolveImageUrl((typeof destination.image === 'string' && destination.image.trim()) || resolvedList[0] || '') ||
+      DEFAULT_IMAGE,
     rating: toNumber(destination.rating, 0),
     status: destination.status === 'active' ? 'active' : 'draft',
   };
