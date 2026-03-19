@@ -10,7 +10,12 @@ use App\Http\Controllers\AuthController;
 use App\Http\Controllers\Owner\TransportController;
 use App\Http\Controllers\Owner\MessageController;
 use App\Http\Controllers\Customer\MessageController as CustomerMessageController;
+<<<<<<< HEAD
 use Illuminate\Support\Facades\DB;
+=======
+use App\Http\Controllers\PublicFileController;
+use App\Http\Controllers\ImageUploadController;
+>>>>>>> channy/customer-destination
 
 /*
 |--------------------------------------------------------------------------
@@ -19,6 +24,7 @@ use Illuminate\Support\Facades\DB;
 */
 use App\Http\Controllers\Owner\DestinationController;
 use App\Http\Controllers\Owner\PromotionController;
+<<<<<<< HEAD
 use App\Http\Controllers\Owner\OwnerProfileController;
 // use Illuminate\Http\Request;
 // use Illuminate\Support\Facades\Route;
@@ -45,8 +51,38 @@ Route::get('/health', function () {
         ], 500);
     }
 });
+=======
+use App\Http\Controllers\Owner\AccommodationController;
+// use Illuminate\Http\Request;
+// use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\Api\BookingController; // ADD THIS
+use App\Http\Controllers\Api\HotelSelectionController;
+use App\Http\Controllers\Api\HotelController;
+
+/*
+|--------------------------------------------------------------------------
+| Public Routes (No Authentication Required)
+|--------------------------------------------------------------------------
+*/
+
+Route::get('/files/{path}', [PublicFileController::class, 'show'])->where('path', '.*');
+
+// Get all active hotels for customers
+Route::get('/hotels/public', [HotelController::class, 'index']);
+Route::get('/hotels-public', [HotelController::class, 'index']);
+>>>>>>> channy/customer-destination
 
 Route::prefix('auth')->group(function () {
+
+    Route::get('/test', function () {
+        return response()->json([
+            'message' => 'Laravel API is working!',
+            'database' => 'Connected',
+            'timestamp' => now()->toDateTimeString(),
+            'environment' => app()->environment(),
+            'users_count' => \App\Models\User::count()
+        ]);
+    });
 
     Route::post('/register', [RegisterController::class, 'register']);
     Route::post('/login', [LoginController::class, 'login']);
@@ -111,6 +147,7 @@ Route::middleware(['auth:sanctum', 'role:owner'])->group(function () {
     
     // Owner promotions routes
     Route::apiResource('promotions', PromotionController::class);
+    Route::apiResource('hotels', AccommodationController::class);
 });
 
 Route::middleware(['auth:sanctum', 'role:owner'])->get('/owner/transports', [TransportController::class, 'index']);
@@ -124,6 +161,9 @@ Route::apiResource('users', AuthController::class);
 
 // PROTECTED ROUTES (require authentication)
 Route::middleware(['auth:sanctum'])->group(function () {
+    // Image Upload
+    Route::post('/upload/image', [ImageUploadController::class, 'upload']);
+
     // Customer booking routes
     Route::middleware(['role:customer,admin'])->group(function () {
         Route::post('/bookings', [BookingController::class, 'store']);
@@ -132,6 +172,12 @@ Route::middleware(['auth:sanctum'])->group(function () {
         // Backwards-compatible aliases
         Route::get('/customer/bookings', [BookingController::class, 'myBookings']);
         Route::post('/customer/bookings', [BookingController::class, 'store']);
+
+        // Customer hotel selection routes
+        Route::apiResource('hotel-selections', HotelSelectionController::class);
+        Route::get('/hotel-selections/status/{status}', [HotelSelectionController::class, 'getByStatus']);
+        Route::post('/hotel-selections/{hotelSelection}/confirm', [HotelSelectionController::class, 'confirm']);
+        Route::post('/hotel-selections/{hotelSelection}/cancel', [HotelSelectionController::class, 'cancel']);
     });
 
     // Owner routes - accessible by owners and admins

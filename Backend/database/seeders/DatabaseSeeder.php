@@ -68,6 +68,7 @@ class DatabaseSeeder extends Seeder
         ]);
 >>>>>>> leakk/new-feature-owner
 
+<<<<<<< HEAD
         User::updateOrCreate(
             ['email' => 'owner1@test.com'],
             [
@@ -85,5 +86,15 @@ class DatabaseSeeder extends Seeder
                 'role' => 'customer',
             ]
         );
+=======
+User::factory()->create([
+            'name' => 'Customer 1',
+            'email' => 'customer1@test.com',
+            'role' => 'customer'
+        ]);
+
+$this->call(HotelSeeder::class);
+>>>>>>> channy/customer-destination
     }
+
 }

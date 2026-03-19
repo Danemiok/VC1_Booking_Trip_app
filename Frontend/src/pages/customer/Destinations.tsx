@@ -15,7 +15,11 @@ import {
   Users, 
   CheckCircle2 
 } from 'lucide-react';
+<<<<<<< HEAD
 import { getPublicDestinations } from '../../services/destinationService';
+=======
+import { getHotels, type Hotel } from '../../data/hotels';
+>>>>>>> channy/customer-destination
 
 type DestinationStatus = 'active' | 'draft';
 
@@ -31,12 +35,71 @@ interface DestinationItem {
   status: DestinationStatus;
 }
 
+<<<<<<< HEAD
+=======
+const DEFAULT_IMAGE = 'https://picsum.photos/seed/public-destination/800/600';
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL ?? 'http://127.0.0.1:8000/api';
+const API_ORIGIN = /^https?:\/\//i.test(API_BASE_URL)
+  ? API_BASE_URL.replace(/\/api\/?$/, '')
+  : '';
+const ASSET_ORIGIN =
+  import.meta.env.VITE_ASSET_ORIGIN ||
+  API_ORIGIN ||
+  (typeof window !== 'undefined' ? window.location.origin : '');
+
+const toNumber = (value: number | string | null | undefined, fallback = 0) => {
+  const parsed = typeof value === 'number' ? value : parseFloat(String(value ?? ''));
+  return Number.isFinite(parsed) ? parsed : fallback;
+};
+
+>>>>>>> channy/customer-destination
 const getErrorMessage = (error: any, fallback: string) => {
   if (typeof error?.data?.message === 'string' && error.data.message.trim()) return error.data.message;
   if (typeof error?.message === 'string' && error.message.trim()) return error.message;
   return fallback;
 };
 
+<<<<<<< HEAD
+=======
+const resolveImageUrl = (value?: string | null) => {
+  if (!value) return '';
+  const cleaned = value.replace(/\\/g, '/');
+  const normalizedScheme = cleaned.replace(/^https?:\/(?!\/)/i, (match) => `${match}/`);
+  if (normalizedScheme.startsWith('data:')) return normalizedScheme;
+  if (/^https?:\/\//i.test(normalizedScheme)) return normalizedScheme;
+
+  const normalized = normalizedScheme.startsWith('/') ? normalizedScheme : `/${normalizedScheme}`;
+  if (!ASSET_ORIGIN) return normalized;
+
+  if (normalized.startsWith('/storage/')) return `${ASSET_ORIGIN}${normalized}`;
+  if (normalized.startsWith('/images/')) return `${ASSET_ORIGIN}/storage${normalized}`;
+  if (normalized.startsWith('/destinations/')) return `${ASSET_ORIGIN}/storage${normalized}`;
+
+  return `${ASSET_ORIGIN}${normalized}`;
+};
+
+const normalizeDestination = (destination: DestinationApiRecord): DestinationItem => {
+  const imageList = Array.isArray(destination.images)
+    ? destination.images.filter((image): image is string => typeof image === 'string' && image.trim().length > 0)
+    : [];
+  const resolvedList = imageList.map(resolveImageUrl).filter(Boolean);
+
+  return {
+    id: String(destination.id),
+    name: destination.name?.trim() || 'Untitled destination',
+    type: destination.type?.trim() || 'Boutique Hotel',
+    description: destination.description?.trim() || 'Discover this destination and start planning your stay.',
+    location: destination.location?.trim() || 'Unknown location',
+    price: toNumber(destination.price, 0),
+    image:
+      resolveImageUrl((typeof destination.image === 'string' && destination.image.trim()) || resolvedList[0] || '') ||
+      DEFAULT_IMAGE,
+    rating: toNumber(destination.rating, 0),
+    status: destination.status === 'active' ? 'active' : 'draft',
+  };
+};
+
+>>>>>>> channy/customer-destination
 export default function Destinations() {
   const [searchTerm, setSearchTerm] = React.useState('');
   const [destinations, setDestinations] = React.useState<DestinationItem[]>([]);
@@ -211,6 +274,13 @@ const parseGuestCount = (guestLabel: unknown): number => {
   return totalGuests > 0 ? totalGuests : 2;
 };
 
+const formatHotelDate = (value?: string): string => {
+  if (!value) return 'Unknown date';
+  const parsed = new Date(value);
+  if (Number.isNaN(parsed.getTime())) return 'Unknown date';
+  return parsed.toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' });
+};
+
 const getTripNights = (tripData?: any): number => {
   const start = tripData?.startDate ? new Date(tripData.startDate) : null;
   const end = tripData?.endDate ? new Date(tripData.endDate) : null;
@@ -268,8 +338,13 @@ export const Hotels: React.FC<HotelsPageProps> = ({ tripData, onBack, onSelectHo
   const [selectedRoomByHotel, setSelectedRoomByHotel] = useState<Record<number, string>>({});
   const [guestsByHotel, setGuestsByHotel] = useState<Record<number, number>>({});
   const [currentPage, setCurrentPage] = useState(1);
+<<<<<<< HEAD
   const [hotels, setHotels] = useState<any[]>([]);
   const [isLoadingHotels, setIsLoadingHotels] = useState(true);
+=======
+  const [hotels, setHotels] = useState<Hotel[]>([]);
+  const [hotelsLoading, setHotelsLoading] = useState(true);
+>>>>>>> channy/customer-destination
   const [hotelsError, setHotelsError] = useState('');
 
   const language = (() => {
@@ -353,6 +428,7 @@ export const Hotels: React.FC<HotelsPageProps> = ({ tripData, onBack, onSelectHo
   };
   
   useEffect(() => {
+<<<<<<< HEAD
     const loadHotels = async () => {
       setIsLoadingHotels(true);
       setHotelsError('');
@@ -371,6 +447,27 @@ export const Hotels: React.FC<HotelsPageProps> = ({ tripData, onBack, onSelectHo
     loadHotels();
   }, []);
 
+=======
+    let cancelled = false;
+    setHotelsLoading(true);
+    setHotelsError('');
+
+    getHotels()
+      .then((data) => {
+        if (!cancelled) setHotels(data);
+      })
+      .catch(() => {
+        if (!cancelled) setHotelsError('Failed to load hotels.');
+      })
+      .finally(() => {
+        if (!cancelled) setHotelsLoading(false);
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+>>>>>>> channy/customer-destination
   const defaultGuests = parseGuestCount(tripData?.guests);
   const tripNights = getTripNights(tripData);
 
@@ -663,7 +760,23 @@ export const Hotels: React.FC<HotelsPageProps> = ({ tripData, onBack, onSelectHo
               transition={{ duration: 0.2 }}
               className="space-y-12"
             >
-              {filteredHotels.length > 0 ? (
+              {hotelsLoading ? (
+                <div className="text-center py-20 bg-slate-50 dark:bg-slate-800/50 rounded-[2rem] border-2 border-dashed border-slate-200 dark:border-slate-700">
+                  <div className="bg-slate-100 dark:bg-slate-800 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <Search className="w-8 h-8 text-slate-400" />
+                  </div>
+                  <h3 className="text-xl font-bold text-slate-900 dark:text-white mb-2">Loading hotels</h3>
+                  <p className="text-slate-500 dark:text-slate-400">Fetching the latest listings.</p>
+                </div>
+              ) : hotelsError ? (
+                <div className="text-center py-20 bg-red-50 dark:bg-red-900/20 rounded-[2rem] border-2 border-dashed border-red-200 dark:border-red-800">
+                  <div className="bg-red-100 dark:bg-red-900/40 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <Search className="w-8 h-8 text-red-400" />
+                  </div>
+                  <h3 className="text-xl font-bold text-red-700 dark:text-red-200 mb-2">Unable to load hotels</h3>
+                  <p className="text-red-600/80 dark:text-red-300/80">{hotelsError}</p>
+                </div>
+              ) : filteredHotels.length > 0 ? (
                 paginatedHotels.map((hotel) => {
                   const roomOptions = buildRoomOptions(parsePrice(hotel.price));
                   const defaultRoom = roomOptions[0];
@@ -730,6 +843,9 @@ export const Hotels: React.FC<HotelsPageProps> = ({ tripData, onBack, onSelectHo
                         >
                           {hotel.name}
                         </h3>
+                        <div className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">
+                          {hotel.owner?.name ? `Owner: ${hotel.owner.name}` : 'Owner: Unknown'} · {formatHotelDate(hotel.created_at)}
+                        </div>
                         <button
                           type="button"
                           onClick={() => openMapForHotel(hotel)}

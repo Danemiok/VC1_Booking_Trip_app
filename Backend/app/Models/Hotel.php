@@ -6,7 +6,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
-class Accommodation extends Model
+class Hotel extends Model
 {
     use HasFactory;
 
@@ -21,7 +21,6 @@ class Accommodation extends Model
         'description',
         'stars_rating',
         'is_active',
-        'image',
     ];
 
     protected $casts = [
@@ -33,10 +32,4 @@ class Accommodation extends Model
     {
         return $this->belongsTo(User::class, 'owner_id');
     }
-
-    public function scopeActive($query)
-    {
-        return $query->where('is_active', true);
-    }
 }
-

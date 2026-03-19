@@ -51,6 +51,7 @@ export async function apiRequest(path, options = {}) {
   const method = (options.method || 'GET').toUpperCase();
   const response = await fetch(`${API_BASE_URL}${path}`, {
     ...options,
+    credentials: 'include',
     headers: {
       Accept: 'application/json',
       'Content-Type': 'application/json',

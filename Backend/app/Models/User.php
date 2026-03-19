@@ -44,8 +44,15 @@ class User extends Authenticatable
         'password' => 'hashed',
     ];
 
+<<<<<<< HEAD
     public function ownerProfile(): HasOne
     {
         return $this->hasOne(OwnerProfile::class);
+=======
+    public function accommodations()
+    {
+        return $this->hasMany(Accommodation::class, 'owner_id');
+>>>>>>> channy/customer-destination
     }
 }
+
