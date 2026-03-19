@@ -179,6 +179,38 @@ export const GroupPlanning: React.FC<GroupPlanningProps> = ({ onBack, tripTitle 
       setPolls(group.polls);
       setGroupName(group.name);
 
+<<<<<<< HEAD
+    socketService.connect();
+    socketService.emit('join-group', { groupId, email: userEmail });
+
+    const handleNewMessage = (msg: Message) => {
+      setMessages(prev => [...prev, msg]);
+    };
+
+    const handleItineraryUpdated = (items: ItineraryItem[]) => {
+      setItinerary(items);
+    };
+
+    const handlePollCreated = (poll: Poll) => {
+      setPolls(prev => [...prev, poll]);
+    };
+
+    const handlePollUpdated = (poll: Poll) => {
+      setPolls(prev => prev.map(p => (p.id === poll.id ? poll : p)));
+    };
+
+    socketService.on('new-message', handleNewMessage);
+    socketService.on('itinerary-updated', handleItineraryUpdated);
+    socketService.on('poll-created', handlePollCreated);
+    socketService.on('poll-updated', handlePollUpdated);
+
+    return () => {
+      socketService.off('new-message', handleNewMessage);
+      socketService.off('itinerary-updated', handleItineraryUpdated);
+      socketService.off('poll-created', handlePollCreated);
+      socketService.off('poll-updated', handlePollUpdated);
+    };
+=======
       const socket = socketService.connect();
       socket.emit('join-group', { groupId, email: userEmail });
 
@@ -229,6 +261,7 @@ export const GroupPlanning: React.FC<GroupPlanningProps> = ({ onBack, tripTitle 
       setGroupId(null);
       localStorage.removeItem('activeGroupId');
     }
+>>>>>>> a216941f3ee0eff0692229471d62d618b84904af
   }, [groupId, userEmail]);
 
   useEffect(() => {
@@ -449,6 +482,22 @@ export const GroupPlanning: React.FC<GroupPlanningProps> = ({ onBack, tripTitle 
 
   const handleSendMessage = (e: React.FormEvent) => {
     e.preventDefault();
+<<<<<<< HEAD
+    if (!newMessage.trim() || !groupId) return;
+    socketService.emit('send-message', {
+      groupId,
+      email: userEmail,
+      text: newMessage
+    });
+    setNewMessage('');
+  };
+
+  const handleVotePoll = (pollId: string, optionId: string) => {
+    socketService.emit('vote-poll', {
+      groupId,
+      email: userEmail,
+      optionId
+=======
     sendMessage();
   };
 
@@ -474,6 +523,7 @@ export const GroupPlanning: React.FC<GroupPlanningProps> = ({ onBack, tripTitle 
       const updatedPoll = next.find((p) => p.id === pollId);
       if (updatedPoll) socketService.getSocket()?.emit('poll-updated', updatedPoll);
       return next;
+>>>>>>> a216941f3ee0eff0692229471d62d618b84904af
     });
   };
 
@@ -490,6 +540,9 @@ export const GroupPlanning: React.FC<GroupPlanningProps> = ({ onBack, tripTitle 
 
   const handleAddActivity = () => {
     if (!newActivity.time || !newActivity.activity || !groupId) return;
+<<<<<<< HEAD
+    socketService.emit('update-itinerary', {
+=======
     const item: ItineraryItem = {
       id: createId(),
       time: newActivity.time,
@@ -509,6 +562,7 @@ export const GroupPlanning: React.FC<GroupPlanningProps> = ({ onBack, tripTitle 
       return next;
     });
     socketService.getSocket()?.emit('update-itinerary', {
+>>>>>>> a216941f3ee0eff0692229471d62d618b84904af
       groupId,
       email: userEmail,
       item: newActivity
@@ -519,8 +573,14 @@ export const GroupPlanning: React.FC<GroupPlanningProps> = ({ onBack, tripTitle 
 
   const handleCreatePoll = () => {
     if (!newPoll.question || !groupId) return;
+<<<<<<< HEAD
+    socketService.emit('create-poll', {
+      groupId,
+      email: userEmail,
+=======
     const poll: Poll = {
       id: createId(),
+>>>>>>> a216941f3ee0eff0692229471d62d618b84904af
       question: newPoll.question,
       options: newPoll.options
         .filter((o) => o.trim())
