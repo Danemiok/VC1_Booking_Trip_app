@@ -40,6 +40,16 @@ Route::get('/hotels-public', [HotelController::class, 'index']);
 
 Route::prefix('auth')->group(function () {
 
+    Route::get('/test', function () {
+        return response()->json([
+            'message' => 'Laravel API is working!',
+            'database' => 'Connected',
+            'timestamp' => now()->toDateTimeString(),
+            'environment' => app()->environment(),
+            'users_count' => \App\Models\User::count()
+        ]);
+    });
+
     Route::post('/register', [RegisterController::class, 'register']);
     Route::post('/login', [LoginController::class, 'login']);
 
