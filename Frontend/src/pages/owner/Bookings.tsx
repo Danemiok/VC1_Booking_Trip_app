@@ -18,12 +18,12 @@ import {
 import { useNavigate } from 'react-router-dom';
 import { cn } from '@/src/utils/utils';
 import { bookingService } from '@/src/services/bookingService';
+import { API_BASE_URL } from '@/src/services/api';
 import { useAuth } from '../../context/AuthContext';
 
 const Bookings = () => {
   const navigate = useNavigate();
   const { user, token, isAuthenticated, logout } = useAuth();
-  const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://127.0.0.1:8000/api';
   
   const [serviceFilter, setServiceFilter] = React.useState<'all' | 'hotel' | 'transport'>('all');
   const [dateRange, setDateRange] = React.useState<'last1' | 'last3' | 'last7' | 'all'>('last7');
@@ -92,25 +92,12 @@ const Bookings = () => {
   
   const pageSize = 10;
 
-  // Debug localStorage on mount
+  // Debug auth state on mount
   React.useEffect(() => {
     console.log('🔍 ===== DEBUG INFO =====');
     console.log('Auth Context - isAuthenticated:', isAuthenticated);
     console.log('Auth Context - user:', user);
     console.log('Auth Context - token exists:', !!token);
-    console.log('localStorage - auth_token:', localStorage.getItem('auth_token'));
-    console.log('localStorage - user:', localStorage.getItem('user'));
-    
-    try {
-      const userStr = localStorage.getItem('user');
-      if (userStr) {
-        const parsedUser = JSON.parse(userStr);
-        console.log('Parsed user from storage:', parsedUser);
-        console.log('User role from storage:', parsedUser.role);
-      }
-    } catch (e) {
-      console.error('Error parsing user from storage:', e);
-    }
     console.log('🔍 =====================');
   }, []);
 

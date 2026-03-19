@@ -18,6 +18,9 @@ use App\Http\Controllers\Customer\MessageController as CustomerMessageController
 */
 use App\Http\Controllers\Owner\DestinationController;
 use App\Http\Controllers\Owner\PromotionController;
+use App\Http\Controllers\Owner\OwnerProfileController;
+// use Illuminate\Http\Request;
+// use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Api\BookingController; // ADD THIS
 
 Route::prefix('auth')->group(function () {
@@ -77,6 +80,9 @@ Route::middleware(['auth:sanctum', 'role:owner'])->group(function () {
         return response()->json(['message' => 'Owner access granted']);
     });
     
+    Route::get('/owner/profile', [OwnerProfileController::class, 'show']);
+    Route::put('/owner/profile', [OwnerProfileController::class, 'update']);
+
     // Owner destinations routes
     Route::apiResource('destinations', DestinationController::class);
     

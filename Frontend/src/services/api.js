@@ -1,25 +1,36 @@
-const RAW_API_BASE_URL = import.meta.env.VITE_API_BASE_URL ?? '/api';
-const BACKEND_ORIGIN = import.meta.env.VITE_BACKEND_ORIGIN;
-const API_BASE_URL = import.meta.env.DEV
-  ? RAW_API_BASE_URL
-  : (
-      RAW_API_BASE_URL.startsWith('/') && BACKEND_ORIGIN
-        ? `${BACKEND_ORIGIN}${RAW_API_BASE_URL}`
-        : RAW_API_BASE_URL
-    );
+const DEFAULT_API_BASE_URL =
+  typeof window !== 'undefined'
+    ? `${window.location.origin}/api`
+    : 'http://127.0.0.1:8000/api';
+const RAW_API_BASE_URL = import.meta.env.VITE_API_BASE_URL ?? DEFAULT_API_BASE_URL;
 
-const AUTH_TOKEN_KEY = 'auth_token';
-
-function getStoredAuthToken() {
-  try {
-    return localStorage.getItem(AUTH_TOKEN_KEY);
-  } catch {
-    return null;
+const normalizeApiBaseUrl = (value) => {
+  const trimmed = String(value ?? '').trim();
+  const withoutTrailingSlash = trimmed.replace(/\/+$/, '');
+  if (withoutTrailingSlash.endsWith('/api')) {
+    return withoutTrailingSlash;
   }
+  return `${withoutTrailingSlash}/api`;
+};
+
+export const API_BASE_URL = normalizeApiBaseUrl(RAW_API_BASE_URL);
+
+let authToken = null;
+
+export function getApiAuthToken() {
+  return authToken;
+}
+
+export function setApiAuthToken(token) {
+  authToken = token ?? null;
+}
+
+export function clearApiAuthToken() {
+  authToken = null;
 }
 
 export async function apiRequest(path, options = {}) {
-  const token = getStoredAuthToken();
+  const token = getApiAuthToken();
   const hasAuthHeader = Boolean(
     options?.headers &&
       Object.keys(options.headers).some((key) => key.toLowerCase() === 'authorization'),
@@ -39,9 +50,13 @@ export async function apiRequest(path, options = {}) {
 
   const method = (options.method || 'GET').toUpperCase();
   const response = await fetch(`${API_BASE_URL}${path}`, {
-    headers,
-    cache: method === 'GET' ? 'no-store' : undefined,
     ...options,
+    headers: {
+      Accept: 'application/json',
+      'Content-Type': 'application/json',
+      ...(token && !hasAuthHeader ? { Authorization: `Bearer ${token}` } : {}),
+      ...(options.headers ?? {}),
+    },
   });
 
   const rawBody = await response.text();
