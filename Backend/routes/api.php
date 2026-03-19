@@ -10,12 +10,9 @@ use App\Http\Controllers\AuthController;
 use App\Http\Controllers\Owner\TransportController;
 use App\Http\Controllers\Owner\MessageController;
 use App\Http\Controllers\Customer\MessageController as CustomerMessageController;
-<<<<<<< HEAD
 use Illuminate\Support\Facades\DB;
-=======
 use App\Http\Controllers\PublicFileController;
 use App\Http\Controllers\ImageUploadController;
->>>>>>> channy/customer-destination
 
 /*
 |--------------------------------------------------------------------------
@@ -24,7 +21,6 @@ use App\Http\Controllers\ImageUploadController;
 */
 use App\Http\Controllers\Owner\DestinationController;
 use App\Http\Controllers\Owner\PromotionController;
-<<<<<<< HEAD
 use App\Http\Controllers\Owner\OwnerProfileController;
 // use Illuminate\Http\Request;
 // use Illuminate\Support\Facades\Route;
@@ -51,11 +47,9 @@ Route::get('/health', function () {
         ], 500);
     }
 });
-=======
 use App\Http\Controllers\Owner\AccommodationController;
 // use Illuminate\Http\Request;
 // use Illuminate\Support\Facades\Route;
-use App\Http\Controllers\Api\BookingController; // ADD THIS
 use App\Http\Controllers\Api\HotelSelectionController;
 use App\Http\Controllers\Api\HotelController;
 
@@ -70,7 +64,6 @@ Route::get('/files/{path}', [PublicFileController::class, 'show'])->where('path'
 // Get all active hotels for customers
 Route::get('/hotels/public', [HotelController::class, 'index']);
 Route::get('/hotels-public', [HotelController::class, 'index']);
->>>>>>> channy/customer-destination
 
 Route::prefix('auth')->group(function () {
 
