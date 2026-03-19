@@ -1,6 +1,3 @@
-<<<<<<< HEAD
-import { getAuthToken } from './authService';
-
 const RAW_API_BASE_URL = import.meta.env.VITE_API_BASE_URL ?? '/api';
 const BACKEND_ORIGIN = import.meta.env.VITE_BACKEND_ORIGIN;
 const API_BASE_URL = import.meta.env.DEV
@@ -10,9 +7,6 @@ const API_BASE_URL = import.meta.env.DEV
         ? `${BACKEND_ORIGIN}${RAW_API_BASE_URL}`
         : RAW_API_BASE_URL
     );
-=======
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL ?? 'http://127.0.0.1:8000/api';
->>>>>>> 69a0224 (Bufig-Auth)
 
 const AUTH_TOKEN_KEY = 'auth_token';
 
@@ -45,19 +39,9 @@ export async function apiRequest(path, options = {}) {
 
   const method = (options.method || 'GET').toUpperCase();
   const response = await fetch(`${API_BASE_URL}${path}`, {
-<<<<<<< HEAD
     headers,
     cache: method === 'GET' ? 'no-store' : undefined,
     ...options,
-=======
-    ...options,
-    headers: {
-      Accept: 'application/json',
-      'Content-Type': 'application/json',
-      ...(token && !hasAuthHeader ? { Authorization: `Bearer ${token}` } : {}),
-      ...(options.headers ?? {}),
-    },
->>>>>>> 69a0224 (Bufig-Auth)
   });
 
   const rawBody = await response.text();
