@@ -31,7 +31,6 @@ import OwnerPromotions from '../pages/owner/Promotions';
 import OwnerCreatePromotion from '../pages/owner/CreatePromotion';
 import OwnerAnalytics from '../pages/owner/Analytics';
 import OwnerFinancials from '../pages/owner/Financials';
-import OwnerProfile from '../pages/owner/Profile';
 import OwnerSettings from '../pages/owner/Settings';
 import OwnerProfile from '../pages/owner/Profile';
 import OwnerRegisterVehicle from '../pages/owner/RegisterVehicle';
