@@ -17,6 +17,7 @@ export interface AdminNotification {
   time: string;
   type: 'user' | 'booking' | 'system' | 'alert';
   read: boolean;
+  meta?: any;
 }
 
 const notifications: AdminNotification[] = [
@@ -59,6 +60,8 @@ interface NotificationDropdownProps {
   onClose: () => void;
   notifications?: AdminNotification[];
   onNotificationClick?: (notification: AdminNotification) => void;
+  onMarkAllAsRead?: () => void;
+  onViewAll?: () => void;
 }
 
 export const NotificationDropdown: React.FC<NotificationDropdownProps> = ({
@@ -66,10 +69,14 @@ export const NotificationDropdown: React.FC<NotificationDropdownProps> = ({
   onClose,
   notifications: notificationsProp,
   onNotificationClick,
+  onMarkAllAsRead,
+  onViewAll,
 }) => {
   if (!isOpen) return null;
 
   const items = notificationsProp ?? notifications;
+  const hasUnread = items.some((n) => !n.read);
+  const isClickable = typeof onNotificationClick === 'function';
 
   const getIcon = (type: string) => {
     switch (type) {
@@ -92,7 +99,18 @@ export const NotificationDropdown: React.FC<NotificationDropdownProps> = ({
         <div className="p-4 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between">
           <h3 className="font-bold text-lg text-slate-900 dark:text-slate-100">Notifications</h3>
           <div className="flex items-center gap-2">
-            <button className="text-[11px] font-bold text-primary hover:underline">Mark all as read</button>
+            {onMarkAllAsRead && (
+              <button
+                onClick={onMarkAllAsRead}
+                disabled={!hasUnread}
+                className={cn(
+                  "text-[11px] font-bold text-primary hover:underline",
+                  !hasUnread && "opacity-50 cursor-not-allowed hover:no-underline",
+                )}
+              >
+                Mark all as read
+              </button>
+            )}
             <button onClick={onClose} className="p-1.5 text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-md transition-colors">
               <X size={16} />
             </button>
@@ -105,9 +123,12 @@ export const NotificationDropdown: React.FC<NotificationDropdownProps> = ({
               {items.map((notif) => (
                 <div 
                   key={notif.id} 
-                  onClick={() => onNotificationClick?.(notif)}
+                  onClick={isClickable ? () => onNotificationClick(notif) : undefined}
                   className={cn(
-                    "px-4 py-3 hover:bg-slate-50 dark:hover:bg-slate-800/60 transition-colors cursor-pointer flex gap-3",
+                    "px-4 py-3 transition-colors flex gap-3",
+                    isClickable
+                      ? "cursor-pointer hover:bg-slate-50 dark:hover:bg-slate-800/60"
+                      : "cursor-default",
                     !notif.read && "bg-primary/5"
                   )}
                 >
@@ -145,7 +166,14 @@ export const NotificationDropdown: React.FC<NotificationDropdownProps> = ({
         </div>
 
         <div className="p-3 border-t border-slate-200 dark:border-slate-800 text-center">
-          <button className="text-sm font-semibold text-slate-600 dark:text-slate-300 hover:text-primary transition-colors">
+          <button
+            onClick={() => {
+              onViewAll?.();
+              onClose();
+            }}
+            className="text-sm font-semibold text-slate-600 dark:text-slate-300 hover:text-primary transition-colors"
+            type="button"
+          >
             View all notifications
           </button>
         </div>

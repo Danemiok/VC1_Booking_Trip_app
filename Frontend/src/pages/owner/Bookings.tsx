@@ -1,5 +1,5 @@
 import React from 'react';
-import { 
+import {
   Search, 
   Download, 
   FileText,
@@ -19,7 +19,7 @@ import {
   DollarSign,
   X
 } from 'lucide-react';
-import { useNavigate } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 import { cn } from '@/src/utils/utils';
 import { bookingService } from '@/src/services/bookingService';
 import { useAuth } from '../../context/AuthContext';
@@ -28,6 +28,7 @@ import { RENTAL_VEHICLES } from '../../data/rentals';
 
 const Bookings = () => {
   const navigate = useNavigate();
+  const location = useLocation();
   const { user, token, isAuthenticated, logout } = useAuth();
   const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://127.0.0.1:8000/api';
   
@@ -886,6 +887,28 @@ const Bookings = () => {
     setShowBookingModal(false);
     setSelectedBooking(null);
   };
+
+  const openedFromQueryRef = React.useRef<string | null>(null);
+
+  React.useEffect(() => {
+    const params = new URLSearchParams(location.search);
+    const openBookingId = params.get('openBookingId');
+    if (!openBookingId) return;
+
+    if (openedFromQueryRef.current === String(openBookingId)) return;
+    if (!Array.isArray(bookings) || bookings.length === 0) return;
+
+    const booking = bookings.find((b) => String(b?.id ?? '') === String(openBookingId));
+    openedFromQueryRef.current = String(openBookingId);
+
+    if (booking) {
+      openBookingDetails(booking);
+      return;
+    }
+
+    setSuccessMessage(null);
+    setPageError('Booking details not found in the current list. Try refreshing the page.');
+  }, [bookings, location.search]);
 
   const updateBookingStatus = async (booking: any, nextStatus: 'paid' | 'pending' | 'canceled') => {
     if (!booking?.id) return;

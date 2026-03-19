@@ -8,7 +8,11 @@ interface HeaderProps {
   title: string;
   isDark: boolean;
   toggleTheme: () => void;
-  onNotificationClick: (notification: AdminNotification) => void;
+  onNotificationClick?: (notification: AdminNotification) => void;
+  notifications?: AdminNotification[];
+  unreadCount?: number;
+  onMarkAllNotificationsRead?: () => void;
+  onViewAllNotifications?: () => void;
   onProfileClick: () => void;
   onLogoutClick: () => void;
   user?: { name?: string; email?: string } | null;
@@ -19,6 +23,10 @@ export const Header: React.FC<HeaderProps> = ({
   isDark,
   toggleTheme,
   onNotificationClick,
+  notifications,
+  unreadCount,
+  onMarkAllNotificationsRead,
+  onViewAllNotifications,
   onProfileClick,
   onLogoutClick,
   user,
@@ -39,6 +47,13 @@ export const Header: React.FC<HeaderProps> = ({
     setIsLogoutConfirmOpen(false);
     onLogoutClick(); // Use the logout prop from parent component
   };
+
+  const computedUnreadCount =
+    typeof unreadCount === 'number'
+      ? unreadCount
+      : Array.isArray(notifications)
+        ? notifications.filter((n) => !n.read).length
+        : null;
 
   return (
     <header className="h-16 flex items-center justify-between px-8 border-b border-slate-200/50 dark:border-slate-800/50 bg-white/60 dark:bg-slate-900/40 backdrop-blur-xl sticky top-0 z-10">
@@ -70,16 +85,30 @@ export const Header: React.FC<HeaderProps> = ({
 
           >
             <Bell size={20} />
-            <span className="absolute top-2 right-2 w-2 h-2 bg-red-500 rounded-full border-2 border-white dark:border-slate-900"></span>
+            {computedUnreadCount === null && (
+              <span className="absolute top-2 right-2 min-w-2 h-2 bg-red-500 rounded-full border-2 border-white dark:border-slate-900" />
+            )}
+            {typeof computedUnreadCount === 'number' && computedUnreadCount > 0 && (
+              <span className="absolute -top-1 -right-1 min-w-5 h-5 px-1 rounded-full bg-red-600 text-white text-[10px] font-extrabold flex items-center justify-center border-2 border-white dark:border-slate-900">
+                {computedUnreadCount > 99 ? '99+' : computedUnreadCount}
+              </span>
+            )}
           </button>
           
           <NotificationDropdown 
             isOpen={isNotificationsOpen} 
             onClose={() => setIsNotificationsOpen(false)} 
-            onNotificationClick={(notification) => {
-              setIsNotificationsOpen(false);
-              onNotificationClick(notification);
-            }}
+            notifications={notifications}
+            onMarkAllAsRead={onMarkAllNotificationsRead}
+            onViewAll={onViewAllNotifications}
+            onNotificationClick={
+              onNotificationClick
+                ? (notification) => {
+                    setIsNotificationsOpen(false);
+                    onNotificationClick(notification);
+                  }
+                : undefined
+            }
           />
         </div>
 
