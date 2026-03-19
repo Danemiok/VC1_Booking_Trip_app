@@ -41,16 +41,32 @@ class DatabaseSeeder extends Seeder
             ]
         );
 
+<<<<<<< HEAD
         // Extra dev account (matches common demo login input)
+=======
+>>>>>>> leakk/new-feature-owner
         User::updateOrCreate(
             ['email' => 'owner@test.com'],
             [
                 'name' => 'Owner Test',
+<<<<<<< HEAD
                 // Match the credentials you want to use in the UI.
                 'password' => Hash::make('Password@123'),
                 'role' => 'owner',
             ]
         );
+=======
+                'password' => Hash::make('password123'),
+                'role' => 'owner',
+            ]
+        );
+
+        User::factory()->create([
+            'name' => 'Owner 1',
+            'email' => 'owner1@test.com',
+            'role' => 'owner'
+        ]);
+>>>>>>> leakk/new-feature-owner
 
         User::updateOrCreate(
             ['email' => 'owner1@test.com'],

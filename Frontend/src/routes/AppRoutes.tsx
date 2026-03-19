@@ -31,14 +31,14 @@ import OwnerPromotions from '../pages/owner/Promotions';
 import OwnerCreatePromotion from '../pages/owner/CreatePromotion';
 import OwnerAnalytics from '../pages/owner/Analytics';
 import OwnerFinancials from '../pages/owner/Financials';
-import OwnerProfile from '../pages/owner/Profile';
 import OwnerSettings from '../pages/owner/Settings';
+import OwnerProfile from '../pages/owner/Profile';
 import OwnerRegisterVehicle from '../pages/owner/RegisterVehicle';
 import OwnerPropertyDetail from '../pages/owner/PropertyDetail';
 import OwnerAddRoom from '../pages/owner/AddRoom';
 import OwnerAddProperty from '../pages/owner/AddProperty';
 import OwnerEditProperty from '../pages/owner/EditProperty';
-import { useLocation } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 import OwnerSidebar from '../components/layout/owner/Sidebar';
 import {
   Dashboard as AdminDashboard,
@@ -130,6 +130,7 @@ const getOwnerTitle = (pathname: string): string => {
   if (pathname.startsWith('/profile')) return 'Profile';
   if (pathname.startsWith('/settings')) return 'Settings';
   if (pathname.startsWith('/destinations')) return 'Destinations';
+  if (pathname.startsWith('/profile')) return 'Profile';
   return 'Overview Dashboard';
 };
 
@@ -137,11 +138,13 @@ const OwnerShell: React.FC<{ onLogout: () => void }> = ({ onLogout }) => {
   const { user } = useAuth();
   const { isDarkMode, toggleDarkMode } = useTheme();
   const location = useLocation();
+  const navigate = useNavigate();
 
   const renderOwnerPage = () => {
     const path = location.pathname;
 
     if (path === '/' || path === '/owner') return <OwnerDashboard />;
+    if (path.startsWith('/profile')) return <OwnerProfile />;
     if (path.startsWith('/destinations') && path.includes('/add-room')) return <OwnerAddRoom />;
     if (path.startsWith('/destinations') && path.includes('/edit')) return <OwnerEditProperty />;
     if (path.startsWith('/destinations') && path.includes('/new')) return <OwnerAddProperty />;
@@ -173,7 +176,8 @@ const OwnerShell: React.FC<{ onLogout: () => void }> = ({ onLogout }) => {
           isDark={isDarkMode}
           toggleTheme={toggleDarkMode}
           onNotificationClick={() => {}}
-          onProfileClick={() => {}}
+          onProfileClick={() => navigate('/profile')}
+          onSettingsClick={() => navigate('/settings')}
           onLogoutClick={onLogout}
           user={user}
         />
@@ -330,6 +334,7 @@ const AdminShell: React.FC<{ view: string; setView: (view: string) => void; onLo
           toggleTheme={toggleDarkMode}
           onNotificationClick={handleNotificationClick}
           onProfileClick={() => safeSetView('profile')}
+          onSettingsClick={() => safeSetView('settings')}
           onLogoutClick={onLogout}
           user={user}
         />

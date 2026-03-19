@@ -22,7 +22,8 @@ export default defineConfig(({mode}) => {
       hmr: process.env.DISABLE_HMR !== 'true',
       proxy: {
         '/api': {
-          target: apiProxyTarget,
+          target: env.VITE_BACKEND_ORIGIN || 'http://127.0.0.1:8001',
+          // target: apiProxyTarget,
           changeOrigin: true,
         },
       },

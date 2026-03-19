@@ -35,7 +35,20 @@ export async function apiRequest(path, options = {}) {
     options?.headers &&
       Object.keys(options.headers).some((key) => key.toLowerCase() === 'authorization'),
   );
+  const isFormData =
+    typeof FormData !== 'undefined' && options?.body instanceof FormData;
 
+  const headers = {
+    Accept: 'application/json',
+    ...(token && !hasAuthHeader ? { Authorization: `Bearer ${token}` } : {}),
+    ...(options.headers ?? {}),
+  };
+
+  if (!isFormData) {
+    headers['Content-Type'] = 'application/json';
+  }
+
+  const method = (options.method || 'GET').toUpperCase();
   const response = await fetch(`${API_BASE_URL}${path}`, {
     ...options,
     headers: {

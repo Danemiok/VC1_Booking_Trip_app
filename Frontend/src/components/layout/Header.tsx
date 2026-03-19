@@ -10,6 +10,7 @@ interface HeaderProps {
   toggleTheme: () => void;
   onNotificationClick: (notification: AdminNotification) => void;
   onProfileClick: () => void;
+  onSettingsClick?: () => void;
   onLogoutClick: () => void;
   user?: { name?: string; email?: string } | null;
 }
@@ -20,6 +21,7 @@ export const Header: React.FC<HeaderProps> = ({
   toggleTheme,
   onNotificationClick,
   onProfileClick,
+  onSettingsClick,
   onLogoutClick,
   user,
 }) => {
@@ -108,6 +110,7 @@ export const Header: React.FC<HeaderProps> = ({
               onClose={() => setIsProfileDropdownOpen(false)}
               onLogoutClick={handleLogoutClick}
               onProfileClick={onProfileClick}
+              onSettingsClick={onSettingsClick}
             />
           )}
         </div>

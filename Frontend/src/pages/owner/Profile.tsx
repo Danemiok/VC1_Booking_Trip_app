@@ -1,361 +1,201 @@
 import React from 'react';
-import {
-  Building2,
-  Camera,
-  CreditCard,
-  Mail,
-  MapPin,
-  Phone,
-  Save,
-  User,
-} from 'lucide-react';
-import { useAuth } from '../../context/AuthContext';
-import { apiRequest } from '../../services/api';
+import { Mail, Phone, MapPin, Briefcase, Building2, PencilLine, Camera } from 'lucide-react';
+import { useAuth } from '@/src/context/AuthContext';
+import { useNavigate } from 'react-router-dom';
+import { cn } from '@/src/utils/utils';
 
-type Alert = { type: 'success' | 'error' | 'info'; message: string };
-
-type OwnerProfileForm = {
+type OwnerProfileData = {
   name: string;
   email: string;
-  phone_number: string;
+  phone: string;
+  role: string;
+  company: string;
+  location: string;
   avatar: string;
-  bio: string;
-  date_of_birth: string;
-  gender: string;
-  business_name: string;
-  business_address: string;
-  business_registration_number: string;
-  tax_id: string;
-  business_phone_number: string;
-  commision_rate: string;
-  payment_terms: '' | 'monthly' | 'per_booking';
-  bank_name: string;
-  bank_account_number: string;
-  bank_account_holder: string;
 };
 
-const emptyProfile = (name?: string, email?: string, phone?: string): OwnerProfileForm => ({
-  name: name ?? '',
-  email: email ?? '',
-  phone_number: phone ?? '',
-  avatar: '',
-  bio: '',
-  date_of_birth: '',
-  gender: '',
-  business_name: '',
-  business_address: '',
-  business_registration_number: '',
-  tax_id: '',
-  business_phone_number: '',
-  commision_rate: '10%',
-  payment_terms: '',
-  bank_name: '',
-  bank_account_number: '',
-  bank_account_holder: '',
-});
+const DEFAULT_PROFILE: OwnerProfileData = {
+  name: 'Owner',
+  email: 'owner@example.com',
+  phone: '+855 12 345 678',
+  role: 'Owner',
+  company: 'Komroung Travel Co.',
+  location: 'Phnom Penh, Cambodia',
+  avatar: 'https://i.pravatar.cc/150?u=owner',
+};
 
-const OwnerProfile = () => {
-  const { user, updateUser } = useAuth();
-  const [form, setForm] = React.useState<OwnerProfileForm>(() =>
-    emptyProfile(user?.name, user?.email, user?.phone),
-  );
-  const [isLoading, setIsLoading] = React.useState(true);
-  const [isSaving, setIsSaving] = React.useState(false);
-  const [alert, setAlert] = React.useState<Alert | null>(null);
+const Profile = () => {
+  const { user } = useAuth();
+  const navigate = useNavigate();
+  const [profile, setProfile] = React.useState<OwnerProfileData>(DEFAULT_PROFILE);
+  const fileInputRef = React.useRef<HTMLInputElement | null>(null);
 
   React.useEffect(() => {
-    const loadProfile = async () => {
-      setIsLoading(true);
+    const raw = localStorage.getItem('ownerInfo');
+    const storedAvatar = localStorage.getItem('ownerProfileAvatar');
+    let next = { ...DEFAULT_PROFILE };
+
+    if (raw) {
       try {
-        const response = await apiRequest('/owner/profile');
-        const apiUser = response?.user ?? {};
-        const profile = response?.profile ?? {};
-        setForm({
-          ...emptyProfile(apiUser?.name, apiUser?.email, apiUser?.phone_number),
-          name: profile?.name ?? apiUser?.name ?? '',
-          avatar: profile?.avatar ?? '',
-          bio: profile?.bio ?? '',
-          date_of_birth: profile?.date_of_birth ?? '',
-          gender: profile?.gender ?? '',
-          business_name: profile?.business_name ?? '',
-          business_address: profile?.business_address ?? '',
-          business_registration_number: profile?.business_registration_number ?? '',
-          tax_id: profile?.tax_id ?? '',
-          business_phone_number: profile?.business_phone_number ?? '',
-          commision_rate: profile?.commision_rate ?? '10%',
-          payment_terms: profile?.payment_terms ?? '',
-          bank_name: profile?.bank_name ?? '',
-          bank_account_number: profile?.bank_account_number ?? '',
-          bank_account_holder: profile?.bank_account_holder ?? '',
-        });
-      } catch (error: any) {
-        setAlert({ type: 'error', message: error?.data?.message ?? 'Failed to load owner profile.' });
-      } finally {
-        setIsLoading(false);
+        const parsed = JSON.parse(raw) as Partial<OwnerProfileData>;
+        next = { ...next, ...parsed };
+      } catch {
+        // ignore storage parsing errors
+      }
+    }
+
+    if (storedAvatar) {
+      next.avatar = storedAvatar;
+    }
+
+    next.name = user?.name || next.name;
+    next.email = user?.email || next.email;
+    next.role = user?.role ? user.role.charAt(0).toUpperCase() + user.role.slice(1) : next.role;
+
+    setProfile(next);
+  }, [user]);
+
+  const handleAvatarChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+    if (!file.type.startsWith('image/')) return;
+
+    const reader = new FileReader();
+    reader.onload = () => {
+      const result = typeof reader.result === 'string' ? reader.result : '';
+      if (!result) return;
+
+      setProfile((prev) => ({ ...prev, avatar: result }));
+      localStorage.setItem('ownerProfileAvatar', result);
+
+      const raw = localStorage.getItem('ownerInfo');
+      try {
+        const parsed = raw ? (JSON.parse(raw) as Partial<OwnerProfileData>) : {};
+        const next = { ...parsed, avatar: result };
+        localStorage.setItem('ownerInfo', JSON.stringify(next));
+      } catch {
+        localStorage.setItem('ownerInfo', JSON.stringify({ avatar: result }));
       }
     };
-
-    loadProfile();
-  }, []);
-
-  const handleChange = (field: keyof OwnerProfileForm) => (event: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
-    setForm((prev) => ({ ...prev, [field]: event.target.value }));
+    reader.readAsDataURL(file);
   };
 
-  const handleSave = async () => {
-    setIsSaving(true);
-    setAlert(null);
-    try {
-      const response = await apiRequest('/owner/profile', {
-        method: 'PUT',
-        body: JSON.stringify(form),
-      });
-      const nextUser = response?.user;
-      if (nextUser) {
-        updateUser({
-          name: nextUser.name ?? form.name,
-          email: nextUser.email ?? form.email,
-          phone: nextUser.phone_number ?? form.phone_number,
-        });
-      }
-      setAlert({ type: 'success', message: 'Owner profile updated successfully.' });
-    } catch (error: any) {
-      const fieldErrors = error?.data?.errors;
-      if (fieldErrors) {
-        const firstError = Object.values(fieldErrors)[0] as string[] | string | undefined;
-        setAlert({
-          type: 'error',
-          message: Array.isArray(firstError) ? firstError[0] : 'Failed to save profile.',
-        });
-      } else {
-        setAlert({ type: 'error', message: error?.data?.message ?? 'Failed to save profile.' });
-      }
-    } finally {
-      setIsSaving(false);
-    }
-  };
-
-  const avatarPreview =
-    form.avatar?.trim() ||
-    `https://ui-avatars.com/api/?name=${encodeURIComponent(form.name || user?.name || 'Owner')}&background=0D8ABC&color=fff&size=256`;
-
-  if (isLoading) {
-    return (
-      <div className="p-8">
-        <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-6">
-          <p className="text-sm text-slate-500">Loading owner profile...</p>
-        </div>
-      </div>
-    );
-  }
+  const infoItems = [
+    { icon: Mail, label: 'Email', value: profile.email },
+    { icon: Phone, label: 'Phone', value: profile.phone },
+    { icon: MapPin, label: 'Location', value: profile.location },
+    { icon: Briefcase, label: 'Role', value: profile.role },
+    { icon: Building2, label: 'Company', value: profile.company },
+  ];
 
   return (
-    <div className="p-8 max-w-6xl mx-auto space-y-6">
-      {alert && (
-        <div
-          className={`rounded-2xl border px-4 py-3 text-sm font-semibold ${
-            alert.type === 'success'
-              ? 'border-emerald-200 bg-emerald-50 text-emerald-700 dark:border-emerald-900/40 dark:bg-emerald-900/10 dark:text-emerald-300'
-              : 'border-rose-200 bg-rose-50 text-rose-700 dark:border-rose-900/40 dark:bg-rose-900/10 dark:text-rose-300'
-          }`}
-        >
-          {alert.message}
-        </div>
-      )}
-
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+    <div className="p-8 max-w-[1200px] mx-auto space-y-8">
+      <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-6">
         <div>
-          <h2 className="text-2xl font-bold">Owner Profile</h2>
-          <p className="text-sm text-slate-500">Manage your personal and business details.</p>
+          <p className="text-[11px] uppercase font-bold tracking-[0.2em] text-blue-600">Owner Profile</p>
+          <h1 className="text-3xl font-bold tracking-tight text-slate-900 dark:text-white mt-2">
+            {profile.name}
+          </h1>
+          <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">
+            Manage your profile and keep your business details up to date.
+          </p>
         </div>
         <button
-          onClick={handleSave}
-          disabled={isSaving}
-          className="inline-flex items-center justify-center gap-2 px-5 py-3 rounded-xl bg-blue-600 text-white text-sm font-bold hover:bg-blue-700 transition-colors disabled:opacity-70 disabled:cursor-not-allowed"
+          onClick={() => navigate('/settings')}
+          className="inline-flex items-center gap-2 rounded-xl bg-blue-600 px-5 py-3 text-sm font-semibold text-white shadow-lg shadow-blue-500/20 hover:bg-blue-700 transition-colors"
         >
-          <Save size={16} />
-          {isSaving ? 'Saving...' : 'Save Changes'}
+          <PencilLine size={16} />
+          Edit in Settings
         </button>
       </div>
 
-      <section className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-6 space-y-6">
-        <div className="flex flex-col sm:flex-row items-start sm:items-center gap-6">
-          <div className="relative">
-            <img
-              src={avatarPreview}
-              alt="Owner avatar"
-              className="w-24 h-24 rounded-2xl object-cover border border-slate-200 dark:border-slate-700"
-            />
-            <div className="absolute -bottom-2 -right-2 w-9 h-9 rounded-xl bg-blue-600 text-white flex items-center justify-center shadow-lg">
-              <Camera size={16} />
+      <section className="grid grid-cols-1 lg:grid-cols-[360px_1fr] gap-6">
+        <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-6 shadow-sm">
+          <div className="flex flex-col items-center text-center">
+            <div className="relative w-28 h-28 rounded-full overflow-hidden border-4 border-blue-100 dark:border-blue-900/40 shadow-md">
+              <img src={profile.avatar} alt={profile.name} className="w-full h-full object-cover" />
+              <button
+                type="button"
+                onClick={() => fileInputRef.current?.click()}
+                className="absolute -bottom-1 -right-1 w-9 h-9 rounded-full bg-blue-600 text-white flex items-center justify-center shadow-lg shadow-blue-500/30 hover:bg-blue-700 transition-colors"
+                title="Change photo"
+              >
+                <Camera size={16} />
+              </button>
             </div>
-          </div>
-          <div className="flex-1 space-y-2">
-            <label className="text-xs uppercase font-bold tracking-widest text-slate-400">Avatar URL</label>
             <input
-              value={form.avatar}
-              onChange={handleChange('avatar')}
-              className="w-full px-3 py-2.5 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-sm focus:ring-2 focus:ring-blue-600/10 transition-all"
-              placeholder="https://..."
+              ref={fileInputRef}
+              type="file"
+              accept="image/*"
+              className="hidden"
+              onChange={handleAvatarChange}
             />
+            <h2 className="mt-4 text-xl font-bold text-slate-900 dark:text-white">{profile.name}</h2>
+            <p className="text-sm text-slate-500 dark:text-slate-400">{profile.email}</p>
+            <span className="mt-3 inline-flex items-center rounded-full bg-emerald-100 text-emerald-700 dark:bg-emerald-500/10 dark:text-emerald-300 px-3 py-1 text-xs font-bold uppercase tracking-wider">
+              {profile.role}
+            </span>
+          </div>
+
+          <div className="mt-6 space-y-3">
+            {infoItems.map((item) => (
+              <div
+                key={item.label}
+                className="flex items-start gap-3 rounded-xl bg-slate-50 dark:bg-slate-800/60 px-4 py-3"
+              >
+                <div className="p-2 rounded-lg bg-blue-100 text-blue-600 dark:bg-blue-500/10 dark:text-blue-300">
+                  <item.icon size={16} />
+                </div>
+                <div>
+                  <p className="text-[10px] uppercase font-bold tracking-[0.15em] text-slate-400">
+                    {item.label}
+                  </p>
+                  <p className="text-sm font-semibold text-slate-800 dark:text-slate-200">
+                    {item.value}
+                  </p>
+                </div>
+              </div>
+            ))}
           </div>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-          <div className="space-y-2">
-            <label className="text-xs uppercase font-bold tracking-widest text-slate-400">Full name</label>
-            <div className="relative">
-              <User className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 size-4" />
-              <input
-                value={form.name}
-                onChange={handleChange('name')}
-                className="w-full pl-10 pr-3 py-2.5 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-sm focus:ring-2 focus:ring-blue-600/10 transition-all"
-              />
-            </div>
-          </div>
-          <div className="space-y-2">
-            <label className="text-xs uppercase font-bold tracking-widest text-slate-400">Email</label>
-            <div className="relative">
-              <Mail className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 size-4" />
-              <input
-                value={form.email}
-                onChange={handleChange('email')}
-                className="w-full pl-10 pr-3 py-2.5 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-sm focus:ring-2 focus:ring-blue-600/10 transition-all"
-              />
-            </div>
-          </div>
-          <div className="space-y-2">
-            <label className="text-xs uppercase font-bold tracking-widest text-slate-400">Phone</label>
-            <div className="relative">
-              <Phone className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 size-4" />
-              <input
-                value={form.phone_number}
-                onChange={handleChange('phone_number')}
-                className="w-full pl-10 pr-3 py-2.5 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-sm focus:ring-2 focus:ring-blue-600/10 transition-all"
-              />
-            </div>
-          </div>
-          <div className="space-y-2">
-            <label className="text-xs uppercase font-bold tracking-widest text-slate-400">Date of birth</label>
-            <input
-              value={form.date_of_birth}
-              onChange={handleChange('date_of_birth')}
-              className="w-full px-3 py-2.5 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-sm focus:ring-2 focus:ring-blue-600/10 transition-all"
-              placeholder="YYYY-MM-DD"
-            />
-          </div>
-          <div className="space-y-2 md:col-span-2">
-            <label className="text-xs uppercase font-bold tracking-widest text-slate-400">Bio</label>
-            <textarea
-              value={form.bio}
-              onChange={handleChange('bio')}
-              className="w-full px-3 py-2.5 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-sm focus:ring-2 focus:ring-blue-600/10 transition-all min-h-[110px]"
-            />
-          </div>
-        </div>
-      </section>
-
-      <section className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-6 space-y-5">
-        <div className="flex items-center gap-2 text-slate-700 dark:text-slate-200">
-          <Building2 size={18} />
-          <h3 className="text-lg font-bold">Business Information</h3>
-        </div>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-          <div className="space-y-2">
-            <label className="text-xs uppercase font-bold tracking-widest text-slate-400">Business name</label>
-            <input
-              value={form.business_name}
-              onChange={handleChange('business_name')}
-              className="w-full px-3 py-2.5 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-sm"
-            />
-          </div>
-          <div className="space-y-2">
-            <label className="text-xs uppercase font-bold tracking-widest text-slate-400">Business phone</label>
-            <input
-              value={form.business_phone_number}
-              onChange={handleChange('business_phone_number')}
-              className="w-full px-3 py-2.5 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-sm"
-            />
-          </div>
-          <div className="space-y-2 md:col-span-2">
-            <label className="text-xs uppercase font-bold tracking-widest text-slate-400">Business address</label>
-            <div className="relative">
-              <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 size-4" />
-              <input
-                value={form.business_address}
-                onChange={handleChange('business_address')}
-                className="w-full pl-10 pr-3 py-2.5 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-sm"
-              />
-            </div>
-          </div>
-          <div className="space-y-2">
-            <label className="text-xs uppercase font-bold tracking-widest text-slate-400">Registration number</label>
-            <input
-              value={form.business_registration_number}
-              onChange={handleChange('business_registration_number')}
-              className="w-full px-3 py-2.5 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-sm"
-            />
-          </div>
-          <div className="space-y-2">
-            <label className="text-xs uppercase font-bold tracking-widest text-slate-400">Tax ID</label>
-            <input
-              value={form.tax_id}
-              onChange={handleChange('tax_id')}
-              className="w-full px-3 py-2.5 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-sm"
-            />
-          </div>
-        </div>
-      </section>
-
-      <section className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-6 space-y-5">
-        <div className="flex items-center gap-2 text-slate-700 dark:text-slate-200">
-          <CreditCard size={18} />
-          <h3 className="text-lg font-bold">Payout Details</h3>
-        </div>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-          <div className="space-y-2">
-            <label className="text-xs uppercase font-bold tracking-widest text-slate-400">Commission rate</label>
-            <input
-              value={form.commision_rate}
-              onChange={handleChange('commision_rate')}
-              className="w-full px-3 py-2.5 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-sm"
-            />
-          </div>
-          <div className="space-y-2">
-            <label className="text-xs uppercase font-bold tracking-widest text-slate-400">Payment terms</label>
-            <select
-              value={form.payment_terms}
-              onChange={handleChange('payment_terms')}
-              className="w-full px-3 py-2.5 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-sm"
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          {[
+            { title: 'Total Listings', value: '18', subtitle: 'Hotels, transports, rentals' },
+            { title: 'Upcoming Bookings', value: '42', subtitle: 'Next 30 days' },
+            { title: 'Avg. Guest Rating', value: '4.8', subtitle: 'Based on 1,240 reviews' },
+            { title: 'Monthly Revenue', value: '$12,845', subtitle: 'Updated today' },
+          ].map((stat) => (
+            <div
+              key={stat.title}
+              className={cn(
+                "bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-6 shadow-sm"
+              )}
             >
-              <option value="">Select terms</option>
-              <option value="monthly">Monthly</option>
-              <option value="per_booking">Per booking</option>
-            </select>
-          </div>
-          <div className="space-y-2">
-            <label className="text-xs uppercase font-bold tracking-widest text-slate-400">Bank name</label>
-            <input
-              value={form.bank_name}
-              onChange={handleChange('bank_name')}
-              className="w-full px-3 py-2.5 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-sm"
-            />
-          </div>
-          <div className="space-y-2">
-            <label className="text-xs uppercase font-bold tracking-widest text-slate-400">Bank account number</label>
-            <input
-              value={form.bank_account_number}
-              onChange={handleChange('bank_account_number')}
-              className="w-full px-3 py-2.5 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-sm"
-            />
-          </div>
-          <div className="space-y-2 md:col-span-2">
-            <label className="text-xs uppercase font-bold tracking-widest text-slate-400">Account holder name</label>
-            <input
-              value={form.bank_account_holder}
-              onChange={handleChange('bank_account_holder')}
-              className="w-full px-3 py-2.5 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-sm"
-            />
+              <p className="text-[11px] uppercase font-bold tracking-[0.15em] text-slate-400">{stat.title}</p>
+              <p className="mt-3 text-3xl font-bold text-slate-900 dark:text-white">{stat.value}</p>
+              <p className="mt-2 text-sm text-slate-500 dark:text-slate-400">{stat.subtitle}</p>
+            </div>
+          ))}
+
+          <div className="md:col-span-2 bg-gradient-to-br from-blue-50 via-white to-slate-50 dark:from-blue-900/10 dark:via-slate-900 dark:to-slate-950 border border-blue-100/80 dark:border-blue-900/40 rounded-2xl p-6">
+            <h3 className="text-lg font-bold text-slate-900 dark:text-white">Profile checklist</h3>
+            <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">
+              Complete these steps to boost trust with customers and earn more bookings.
+            </p>
+            <ul className="mt-4 space-y-2 text-sm text-slate-700 dark:text-slate-300">
+              {[
+                'Add a professional business logo and cover photo.',
+                'Verify phone number for faster guest confirmations.',
+                'Describe your transport services and amenities.',
+                'Enable two-factor authentication for account security.',
+              ].map((item) => (
+                <li key={item} className="flex items-center gap-2">
+                  <span className="h-2 w-2 rounded-full bg-blue-500" />
+                  {item}
+                </li>
+              ))}
+            </ul>
           </div>
         </div>
       </section>
@@ -363,4 +203,4 @@ const OwnerProfile = () => {
   );
 };
 
-export default OwnerProfile;
+export default Profile;
