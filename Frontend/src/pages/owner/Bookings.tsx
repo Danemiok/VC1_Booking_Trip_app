@@ -1,8 +1,9 @@
 import React from 'react';
 import { 
   Search, 
-  Filter, 
   Download, 
+  FileText,
+  Bell,
   MoreHorizontal, 
   Calendar, 
   Users, 
@@ -13,6 +14,9 @@ import {
   CheckCircle2,
   Clock,
   XCircle,
+  SlidersHorizontal,
+  RotateCcw,
+  DollarSign,
   X
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
@@ -20,6 +24,8 @@ import { cn } from '@/src/utils/utils';
 import { bookingService } from '@/src/services/bookingService';
 import { API_BASE_URL } from '@/src/services/api';
 import { useAuth } from '../../context/AuthContext';
+import { ALL_HOTELS } from '../../data/hotels';
+import { RENTAL_VEHICLES } from '../../data/rentals';
 
 const Bookings = () => {
   const navigate = useNavigate();
@@ -37,9 +43,36 @@ const Bookings = () => {
   const [loading, setLoading] = React.useState(false);
   const [searchTerm, setSearchTerm] = React.useState('');
   const [exportLoading, setExportLoading] = React.useState(false);
+  const [exportPdfLoading, setExportPdfLoading] = React.useState(false);
+  const [showPdfModal, setShowPdfModal] = React.useState(false);
+  const [pdfOptions, setPdfOptions] = React.useState(() => ({
+    title: 'Bookings Export',
+    subtitle: 'Cambodia Travel',
+    theme: 'clean' as 'clean' | 'dark',
+    includeHeaderBand: true,
+    includeRowStripes: true,
+    accentHex: '#2563eb',
+    pageBgHex: '#ffffff',
+    filename: `bookings-${new Date().toISOString().split('T')[0]}.pdf`,
+  }));
   const [authError, setAuthError] = React.useState<string | null>(null);
   const [pageError, setPageError] = React.useState<string | null>(null);
   const [successMessage, setSuccessMessage] = React.useState<string | null>(null);
+
+  type OwnerNotification = {
+    id: number | string;
+    title: string;
+    message?: string | null;
+    bookingId?: string | null;
+    data?: any;
+    readAt?: string | null;
+    createdAt?: string | null;
+  };
+
+  const [showNotifications, setShowNotifications] = React.useState(false);
+  const [notificationsLoading, setNotificationsLoading] = React.useState(false);
+  const [notifications, setNotifications] = React.useState<OwnerNotification[]>([]);
+  const [unreadNotificationCount, setUnreadNotificationCount] = React.useState(0);
 
   const BOOKINGS_CACHE_KEY = 'owner_bookings_cache_v1';
   const STATS_CACHE_KEY = 'owner_booking_stats_cache_v1';
@@ -68,22 +101,26 @@ const Bookings = () => {
     }
   }, []);
   
-  // Filter modal state
-  const [showFilterModal, setShowFilterModal] = React.useState(false);
-  const [tempFilters, setTempFilters] = React.useState({
-    status: 'all' as 'all' | 'paid' | 'pending' | 'canceled',
+  type OwnerFilters = {
+    status: 'all' | 'paid' | 'pending' | 'canceled';
+    minAmount: string;
+    maxAmount: string;
+  };
+
+  const defaultFilters: OwnerFilters = {
+    status: 'all',
     minAmount: '',
     maxAmount: '',
-    guestName: '',
-    bookingId: ''
-  });
-  const [activeFilters, setActiveFilters] = React.useState({
-    status: 'all' as 'all' | 'paid' | 'pending' | 'canceled',
-    minAmount: '',
-    maxAmount: '',
-    guestName: '',
-    bookingId: ''
-  });
+  };
+
+  const [filters, setFilters] = React.useState<OwnerFilters>(defaultFilters);
+
+  const handleFilterChange = <K extends keyof OwnerFilters>(key: K, value: OwnerFilters[K]) => {
+    setFilters((prev) => ({ ...prev, [key]: value }));
+    setCurrentPage(1);
+  };
+
+
 
   const [openActionBookingId, setOpenActionBookingId] = React.useState<string | null>(null);
   const [selectedBooking, setSelectedBooking] = React.useState<any | null>(null);
@@ -203,6 +240,18 @@ const Bookings = () => {
   const formatDate = (d: Date) =>
     d.toLocaleDateString('en-US', { month: 'short', day: '2-digit', year: 'numeric' });
 
+  const formatNotificationTime = (iso?: string | null) => {
+    if (!iso) return '';
+    const d = new Date(iso);
+    if (Number.isNaN(d.getTime())) return '';
+    return d.toLocaleString('en-US', {
+      month: 'short',
+      day: '2-digit',
+      hour: '2-digit',
+      minute: '2-digit',
+    });
+  };
+
   const addDays = (base: Date, deltaDays: number) => {
     const next = new Date(base);
     next.setDate(next.getDate() + deltaDays);
@@ -264,43 +313,37 @@ const Bookings = () => {
     try {
       setLoading(true);
       setPageError(null);
-      const filters = {
-        service: serviceFilter !== 'all' ? serviceFilter : undefined,
+      const apiFilters = {
+        // Keep transport tab flexible (may include categories like 'trip'); fetch all and filter client-side.
+        service: serviceFilter !== 'all' && serviceFilter !== 'transport' ? serviceFilter : undefined,
         date_range: dateRange,
         search: searchTerm || undefined,
-        status: activeFilters.status !== 'all' ? activeFilters.status : undefined,
-        min_amount: activeFilters.minAmount || undefined,
-        max_amount: activeFilters.maxAmount || undefined,
-        guest_name: activeFilters.guestName || undefined,
-        booking_id: activeFilters.bookingId || undefined
+        status: filters.status !== 'all' ? filters.status : undefined,
+        min_amount: filters.minAmount || undefined,
+        max_amount: filters.maxAmount || undefined
       };
       
-      console.log('📡 FetchBookings - Calling API with filters:', filters);
+      console.log('📡 FetchBookings - Calling API with filters:', apiFilters);
       
-      const response = await bookingService.getBookings(filters);
+      const response = await bookingService.getBookings(apiFilters);
       
       console.log('📡 FetchBookings - Response:', response);
       
-      if (response.data && response.data.length > 0) {
-        console.log(`✅ FetchBookings - Got ${response.data.length} REAL bookings from API`);
-        setBookings(response.data);
-        try {
-          localStorage.setItem(BOOKINGS_CACHE_KEY, JSON.stringify(response.data));
-        } catch {
-          // ignore cache write errors
-        }
-      } else {
-        console.log('⚠️ FetchBookings - No real data, using mock data');
-        setBookings(mockCustomerBookings);
+      const next = Array.isArray(response.data) ? response.data : [];
+      console.log(`✅ FetchBookings - Got ${next.length} bookings from API`);
+      setBookings(next);
+      try {
+        localStorage.setItem(BOOKINGS_CACHE_KEY, JSON.stringify(next));
+      } catch {
+        // ignore cache write errors
       }
     } catch (error) {
       console.error('❌ FetchBookings - Error:', error);
-      setPageError('Failed to load bookings. Showing sample data.');
-      setBookings(mockCustomerBookings);
+      setPageError('Failed to load bookings. Showing cached data (if available).');
     } finally {
       setLoading(false);
     }
-  }, [serviceFilter, dateRange, searchTerm, activeFilters, isAuthenticated]);
+  }, [serviceFilter, dateRange, searchTerm, filters, isAuthenticated]);
 
   // Fetch booking statistics
   const fetchStats = React.useCallback(async () => {
@@ -337,12 +380,49 @@ const Bookings = () => {
     }
   }, [isAuthenticated, fetchBookings, fetchStats]);
 
+  const fetchOwnerNotifications = React.useCallback(
+    async ({ silent = false } = {}) => {
+      if (!isAuthenticated) return;
+
+      try {
+        if (!silent) setNotificationsLoading(true);
+        const response = await bookingService.getOwnerNotifications({ limit: 25 });
+        const next = Array.isArray(response?.data) ? response.data : [];
+        const nextUnread = Number(
+          response?.unread_count ?? response?.unreadCount ?? next.filter((n: any) => !n?.readAt).length,
+        );
+
+        setNotifications(next);
+        setUnreadNotificationCount(Number.isFinite(nextUnread) ? nextUnread : 0);
+      } catch (error) {
+        console.error('Failed to fetch owner notifications:', error);
+      } finally {
+        if (!silent) setNotificationsLoading(false);
+      }
+    },
+    [isAuthenticated],
+  );
+
+  React.useEffect(() => {
+    if (!isAuthenticated) return;
+
+    fetchOwnerNotifications();
+    const id = window.setInterval(() => fetchOwnerNotifications({ silent: true }), 30000);
+    return () => window.clearInterval(id);
+  }, [isAuthenticated, fetchOwnerNotifications]);
+
+  React.useEffect(() => {
+    if (showNotifications) {
+      fetchOwnerNotifications();
+    }
+  }, [showNotifications, fetchOwnerNotifications]);
+
   React.useEffect(() => {
     if (isAuthenticated) {
       console.log('🔄 Filters changed, resetting to page 1');
       setCurrentPage(1);
     }
-  }, [serviceFilter, dateRange, searchTerm, activeFilters, isAuthenticated]);
+  }, [serviceFilter, dateRange, searchTerm, filters, isAuthenticated]);
 
   const parseBookingDate = (value: any) => {
     if (!value) return null;
@@ -365,12 +445,26 @@ const Bookings = () => {
     return d >= cutoff;
   };
 
+  const amountRangeInvalid = (() => {
+    if (!filters.minAmount || !filters.maxAmount) return false;
+    const min = parseFloat(filters.minAmount);
+    const max = parseFloat(filters.maxAmount);
+    if (!Number.isFinite(min) || !Number.isFinite(max)) return false;
+    return min > max;
+  })();
+
   // Filter bookings based on ALL filters
   const filteredBookings = bookings
-    .filter((b: any) => (serviceFilter === 'all' ? true : b.category === serviceFilter))
+    .filter((b: any) => {
+      if (serviceFilter === 'all') return true;
+      const category = String(b?.category ?? '').toLowerCase();
+      if (serviceFilter === 'hotel') return category === 'hotel';
+      // Transport tab should include other non-hotel categories used elsewhere in the app (e.g. 'trip').
+      return category === 'transport' || category === 'trip' || category === 'rental';
+    })
     .filter((b: any) => {
       // Prefer createdAt for date-range filtering (booking dates may be non-ISO / missing year)
-      const dateToCheck = b.createdAt ?? b.created_at ?? (b.category === 'hotel' ? b.dateStart : b.date);
+      const dateToCheck = b.createdAt ?? b.created_at ?? b.date ?? (b.category === 'hotel' ? b.dateStart : null);
       return isWithinSelectedRange(dateToCheck);
     })
     .filter((b: any) => {
@@ -384,22 +478,14 @@ const Bookings = () => {
       );
     })
     .filter((b: any) => {
-      if (activeFilters.status !== 'all' && b.status !== activeFilters.status) {
+      if (filters.status !== 'all' && b.status !== filters.status) {
         return false;
       }
-      if (
-        activeFilters.guestName &&
-        !String(b.guest ?? '').toLowerCase().includes(activeFilters.guestName.toLowerCase())
-      ) {
+      if (amountRangeInvalid) return true;
+      if (filters.minAmount && Number(b.amount ?? 0) < parseFloat(filters.minAmount)) {
         return false;
       }
-      if (activeFilters.bookingId && !String(b.id ?? '').toLowerCase().includes(activeFilters.bookingId.toLowerCase())) {
-        return false;
-      }
-      if (activeFilters.minAmount && Number(b.amount ?? 0) < parseFloat(activeFilters.minAmount)) {
-        return false;
-      }
-      if (activeFilters.maxAmount && Number(b.amount ?? 0) > parseFloat(activeFilters.maxAmount)) {
+      if (filters.maxAmount && Number(b.amount ?? 0) > parseFloat(filters.maxAmount)) {
         return false;
       }
       return true;
@@ -433,37 +519,16 @@ const Bookings = () => {
 
   const handleSearch = (e: React.ChangeEvent<HTMLInputElement>) => {
     setSearchTerm(e.target.value);
-  };
-
-  const openFilterModal = () => {
-    setTempFilters({ ...activeFilters });
-    setShowFilterModal(true);
-  };
-
-  const closeFilterModal = () => {
-    setShowFilterModal(false);
-  };
-
-  const applyFilters = () => {
-    setActiveFilters({ ...tempFilters });
-    setShowFilterModal(false);
     setCurrentPage(1);
-    setSuccessMessage('Filters applied successfully');
   };
 
   const clearFilters = () => {
-    const clearedFilters = {
-      status: 'all' as const,
-      minAmount: '',
-      maxAmount: '',
-      guestName: '',
-      bookingId: ''
-    };
-    setTempFilters(clearedFilters);
-    setActiveFilters(clearedFilters);
-    setShowFilterModal(false);
+    setFilters(defaultFilters);
+    setSearchTerm('');
+    setServiceFilter('all');
+    setDateRange('last7');
     setCurrentPage(1);
-    setSuccessMessage('Filters cleared');
+    setSuccessMessage('All filters cleared');
   };
 
   const handleExport = async () => {
@@ -477,7 +542,11 @@ const Bookings = () => {
         b.guest,
         b.service,
         b.route,
-        b.category === 'hotel' ? `${b.dateStart} to ${b.dateEnd}` : `${b.date} ${b.time}`,
+        b.date
+          ? `${b.date}${b.time ? ` ${b.time}` : ''}`
+          : b.category === 'hotel'
+            ? `${b.dateStart} to ${b.dateEnd}`
+            : `${b.date} ${b.time}`,
         b.pax,
         `$${b.amount}`,
         b.status,
@@ -503,6 +572,295 @@ const Bookings = () => {
     } finally {
       setExportLoading(false);
     }
+  };
+
+  const handleExportPdf = async (options?: {
+    title?: string;
+    subtitle?: string;
+    theme?: 'clean' | 'dark';
+    includeHeaderBand?: boolean;
+    includeRowStripes?: boolean;
+    accentHex?: string;
+    pageBgHex?: string;
+    filename?: string;
+  }) => {
+    try {
+      setExportPdfLoading(true);
+      setPageError(null);
+
+      if (!filteredBookings || filteredBookings.length === 0) {
+        throw new Error('No bookings to export');
+      }
+
+      // Use a literal dynamic import so Vite can bundle it (variable imports won't be resolved).
+      const jsPDFMod = await import('jspdf');
+      const jsPDF =
+        jsPDFMod?.jsPDF ||
+        jsPDFMod?.default?.jsPDF ||
+        jsPDFMod?.default ||
+        jsPDFMod;
+      if (typeof jsPDF !== 'function') throw new Error('PDF library not available');
+
+      const title = options?.title?.trim() || 'Bookings Export';
+      const subtitle = options?.subtitle?.trim() || '';
+      const theme = options?.theme ?? 'clean';
+      const includeHeaderBand = options?.includeHeaderBand ?? true;
+      const includeRowStripes = options?.includeRowStripes ?? true;
+      const accentHex = options?.accentHex?.trim();
+      const pageBgHex = options?.pageBgHex?.trim();
+      const filename =
+        (() => {
+          const raw = options?.filename?.trim() || `bookings-${new Date().toISOString().split('T')[0]}.pdf`;
+          const withExt = raw.toLowerCase().endsWith('.pdf') ? raw : `${raw}.pdf`;
+          // Sanitize for Windows/macOS forbidden filename chars
+          return withExt.replace(/[\\/:*?"<>|]+/g, '-');
+        })();
+
+      const doc = new jsPDF({ orientation: 'landscape', unit: 'pt', format: 'a4' });
+      const margin = 36;
+      const pageHeight = doc.internal.pageSize.getHeight();
+      const pageWidth = doc.internal.pageSize.getWidth();
+      const usableWidth = doc.internal.pageSize.getWidth() - margin * 2;
+
+      const truncate = (value: any, max: number) => {
+        const s = String(value ?? '');
+        if (s.length <= max) return s;
+        return s.slice(0, Math.max(0, max - 3)) + '...';
+      };
+
+      const hexToRgb = (hex?: string): [number, number, number] | null => {
+        if (!hex) return null;
+        const cleaned = hex.replace('#', '').trim();
+        if (!/^[0-9a-fA-F]{6}$/.test(cleaned)) return null;
+        const r = parseInt(cleaned.slice(0, 2), 16);
+        const g = parseInt(cleaned.slice(2, 4), 16);
+        const b = parseInt(cleaned.slice(4, 6), 16);
+        if (![r, g, b].every(Number.isFinite)) return null;
+        return [r, g, b];
+      };
+
+      const colors =
+        theme === 'dark'
+          ? {
+              pageBg: [15, 23, 42] as const,
+              headerBand: [30, 41, 59] as const,
+              textPrimary: [248, 250, 252] as const,
+              textMuted: [148, 163, 184] as const,
+              grid: [51, 65, 85] as const,
+              stripe: [30, 41, 59] as const,
+            }
+          : {
+              pageBg: [255, 255, 255] as const,
+              headerBand: [37, 99, 235] as const,
+              textPrimary: [15, 23, 42] as const,
+              textMuted: [100, 116, 139] as const,
+              grid: [226, 232, 240] as const,
+              stripe: [248, 250, 252] as const,
+            };
+
+      const accentRgb = hexToRgb(accentHex);
+      const pageBgRgb = hexToRgb(pageBgHex);
+      const headerBandColor = accentRgb ?? colors.headerBand;
+      const pageBgColor = pageBgRgb ?? colors.pageBg;
+
+      // Page background
+      doc.setFillColor(...pageBgColor);
+      doc.rect(0, 0, pageWidth, pageHeight, 'F');
+
+      let y = margin;
+
+      // Optional header band
+      if (includeHeaderBand) {
+        doc.setFillColor(...headerBandColor);
+        if (typeof (doc as any).roundedRect === 'function') {
+          (doc as any).roundedRect(margin, y - 10, usableWidth, 56, 12, 12, 'F');
+        } else {
+          doc.rect(margin, y - 10, usableWidth, 56, 'F');
+        }
+      }
+
+      doc.setFontSize(18);
+      doc.setTextColor(...colors.textPrimary);
+      doc.text(title, margin + (includeHeaderBand ? 16 : 0), y + (includeHeaderBand ? 16 : 0));
+
+      doc.setFontSize(10);
+      doc.setTextColor(...colors.textMuted);
+      const metaParts = [subtitle, `Generated: ${new Date().toLocaleString()}`].filter(Boolean);
+      doc.text(metaParts.join('  |  '), margin + (includeHeaderBand ? 16 : 0), y + (includeHeaderBand ? 34 : 18));
+
+      y += includeHeaderBand ? 70 : 44;
+
+      doc.setDrawColor(...colors.grid);
+      doc.line(margin, y, margin + usableWidth, y);
+      y += 18;
+
+      // Simple table (no autotable dependency)
+      const cols = [
+        { title: 'ID', w: 120 },
+        { title: 'Guest', w: 120 },
+        { title: 'Service', w: 150 },
+        { title: 'Date/Time', w: 120 },
+        { title: 'Amount', w: 80 },
+        { title: 'Status', w: 80 },
+        { title: 'Phone', w: 120 },
+      ];
+
+      const scale = usableWidth / cols.reduce((sum, c) => sum + c.w, 0);
+      const scaledCols = cols.map((c) => ({ ...c, w: Math.floor(c.w * scale) }));
+
+      const drawHeader = () => {
+        doc.setFontSize(10);
+        doc.setTextColor(...colors.textPrimary);
+        let x = margin;
+        for (const c of scaledCols) {
+          doc.text(c.title, x, y);
+          x += c.w;
+        }
+        y += 12;
+        doc.setDrawColor(...colors.grid);
+        doc.line(margin, y, margin + usableWidth, y);
+        y += 12;
+      };
+
+      const ensureSpace = (needed: number) => {
+        if (y + needed <= pageHeight - margin) return;
+        doc.addPage();
+        // background for new page
+        doc.setFillColor(...pageBgColor);
+        doc.rect(0, 0, pageWidth, pageHeight, 'F');
+        y = margin;
+        if (includeHeaderBand) {
+          doc.setFillColor(...headerBandColor);
+          if (typeof (doc as any).roundedRect === 'function') {
+            (doc as any).roundedRect(margin, y - 10, usableWidth, 56, 12, 12, 'F');
+          } else {
+            doc.rect(margin, y - 10, usableWidth, 56, 'F');
+          }
+        }
+        doc.setFontSize(18);
+        doc.setTextColor(...colors.textPrimary);
+        doc.text(title, margin + (includeHeaderBand ? 16 : 0), y + (includeHeaderBand ? 16 : 0));
+        doc.setFontSize(10);
+        doc.setTextColor(...colors.textMuted);
+        doc.text(metaParts.join('  |  '), margin + (includeHeaderBand ? 16 : 0), y + (includeHeaderBand ? 34 : 18));
+        y += includeHeaderBand ? 70 : 44;
+        doc.setDrawColor(...colors.grid);
+        doc.line(margin, y, margin + usableWidth, y);
+        y += 18;
+        drawHeader();
+      };
+
+      drawHeader();
+
+      doc.setFontSize(9);
+      doc.setTextColor(...colors.textPrimary);
+
+      for (let rowIndex = 0; rowIndex < filteredBookings.length; rowIndex++) {
+        const b = filteredBookings[rowIndex];
+        ensureSpace(14);
+
+        const dateValue = b?.date
+          ? `${b.date}${b.time ? ` ${b.time}` : ''}`
+          : b?.category === 'hotel'
+            ? `${b.dateStart} - ${b.dateEnd}`
+            : `${b?.date ?? ''}${b?.time ? ` ${b.time}` : ''}`;
+
+        const row = [
+          truncate(b?.id, 18),
+          truncate(b?.guest, 18),
+          truncate(b?.service, 22),
+          truncate(dateValue, 22),
+          `$${truncate(b?.amount, 12)}`,
+          truncate(b?.status, 10),
+          truncate(b?.customerPhone, 16),
+        ];
+
+        if (includeRowStripes && rowIndex % 2 === 0) {
+          doc.setFillColor(...colors.stripe);
+          doc.rect(margin, y - 10, usableWidth, 16, 'F');
+          doc.setTextColor(...colors.textPrimary);
+        }
+
+        let x = margin;
+        for (let i = 0; i < row.length; i++) {
+          doc.text(String(row[i] ?? ''), x, y);
+          x += scaledCols[i].w;
+        }
+        y += 14;
+      }
+
+      // Footer page numbers
+      const pageCount = doc.getNumberOfPages();
+      for (let p = 1; p <= pageCount; p++) {
+        doc.setPage(p);
+        doc.setFontSize(9);
+        doc.setTextColor(...colors.textMuted);
+        doc.text(`Page ${p} / ${pageCount}`, pageWidth - margin, pageHeight - margin / 2, { align: 'right' });
+      }
+
+      doc.save(filename);
+      setSuccessMessage('PDF export completed successfully');
+    } catch (error) {
+      console.error('PDF export error:', error);
+      const message =
+        error instanceof Error ? error.message : typeof error === 'string' ? error : 'Failed to export bookings to PDF';
+      setPageError(`PDF export failed: ${message}`);
+    } finally {
+      setExportPdfLoading(false);
+    }
+  };
+
+  const openPdfModal = () => setShowPdfModal(true);
+  const closePdfModal = () => setShowPdfModal(false);
+
+  const closeNotifications = () => setShowNotifications(false);
+
+  const markNotificationRead = async (notificationId: number | string) => {
+    try {
+      await bookingService.markOwnerNotificationRead(notificationId);
+      setNotifications((prev) =>
+        prev.map((n) =>
+          String(n.id) === String(notificationId)
+            ? { ...n, readAt: n.readAt ?? new Date().toISOString() }
+            : n,
+        ),
+      );
+      setUnreadNotificationCount((c) => Math.max(0, c - 1));
+    } catch (error) {
+      console.error('Failed to mark notification read:', error);
+    }
+  };
+
+  const markAllNotificationsRead = async () => {
+    try {
+      await bookingService.markAllOwnerNotificationsRead();
+      setNotifications((prev) => prev.map((n) => ({ ...n, readAt: n.readAt ?? new Date().toISOString() })));
+      setUnreadNotificationCount(0);
+    } catch (error) {
+      console.error('Failed to mark all notifications read:', error);
+    }
+  };
+
+  const openNotification = async (n: OwnerNotification) => {
+    if (!n) return;
+
+    if (!n.readAt) {
+      await markNotificationRead(n.id);
+    }
+
+    const bookingId = n.bookingId ?? n?.data?.id ?? null;
+    if (bookingId) {
+      const booking = bookings.find((b) => String(b?.id ?? '') === String(bookingId));
+      if (booking) {
+        openBookingDetails(booking);
+        closeNotifications();
+        return;
+      }
+    }
+
+    setSuccessMessage(null);
+    setPageError('Booking details not found in the current list. Try refreshing the page.');
+    closeNotifications();
   };
 
   const openBookingDetails = (booking: any) => {
@@ -553,10 +911,10 @@ const Bookings = () => {
 
   const getStatusIcon = (status: string) => {
     switch(status) {
-      case 'paid': return <CheckCircle2 size={12} />;
-      case 'pending': return <Clock size={12} />;
-      case 'canceled': return <XCircle size={12} />;
-      default: return <Clock size={12} />;
+      case 'paid': return <CheckCircle2 size={10} />;
+      case 'pending': return <Clock size={10} />;
+      case 'canceled': return <XCircle size={10} />;
+      default: return <Clock size={10} />;
     }
   };
 
@@ -575,7 +933,42 @@ const Bookings = () => {
     return '0.00';
   };
 
-  const activeFilterCount = Object.values(activeFilters).filter(val => val !== 'all' && val !== '').length;
+  const getBookingImage = (booking: any): string | null => {
+    const explicit =
+      booking?.image ||
+      booking?.serviceImage ||
+      booking?.hotelImage ||
+      booking?.destinationImage ||
+      booking?.rentalImage ||
+      booking?.vehicleImage ||
+      booking?.rental?.image;
+    if (typeof explicit === 'string' && explicit.trim()) return explicit;
+
+    const serviceName = String(booking?.service ?? '').trim();
+    const routeName = String(booking?.route ?? '').trim();
+
+    const hotel =
+      ALL_HOTELS.find((h) => h.name === serviceName) ||
+      ALL_HOTELS.find((h) => serviceName && h.name && serviceName.toLowerCase().includes(h.name.toLowerCase())) ||
+      ALL_HOTELS.find((h) => routeName && h.location && routeName.toLowerCase().includes(h.location.toLowerCase()));
+
+    if (hotel?.image) return hotel.image;
+
+    const vehicleName = String(booking?.vehicleType ?? booking?.service ?? '').trim();
+    const vehicle =
+      RENTAL_VEHICLES.find((v) => v.name === vehicleName) ||
+      RENTAL_VEHICLES.find((v) => vehicleName && v.name && vehicleName.toLowerCase().includes(v.name.toLowerCase()));
+
+    if (vehicle?.image) return vehicle.image;
+
+    return null;
+  };
+
+  const activeFilterCount =
+    Object.values(filters).filter((val) => val !== 'all' && val !== '').length +
+    (serviceFilter !== 'all' ? 1 : 0) +
+    (dateRange !== 'last7' ? 1 : 0) +
+    (searchTerm ? 1 : 0);
 
   // Show error if not authenticated or not owner
   if (!isAuthenticated || authError) {
@@ -598,20 +991,6 @@ const Bookings = () => {
 
   return (
     <div className="p-8 space-y-8 max-w-[1600px] mx-auto">
-      {/* Top Search Bar */}
-      <div className="flex items-center justify-between">
-        <div className="relative w-96">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 size-4" />
-          <input 
-            className="w-full pl-10 pr-4 py-2.5 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl text-sm focus:ring-2 focus:ring-blue-600/10 focus:border-blue-600 transition-all" 
-            placeholder="Search businesses, owners, or destinations..." 
-            type="text"
-            value={searchTerm}
-            onChange={handleSearch}
-          />
-        </div>
-      </div>
-
       {/* Message Notifications */}
       {pageError && (
         <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg relative" role="alert">
@@ -653,206 +1032,417 @@ const Bookings = () => {
       {/* Bookings Table Section */}
       <section className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm overflow-hidden">
         {/* Filters Bar */}
-        <div className="p-6 border-b border-slate-100 dark:border-slate-800 flex flex-col md:flex-row md:items-center justify-between gap-4">
-          <div className="relative flex-1 max-w-md">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 size-4" />
-            <input 
-              className="w-full pl-10 pr-4 py-2 bg-slate-50 dark:bg-slate-800 border-transparent focus:bg-white dark:focus:bg-slate-900 focus:ring-2 focus:ring-blue-600/10 rounded-xl text-sm transition-all" 
-              placeholder="Search Booking ID, Guest Name..." 
-              type="text"
-              value={searchTerm}
-              onChange={handleSearch}
-            />
-          </div>
-          <div className="flex flex-col sm:flex-row gap-3 sm:items-center sm:justify-end">
-            {/* Service Filter Tabs */}
-            <div className="bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl p-1 flex items-center gap-1">
-              <button
-                onClick={() => setServiceFilter('all')}
-                className={cn(
-                  "px-4 py-2 text-xs font-bold rounded-lg transition-colors",
-                  serviceFilter === 'all'
-                    ? "bg-blue-600 text-white shadow-lg shadow-blue-500/20"
-                    : "text-slate-500 hover:text-slate-900 dark:hover:text-slate-100"
-                )}
-              >
-                All Services
-              </button>
-              <button
-                onClick={() => setServiceFilter('hotel')}
-                className={cn(
-                  "px-4 py-2 text-xs font-bold rounded-lg transition-colors",
-                  serviceFilter === 'hotel'
-                    ? "bg-blue-600 text-white shadow-lg shadow-blue-500/20"
-                    : "text-slate-500 hover:text-slate-900 dark:hover:text-slate-100"
-                )}
-              >
-                Hotel
-              </button>
-              <button
-                onClick={() => setServiceFilter('transport')}
-                className={cn(
-                  "px-4 py-2 text-xs font-bold rounded-lg transition-colors",
-                  serviceFilter === 'transport'
-                    ? "bg-blue-600 text-white shadow-lg shadow-blue-500/20"
-                    : "text-slate-500 hover:text-slate-900 dark:hover:text-slate-100"
-                )}
-              >
-                Transport
-              </button>
+        <div className="p-6 border-b border-slate-100 dark:border-slate-800 space-y-4 bg-gradient-to-b from-slate-50/70 to-white dark:from-slate-900 dark:to-slate-900">
+          <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+            <div className="relative flex-1 max-w-xl">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 size-4" />
+              <input 
+                className="w-full pl-10 pr-10 py-2 bg-white/80 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 focus:bg-white dark:focus:bg-slate-900 focus:ring-2 focus:ring-blue-600/20 rounded-xl text-sm transition-all shadow-sm" 
+                placeholder="Search Booking ID, Guest Name..."
+                type="text"
+                value={searchTerm}
+                onChange={handleSearch}
+              />
+              {searchTerm && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    setSearchTerm('');
+                    setCurrentPage(1);
+                  }}
+                  className="absolute right-2 top-1/2 -translate-y-1/2 p-1.5 rounded-lg text-slate-400 hover:text-slate-600 hover:bg-slate-100 dark:hover:bg-slate-700/40 transition-colors"
+                  aria-label="Clear search"
+                >
+                  <X size={14} />
+                </button>
+              )}
             </div>
 
-            {/* Date Range Filter */}
-            <div className="relative">
-              <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={16} />
-              <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400" size={16} />
-              <select
-                value={dateRange}
-                onChange={(e) => setDateRange(e.target.value as any)}
-                className="appearance-none pl-10 pr-10 py-2 text-xs font-bold bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 border border-slate-200 dark:border-slate-700 rounded-xl hover:bg-slate-50 dark:hover:bg-slate-700/40 transition-colors"
-              >
-                <option value="last1" className="bg-white text-slate-900 dark:bg-slate-800 dark:text-slate-100">Last 1 Day</option>
-                <option value="last3" className="bg-white text-slate-900 dark:bg-slate-800 dark:text-slate-100">Last 3 Days</option>
-                <option value="last7" className="bg-white text-slate-900 dark:bg-slate-800 dark:text-slate-100">Last 7 Days</option>
-                <option value="all" className="bg-white text-slate-900 dark:bg-slate-800 dark:text-slate-100">All time</option>
-              </select>
-            </div>
+            <div className="flex flex-wrap gap-2 items-center justify-end">
+              <div className="bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl p-1 flex items-center gap-1">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setServiceFilter('all');
+                    setCurrentPage(1);
+                  }}
+                  className={cn(
+                    "px-4 py-2 text-xs font-bold rounded-lg transition-colors whitespace-nowrap",
+                    serviceFilter === 'all'
+                      ? "bg-blue-600 text-white shadow-lg shadow-blue-500/20"
+                      : "text-slate-500 hover:text-slate-900 dark:hover:text-slate-100"
+                  )}
+                >
+                  All
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setServiceFilter('hotel');
+                    setCurrentPage(1);
+                  }}
+                  className={cn(
+                    "px-4 py-2 text-xs font-bold rounded-lg transition-colors whitespace-nowrap",
+                    serviceFilter === 'hotel'
+                      ? "bg-blue-600 text-white shadow-lg shadow-blue-500/20"
+                      : "text-slate-500 hover:text-slate-900 dark:hover:text-slate-100"
+                  )}
+                >
+                  Hotel
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setServiceFilter('transport');
+                    setCurrentPage(1);
+                  }}
+                  className={cn(
+                    "px-4 py-2 text-xs font-bold rounded-lg transition-colors whitespace-nowrap",
+                    serviceFilter === 'transport'
+                      ? "bg-blue-600 text-white shadow-lg shadow-blue-500/20"
+                      : "text-slate-500 hover:text-slate-900 dark:hover:text-slate-100"
+                  )}
+                >
+                  Transport
+                </button>
+              </div>
 
-            {/* Action Buttons */}
-            <div className="flex gap-2">
-              <button 
-                onClick={openFilterModal}
-                className={cn(
-                  "px-4 py-2 text-xs font-bold rounded-xl flex items-center gap-2 transition-colors relative",
-                  activeFilterCount > 0 
-                    ? "bg-blue-600 text-white shadow-lg shadow-blue-500/20" 
-                    : "bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 hover:bg-slate-50"
-                )}
+              <div className="relative">
+                <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={16} />
+                <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400" size={16} />
+                <select
+                  value={dateRange}
+                  onChange={(e) => {
+                    setDateRange(e.target.value as any);
+                    setCurrentPage(1);
+                  }}
+                  className="appearance-none pl-10 pr-10 py-2 text-xs font-bold bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 border border-slate-200 dark:border-slate-700 rounded-xl hover:bg-slate-50 dark:hover:bg-slate-700/40 transition-colors"
+                >
+                  <option value="last1" className="bg-white text-slate-900 dark:bg-slate-800 dark:text-slate-100">Last 1 Day</option>
+                  <option value="last3" className="bg-white text-slate-900 dark:bg-slate-800 dark:text-slate-100">Last 3 Days</option>
+                  <option value="last7" className="bg-white text-slate-900 dark:bg-slate-800 dark:text-slate-100">Last 7 Days</option>
+                  <option value="all" className="bg-white text-slate-900 dark:bg-slate-800 dark:text-slate-100">All time</option>
+                </select>
+              </div>
+
+              <button
+                type="button"
+                onClick={clearFilters}
+                className="px-4 py-2 text-xs font-bold rounded-xl flex items-center gap-2 transition-colors bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-700/40"
               >
-                <Filter size={16} /> 
-                Filter
-                {activeFilterCount > 0 && (
-                  <span className="absolute -top-2 -right-2 w-5 h-5 bg-red-500 text-white text-[10px] rounded-full flex items-center justify-center">
-                    {activeFilterCount}
-                  </span>
-                )}
+                <RotateCcw size={16} />
+                Clear
               </button>
-              
+
               <button 
                 onClick={handleExport}
                 disabled={exportLoading}
                 className="px-4 py-2 text-xs font-bold bg-blue-600 text-white rounded-xl flex items-center gap-2 hover:bg-blue-700 transition-colors shadow-lg shadow-blue-500/20 disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 <Download size={16} /> 
-                {exportLoading ? 'Exporting...' : 'Export CSV'}
+                {exportLoading ? '...' : 'CSV'}
+              </button>
+
+              <button 
+                onClick={openPdfModal}
+                disabled={exportPdfLoading}
+                className="px-4 py-2 text-xs font-bold bg-slate-900 dark:bg-white text-white dark:text-slate-900 rounded-xl flex items-center gap-2 hover:opacity-90 transition-colors shadow-lg shadow-slate-900/10 disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                <FileText size={16} /> 
+                {exportPdfLoading ? '...' : 'PDF'}
               </button>
             </div>
           </div>
+
+          <div className="flex flex-col lg:flex-row lg:items-center gap-3 pt-1">
+            <div className="flex flex-wrap items-center gap-3">
+              <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider flex items-center gap-1">
+                <SlidersHorizontal size={12} /> Quick Filters:
+              </span>
+
+              <div className="flex items-center gap-1">
+                <button
+                  type="button"
+                  onClick={() => handleFilterChange('status', 'all')}
+                  className={cn(
+                    "px-3 py-1.5 text-[10px] font-bold rounded-full transition-colors",
+                    filters.status === 'all'
+                      ? "bg-blue-600 text-white"
+                      : "bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-700"
+                  )}
+                >
+                  All
+                </button>
+                <button
+                  type="button"
+                  onClick={() => handleFilterChange('status', 'paid')}
+                  className={cn(
+                    "px-3 py-1.5 text-[10px] font-bold rounded-full transition-colors flex items-center gap-1",
+                    filters.status === 'paid'
+                      ? "bg-emerald-600 text-white"
+                      : "bg-emerald-50 dark:bg-emerald-900/20 text-emerald-600 hover:bg-emerald-100 dark:hover:bg-emerald-900/30"
+                  )}
+                >
+                  <CheckCircle2 size={10} /> Paid
+                </button>
+                <button
+                  type="button"
+                  onClick={() => handleFilterChange('status', 'pending')}
+                  className={cn(
+                    "px-3 py-1.5 text-[10px] font-bold rounded-full transition-colors flex items-center gap-1",
+                    filters.status === 'pending'
+                      ? "bg-amber-600 text-white"
+                      : "bg-amber-50 dark:bg-amber-900/20 text-amber-600 hover:bg-amber-100 dark:hover:bg-amber-900/30"
+                  )}
+                >
+                  <Clock size={10} /> Pending
+                </button>
+                <button
+                  type="button"
+                  onClick={() => handleFilterChange('status', 'canceled')}
+                  className={cn(
+                    "px-3 py-1.5 text-[10px] font-bold rounded-full transition-colors flex items-center gap-1",
+                    filters.status === 'canceled'
+                      ? "bg-rose-600 text-white"
+                      : "bg-rose-50 dark:bg-rose-900/20 text-rose-600 hover:bg-rose-100 dark:hover:bg-rose-900/30"
+                  )}
+                >
+                  <XCircle size={10} /> Canceled
+                </button>
+              </div>
+            </div>
+
+            <div className="flex flex-wrap items-center gap-2 lg:ml-auto">
+              <div
+                className={cn(
+                  "flex items-center gap-2 px-3 py-2 rounded-xl border",
+                  amountRangeInvalid
+                    ? "bg-rose-50/70 dark:bg-rose-900/10 border-rose-200 dark:border-rose-800/40"
+                    : "bg-slate-50 dark:bg-slate-800 border-slate-200 dark:border-slate-700"
+                )}
+              >
+                <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider whitespace-nowrap">
+                  Amount
+                </span>
+                <div className="relative">
+                  <DollarSign className="absolute left-2 top-1/2 -translate-y-1/2 text-slate-400" size={12} />
+                  <input
+                    type="number"
+                    min={0}
+                    inputMode="decimal"
+                    value={filters.minAmount}
+                    onChange={(e) => handleFilterChange('minAmount', e.target.value)}
+                    placeholder="Min"
+                    className={cn(
+                      "pl-7 pr-2 py-1.5 text-[10px] rounded-lg w-24 outline-none bg-white dark:bg-slate-900 border",
+                      amountRangeInvalid
+                        ? "border-rose-300 dark:border-rose-800 focus:ring-1 focus:ring-rose-500"
+                        : "border-slate-200 dark:border-slate-700 focus:ring-1 focus:ring-blue-500"
+                    )}
+                  />
+                </div>
+                <span className="text-slate-400 text-[10px]">-</span>
+                <div className="relative">
+                  <DollarSign className="absolute left-2 top-1/2 -translate-y-1/2 text-slate-400" size={12} />
+                  <input
+                    type="number"
+                    min={0}
+                    inputMode="decimal"
+                    value={filters.maxAmount}
+                    onChange={(e) => handleFilterChange('maxAmount', e.target.value)}
+                    placeholder="Max"
+                    className={cn(
+                      "pl-7 pr-2 py-1.5 text-[10px] rounded-lg w-24 outline-none bg-white dark:bg-slate-900 border",
+                      amountRangeInvalid
+                        ? "border-rose-300 dark:border-rose-800 focus:ring-1 focus:ring-rose-500"
+                        : "border-slate-200 dark:border-slate-700 focus:ring-1 focus:ring-blue-500"
+                    )}
+                  />
+                </div>
+              </div>
+
+              {activeFilterCount > 0 && (
+                <div className="flex items-center gap-1 px-2 py-1 bg-blue-50 dark:bg-blue-900/20 text-blue-600 rounded-full">
+                  <span className="text-[8px] font-bold">
+                    {activeFilterCount} active filter{activeFilterCount !== 1 ? 's' : ''}
+                  </span>
+                </div>
+              )}
+            </div>
+          </div>
+
+          {amountRangeInvalid && (
+            <p className="text-[11px] text-rose-600 dark:text-rose-400">
+              Min amount must be less than or equal to max amount.
+            </p>
+          )}
         </div>
 
-        {/* Filter Modal */}
-        {showFilterModal && (
-          <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50" onClick={closeFilterModal}>
-            <div className="bg-white dark:bg-slate-900 rounded-2xl p-6 max-w-md w-full mx-4" onClick={(e) => e.stopPropagation()}>
+        {/* PDF Export Modal */}
+        {showPdfModal && (
+          <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50" onClick={closePdfModal}>
+            <div
+              className="bg-white dark:bg-slate-900 rounded-2xl p-6 max-w-lg w-full mx-4 shadow-xl"
+              onClick={(e) => e.stopPropagation()}
+              role="dialog"
+              aria-modal="true"
+              aria-label="Export PDF settings"
+            >
               <div className="flex items-center justify-between mb-4">
-                <h3 className="text-lg font-bold">Advanced Filters</h3>
-                <button onClick={closeFilterModal} className="p-1 hover:bg-slate-100 rounded-lg">
-                  <X size={20} />
+                <h3 className="text-lg font-bold text-slate-900 dark:text-slate-100">Export PDF</h3>
+                <button
+                  type="button"
+                  onClick={closePdfModal}
+                  className="p-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
+                  aria-label="Close"
+                >
+                  <X size={18} />
                 </button>
               </div>
+
+              <p className="text-xs text-slate-500 dark:text-slate-400 mb-6">
+                Edit the PDF style and filename before downloading.
+              </p>
 
               <div className="space-y-4">
-                {/* Status Filter */}
                 <div>
-                  <label className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-2 block">
-                    Booking Status
-                  </label>
-                  <div className="grid grid-cols-3 gap-2">
-                    {(['all', 'paid', 'pending', 'canceled'] as const).map((status) => (
-                      <button
-                        key={status}
-                        onClick={() => setTempFilters({ ...tempFilters, status })}
-                        className={cn(
-                          "px-3 py-2 text-xs font-bold rounded-lg capitalize transition-colors",
-                          tempFilters.status === status
-                            ? status === 'all' ? "bg-blue-600 text-white" :
-                              status === 'paid' ? "bg-emerald-600 text-white" :
-                              status === 'pending' ? "bg-amber-600 text-white" :
-                              "bg-rose-600 text-white"
-                            : "bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400"
-                        )}
-                      >
-                        {status}
-                      </button>
-                    ))}
-                  </div>
-                </div>
-
-                {/* Booking ID Filter */}
-                <div>
-                  <label className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-2 block">
-                    Booking ID
+                  <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-2">
+                    Title
                   </label>
                   <input
                     type="text"
-                    value={tempFilters.bookingId}
-                    onChange={(e) => setTempFilters({ ...tempFilters, bookingId: e.target.value })}
-                    placeholder="e.g., BK-1001"
-                    className="w-full px-4 py-2 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-sm"
+                    value={pdfOptions.title}
+                    onChange={(e) => setPdfOptions((prev) => ({ ...prev, title: e.target.value }))}
+                    className="w-full px-4 py-2.5 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-sm text-slate-900 dark:text-slate-100"
+                    placeholder="Bookings Export"
                   />
                 </div>
 
-                {/* Guest Name Filter */}
                 <div>
-                  <label className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-2 block">
-                    Guest Name
+                  <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-2">
+                    Subtitle
                   </label>
                   <input
                     type="text"
-                    value={tempFilters.guestName}
-                    onChange={(e) => setTempFilters({ ...tempFilters, guestName: e.target.value })}
-                    placeholder="Enter guest name"
-                    className="w-full px-4 py-2 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-sm"
+                    value={pdfOptions.subtitle}
+                    onChange={(e) => setPdfOptions((prev) => ({ ...prev, subtitle: e.target.value }))}
+                    className="w-full px-4 py-2.5 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-sm text-slate-900 dark:text-slate-100"
+                    placeholder="Cambodia Travel"
                   />
                 </div>
 
-                {/* Amount Range Filter */}
-                <div>
-                  <label className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-2 block">
-                    Amount Range ($)
-                  </label>
-                  <div className="grid grid-cols-2 gap-2">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  <div>
+                    <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-2">
+                      Theme
+                    </label>
+                    <select
+                      value={pdfOptions.theme}
+                      onChange={(e) => {
+                        const nextTheme = e.target.value as any;
+                        setPdfOptions((prev) => ({
+                          ...prev,
+                          theme: nextTheme,
+                          accentHex: nextTheme === 'dark' ? '#1e293b' : '#2563eb',
+                          pageBgHex: nextTheme === 'dark' ? '#0f172a' : '#ffffff',
+                        }));
+                      }}
+                      className="w-full px-4 py-2.5 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-sm text-slate-900 dark:text-slate-100"
+                    >
+                      <option value="clean">Clean</option>
+                      <option value="dark">Dark</option>
+                    </select>
+                  </div>
+
+                  <div>
+                    <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-2">
+                      Filename
+                    </label>
                     <input
-                      type="number"
-                      value={tempFilters.minAmount}
-                      onChange={(e) => setTempFilters({ ...tempFilters, minAmount: e.target.value })}
-                      placeholder="Min"
-                      className="w-full px-4 py-2 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-sm"
-                    />
-                    <input
-                      type="number"
-                      value={tempFilters.maxAmount}
-                      onChange={(e) => setTempFilters({ ...tempFilters, maxAmount: e.target.value })}
-                      placeholder="Max"
-                      className="w-full px-4 py-2 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-sm"
+                      type="text"
+                      value={pdfOptions.filename}
+                      onChange={(e) => setPdfOptions((prev) => ({ ...prev, filename: e.target.value }))}
+                      className="w-full px-4 py-2.5 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-sm text-slate-900 dark:text-slate-100"
+                      placeholder="bookings-YYYY-MM-DD.pdf"
                     />
                   </div>
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  <div className="rounded-xl border border-slate-200 dark:border-slate-800 px-4 py-3 flex items-center justify-between gap-3">
+                    <div>
+                      <p className="text-sm font-bold text-slate-900 dark:text-slate-100">Accent color</p>
+                      <p className="text-xs text-slate-500 dark:text-slate-400">Header band color</p>
+                    </div>
+                    <input
+                      type="color"
+                      value={pdfOptions.accentHex}
+                      onChange={(e) => setPdfOptions((prev) => ({ ...prev, accentHex: e.target.value }))}
+                      className="h-9 w-12 rounded-md border border-slate-200 dark:border-slate-700 bg-transparent"
+                      aria-label="Accent color"
+                    />
+                  </div>
+
+                  <div className="rounded-xl border border-slate-200 dark:border-slate-800 px-4 py-3 flex items-center justify-between gap-3">
+                    <div>
+                      <p className="text-sm font-bold text-slate-900 dark:text-slate-100">Background</p>
+                      <p className="text-xs text-slate-500 dark:text-slate-400">Page background color</p>
+                    </div>
+                    <input
+                      type="color"
+                      value={pdfOptions.pageBgHex}
+                      onChange={(e) => setPdfOptions((prev) => ({ ...prev, pageBgHex: e.target.value }))}
+                      className="h-9 w-12 rounded-md border border-slate-200 dark:border-slate-700 bg-transparent"
+                      aria-label="Page background"
+                    />
+                  </div>
+                </div>
+
+                <div className="flex items-center justify-between gap-3 rounded-xl border border-slate-200 dark:border-slate-800 px-4 py-3">
+                  <div>
+                    <p className="text-sm font-bold text-slate-900 dark:text-slate-100">Header band</p>
+                    <p className="text-xs text-slate-500 dark:text-slate-400">Colored header background</p>
+                  </div>
+                  <input
+                    type="checkbox"
+                    checked={pdfOptions.includeHeaderBand}
+                    onChange={(e) => setPdfOptions((prev) => ({ ...prev, includeHeaderBand: e.target.checked }))}
+                    className="h-4 w-4"
+                  />
+                </div>
+
+                <div className="flex items-center justify-between gap-3 rounded-xl border border-slate-200 dark:border-slate-800 px-4 py-3">
+                  <div>
+                    <p className="text-sm font-bold text-slate-900 dark:text-slate-100">Row stripes</p>
+                    <p className="text-xs text-slate-500 dark:text-slate-400">Alternating table rows</p>
+                  </div>
+                  <input
+                    type="checkbox"
+                    checked={pdfOptions.includeRowStripes}
+                    onChange={(e) => setPdfOptions((prev) => ({ ...prev, includeRowStripes: e.target.checked }))}
+                    className="h-4 w-4"
+                  />
                 </div>
               </div>
 
-              {/* Modal Actions */}
-              <div className="flex gap-3 mt-6">
+              <div className="mt-6 flex gap-3 justify-end">
                 <button
-                  onClick={clearFilters}
-                  className="flex-1 px-4 py-2 border border-slate-200 dark:border-slate-700 rounded-xl text-sm font-bold hover:bg-slate-50 transition-colors"
+                  type="button"
+                  onClick={closePdfModal}
+                  className="px-4 py-2.5 rounded-xl text-sm font-bold border border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors"
                 >
-                  Clear All
+                  Cancel
                 </button>
                 <button
-                  onClick={applyFilters}
-                  className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-xl text-sm font-bold hover:bg-blue-700 transition-colors"
+                  type="button"
+                  onClick={async () => {
+                    await handleExportPdf(pdfOptions);
+                    closePdfModal();
+                  }}
+                  disabled={exportPdfLoading}
+                  className="px-4 py-2.5 rounded-xl text-sm font-bold bg-slate-900 dark:bg-white text-white dark:text-slate-900 hover:opacity-90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                 >
-                  Apply Filters
+                  {exportPdfLoading ? 'Exporting...' : 'Download PDF'}
                 </button>
               </div>
             </div>
@@ -899,6 +1489,23 @@ const Bookings = () => {
                 </button>
               </div>
 
+              {(() => {
+                const bookingImage = getBookingImage(selectedBooking);
+                if (!bookingImage) return null;
+
+                return (
+                  <div className="mt-5 rounded-2xl overflow-hidden border border-slate-200 dark:border-slate-800">
+                    <img
+                      src={bookingImage}
+                      alt={selectedBooking.service || 'Booking'}
+                      className="w-full h-44 object-cover"
+                      referrerPolicy="no-referrer"
+                      loading="lazy"
+                    />
+                  </div>
+                );
+              })()}
+
               <div className="mt-6 grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div className="rounded-xl border border-slate-200 dark:border-slate-800 p-4">
                   <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Guest</p>
@@ -923,13 +1530,24 @@ const Bookings = () => {
 
                 <div className="rounded-xl border border-slate-200 dark:border-slate-800 p-4">
                   <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Date & Time</p>
-                  {selectedBooking.category === 'hotel' ? (
+                  {selectedBooking.date ? (
+                    <div className="mt-1">
+                      <p className="text-sm font-bold">
+                        {selectedBooking.date}{' '}
+                        <span className="text-slate-400 font-bold text-xs">{selectedBooking.time}</span>
+                      </p>
+                      {selectedBooking.category === 'hotel' && selectedBooking.dateStart && selectedBooking.dateEnd && (
+                        <p className="mt-0.5 text-xs text-slate-500">Stay: {selectedBooking.dateStart} to {selectedBooking.dateEnd}</p>
+                      )}
+                    </div>
+                  ) : selectedBooking.category === 'hotel' ? (
                     <p className="mt-1 text-sm font-bold">
                       {selectedBooking.dateStart} <span className="text-slate-400 font-bold text-xs">to</span> {selectedBooking.dateEnd}
                     </p>
                   ) : (
                     <p className="mt-1 text-sm font-bold">
-                      {selectedBooking.date} <span className="text-slate-400 font-bold text-xs">{selectedBooking.time}</span>
+                      {selectedBooking.date || '-'}{' '}
+                      <span className="text-slate-400 font-bold text-xs">{selectedBooking.time || ''}</span>
                     </p>
                   )}
                 </div>
@@ -988,19 +1606,20 @@ const Bookings = () => {
           </div>
         ) : (
           <>
-            {/* Bookings Table */}
+            {/* Bookings Table - Compact Version */}
             <div className="overflow-x-auto">
               <table className="w-full text-left">
                 <thead>
-                  <tr className="bg-slate-50/50 dark:bg-slate-800/30 text-[10px] uppercase font-bold tracking-widest text-slate-500">
-                    <th className="px-6 py-4">BOOKING ID</th>
-                    <th className="px-6 py-4">GUEST NAME</th>
-                    <th className="px-6 py-4">SERVICE & ROUTE</th>
-                    <th className="px-6 py-4">DATE & TIME</th>
-                    <th className="px-6 py-4">PAX</th>
-                    <th className="px-6 py-4">AMOUNT</th>
-                    <th className="px-6 py-4">STATUS</th>
-                    <th className="px-6 py-4 text-right">ACTIONS</th>
+                  <tr className="bg-slate-50/50 dark:bg-slate-800/30 text-[9px] uppercase font-bold tracking-widest text-slate-500">
+                    <th className="px-4 py-3">BOOKING ID</th>
+                    <th className="px-4 py-3">GUEST</th>
+                    <th className="px-4 py-3">SERVICE</th>
+                    <th className="px-4 py-3">ROUTE</th>
+                    <th className="px-4 py-3">DATE</th>
+                    <th className="px-4 py-3">PAX</th>
+                    <th className="px-4 py-3">AMOUNT</th>
+                    <th className="px-4 py-3">STATUS</th>
+                    <th className="px-4 py-3 text-right">ACTIONS</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
@@ -1008,74 +1627,94 @@ const Bookings = () => {
                     paginatedBookings.map((booking: any) => (
                       <tr 
                         key={booking.id} 
-                        className="hover:bg-slate-50/30 dark:hover:bg-slate-800/30 transition-colors group cursor-pointer"
+                        className="hover:bg-slate-50/30 dark:hover:bg-slate-800/30 transition-colors group cursor-pointer text-[11px]"
                         onClick={() => openBookingDetails(booking)}
                       >
-                        <td className="px-6 py-4 font-bold text-sm text-blue-600">{booking.id}</td>
-                        <td className="px-6 py-4">
-                          <div>
-                            <p className="font-bold text-sm">{booking.guest}</p>
-                            <p className="text-[10px] text-slate-400">{booking.customerEmail || ''}</p>
+                        <td className="px-4 py-3 font-medium text-blue-600">{booking.id}</td>
+                        <td className="px-4 py-3">
+                          <div className="flex flex-col">
+                            <span className="font-medium truncate max-w-[120px]" title={booking.guest}>{booking.guest}</span>
+                            {booking.customerEmail && (
+                              <span className="text-[8px] text-slate-400 truncate max-w-[120px]" title={booking.customerEmail}>
+                                {booking.customerEmail}
+                              </span>
+                            )}
                           </div>
                         </td>
-                        <td className="px-6 py-4">
-                          <p className="text-sm font-medium">{booking.service}</p>
-                          <p className="text-[10px] text-slate-400 font-bold uppercase tracking-wider">{booking.route}</p>
+                        <td className="px-4 py-3">
+                          <span className="truncate max-w-[150px] block" title={booking.service}>
+                            {booking.service}
+                          </span>
+                        </td>
+                        <td className="px-4 py-3">
+                          <span className="text-[9px] text-slate-600 dark:text-slate-400 block truncate max-w-[150px]" title={booking.route}>
+                            {booking.route}
+                          </span>
                           {booking.roomType && (
-                            <p className="text-[10px] text-slate-400">{booking.roomType}</p>
+                            <span className="text-[8px] text-slate-400 block truncate max-w-[150px]">{booking.roomType}</span>
                           )}
                           {booking.vehicleType && (
-                            <p className="text-[10px] text-slate-400">{booking.vehicleType}</p>
+                            <span className="text-[8px] text-slate-400 block truncate max-w-[150px]">{booking.vehicleType}</span>
                           )}
                         </td>
-                        <td className="px-6 py-4">
-                          {booking.category === 'hotel' ? (
-                            <>
-                              <p className="text-sm font-medium">{booking.dateStart}</p>
-                              <p className="text-[10px] text-slate-400 font-bold">to {booking.dateEnd}</p>
-                            </>
-                          ) : (
-                            <>
-                              <p className="text-sm font-medium">{booking.date}</p>
-                              <p className="text-[10px] text-slate-400 font-bold">{booking.time}</p>
-                            </>
-                          )}
+                        <td className="px-4 py-3">
+                          <div className="flex flex-col">
+                            {booking.date ? (
+                              <>
+                                <span className="font-medium">{booking.date}</span>
+                                <span className="text-[8px] text-slate-400">{booking.time}</span>
+                                {booking.category === 'hotel' && booking.dateStart && booking.dateEnd && (
+                                  <span className="text-[8px] text-slate-400">Stay: {booking.dateStart} → {booking.dateEnd}</span>
+                                )}
+                              </>
+                            ) : booking.category === 'hotel' ? (
+                              <>
+                                <span className="font-medium">{booking.dateStart}</span>
+                                <span className="text-[8px] text-slate-400">→ {booking.dateEnd}</span>
+                              </>
+                            ) : (
+                              <>
+                                <span className="font-medium">{booking.date || '-'}</span>
+                                <span className="text-[8px] text-slate-400">{booking.time || ''}</span>
+                              </>
+                            )}
+                          </div>
                         </td>
-                        <td className="px-6 py-4 text-sm font-bold">{booking.pax}</td>
-                        <td className="px-6 py-4 text-sm font-bold">${formatMoney(booking.amount)}</td>
-                        <td className="px-6 py-4">
+                        <td className="px-4 py-3 font-medium">{booking.pax}</td>
+                        <td className="px-4 py-3 font-medium">${formatMoney(booking.amount)}</td>
+                        <td className="px-4 py-3">
                           <span className={cn(
-                            "inline-flex items-center gap-1.5 px-2.5 py-1 text-[11px] font-bold rounded-full",
+                            "inline-flex items-center gap-1 px-2 py-0.5 text-[8px] font-bold rounded-full whitespace-nowrap",
                             getStatusColor(booking.status)
                           )}>
                             {getStatusIcon(booking.status)}
-                            {booking.status.charAt(0).toUpperCase() + booking.status.slice(1)}
+                            {booking.status.charAt(0).toUpperCase()}
                           </span>
                         </td>
-                        <td className="px-6 py-4 text-right relative">
+                        <td className="px-4 py-3 text-right relative">
                           <button
                             type="button"
                             onClick={(e) => {
                               e.stopPropagation();
                               setOpenActionBookingId((prev) => (prev === booking.id ? null : booking.id));
                             }}
-                            className="p-2 text-slate-400 hover:text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded-lg transition-all"
+                            className="p-1 text-slate-400 hover:text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded-lg transition-all"
                             aria-label="Booking actions"
                           >
-                            <MoreHorizontal size={18} />
+                            <MoreHorizontal size={14} />
                           </button>
 
                           {openActionBookingId === booking.id && (
-                            <div className="absolute right-6 top-12 z-10 w-44 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 shadow-lg overflow-hidden">
+                            <div className="absolute right-4 top-8 z-10 w-36 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 shadow-lg overflow-hidden text-[10px]">
                               <button
                                 type="button"
                                 onClick={(e) => {
                                   e.stopPropagation();
                                   openBookingDetails(booking);
                                 }}
-                                className="w-full text-left px-3 py-2 text-xs font-bold hover:bg-slate-50 dark:hover:bg-slate-800/70 transition-colors"
+                                className="w-full text-left px-2 py-1.5 font-medium hover:bg-slate-50 dark:hover:bg-slate-800/70 transition-colors"
                               >
-                                View Details
+                                View
                               </button>
 
                               {booking.status !== 'paid' && (
@@ -1086,7 +1725,7 @@ const Bookings = () => {
                                     updateBookingStatus(booking, 'paid');
                                   }}
                                   disabled={updatingBookingId === booking.id}
-                                  className="w-full text-left px-3 py-2 text-xs font-bold text-emerald-700 dark:text-emerald-400 hover:bg-emerald-50 dark:hover:bg-emerald-950/30 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                                  className="w-full text-left px-2 py-1.5 font-medium text-emerald-700 dark:text-emerald-400 hover:bg-emerald-50 dark:hover:bg-emerald-950/30 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                                 >
                                   Mark Paid
                                 </button>
@@ -1100,7 +1739,7 @@ const Bookings = () => {
                                     updateBookingStatus(booking, 'pending');
                                   }}
                                   disabled={updatingBookingId === booking.id}
-                                  className="w-full text-left px-3 py-2 text-xs font-bold text-amber-700 dark:text-amber-400 hover:bg-amber-50 dark:hover:bg-amber-950/30 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                                  className="w-full text-left px-2 py-1.5 font-medium text-amber-700 dark:text-amber-400 hover:bg-amber-50 dark:hover:bg-amber-950/30 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                                 >
                                   Mark Pending
                                 </button>
@@ -1114,9 +1753,9 @@ const Bookings = () => {
                                     updateBookingStatus(booking, 'canceled');
                                   }}
                                   disabled={updatingBookingId === booking.id}
-                                  className="w-full text-left px-3 py-2 text-xs font-bold text-rose-700 dark:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/40 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                                  className="w-full text-left px-2 py-1.5 font-medium text-rose-700 dark:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/40 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                                 >
-                                  Cancel Booking
+                                  Cancel
                                 </button>
                               )}
                             </div>
@@ -1126,7 +1765,7 @@ const Bookings = () => {
                     ))
                   ) : (
                     <tr>
-                      <td colSpan={8} className="px-6 py-12 text-center text-slate-500">
+                      <td colSpan={9} className="px-4 py-8 text-center text-slate-500 text-xs">
                         No bookings found
                       </td>
                     </tr>
@@ -1135,24 +1774,24 @@ const Bookings = () => {
               </table>
             </div>
 
-            {/* Pagination */}
-            <div className="px-6 py-4 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between">
-              <p className="text-xs text-slate-500 font-medium">
-                Showing {filteredBookings.length === 0 ? 0 : startIndex + 1} to {Math.min(startIndex + pageSize, filteredBookings.length)} of {filteredBookings.length} results
+            {/* Pagination - Compact */}
+            <div className="px-4 py-3 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between">
+              <p className="text-[10px] text-slate-500 font-medium">
+                {filteredBookings.length === 0 ? 0 : startIndex + 1}-{Math.min(startIndex + pageSize, filteredBookings.length)} of {filteredBookings.length}
               </p>
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-1">
                 <button
-                  className="p-2 text-slate-400 hover:text-blue-600 disabled:opacity-30"
+                  className="p-1 text-slate-400 hover:text-blue-600 disabled:opacity-30"
                   disabled={safeCurrentPage === 1}
                   onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
                   aria-label="Previous page"
                 >
-                  <ChevronLeft size={20} />
+                  <ChevronLeft size={16} />
                 </button>
-                <div className="flex gap-1">
+                <div className="flex gap-0.5">
                   {getPageItems().map((page, i) =>
                     page === '...' ? (
-                      <span key={`dots-${i}`} className="w-8 h-8 inline-flex items-center justify-center text-xs font-bold text-slate-400">
+                      <span key={`dots-${i}`} className="w-6 h-6 inline-flex items-center justify-center text-[10px] font-medium text-slate-400">
                         ...
                       </span>
                     ) : (
@@ -1160,9 +1799,9 @@ const Bookings = () => {
                         key={page}
                         onClick={() => setCurrentPage(page)}
                         className={cn(
-                          "w-8 h-8 rounded-lg text-xs font-bold transition-all",
+                          "w-6 h-6 rounded text-[10px] font-medium transition-all",
                           page === safeCurrentPage
-                            ? "bg-blue-600 text-white shadow-md shadow-blue-500/20"
+                            ? "bg-blue-600 text-white shadow-sm shadow-blue-500/20"
                             : "text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-800"
                         )}
                         aria-label={`Page ${page}`}
@@ -1174,12 +1813,12 @@ const Bookings = () => {
                   )}
                 </div>
                 <button
-                  className="p-2 text-slate-400 hover:text-blue-600 disabled:opacity-30"
+                  className="p-1 text-slate-400 hover:text-blue-600 disabled:opacity-30"
                   disabled={safeCurrentPage === totalPages}
                   onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
                   aria-label="Next page"
                 >
-                  <ChevronRight size={20} />
+                  <ChevronRight size={16} />
                 </button>
               </div>
             </div>

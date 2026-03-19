@@ -50,15 +50,41 @@ export const BookingHistory: React.FC<BookingHistoryProps> = ({
   setTripData
 }) => {
   const availableActivities = AVAILABLE_ACTIVITIES;
-  const { user } = useAuth();
+  const { user, isAuthenticated } = useAuth();
+
+  const getLocalDateInputValue = () => {
+    const d = new Date();
+    const tzOffsetMs = d.getTimezoneOffset() * 60000;
+    return new Date(d.getTime() - tzOffsetMs).toISOString().slice(0, 10);
+  };
+
+  const getLocalTimeInputValue = () => {
+    const d = new Date();
+    const hh = String(d.getHours()).padStart(2, '0');
+    const mm = String(d.getMinutes()).padStart(2, '0');
+    return `${hh}:${mm}`;
+  };
 
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [isPaymentModalOpen, setIsPaymentModalOpen] = useState(false);
   const [isCopied, setIsCopied] = useState(false);
   const [editForm, setEditForm] = useState({
     title: tripData.title,
     dates: tripData.dates,
     guests: tripData.guests
   });
+
+  const [paymentForm, setPaymentForm] = useState<{
+    method: 'aba' | 'acleda';
+    paymentDate: string;
+    paymentTime: string;
+    phone: string;
+  }>(() => ({
+    method: 'aba',
+    paymentDate: getLocalDateInputValue(),
+    paymentTime: getLocalTimeInputValue(),
+    phone: '',
+  }));
 
   // Add states for booking submission
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -80,7 +106,7 @@ export const BookingHistory: React.FC<BookingHistoryProps> = ({
   };
 
   // Function to save booking to database
-  const saveBookingToDatabase = async () => {
+  const saveBookingToDatabase = async (opts?: { paymentMethod?: string; paymentDate?: string; paymentTime?: string; phone?: string }) => {
     try {
       setIsSubmitting(true);
       setBookingError(null);
@@ -93,18 +119,24 @@ export const BookingHistory: React.FC<BookingHistoryProps> = ({
       // Get current year
       const currentYear = new Date().getFullYear();
       
-      // Format dates properly for database (assuming format like "Mar 15")
-      const formatDateForDB = (dateStr: string) => {
-        return `${dateStr}, ${currentYear}`;
+      const toIsoDate = (dateStr: string) => {
+        const parsed = new Date(`${dateStr} ${currentYear}`);
+        if (Number.isNaN(parsed.getTime())) return null;
+        return parsed.toISOString().split('T')[0];
+      };
+
+      const normalizeDateForDB = (dateStr: string) => {
+        const iso = toIsoDate(dateStr);
+        return iso ?? `${dateStr}, ${currentYear}`;
       };
       
-      // Create booking ID
-      const bookingId = `BK-${Date.now().toString().slice(-4)}`;
+      // Create booking ID (reduce collision risk)
+      const bookingId = `BK-${Date.now()}-${Math.random().toString(16).slice(2, 6)}`;
       
       // Prefer authenticated user info so "guest" matches the users table name
       const guestName = user?.name || tripData.guestName || 'Guest User';
       const guestEmail = user?.email || tripData.customerEmail || 'guest@example.com';
-      const guestPhone = user?.phone || tripData.customerPhone || '+855 12 345 678';
+      const guestPhone = opts?.phone || user?.phone || tripData.customerPhone || '+855 12 345 678';
       
       // Prepare booking data for database
       const bookingPayload = {
@@ -112,10 +144,14 @@ export const BookingHistory: React.FC<BookingHistoryProps> = ({
         guest: guestName,
         service: tripData.hotel.name,
         route: tripData.hotel.location,
-        dateStart: formatDateForDB(startDate),
-        dateEnd: formatDateForDB(endDate),
-        date: null,
-        time: null,
+        // For owner preview (image in details modal)
+        image: tripData.hotel.image,
+        serviceImage: tripData.hotel.image,
+        hotelImage: tripData.hotel.image,
+        dateStart: normalizeDateForDB(startDate),
+        dateEnd: normalizeDateForDB(endDate),
+        date: opts?.paymentDate ?? null,
+        time: opts?.paymentTime ?? null,
         pax: parseInt(tripData.guests) || 2,
         amount: financialSummary.total,
         status: 'pending',
@@ -125,14 +161,16 @@ export const BookingHistory: React.FC<BookingHistoryProps> = ({
         customerEmail: guestEmail,
         customerPhone: guestPhone,
         specialRequests: '',
-        paymentMethod: 'credit_card',
+        paymentMethod: opts?.paymentMethod ?? 'credit_card',
         createdAt: new Date().toISOString(),
         // Additional info for reference
         rental: tripData.rental.isBooked ? {
           name: tripData.rental.name,
           price: tripData.rental.price,
-          pickup: tripData.rental.pickup
+          pickup: tripData.rental.pickup,
+          image: tripData.rental.image
         } : null,
+        rentalImage: tripData.rental.isBooked ? tripData.rental.image : null,
         activities: selectedActivities.map(a => ({
           id: a.id,
           name: a.name,
@@ -168,13 +206,48 @@ export const BookingHistory: React.FC<BookingHistoryProps> = ({
     }
   };
 
-  // Handle payment and save
-  const handlePaymentAndSave = async () => {
-    const saved = await saveBookingToDatabase();
+  const openPaymentDetails = (method: 'aba' | 'acleda') => {
+    setBookingError(null);
+    setPaymentForm({
+      method,
+      paymentDate: getLocalDateInputValue(),
+      paymentTime: getLocalTimeInputValue(),
+      phone: user?.phone || tripData.customerPhone || '',
+    });
+    setIsPaymentModalOpen(true);
+  };
+
+  // Handle payment and save (after collecting details)
+  const handlePaymentAndSave = async (method: 'aba' | 'acleda', paymentDate: string, paymentTime: string, phone: string) => {
+    if (isSubmitting) return;
+    if (!isAuthenticated) {
+      setBookingError('Please log in to save your booking to the database.');
+      return;
+    }
+    const saved = await saveBookingToDatabase({ paymentMethod: method, paymentDate, paymentTime, phone });
     if (saved) {
+      setIsPaymentModalOpen(false);
       // Proceed to payment after successful save
       onPaymentClick();
     }
+  };
+
+  const handleConfirmPaymentDetails = async () => {
+    const phone = paymentForm.phone.trim();
+    if (!phone) {
+      setBookingError('Please enter your phone number to continue.');
+      return;
+    }
+    if (!paymentForm.paymentDate) {
+      setBookingError('Please select a payment date to continue.');
+      return;
+    }
+    if (!paymentForm.paymentTime) {
+      setBookingError('Please select a payment time to continue.');
+      return;
+    }
+
+    await handlePaymentAndSave(paymentForm.method, paymentForm.paymentDate, paymentForm.paymentTime, phone);
   };
 
   const toggleRentalBooking = (e: React.MouseEvent) => {
@@ -209,14 +282,14 @@ export const BookingHistory: React.FC<BookingHistoryProps> = ({
 
   const handleDownload = async () => {
     try {
-      const loadLib = async (name: string) => {
-        const importer = Function('n', 'return import(n)') as (n: string) => Promise<any>;
-        return importer(name);
-      };
-
-      const jsPDFMod = await loadLib('jspdf');
-      const jsPDF = jsPDFMod?.default;
-      if (!jsPDF) throw new Error('PDF library not available');
+      // Use a literal dynamic import so Vite can bundle it (variable imports won't be resolved).
+      const jsPDFMod = await import('jspdf');
+      const jsPDF =
+        (jsPDFMod as any)?.jsPDF ||
+        (jsPDFMod as any)?.default?.jsPDF ||
+        (jsPDFMod as any)?.default ||
+        (jsPDFMod as any);
+      if (typeof jsPDF !== 'function') throw new Error('PDF library not available');
 
       const doc = new jsPDF();
     const margin = 20;
@@ -694,7 +767,7 @@ Booked via Cambodia Travel`;
                   <span className="font-bold text-slate-900 dark:text-white">${financialSummary.rental.toLocaleString(undefined, {minimumFractionDigits: 2})}</span>
                 </div>
                 <div className="flex justify-between text-sm">
-                  <span className="text-slate-400">Activities ({selectedActivityIds.length} selected)</span>
+                  <span className="text-slate-400">Activities ({selectedActivityIds?.length ?? 0} selected)</span>
                   <span className="font-bold text-slate-900 dark:text-white">${financialSummary.activities.toLocaleString(undefined, {minimumFractionDigits: 2})}</span>
                 </div>
                 <div className="flex justify-between text-sm">
@@ -719,22 +792,7 @@ Booked via Cambodia Travel`;
 
               <div className="space-y-3 mb-8">
                 <button 
-                  onClick={onPaymentClick}
-                  className="w-full flex items-center justify-center gap-3 py-4 bg-blue-600 text-white rounded-xl font-bold hover:bg-blue-700 transition-colors"
-                >
-                  <Landmark className="w-5 h-5" /> Pay with ABA
-                </button>
-                <button 
-                  onClick={onPaymentClick}
-                  className="w-full flex items-center justify-center gap-3 py-4 bg-blue-800 text-white rounded-xl font-bold hover:bg-blue-900 transition-colors"
-                >
-                  <CreditCard className="w-5 h-5" /> Pay with ACLEDA
-                </button>
-              </div>
-
-              <div className="space-y-3 mb-8">
-                <button 
-                  
+                  onClick={() => openPaymentDetails('aba')}
                   disabled={isSubmitting}
                   className="w-full flex items-center justify-center gap-3 py-4 bg-blue-600 text-white rounded-xl font-bold hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                 >
@@ -751,7 +809,7 @@ Booked via Cambodia Travel`;
                 </button>
 
                 <button 
-                  
+                  onClick={() => openPaymentDetails('acleda')}
                   disabled={isSubmitting}
                   className="w-full flex items-center justify-center gap-3 py-4 bg-blue-800 text-white rounded-xl font-bold hover:bg-blue-900 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                 >
@@ -929,6 +987,116 @@ Booked via Cambodia Travel`;
                     className="flex-1 py-4 bg-blue-600 text-white rounded-xl font-bold hover:bg-blue-700 shadow-lg shadow-blue-500/20 transition-all flex items-center justify-center gap-2"
                   >
                     <Save className="w-5 h-5" /> Save Changes
+                  </button>
+                </div>
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
+
+      {/* Payment Details Modal */}
+      <AnimatePresence>
+        {isPaymentModalOpen && (
+          <div className="fixed inset-0 z-[110] flex items-center justify-center p-4">
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={() => !isSubmitting && setIsPaymentModalOpen(false)}
+              className="absolute inset-0 bg-slate-900/60 backdrop-blur-sm"
+            />
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95, y: 20 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.95, y: 20 }}
+              className="relative w-full max-w-lg bg-white dark:bg-slate-900 rounded-[32px] shadow-2xl overflow-hidden"
+            >
+              <div className="p-8">
+                <div className="flex items-center justify-between mb-8">
+                  <h3 className="text-2xl font-bold text-slate-900 dark:text-white">Payment Details</h3>
+                  <button 
+                    onClick={() => !isSubmitting && setIsPaymentModalOpen(false)}
+                    className="p-2 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-full transition-colors disabled:opacity-50"
+                    disabled={isSubmitting}
+                    aria-label="Close"
+                  >
+                    <X className="w-6 h-6 text-slate-400" />
+                  </button>
+                </div>
+
+                {bookingError && (
+                  <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-2xl mb-6 text-sm">
+                    {bookingError}
+                  </div>
+                )}
+
+                <div className="space-y-6">
+                  <div>
+                    <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-2">Payment Date</label>
+                    <input 
+                      type="date"
+                      value={paymentForm.paymentDate}
+                      onChange={(e) => setPaymentForm((prev) => ({ ...prev, paymentDate: e.target.value }))}
+                      className="w-full px-4 py-3 bg-slate-50 dark:bg-slate-800 border border-slate-100 dark:border-slate-700 rounded-xl text-slate-900 dark:text-white font-medium focus:ring-2 focus:ring-blue-500 outline-none transition-all"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-2">Payment Time</label>
+                    <input 
+                      type="time"
+                      value={paymentForm.paymentTime}
+                      onChange={(e) => setPaymentForm((prev) => ({ ...prev, paymentTime: e.target.value }))}
+                      className="w-full px-4 py-3 bg-slate-50 dark:bg-slate-800 border border-slate-100 dark:border-slate-700 rounded-xl text-slate-900 dark:text-white font-medium focus:ring-2 focus:ring-blue-500 outline-none transition-all"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-2">Phone Number</label>
+                    <input 
+                      type="tel"
+                      placeholder="+855 12 345 678"
+                      value={paymentForm.phone}
+                      onChange={(e) => setPaymentForm((prev) => ({ ...prev, phone: e.target.value }))}
+                      className="w-full px-4 py-3 bg-slate-50 dark:bg-slate-800 border border-slate-100 dark:border-slate-700 rounded-xl text-slate-900 dark:text-white font-medium focus:ring-2 focus:ring-blue-500 outline-none transition-all"
+                    />
+                    <p className="mt-2 text-xs text-slate-400">Used for payment confirmation and booking contact.</p>
+                  </div>
+
+                  <div className="pt-2">
+                    <div className="bg-slate-50 dark:bg-slate-800/50 rounded-2xl p-4 flex items-center justify-between">
+                      <p className="text-sm font-bold text-slate-900 dark:text-white">Payment Method</p>
+                      <p className="text-sm font-extrabold text-blue-600 uppercase tracking-wider">
+                        {paymentForm.method === 'aba' ? 'ABA' : 'ACLEDA'}
+                      </p>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="flex gap-4 mt-10">
+                  <button 
+                    onClick={() => setIsPaymentModalOpen(false)}
+                    disabled={isSubmitting}
+                    className="flex-1 py-4 bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 rounded-xl font-bold hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    Cancel
+                  </button>
+                  <button 
+                    onClick={handleConfirmPaymentDetails}
+                    disabled={isSubmitting}
+                    className="flex-1 py-4 bg-blue-600 text-white rounded-xl font-bold hover:bg-blue-700 shadow-lg shadow-blue-500/20 transition-all flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    {isSubmitting ? (
+                      <>
+                        <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div>
+                        Processing...
+                      </>
+                    ) : (
+                      <>
+                        <CreditCard className="w-5 h-5" /> Continue to Pay
+                      </>
+                    )}
                   </button>
                 </div>
               </div>

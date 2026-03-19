@@ -143,6 +143,15 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       };
     } catch (error) {
       console.error('❌ Login error:', error);
+      // If login fails, clear any stale local session to avoid confusing UX.
+      try {
+        authService.clearAuthToken();
+        authService.clearAuthUser();
+      } catch {
+        // ignore
+      }
+      setUser(null);
+      setToken(null);
       throw error;
     }
   };
