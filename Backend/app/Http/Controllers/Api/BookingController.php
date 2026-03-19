@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Models\Booking;
+use App\Models\AppNotification;
 use App\Models\OwnerNotification;
 use App\Models\User;
 use Illuminate\Http\Request;
@@ -383,19 +384,39 @@ class BookingController extends Controller
                 $title = 'New booking: ' . $booking->id;
                 $message = trim($guest . ' booked ' . $service . ($route ? ' (' . $route . ')' : '') . ' • $' . number_format($amount, 2));
 
+                // Role values can vary by casing across deployments ("Owner" vs "owner").
                 $owners = User::query()
-                    ->whereIn('role', ['owner', 'admin'])
+                    ->whereRaw('LOWER(role) IN (?, ?)', ['owner', 'admin'])
                     ->get(['id']);
 
+                $useNotificationsTable = Schema::hasTable('notifications');
+                $notificationsColumns = $useNotificationsTable ? Schema::getColumnListing('notifications') : [];
+                $supportsTypeColumn = $useNotificationsTable && in_array('type', $notificationsColumns, true);
+
                 foreach ($owners as $owner) {
-                    OwnerNotification::create([
+                    $payload = [
                         'user_id' => $owner->id,
                         'booking_id' => (string) $booking->id,
                         'title' => $title,
                         'message' => $message,
                         'data' => $snapshot,
                         'read_at' => null,
-                    ]);
+                    ];
+
+                    if ($useNotificationsTable) {
+                        $row = $payload;
+                        if ($supportsTypeColumn) {
+                            $row['type'] = 'booking_created';
+                        }
+                        try {
+                            AppNotification::create($row);
+                        } catch (\Throwable $inner) {
+                            // If the `notifications` table exists but has a mismatched schema, fall back.
+                            OwnerNotification::create($payload);
+                        }
+                    } else {
+                        OwnerNotification::create($payload);
+                    }
                 }
             } catch (\Throwable $e) {
                 Log::error('Failed to create owner notification: ' . $e->getMessage());

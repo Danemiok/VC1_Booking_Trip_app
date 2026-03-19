@@ -40,6 +40,9 @@ import OwnerAddProperty from '../pages/owner/AddProperty';
 import OwnerEditProperty from '../pages/owner/EditProperty';
 import { useLocation, useNavigate } from 'react-router-dom';
 import OwnerSidebar from '../components/layout/owner/Sidebar';
+import { OwnerNotificationsProvider, useOwnerNotifications } from '../context/OwnerNotificationsContext';
+import { formatRelativeTime } from '../utils/utils';
+import { OwnerNotificationModal } from '../components/owner/OwnerNotificationModal';
 import {
   Dashboard as AdminDashboard,
   UserManagement,
@@ -134,11 +137,21 @@ const getOwnerTitle = (pathname: string): string => {
   return 'Overview Dashboard';
 };
 
-const OwnerShell: React.FC<{ onLogout: () => void }> = ({ onLogout }) => {
+const OwnerShellInner: React.FC<{ onLogout: () => void }> = ({ onLogout }) => {
   const { user } = useAuth();
   const { isDarkMode, toggleDarkMode } = useTheme();
   const location = useLocation();
   const navigate = useNavigate();
+<<<<<<< HEAD
+=======
+  const {
+    notifications,
+    unreadCount,
+    markAllRead,
+    activeNotification,
+    closeNotification,
+  } = useOwnerNotifications();
+>>>>>>> rika-feature-dashboard
 
   const renderOwnerPage = () => {
     const path = location.pathname;
@@ -167,6 +180,26 @@ const OwnerShell: React.FC<{ onLogout: () => void }> = ({ onLogout }) => {
 
   const title = getOwnerTitle(location.pathname);
 
+  const headerNotifications: AdminNotification[] = React.useMemo(
+    () =>
+      notifications.map((n) => ({
+        id: String(n.id),
+        title: n.title,
+        description: n.message ?? '',
+        time: formatRelativeTime(n.createdAt),
+        type: n.bookingId ? 'booking' : 'system',
+        read: Boolean(n.readAt),
+        meta: {
+          ownerNotificationId: n.id,
+          bookingId: n.bookingId ?? n?.data?.id ?? null,
+        },
+      })),
+    [notifications],
+  );
+
+  // Clicking items in the bell dropdown is intentionally disabled for owners.
+  // Owners open details via Overview → Recent Activities (or "View all notifications").
+
   return (
     <div className="flex h-screen overflow-hidden font-sans transition-colors duration-200">
       <OwnerSidebar />
@@ -175,11 +208,25 @@ const OwnerShell: React.FC<{ onLogout: () => void }> = ({ onLogout }) => {
           title={title}
           isDark={isDarkMode}
           toggleTheme={toggleDarkMode}
+<<<<<<< HEAD
           onNotificationClick={() => {}}
           onProfileClick={() => navigate('/profile')}
           onSettingsClick={() => navigate('/settings')}
+=======
+          notifications={headerNotifications}
+          unreadCount={unreadCount}
+          onMarkAllNotificationsRead={markAllRead}
+          onViewAllNotifications={() => navigate('/owner#recent-activities')}
+          onProfileClick={() => {}}
+>>>>>>> rika-feature-dashboard
           onLogoutClick={onLogout}
           user={user}
+        />
+
+        <OwnerNotificationModal
+          notification={activeNotification}
+          onClose={closeNotification}
+          onOpenBooking={(bookingId) => navigate(`/bookings?openBookingId=${encodeURIComponent(String(bookingId))}`)}
         />
         <div className="flex-1 overflow-y-auto">
           <AnimatePresence mode="wait">
@@ -197,6 +244,14 @@ const OwnerShell: React.FC<{ onLogout: () => void }> = ({ onLogout }) => {
         </div>
       </main>
     </div>
+  );
+};
+
+const OwnerShell: React.FC<{ onLogout: () => void }> = ({ onLogout }) => {
+  return (
+    <OwnerNotificationsProvider>
+      <OwnerShellInner onLogout={onLogout} />
+    </OwnerNotificationsProvider>
   );
 };
 
