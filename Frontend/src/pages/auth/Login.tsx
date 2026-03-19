@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+﻿import React, { useState } from 'react';
 import { AuthLayout } from '../../components/auth/AuthLayout';
 import { Mail, Eye, EyeOff } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
@@ -25,14 +25,10 @@ export const Login: React.FC<LoginProps> = ({ onSwitchToRegister, onBack, onSucc
 
     try {
       const result = await login({ email, password });
-      
-      console.log('✅ Login successful:', result);
-      console.log('👤 User role:', result.user.role);
-      console.log('🎯 Next view:', result.nextView);
-      
       onSuccess(result.nextView);
     } catch (error: any) {
-      console.error('❌ Login error:', error);
+      console.error('âŒ Login error:', error);
+      setPassword('');
       setErrorMessage(error?.data?.message ?? 'Login failed');
     } finally {
       setIsSubmitting(false);
@@ -48,7 +44,7 @@ export const Login: React.FC<LoginProps> = ({ onSwitchToRegister, onBack, onSucc
       onBack={onBack}
       onClose={onClose}
     >
-      <form className="space-y-4" onSubmit={handleSubmit}>
+      <form className="space-y-4" onSubmit={handleSubmit} autoComplete="off">
         <div className="space-y-1.5">
           <label className="ml-1 text-sm font-medium text-slate-700">Email Address</label>
           <div className="relative group">
@@ -57,6 +53,7 @@ export const Login: React.FC<LoginProps> = ({ onSwitchToRegister, onBack, onSucc
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               placeholder="name@example.com"
+              autoComplete="username"
               required
               className="w-full rounded-xl border border-slate-200 bg-slate-50 py-3.5 pl-4 pr-12 text-sm text-slate-700 outline-none transition-all placeholder:text-slate-400 focus:border-blue-600 focus:ring-2 focus:ring-blue-600/20"
             />
@@ -74,6 +71,7 @@ export const Login: React.FC<LoginProps> = ({ onSwitchToRegister, onBack, onSucc
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               placeholder="********"
+              autoComplete="current-password"
               required
               className="w-full rounded-xl border border-slate-200 bg-slate-50 py-3.5 pl-4 pr-12 text-sm text-slate-700 outline-none transition-all placeholder:text-slate-400 focus:border-blue-600 focus:ring-2 focus:ring-blue-600/20"
             />
@@ -105,3 +103,4 @@ export const Login: React.FC<LoginProps> = ({ onSwitchToRegister, onBack, onSucc
     </AuthLayout>
   );
 };
+

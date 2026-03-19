@@ -1,5 +1,5 @@
 export { Dashboard } from './Dashboard';
-export { Destinations } from './Destinations';
+// export { Destinations } from './Destinations';
 export { TripPlanner } from './TripPlanner';
 export { BookingHistory } from './BookingHistory';
 export { GroupInvite } from './GroupInvite';
@@ -14,3 +14,4 @@ export { GroupPlanning } from './GroupPlanning';
 export { ScanToPay } from './ScanTopay';
 export { BookTrip } from './BookTrip';
 export { CustomerBookings } from './CustomerBookings';
+

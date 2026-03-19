@@ -12,11 +12,11 @@ import {
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { cn } from '@/src/utils/utils';
+import { createPromotion } from '@/src/services/promotionService';
 
 type PromotionServiceCategory = 'hotel' | 'transport';
 
 type PromotionType = 'Percentage Discount' | 'Fixed Amount Off' | 'Bundle Offer' | 'Early Bird Special';
-
 const CreatePromotion = () => {
   const navigate = useNavigate();
   const [step, setStep] = React.useState(1);
@@ -25,6 +25,8 @@ const CreatePromotion = () => {
   const [serviceCategory, setServiceCategory] = React.useState<PromotionServiceCategory>('hotel');
   const [campaignName, setCampaignName] = React.useState('');
   const [discountValue, setDiscountValue] = React.useState('');
+  const [promoCode, setPromoCode] = React.useState('');
+  const [promoColor, setPromoColor] = React.useState('#3B82F6'); // Default blue
   const [startDate, setStartDate] = React.useState('');
   const [endDate, setEndDate] = React.useState('');
 
@@ -217,8 +219,34 @@ const CreatePromotion = () => {
                     type="date"
                     value={endDate}
                     onChange={(e) => setEndDate(e.target.value)}
-                    className="w-full px-4 py-3 bg-slate-50 dark:bg-slate-800 border-transparent rounded-xl text-sm focus:bg-white dark:focus:bg-slate-900 focus:ring-2 focus:ring-blue-600/10 transition-all font-medium"
+                    className="w-full px-4 py-3 bg-slate-50 dark:bg-slate-800 border-transparent rounded-xl text-sm focus:bg-white dark:focus:bg-slate-900 focus focus:ring-blue-600/10:ring-2 transition-all font-medium"
                   />
+                </div>
+                <div className="space-y-2">
+                  <label className="text-[10px] uppercase font-bold tracking-widest text-slate-400">Promo Code (Optional)</label>
+                  <input
+                    value={promoCode}
+                    onChange={(e) => setPromoCode(e.target.value)}
+                    className="w-full px-4 py-3 bg-slate-50 dark:bg-slate-800 border-transparent rounded-xl text-sm focus:bg-white dark:focus:bg-slate-900 focus:ring-2 focus:ring-blue-600/10 transition-all font-medium"
+                    placeholder="e.g. SUMMER2024"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <label className="text-[10px] uppercase font-bold tracking-widest text-slate-400">Badge Color</label>
+                  <div className="flex items-center gap-3">
+                    <input
+                      type="color"
+                      value={promoColor}
+                      onChange={(e) => setPromoColor(e.target.value)}
+                      className="w-12 h-12 rounded-xl border-0 cursor-pointer"
+                    />
+                    <input
+                      value={promoColor}
+                      onChange={(e) => setPromoColor(e.target.value)}
+                      className="flex-1 px-4 py-3 bg-slate-50 dark:bg-slate-800 border-transparent rounded-xl text-sm focus:bg-white dark:focus:bg-slate-900 focus:ring-2 focus:ring-blue-600/10 transition-all font-medium"
+                      placeholder="#3B82F6"
+                    />
+                  </div>
                 </div>
               </div>
             </div>

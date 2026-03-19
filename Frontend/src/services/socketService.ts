@@ -32,8 +32,12 @@ class SocketServiceStub {
     }
   }
 
-  connect(): void {
-    // Stub: no-op
+  connect(): SocketServiceStub {
+    return this;
+  }
+
+  getSocket(): SocketServiceStub {
+    return this;
   }
 
   disconnect(): void {

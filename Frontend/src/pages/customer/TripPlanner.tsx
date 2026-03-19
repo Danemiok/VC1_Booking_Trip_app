@@ -19,6 +19,7 @@ import {
 } from 'lucide-react';
 import { 
   format, 
+  parse,
   startOfMonth, 
   endOfMonth, 
   startOfWeek, 
@@ -77,8 +78,25 @@ const DESTINATION_OPTIONS = [
 
 const parseDateValue = (value: unknown): Date | null => {
   if (!value) return null;
-  const parsed = value instanceof Date ? value : new Date(value as string | number);
+  if (value instanceof Date) {
+    return Number.isNaN(value.getTime()) ? null : value;
+  }
+  const parsed = new Date(value as string | number);
   return Number.isNaN(parsed.getTime()) ? null : parsed;
+};
+
+const parseDateFromString = (value: string, fallbackYear: number): Date | null => {
+  const raw = value.trim();
+  if (!raw) return null;
+
+  const withYear = parse(raw, 'MMMM d, yyyy', new Date(fallbackYear, 0, 1));
+  if (!Number.isNaN(withYear.getTime())) return withYear;
+
+  const withoutYear = parse(`${raw}, ${fallbackYear}`, 'MMMM d, yyyy', new Date(fallbackYear, 0, 1));
+  if (!Number.isNaN(withoutYear.getTime())) return withoutYear;
+
+  const native = new Date(raw);
+  return Number.isNaN(native.getTime()) ? null : native;
 };
 
 const getDateRangeFromTripData = (tripData: any): { start: Date | null; end: Date | null } => {
@@ -137,8 +155,35 @@ export const TripPlanner: React.FC<TripPlannerProps> = ({
     tripData.destination ||
     DESTINATION_OPTIONS[0];
 
+  const hotelSelected = Boolean(tripData?.hotel?.name) && Number(tripData?.hotel?.price || 0) > 0;
+  const rentalSelected = Boolean(tripData?.rental?.name) && Number(tripData?.rental?.price || 0) > 0;
+
   const selectedActivities = AVAILABLE_ACTIVITIES.filter(a => selectedActivityIds.includes(a.id));
   const suggestedActivities = AVAILABLE_ACTIVITIES.filter(a => !selectedActivityIds.includes(a.id)).slice(0, 3);
+
+  const selectedActivitiesTotal = selectedActivities.reduce((sum, a) => sum + (a.price * a.guests), 0);
+  const activitiesSelected = selectedActivities.length > 0;
+  const baseTotal =
+    (hotelSelected ? tripData.hotel.price : 0) +
+    (rentalSelected ? tripData.rental.price : 0) +
+    (activitiesSelected ? selectedActivitiesTotal : 0);
+
+  const promotion = tripData?.promotion as
+    | {
+        id: number;
+        title: string;
+        discount: string;
+        code: string;
+        originalPrice: string;
+        promoPrice: string;
+      }
+    | undefined;
+
+  const promoPercent = promotion?.discount?.includes('%')
+    ? Number.parseFloat(String(promotion.discount).replace(/[^0-9.]/g, ''))
+    : null;
+  const promoDiscountAmount = promoPercent && promoPercent > 0 && baseTotal > 0 ? baseTotal * (promoPercent / 100) : 0;
+  const totalAfterPromo = Math.max(0, baseTotal - promoDiscountAmount);
 
   useEffect(() => {
     const destinationName = tripData.destination?.name || tripData.hotel.location.split(',')[0] || DESTINATION_OPTIONS[0].name;
@@ -531,8 +576,8 @@ export const TripPlanner: React.FC<TripPlannerProps> = ({
                   <p className="text-sm text-slate-400">{tripData.hotel.roomType}</p>
                 </div>
                 <div className="text-right">
-                  <p className="text-xl font-bold text-blue-600">${(tripData.hotel.dailyPrice || 0).toFixed(2)}<span className="text-[10px] text-slate-400 font-normal ml-1">/night</span></p>
-                  <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Total: ${tripData.hotel.price.toFixed(2)}</p>
+                  <p className="text-xl font-bold text-blue-600">${(hotelSelected ? (tripData.hotel.dailyPrice || 0) : 0).toFixed(2)}<span className="text-[10px] text-slate-400 font-normal ml-1">/night</span></p>
+                  <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Total: ${(hotelSelected ? tripData.hotel.price : 0).toFixed(2)}</p>
                 </div>
               </div>
             </section>
@@ -670,42 +715,83 @@ export const TripPlanner: React.FC<TripPlannerProps> = ({
                   </div>
                   <span className="font-bold">{activeDestinationOption.name}</span>
                 </div>
+                <div className="h-px bg-white/10 dark:bg-slate-200/70" />
                 <div className="flex justify-between items-center">
                   <div className="flex flex-col">
                     <span className="text-white/60 dark:text-slate-500 text-sm">Hotel</span>
-                    <span className="text-[10px] text-white/40 dark:text-slate-400">${(tripData.hotel.dailyPrice || 0).toFixed(2)} /night</span>
+                    <span className="text-[10px] text-white/40 dark:text-slate-400">${(hotelSelected ? (tripData.hotel.dailyPrice || 0) : 0).toFixed(2)} /night</span>
                   </div>
-                  <span className="font-bold">${tripData.hotel.price.toFixed(2)}</span>
+                  <span className="font-bold">${(hotelSelected ? tripData.hotel.price : 0).toFixed(2)}</span>
                 </div>
                 <div className="flex justify-between items-center">
                   <div className="flex flex-col">
                     <span className="text-white/60 dark:text-slate-500 text-sm">Rental</span>
-                    <span className="text-[10px] text-white/40 dark:text-slate-400">${(tripData.rental.dailyPrice || 0).toFixed(2)} /day</span>
+                    <span className="text-[10px] text-white/40 dark:text-slate-400">${(rentalSelected ? (tripData.rental.dailyPrice || 0) : 0).toFixed(2)} /day</span>
                   </div>
-                  <span className="font-bold">${tripData.rental.isBooked ? tripData.rental.price.toFixed(2) : '0.00'}</span>
+                  <span className="font-bold">${(rentalSelected ? tripData.rental.price : 0).toFixed(2)}</span>
                 </div>
                 <div className="flex justify-between items-center">
                   <div className="flex flex-col">
                     <span className="text-white/60 dark:text-slate-500 text-sm">Activities</span>
-                    <span className="text-[10px] text-white/40 dark:text-slate-400">{selectedActivities.length} items</span>
+                    <span className="text-[10px] text-white/40 dark:text-slate-400">{activitiesSelected ? `${selectedActivities.length} items` : 'No activities'}</span>
                   </div>
-                  <span className="font-bold">${selectedActivities.reduce((sum, a) => sum + (a.price * a.guests), 0).toFixed(2)}</span>
+                  <span className="font-bold">${(activitiesSelected ? selectedActivitiesTotal : 0).toFixed(2)}</span>
                 </div>
-                <div className="pt-6 border-t border-white/10 dark:border-slate-100 flex justify-between items-center">
-                  <span className="text-lg font-bold">Total Est.</span>
-                  <span className="text-3xl font-bold text-blue-400 dark:text-blue-600">
-                    ${(
-                      tripData.hotel.price + 
-                      (tripData.rental.isBooked ? tripData.rental.price : 0) + 
-                      selectedActivities.reduce((sum, a) => sum + (a.price * a.guests), 0)
-                    ).toFixed(2)}
-                  </span>
+
+                {promotion && (
+                  <div className="rounded-2xl bg-white/5 dark:bg-slate-100/70 border border-white/10 dark:border-slate-200/70 p-4">
+                    <div className="flex items-start justify-between gap-3">
+                      <div className="flex flex-col">
+                        <span className="text-[10px] font-bold text-white/60 dark:text-slate-600 uppercase tracking-widest">Promotion</span>
+                        <span className="text-sm font-extrabold text-white dark:text-slate-900 leading-tight">{promotion.title}</span>
+                        <span className="text-[10px] font-bold text-blue-300 dark:text-blue-600 uppercase tracking-widest mt-1">{promotion.code} • {promotion.discount}</span>
+                      </div>
+                      <button
+                        onClick={() =>
+                          setTripData((prev: any) => {
+                            const next = { ...prev };
+                            delete next.promotion;
+                            return next;
+                          })
+                        }
+                        className="text-[10px] font-bold text-white/60 hover:text-white dark:text-slate-600 dark:hover:text-slate-900 uppercase tracking-widest"
+                      >
+                        Remove
+                      </button>
+                    </div>
+
+                    {promoDiscountAmount > 0 && (
+                      <div className="mt-3 flex items-center justify-between">
+                        <span className="text-[10px] font-bold text-white/50 dark:text-slate-600 uppercase tracking-widest">Discount</span>
+                        <span className="text-sm font-extrabold text-emerald-300 dark:text-emerald-600">- ${promoDiscountAmount.toFixed(2)}</span>
+                      </div>
+                    )}
+                  </div>
+                )}
+                <div className="pt-6 border-t border-white/10 dark:border-slate-100 space-y-3">
+                  <div className="flex justify-between items-center">
+                    <span className="text-sm font-bold text-white/60 dark:text-slate-600">Subtotal</span>
+                    <span className="text-sm font-extrabold">${baseTotal.toFixed(2)}</span>
+                  </div>
+                  {promoDiscountAmount > 0 && (
+                    <div className="flex justify-between items-center">
+                      <span className="text-sm font-bold text-white/60 dark:text-slate-600">Promotion</span>
+                      <span className="text-sm font-extrabold text-emerald-300 dark:text-emerald-600">- ${promoDiscountAmount.toFixed(2)}</span>
+                    </div>
+                  )}
+                  <div className="flex justify-between items-center">
+                    <span className="text-lg font-bold">Total Est.</span>
+                    <span className="text-3xl font-bold text-blue-400 dark:text-blue-600">
+                      ${(promotion ? totalAfterPromo : baseTotal).toFixed(2)}
+                    </span>
+                  </div>
                 </div>
               </div>
 
               <button 
                 onClick={onProceedToBooking}
-                className="w-full bg-blue-600 text-white py-4 rounded-2xl font-bold flex items-center justify-center gap-2 hover:bg-blue-700 transition-all mb-4"
+                disabled={baseTotal <= 0}
+                className="w-full bg-blue-600 disabled:bg-white/10 disabled:text-white/40 dark:disabled:bg-slate-100/60 dark:disabled:text-slate-500 text-white py-4 rounded-2xl font-bold flex items-center justify-center gap-2 hover:bg-blue-700 disabled:hover:bg-white/10 transition-all mb-4"
               >
                 Proceed to Booking <ArrowRight className="w-5 h-5" />
               </button>

@@ -46,9 +46,13 @@ export function isAuthenticated() {
 }
 
 export async function login(payload) {
+  const normalizedPayload = {
+    ...payload,
+    email: typeof payload?.email === 'string' ? payload.email.trim().toLowerCase() : payload?.email,
+  };
   const data = await apiRequest('/auth/login', {
     method: 'POST',
-    body: JSON.stringify(payload),
+    body: JSON.stringify(normalizedPayload),
   });
 
   if (data?.access_token) {
@@ -63,9 +67,13 @@ export async function login(payload) {
 }
 
 export async function register(payload) {
+  const normalizedPayload = {
+    ...payload,
+    email: typeof payload?.email === 'string' ? payload.email.trim().toLowerCase() : payload?.email,
+  };
   const data = await apiRequest('/auth/register', {
     method: 'POST',
-    body: JSON.stringify(payload),
+    body: JSON.stringify(normalizedPayload),
   });
 
   if (data?.access_token) {

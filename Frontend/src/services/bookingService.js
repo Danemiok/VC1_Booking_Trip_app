@@ -1,4 +1,4 @@
-import { apiRequest } from './api';
+﻿import { apiRequest } from './api';
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://127.0.0.1:8000/api';
 
@@ -6,8 +6,8 @@ export const bookingService = {
   // Get all bookings (for owner page)
   getBookings: async (filters = {}) => {
     try {
-      console.log('🔍 Fetching bookings with filters:', filters);
-      console.log('🌐 API URL:', API_BASE_URL);
+      console.log('ðŸ” Fetching bookings with filters:', filters);
+      console.log('ðŸŒ API URL:', API_BASE_URL);
       
       const queryParams = new URLSearchParams();
       if (filters.service && filters.service !== 'all') queryParams.append('service', filters.service);
@@ -22,41 +22,53 @@ export const bookingService = {
       const queryString = queryParams.toString() ? `?${queryParams.toString()}` : '';
       const url = `/bookings${queryString}`;
       
-      console.log('📡 Calling API:', url);
+      console.log('ðŸ“¡ Calling API:', url);
       
       const response = await apiRequest(url, {
         method: 'GET',
       });
       
-      console.log('✅ API Response:', response);
+      console.log('âœ… API Response:', response);
       
       // Make sure we return the data in the format expected
       return {
         data: response.data || []
       };
     } catch (error) {
-      console.error('❌ Error fetching bookings:', error);
+      console.error('âŒ Error fetching bookings:', error);
       console.error('Error details:', error.message);
-      return { data: [] };
+      throw error;
     }
   },
 
   // Create a new booking
   createBooking: async (bookingData) => {
     try {
-      console.log('📝 Creating booking:', bookingData);
+      console.log('ðŸ“ Creating booking:', bookingData);
       
       const response = await apiRequest('/bookings', {
         method: 'POST',
         body: JSON.stringify(bookingData),
       });
       
-      console.log('✅ Booking created:', response);
+      console.log('âœ… Booking created:', response);
       return { success: true, data: response };
     } catch (error) {
-      console.error('❌ Error creating booking:', error);
+      console.error('âŒ Error creating booking:', error);
       throw error;
     }
+  },
+
+
+  // Get bookings for the currently authenticated customer (recommended for \"My bookings\" page)
+  getMyBookings: async () => {
+    const response = await apiRequest('/customer/bookings', {
+      method: 'GET',
+    });
+
+    return {
+      data: response.data || [],
+    };
   },
 
   // Get bookings for a specific customer (restricted by backend)
@@ -73,14 +85,14 @@ export const bookingService = {
   // Get booking statistics
   getBookingStats: async () => {
     try {
-      console.log('📊 Fetching booking stats');
+      console.log('ðŸ“Š Fetching booking stats');
       const response = await apiRequest('/bookings/stats', {
         method: 'GET',
       });
-      console.log('✅ Stats received:', response);
+      console.log('âœ… Stats received:', response);
       return response;
     } catch (error) {
-      console.error('❌ Error fetching stats:', error);
+      console.error('âŒ Error fetching stats:', error);
       return {
         total_bookings: '0',
         active_guests: '0',
@@ -106,6 +118,38 @@ export const bookingService = {
     };
   },
 
+  // Owner notifications
+  getOwnerNotifications: async ({ limit = 25, unread = false } = {}) => {
+    const queryParams = new URLSearchParams();
+    if (limit) queryParams.append('limit', String(limit));
+    if (unread) queryParams.append('unread', '1');
+    const queryString = queryParams.toString() ? `?${queryParams.toString()}` : '';
+
+    return apiRequest(`/owner/notifications${queryString}`, {
+      method: 'GET',
+    });
+  },
+
+  getOwnerUnreadNotificationCount: async () => {
+    return apiRequest('/owner/notifications/unread-count', {
+      method: 'GET',
+    });
+  },
+
+  markOwnerNotificationRead: async (notificationId) => {
+    if (!notificationId) throw new Error('notificationId is required');
+
+    return apiRequest(`/owner/notifications/${encodeURIComponent(notificationId)}/read`, {
+      method: 'POST',
+    });
+  },
+
+  markAllOwnerNotificationsRead: async () => {
+    return apiRequest('/owner/notifications/read-all', {
+      method: 'POST',
+    });
+  },
+
   // Export bookings to CSV
   exportBookings: async (filters = {}) => {
     try {
@@ -115,7 +159,7 @@ export const bookingService = {
       
       const queryString = queryParams.toString() ? `?${queryParams.toString()}` : '';
       
-      console.log('📥 Exporting bookings to CSV');
+      console.log('ðŸ“¥ Exporting bookings to CSV');
       
       const response = await fetch(`${API_BASE_URL}/bookings/export${queryString}`, {
         method: 'GET',
@@ -134,8 +178,9 @@ export const bookingService = {
       const blob = await response.blob();
       return blob;
     } catch (error) {
-      console.error('❌ Error exporting bookings:', error);
+      console.error('âŒ Error exporting bookings:', error);
       throw error;
     }
   }
 };
+
