@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\ProfileController;
 use Illuminate\Foundation\Application;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 
@@ -17,9 +18,16 @@ use Inertia\Inertia;
 */
 
 Route::get('/', function () {
-    return response()->json([
-        'message' => 'Laravel Backend API running'
-    ]);
+    /** @var Request $request */
+    $request = request();
+
+    if ($request->expectsJson() || $request->query('format') === 'json') {
+        return response()->json([
+            'message' => 'Laravel Backend API running',
+        ]);
+    }
+
+    return view('welcome');
 });
 
 Route::get('/dashboard', function () {

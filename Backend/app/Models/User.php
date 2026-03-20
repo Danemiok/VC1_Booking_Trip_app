@@ -6,6 +6,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Laravel\Sanctum\HasApiTokens;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 
 class User extends Authenticatable
@@ -44,15 +45,14 @@ class User extends Authenticatable
         'password' => 'hashed',
     ];
 
-<<<<<<< HEAD
     public function ownerProfile(): HasOne
     {
         return $this->hasOne(OwnerProfile::class);
-=======
-    public function accommodations()
+    }
+
+    public function accommodations(): HasMany
     {
         return $this->hasMany(Accommodation::class, 'owner_id');
->>>>>>> channy/customer-destination
     }
 }
 
