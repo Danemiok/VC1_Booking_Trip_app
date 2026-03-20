@@ -1,5 +1,5 @@
 import React from 'react';
-import { HelpCenterLayout, HelpButton, useHelpCenterContext } from '../components/layout/HelpCenterLayout';
+import { HelpCenterLayout, HelpButton, useHelpCenterContext } from '../../components/layout/HelpCenterLayout';
 
 const DemoContent: React.FC = () => {
   const { openHelpCenter } = useHelpCenterContext();
