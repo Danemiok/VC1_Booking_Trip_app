@@ -1,6 +1,6 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
-import { bookingService } from '@/src/services/bookingService';
+import { bookingService } from '@/services/bookingService';
 import { useAuth } from '../../context/AuthContext';
 
 const formatDate = (value: any) => {

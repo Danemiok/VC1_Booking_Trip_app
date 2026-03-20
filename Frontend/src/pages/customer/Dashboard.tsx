@@ -8,6 +8,7 @@ import {
   Users, 
   Hotel, 
   Ship, 
+  Car,
   Waves, 
   Star, 
   CheckCircle2, 
@@ -33,7 +34,7 @@ import {
   isAfter
 } from 'date-fns';
 import { useAuth } from '../../context/AuthContext';
-import { bookingService } from '@/src/services/bookingService';
+import { bookingService } from '@/services/bookingService';
 import { getPublicDestinations } from '../../services/destinationService';
 
 // --- Sub-components (could be further split) ---
@@ -482,7 +483,7 @@ const Categories = ({
 }) => {
   const categories = [
     { icon: Hotel, title: "Hotel", desc: "Villas & Resorts", color: "bg-blue-500/10 text-blue-500", onClick: onHotelsClick },
-    { icon: Ship, title: "Rental", desc: "Ferries & Boats", color: "bg-emerald-500/10 text-emerald-500", onClick: onRentalsClick },
+    { icon: Car, title: "Transport", desc: "Cars, Buses & Trains", color: "bg-emerald-500/10 text-emerald-500", onClick: onRentalsClick },
     { icon: Waves, title: "Activities", desc: "Tours & Diving", color: "bg-amber-500/10 text-amber-500", onClick: onActivitiesClick },
   ];
 

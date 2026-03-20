@@ -23,9 +23,9 @@ import {
   AreaChart,
   Area
 } from 'recharts';
-import { cn, formatRelativeTime } from '@/src/utils/utils';
-import { MOCK_REVENUE_DATA } from '@/src/routes/constants';
-import { useOwnerNotifications } from '@/src/context/OwnerNotificationsContext';
+import { cn, formatRelativeTime } from '@/utils/utils';
+import { MOCK_REVENUE_DATA } from '@/routes/constants';
+import { useOwnerNotifications } from '@/context/OwnerNotificationsContext';
 import { useLocation, useNavigate } from 'react-router-dom';
 
 const StatCard = ({ title, value, change, changeType, icon: Icon, subtitle }: any) => (

@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Accommodation;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Storage;
 
 class AccommodationController extends Controller
 {
@@ -40,7 +41,13 @@ class AccommodationController extends Controller
             'description' => 'nullable|string',
             'stars_rating' => 'nullable|numeric|min:0|max:5',
             'is_active' => 'boolean',
+            'image' => 'nullable|image|max:10240',
         ]);
+
+        if ($request->hasFile('image')) {
+            $path = $request->file('image')->store('uploads/accommodations', 'public');
+            $validated['image'] = Storage::url($path);
+        }
 
         $validated['owner_id'] = Auth::id();
 
@@ -78,7 +85,19 @@ class AccommodationController extends Controller
             'description' => 'nullable|string',
             'stars_rating' => 'nullable|numeric|min:0|max:5',
             'is_active' => 'boolean',
+            'image' => 'nullable|image|max:10240',
         ]);
+
+        if ($request->hasFile('image')) {
+            // Delete old image if it exists
+            if ($accommodation->image && !str_starts_with($accommodation->image, 'http')) {
+                $oldPath = str_replace('/storage/', '', $accommodation->image);
+                Storage::disk('public')->delete($oldPath);
+            }
+
+            $path = $request->file('image')->store('uploads/accommodations', 'public');
+            $validated['image'] = Storage::url($path);
+        }
 
         $accommodation->update($validated);
 

@@ -11,9 +11,9 @@ import {
   Plus
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
-import { cn } from '@/src/utils/utils';
-import { apiRequest } from '@/src/services/api';
-import { getAuthToken } from '@/src/services/authService';
+import { cn } from '@/utils/utils';
+import { apiRequest } from '@/services/api';
+import { getAuthToken } from '@/services/authService';
 
 const RegisterVehicle = () => {
   const navigate = useNavigate();

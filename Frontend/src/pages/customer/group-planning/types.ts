@@ -1,27 +1,25 @@
+export type MemberRole = 'Leader' | 'Member' | string;
+
+export interface Member {
+  user_email: string;
+  user_name: string;
+  role: MemberRole;
+}
+
+export interface MessageAttachment {
+  name: string;
+  mimeType: string;
+  dataUrl?: string;
+}
+
 export interface Message {
   id: string;
   sender_name: string;
   sender_email: string;
   text: string;
   created_at: string;
-  type?: 'system' | 'user';
-  attachment?: {
-    name: string;
-    mimeType: string;
-    dataUrl?: string;
-  };
-}
-
-export interface Member {
-  user_email: string;
-  user_name: string;
-  role: 'Leader' | 'Member';
-}
-
-export interface Poll {
-  id: string;
-  question: string;
-  options: { id: string; text: string; votes: number }[];
+  type?: 'system' | 'user' | string;
+  attachment?: MessageAttachment;
 }
 
 export interface ItineraryItem {
@@ -30,6 +28,18 @@ export interface ItineraryItem {
   activity: string;
   location: string;
   votes: number;
+}
+
+export interface PollOption {
+  id: string;
+  text: string;
+  votes: number;
+}
+
+export interface Poll {
+  id: string;
+  question: string;
+  options: PollOption[];
 }
 
 export interface StoredGroup {
@@ -41,3 +51,4 @@ export interface StoredGroup {
   polls: Poll[];
   itinerary: ItineraryItem[];
 }
+

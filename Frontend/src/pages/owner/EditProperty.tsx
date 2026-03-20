@@ -14,8 +14,8 @@ import {
   Plus
 } from 'lucide-react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { cn } from '@/src/utils/utils';
-import { apiRequest } from '@/src/services/api';
+import { cn } from '@/utils/utils';
+import { apiRequest } from '@/services/api';
 
 type DestinationStatus = 'active' | 'draft';
 

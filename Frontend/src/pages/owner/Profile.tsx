@@ -1,8 +1,8 @@
 import React from 'react';
 import { Mail, Phone, MapPin, Briefcase, Building2, PencilLine, Camera } from 'lucide-react';
-import { useAuth } from '@/src/context/AuthContext';
+import { useAuth } from '@/context/AuthContext';
 import { useNavigate } from 'react-router-dom';
-import { cn } from '@/src/utils/utils';
+import { cn } from '@/utils/utils';
 
 type OwnerProfileData = {
   name: string;

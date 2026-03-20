@@ -530,12 +530,6 @@ export const Rentals: React.FC<RentalsProps> = ({ onBack, onSelectVehicle }) => 
                                 </span>
                               )}
                             </div>
-                            <div className="absolute top-4 right-4">
-                              <div className="bg-white/90 backdrop-blur-md text-slate-900 text-[10px] font-bold px-2 py-1 rounded-lg flex items-center gap-1 shadow-lg">
-                                <Star className="w-3 h-3 fill-amber-400 text-amber-400" />
-                                {car.rating}
-                              </div>
-                            </div>
                           </div>
                           <div className="p-6">
                             <div className="flex items-center justify-between mb-4">

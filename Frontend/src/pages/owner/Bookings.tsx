@@ -20,9 +20,9 @@ import {
   X
 } from 'lucide-react';
 import { useLocation, useNavigate } from 'react-router-dom';
-import { cn } from '@/src/utils/utils';
-import { bookingService } from '@/src/services/bookingService';
-import { API_BASE_URL } from '@/src/services/api';
+import { cn } from '@/utils/utils';
+import { bookingService } from '@/services/bookingService';
+import { API_BASE_URL } from '@/services/api';
 import { useAuth } from '../../context/AuthContext';
 import { ALL_HOTELS } from '../../data/hotels';
 import { RENTAL_VEHICLES } from '../../data/rentals';

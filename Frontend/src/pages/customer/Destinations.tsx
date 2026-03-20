@@ -1,27 +1,27 @@
 
-import { MapPin, Search, Star } from 'lucide-react';
+import {
+  CheckCircle2,
+  ChevronLeft,
+  ChevronRight,
+  Filter,
+  Heart,
+  MapPin,
+  Search,
+  SlidersHorizontal,
+  Star,
+  Users,
+  Waves,
+} from 'lucide-react';
 import React, { useEffect, useState } from 'react';
 import { motion } from 'motion/react';
 
-import { 
-  ChevronLeft, 
-  ChevronRight, 
-  Filter, 
-  SlidersHorizontal, 
-
-  Heart, 
-
-  Waves, 
-  Users, 
-  CheckCircle2 
-} from 'lucide-react';
-import { getHotels, type Hotel } from '../../data/hotels';
-import { getPublicDestinations } from '../../services/destinationService';
+import { getHotels, type Hotel } from '@/data/hotels';
+import { getPublicDestinations } from '@/services/destinationService';
 
 type DestinationStatus = 'active' | 'draft';
 
 interface DestinationItem {
-  id: string;
+  id: string | number;
   name: string;
   type: string;
   description: string;
@@ -50,17 +50,7 @@ export default function Destinations() {
 
     try {
       const data = await getPublicDestinations();
-      setDestinations(data.map((item: any) => ({
-        id: String(item.id),
-        name: item.name,
-        type: item.type,
-        description: item.description,
-        location: item.location,
-        price: item.price,
-        image: item.image,
-        rating: item.rating,
-        status: item.status === 'active' ? 'active' : 'draft',
-      })));
+      setDestinations(Array.isArray(data) ? data : []);
     } catch (error) {
       setLoadError(getErrorMessage(error, 'Failed to load destinations. Please try again.'));
     } finally {
@@ -130,8 +120,12 @@ export default function Destinations() {
             >
               <div className="relative">
                 <img src={destination.image} alt={destination.name} className="h-56 w-full object-cover" />
-                <div className="absolute left-4 top-4 rounded-full bg-emerald-500 px-3 py-1 text-xs font-semibold text-white">
-                  ACTIVE
+                <div
+                  className={`absolute left-4 top-4 rounded-full px-3 py-1 text-xs font-semibold text-white ${
+                    destination.status === 'active' ? 'bg-emerald-500' : 'bg-amber-500'
+                  }`}
+                >
+                  {(destination.status ?? 'draft').toUpperCase()}
                 </div>
                 <div className="absolute right-4 top-4 rounded-full bg-white/90 px-3 py-1 text-xs font-semibold text-slate-700 dark:bg-slate-900/90 dark:text-slate-200">
                   {destination.type}
@@ -148,10 +142,7 @@ export default function Destinations() {
                 </div>
 
                 <div className="flex items-center justify-between">
-                  <p className="flex items-center gap-1 text-sm text-slate-600 dark:text-slate-300">
-                    <Star size={15} className="text-yellow-500" />
-                    {destination.rating > 0 ? destination.rating.toFixed(1) : 'New listing'}
-                  </p>
+                  <div></div>
                   <p className="text-lg font-bold text-blue-600 dark:text-blue-400">
                     ${destination.price.toFixed(0)}
                     <span className="ml-1 text-xs font-medium text-slate-500 dark:text-slate-400">/ night</span>
@@ -654,7 +645,7 @@ export const Hotels: React.FC<HotelsPageProps> = ({ tripData, onBack, onSelectHo
 
             {hotelsLoading && (
               <div className="rounded-2xl border border-slate-200 bg-white px-6 py-10 text-center text-slate-500 shadow-sm dark:border-slate-800 dark:bg-slate-900 dark:text-slate-400">
-                Loading destinations...
+                Loading hotels...
               </div>
             )}
 
@@ -738,16 +729,6 @@ export const Hotels: React.FC<HotelsPageProps> = ({ tripData, onBack, onSelectHo
                     {/* Content Container */}
                     <div className="flex-1 p-10 md:p-14 flex flex-col justify-between">
                       <div>
-                        <div className="flex items-center justify-between mb-6">
-                          <div className="flex items-center gap-3">
-                            <div className="text-left">
-                              <p className="text-[10px] font-bold text-slate-900 dark:text-white uppercase tracking-widest">{t('exceptional_stay')}</p>
-                              <p className="text-[9px] text-slate-400 font-medium uppercase tracking-widest">
-                                {typeof hotel.rating === 'number' ? `${hotel.rating.toFixed(1)} ★` : ''}
-                              </p>
-                            </div>
-                          </div>
-                        </div>
 
                         <h3 
                           className="text-3xl font-serif italic text-slate-900 dark:text-white mb-3 group-hover:text-blue-600 transition-colors cursor-pointer"
