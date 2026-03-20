@@ -9,6 +9,7 @@ import { AppRoutes } from './routes/AppRoutes';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import { ThemeProvider } from './context/ThemeContext';
 import { ALL_HOTELS } from './data/hotels';
+import { HelpCenterLayout } from './components/layout/HelpCenterLayout';
 
 const AppContent = () => {
   const [view, setView] = useState('landing');
@@ -218,6 +219,20 @@ const AppContent = () => {
     setView('trip-planner');
   };
 
+  const handleTourGuidesClick = () => {
+    // Navigate to landing page and scroll to "Recommended for You" section
+    setReturnToPlanner(false);
+    setView('landing');
+    
+    // Scroll to the recommended section after component mounts
+    setTimeout(() => {
+      const element = document.getElementById('recommended-for-you');
+      if (element) {
+        element.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }
+    }, 100);
+  };
+
   const handleLogout = () => {
     logout();
     setReturnToPlanner(false);
@@ -238,80 +253,95 @@ const AppContent = () => {
   }, [user]);
 
   return (
-    <div className="min-h-screen bg-white dark:bg-slate-900 transition-colors duration-300">
-      <Navbar 
-        onLoginClick={() => setView('login')}
-        user={user}
-        onLogout={handleLogout}
-        onProfileClick={handleProfileClick}
-        notifications={notifications}
-        onMarkAsRead={handleMarkAsRead}
-        onMarkAllAsRead={handleMarkAllAsRead}
-        onHotelsClick={() => { setReturnToPlanner(false); setView('hotels'); }}
-        onRentalsClick={() => { setReturnToPlanner(false); setView('rentals'); }}
-        onHomeClick={() => { setReturnToPlanner(false); setView('landing'); }}
-        onBookingsClick={() => { setReturnToPlanner(false); setView('bookings'); }}
-        onTripPlannerClick={handleTripPlannerClick}
-        onActivitiesClick={() => { setReturnToPlanner(false); setView('activities'); }}
-        currentView={view}
-      />
+    <HelpCenterLayout>
+      <div className="min-h-screen bg-white dark:bg-slate-900 transition-colors duration-300">
+        <Navbar 
+          onLoginClick={() => setView('login')}
+          user={user}
+          onLogout={handleLogout}
+          onProfileClick={handleProfileClick}
+          notifications={notifications}
+          onMarkAsRead={handleMarkAsRead}
+          onMarkAllAsRead={handleMarkAllAsRead}
+          onHotelsClick={() => { 
+            setReturnToPlanner(false); 
+            setView('hotels'); 
+          }}
+          onRentalsClick={() => { setReturnToPlanner(false); setView('rentals'); }}
+          onHomeClick={() => { setReturnToPlanner(false); setView('landing'); }}
+          onBookingsClick={() => { setReturnToPlanner(false); setView('bookings'); }}
+          onTripPlannerClick={handleTripPlannerClick}
+          onActivitiesClick={() => { setReturnToPlanner(false); setView('activities'); }}
+          currentView={view}
+        />
 
-      <AppRoutes 
-        view={view}
-        setView={setView}
-        onSelectRecommendation={handleSelectRecommendation}
-        onSelectDestination={handleSelectDestination}
-        onPromotionsClick={() => setView('promotions')}
-        onHotelsClick={() => setView('hotels')}
-        onRentalsClick={() => setView('rentals')}
-        onActivitiesClick={() => setView('activities')}
-        notifications={notifications}
-        onMarkAsRead={handleMarkAsRead}
-        onMarkAllAsRead={handleMarkAllAsRead}
-        activeProfileTab={activeProfileTab}
-        selectedHotel={selectedHotel}
-        setSelectedHotel={setSelectedHotel}
-        selectedActivityIds={selectedActivityIds}
-        setSelectedActivityIds={setSelectedActivityIds}
-        tripData={tripData}
-        setTripData={setTripData}
-        onSearch={handleSearch}
-        returnToPlanner={returnToPlanner}
-        setReturnToPlanner={setReturnToPlanner}
-      />
+        <AppRoutes 
+          view={view}
+          setView={setView}
+          onSelectRecommendation={handleSelectRecommendation}
+          onSelectDestination={handleSelectDestination}
+          onPromotionsClick={() => setView('promotions')}
+          onHotelsClick={() => { 
+            setReturnToPlanner(false); 
+            setView('hotels'); 
+          }}
+          onRentalsClick={() => setView('rentals')}
+          onActivitiesClick={() => setView('activities')}
+          notifications={notifications}
+          onMarkAsRead={handleMarkAsRead}
+          onMarkAllAsRead={handleMarkAllAsRead}
+          activeProfileTab={activeProfileTab}
+          selectedHotel={selectedHotel}
+          setSelectedHotel={setSelectedHotel}
+          selectedActivityIds={selectedActivityIds}
+          setSelectedActivityIds={setSelectedActivityIds}
+          tripData={tripData}
+          setTripData={setTripData}
+          onSearch={handleSearch}
+          returnToPlanner={returnToPlanner}
+          setReturnToPlanner={setReturnToPlanner}
+        />
 
-      <Footer
-        onLoginClick={() => setView('login')}
-        onHomeClick={() => {
-          setReturnToPlanner(false);
-          setView('landing');
-        }}
-        onTripPlannerClick={() => {
-          setReturnToPlanner(true);
-          setView('trip-planner');
-        }}
-        onBookingsClick={() => {
-          setReturnToPlanner(false);
-          setView('bookings');
-        }}
-        user={user}
-      />
+        <Footer
+          onLoginClick={() => setView('login')}
+          onHomeClick={() => {
+            setReturnToPlanner(false);
+            setView('landing');
+          }}
+          onTripPlannerClick={() => {
+            setReturnToPlanner(true);
+            setView('trip-planner');
+          }}
+          onBookingsClick={() => {
+            setReturnToPlanner(false);
+            setView('bookings');
+          }}
+          onHotelsClick={() => { 
+            setReturnToPlanner(false); 
+            setView('hotels'); 
+          }}
+          onRentalsClick={() => { setReturnToPlanner(false); setView('rentals'); }}
+          onActivitiesClick={() => { setReturnToPlanner(false); setView('activities'); }}
+          onTourGuidesClick={handleTourGuidesClick}
+          user={user}
+        />
 
-      <AnimatePresence>
-        {selectedRecommendation && (
-          <RecommendationModal 
-            item={selectedRecommendation} 
-            onClose={() => setSelectedRecommendation(null)} 
-          />
-        )}
-        {selectedDestination && (
-          <DestinationModal 
-            dest={selectedDestination} 
-            onClose={() => setSelectedDestination(null)} 
-          />
-        )}
-      </AnimatePresence>
-    </div>
+        <AnimatePresence>
+          {selectedRecommendation && (
+            <RecommendationModal 
+              item={selectedRecommendation} 
+              onClose={() => setSelectedRecommendation(null)} 
+            />
+          )}
+          {selectedDestination && (
+            <DestinationModal 
+              dest={selectedDestination} 
+              onClose={() => setSelectedDestination(null)} 
+            />
+          )}
+        </AnimatePresence>
+      </div>
+    </HelpCenterLayout>
   );
 };
 

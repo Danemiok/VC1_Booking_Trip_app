@@ -1,11 +1,16 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Compass, Send } from 'lucide-react';
+import { SupportModal } from '../common/SupportModal';
 
 interface FooterProps {
   onLoginClick: () => void;
   onHomeClick: () => void;
   onTripPlannerClick: () => void;
   onBookingsClick: () => void;
+  onHotelsClick: () => void;
+  onRentalsClick: () => void;
+  onActivitiesClick: () => void;
+  onTourGuidesClick: () => void;
   user: { name: string } | null;
 }
 
@@ -14,8 +19,23 @@ export const Footer: React.FC<FooterProps> = ({
   onHomeClick,
   onTripPlannerClick,
   onBookingsClick,
+  onHotelsClick,
+  onRentalsClick,
+  onActivitiesClick,
+  onTourGuidesClick,
   user
 }) => {
+  const [isSupportModalOpen, setIsSupportModalOpen] = useState(false);
+  const [supportContentType, setSupportContentType] = useState<'help-center' | 'terms' | 'privacy' | 'refund'>('help-center');
+
+  const handleSupportClick = (type: 'help-center' | 'terms' | 'privacy' | 'refund') => {
+    setSupportContentType(type);
+    setIsSupportModalOpen(true);
+  };
+
+  const closeSupportModal = () => {
+    setIsSupportModalOpen(false);
+  };
   return (
     <footer className="bg-white dark:bg-slate-900 border-t border-slate-100 dark:border-slate-800 pt-20 pb-10 px-4 sm:px-6 lg:px-8">
       <div className="max-w-7xl mx-auto">
@@ -35,18 +55,76 @@ export const Footer: React.FC<FooterProps> = ({
           <div>
             <h4 className="font-bold text-slate-900 dark:text-white mb-6">Services</h4>
             <ul className="space-y-4">
-              {["Hotels & Villas", "Transport Booking", "Local Activities", "Tour Guides"].map((item, i) => (
-                <li key={i}><a href="#" className="text-sm text-slate-500 dark:text-slate-400 hover:text-blue-600 dark:hover:text-blue-400 transition-colors">{item}</a></li>
-              ))}
+              <li>
+                <button 
+                  onClick={onHotelsClick}
+                  className="text-sm text-slate-500 dark:text-slate-400 hover:text-blue-600 dark:hover:text-blue-400 transition-colors text-left w-full"
+                >
+                  Hotels & Villas
+                </button>
+              </li>
+              <li>
+                <button 
+                  onClick={onRentalsClick}
+                  className="text-sm text-slate-500 dark:text-slate-400 hover:text-blue-600 dark:hover:text-blue-400 transition-colors text-left w-full"
+                >
+                  Transport Booking
+                </button>
+              </li>
+              <li>
+                <button 
+                  onClick={onActivitiesClick}
+                  className="text-sm text-slate-500 dark:text-slate-400 hover:text-blue-600 dark:hover:text-blue-400 transition-colors text-left w-full"
+                >
+                  Local Activities
+                </button>
+              </li>
+              <li>
+                <button 
+                  onClick={onTourGuidesClick}
+                  className="text-sm text-slate-500 dark:text-slate-400 hover:text-blue-600 dark:hover:text-blue-400 transition-colors text-left w-full"
+                >
+                  Tour Guides
+                </button>
+              </li>
             </ul>
           </div>
 
           <div>
             <h4 className="font-bold text-slate-900 dark:text-white mb-6">Support</h4>
             <ul className="space-y-4">
-              {["Help Center", "Terms of Service", "Privacy Policy", "Refund Policy"].map((item, i) => (
-                <li key={i}><a href="#" className="text-sm text-slate-500 dark:text-slate-400 hover:text-blue-600 dark:hover:text-blue-400 transition-colors">{item}</a></li>
-              ))}
+              <li>
+                <button 
+                  onClick={() => handleSupportClick('help-center')}
+                  className="text-sm text-slate-500 dark:text-slate-400 hover:text-blue-600 dark:hover:text-blue-400 transition-colors text-left w-full"
+                >
+                  Help Center
+                </button>
+              </li>
+              <li>
+                <button 
+                  onClick={() => handleSupportClick('terms')}
+                  className="text-sm text-slate-500 dark:text-slate-400 hover:text-blue-600 dark:hover:text-blue-400 transition-colors text-left w-full"
+                >
+                  Terms of Service
+                </button>
+              </li>
+              <li>
+                <button 
+                  onClick={() => handleSupportClick('privacy')}
+                  className="text-sm text-slate-500 dark:text-slate-400 hover:text-blue-600 dark:hover:text-blue-400 transition-colors text-left w-full"
+                >
+                  Privacy Policy
+                </button>
+              </li>
+              <li>
+                <button 
+                  onClick={() => handleSupportClick('refund')}
+                  className="text-sm text-slate-500 dark:text-slate-400 hover:text-blue-600 dark:hover:text-blue-400 transition-colors text-left w-full"
+                >
+                  Refund Policy
+                </button>
+              </li>
             </ul>
           </div>
 
@@ -110,6 +188,12 @@ export const Footer: React.FC<FooterProps> = ({
           </div>
         </div>
       </div>
+      
+      <SupportModal
+        isOpen={isSupportModalOpen}
+        onClose={closeSupportModal}
+        contentType={supportContentType}
+      />
     </footer>
   );
 };

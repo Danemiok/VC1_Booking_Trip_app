@@ -52,6 +52,7 @@ export const BookingHistory: React.FC<BookingHistoryProps> = ({
 
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [isCopied, setIsCopied] = useState(false);
+  const [supportModal, setSupportModal] = useState<null | 'help' | 'terms' | 'privacy' | 'refund'>(null);
   const [editForm, setEditForm] = useState({
     title: tripData.title,
     dates: tripData.dates,
@@ -229,6 +230,69 @@ Booked via Cambodia Travel`;
       console.error('Error sharing:', err);
     }
   };
+
+  const supportContent = {
+    help: {
+      title: 'Help Center',
+      subtitle: 'We are here to make your trip smooth and stress-free.',
+      intro:
+        'Welcome to our Help Center! You can contact us via email or live chat. Here you’ll find answers to the most common questions and tips to get the best experience.',
+      details: [
+        'Company: Cambodia Travel (local-first travel platform)',
+        'Email: support@cambodiatravel.com',
+        'Live chat: 24/7 in-app concierge',
+        'Typical response time: under 15 minutes'
+      ],
+      faqsTitle: 'Common FAQs',
+      faqs: [
+        'How do I change my hotel or transport booking?',
+        'Can I add or remove guests after booking?',
+        'Where can I download my receipt?',
+        'How do refunds work if plans change?'
+      ],
+      tipsTitle: 'Helpful tips',
+      tips: [
+        'Double-check dates and guest counts before paying.',
+        'Download your receipt for quick hotel check-in.',
+        'Share your itinerary with fellow travelers.'
+      ]
+    },
+    terms: {
+      title: 'Terms of Service',
+      subtitle: 'A quick summary of the rules that keep everyone safe.',
+      intro:
+        'By booking with us, you agree to use the service responsibly and provide accurate information. These terms protect both travelers and partners.',
+      highlights: [
+        'Provide accurate traveler details and payment information.',
+        'No resale or unauthorized commercial use of bookings.',
+        'Respect property rules and local regulations.',
+        'Changes and cancellations follow the stated policy for each booking.'
+      ]
+    },
+    privacy: {
+      title: 'Privacy Policy',
+      subtitle: 'Clear, simple information about how we handle your data.',
+      intro:
+        'We collect only the data needed to manage bookings, provide support, and improve your experience. We never sell your personal information.',
+      controlsTitle: 'Your controls',
+      controls: [
+        'Request a copy of your data.',
+        'Update communication preferences.',
+        'Ask for account deletion or anonymization.'
+      ]
+    },
+    refund: {
+      title: 'Refund Policy',
+      subtitle: 'Refund eligibility and timelines at a glance.',
+      intro:
+        'Refunds depend on the cancellation window and the provider policy. We will always show the refundable amount before you confirm a cancellation.',
+      details: [
+        'Eligibility: within the provider’s cancellation window.',
+        'Timeline: 5–10 business days after approval.',
+        'Process: submit a request and we handle the provider follow-up.'
+      ]
+    }
+  } as const;
 
   return (
     <div className="min-h-screen bg-slate-50 dark:bg-slate-950 pt-24 pb-20 px-4 sm:px-6 lg:px-8">
@@ -620,6 +684,73 @@ Booked via Cambodia Travel`;
           </div>
         </div>
 
+        {/* Services & Support */}
+        <section className="mt-16">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+            <div className="bg-white dark:bg-slate-900 rounded-[28px] p-8 border border-slate-100 dark:border-slate-800 shadow-sm">
+              <h3 className="text-xl font-bold text-slate-900 dark:text-white mb-6">Services</h3>
+              <div className="space-y-4">
+                <button 
+                  onClick={onHotelClick}
+                  className="w-full flex items-center justify-between px-4 py-3 rounded-xl bg-slate-50 dark:bg-slate-800/60 text-slate-900 dark:text-white font-semibold hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
+                >
+                  <span>Hotels & Villas</span>
+                  <ChevronRight className="w-4 h-4 text-slate-400" />
+                </button>
+                <button 
+                  onClick={onRentalClick}
+                  className="w-full flex items-center justify-between px-4 py-3 rounded-xl bg-slate-50 dark:bg-slate-800/60 text-slate-900 dark:text-white font-semibold hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
+                >
+                  <span>Transport Booking</span>
+                  <ChevronRight className="w-4 h-4 text-slate-400" />
+                </button>
+                <div className="w-full flex items-center justify-between px-4 py-3 rounded-xl bg-slate-50/60 dark:bg-slate-800/30 text-slate-400 font-semibold">
+                  <span>Local Activities</span>
+                  <span className="text-[10px] uppercase tracking-widest">Coming soon</span>
+                </div>
+                <div className="w-full flex items-center justify-between px-4 py-3 rounded-xl bg-slate-50/60 dark:bg-slate-800/30 text-slate-400 font-semibold">
+                  <span>Tour Guides</span>
+                  <span className="text-[10px] uppercase tracking-widest">Coming soon</span>
+                </div>
+              </div>
+            </div>
+
+            <div className="bg-white dark:bg-slate-900 rounded-[28px] p-8 border border-slate-100 dark:border-slate-800 shadow-sm">
+              <h3 className="text-xl font-bold text-slate-900 dark:text-white mb-6">Support</h3>
+              <div className="space-y-4">
+                <button 
+                  onClick={() => setSupportModal('help')}
+                  className="w-full flex items-center justify-between px-4 py-3 rounded-xl bg-slate-50 dark:bg-slate-800/60 text-slate-900 dark:text-white font-semibold hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
+                >
+                  <span>Help Center</span>
+                  <ChevronRight className="w-4 h-4 text-slate-400" />
+                </button>
+                <button 
+                  onClick={() => setSupportModal('terms')}
+                  className="w-full flex items-center justify-between px-4 py-3 rounded-xl bg-slate-50 dark:bg-slate-800/60 text-slate-900 dark:text-white font-semibold hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
+                >
+                  <span>Terms of Service</span>
+                  <ChevronRight className="w-4 h-4 text-slate-400" />
+                </button>
+                <button 
+                  onClick={() => setSupportModal('privacy')}
+                  className="w-full flex items-center justify-between px-4 py-3 rounded-xl bg-slate-50 dark:bg-slate-800/60 text-slate-900 dark:text-white font-semibold hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
+                >
+                  <span>Privacy Policy</span>
+                  <ChevronRight className="w-4 h-4 text-slate-400" />
+                </button>
+                <button 
+                  onClick={() => setSupportModal('refund')}
+                  className="w-full flex items-center justify-between px-4 py-3 rounded-xl bg-slate-50 dark:bg-slate-800/60 text-slate-900 dark:text-white font-semibold hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
+                >
+                  <span>Refund Policy</span>
+                  <ChevronRight className="w-4 h-4 text-slate-400" />
+                </button>
+              </div>
+            </div>
+          </div>
+        </section>
+
       </div>
 
       {/* Edit Modal */}
@@ -737,6 +868,163 @@ Booked via Cambodia Travel`;
                     <Save className="w-5 h-5" /> Save Changes
                   </button>
                 </div>
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
+
+      {/* Support Modal */}
+      <AnimatePresence>
+        {supportModal && (
+          <div className="fixed inset-0 z-[110] flex items-center justify-center p-4">
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={() => setSupportModal(null)}
+              className="absolute inset-0 bg-slate-900/60 backdrop-blur-sm"
+            />
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95, y: 20 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.95, y: 20 }}
+              className="relative w-full max-w-2xl bg-white dark:bg-slate-900 rounded-[32px] shadow-2xl overflow-hidden"
+            >
+              <div className="p-8">
+                <div className="flex items-start justify-between mb-6">
+                  <div>
+                    <h3 className="text-2xl font-bold text-slate-900 dark:text-white">
+                      {supportContent[supportModal].title}
+                    </h3>
+                    <p className="text-sm text-slate-400 mt-1">
+                      {supportContent[supportModal].subtitle}
+                    </p>
+                  </div>
+                  <button 
+                    onClick={() => setSupportModal(null)}
+                    className="p-2 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-full transition-colors"
+                  >
+                    <X className="w-6 h-6 text-slate-400" />
+                  </button>
+                </div>
+
+                <p className="text-slate-600 dark:text-slate-300 leading-relaxed">
+                  {supportContent[supportModal].intro}
+                </p>
+
+                {supportModal === 'help' && (
+                  <div className="mt-6 space-y-4">
+                    <div className="bg-slate-50 dark:bg-slate-800/50 rounded-2xl p-5">
+                      <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-3">Contact options</p>
+                      <ul className="space-y-2 text-sm text-slate-600 dark:text-slate-300">
+                        {supportContent.help.details.map((item) => (
+                          <li key={item} className="flex items-center gap-2">
+                            <span className="w-1.5 h-1.5 rounded-full bg-blue-500" />
+                            <span>{item}</span>
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                    <div className="bg-slate-50 dark:bg-slate-800/50 rounded-2xl p-5">
+                      <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-3">
+                        {supportContent.help.faqsTitle}
+                      </p>
+                      <ul className="space-y-2 text-sm text-slate-600 dark:text-slate-300">
+                        {supportContent.help.faqs.map((item) => (
+                          <li key={item} className="flex items-center gap-2">
+                            <span className="w-1.5 h-1.5 rounded-full bg-slate-400" />
+                            <span>{item}</span>
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                    <div className="bg-slate-50 dark:bg-slate-800/50 rounded-2xl p-5">
+                      <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-3">
+                        {supportContent.help.tipsTitle}
+                      </p>
+                      <ul className="space-y-2 text-sm text-slate-600 dark:text-slate-300">
+                        {supportContent.help.tips.map((item) => (
+                          <li key={item} className="flex items-center gap-2">
+                            <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
+                            <span>{item}</span>
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  </div>
+                )}
+
+                {supportModal === 'terms' && (
+                  <div className="mt-6 space-y-4">
+                    <div className="bg-slate-50 dark:bg-slate-800/50 rounded-2xl p-5">
+                      <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-3">Important rules</p>
+                      <ul className="space-y-2 text-sm text-slate-600 dark:text-slate-300">
+                        {supportContent.terms.highlights.map((item) => (
+                          <li key={item} className="flex items-center gap-2">
+                            <span className="w-1.5 h-1.5 rounded-full bg-orange-500" />
+                            <span>{item}</span>
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                    <button
+                      onClick={() => window.open('/terms', '_blank')}
+                      className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-slate-900 text-white font-semibold hover:opacity-90 transition-opacity"
+                    >
+                      <ExternalLink className="w-4 h-4" />
+                      Read full Terms
+                    </button>
+                  </div>
+                )}
+
+                {supportModal === 'privacy' && (
+                  <div className="mt-6 space-y-4">
+                    <div className="bg-slate-50 dark:bg-slate-800/50 rounded-2xl p-5">
+                      <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-3">Data usage</p>
+                      <p className="text-sm text-slate-600 dark:text-slate-300">
+                        We use your booking details and contact info to confirm reservations, send updates, and provide support.
+                        Payment details are securely processed by trusted providers.
+                      </p>
+                    </div>
+                    <div className="bg-slate-50 dark:bg-slate-800/50 rounded-2xl p-5">
+                      <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-3">
+                        {supportContent.privacy.controlsTitle}
+                      </p>
+                      <ul className="space-y-2 text-sm text-slate-600 dark:text-slate-300">
+                        {supportContent.privacy.controls.map((item) => (
+                          <li key={item} className="flex items-center gap-2">
+                            <span className="w-1.5 h-1.5 rounded-full bg-blue-500" />
+                            <span>{item}</span>
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  </div>
+                )}
+
+                {supportModal === 'refund' && (
+                  <div className="mt-6 space-y-4">
+                    <div className="bg-slate-50 dark:bg-slate-800/50 rounded-2xl p-5">
+                      <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-3">Refund details</p>
+                      <ul className="space-y-2 text-sm text-slate-600 dark:text-slate-300">
+                        {supportContent.refund.details.map((item) => (
+                          <li key={item} className="flex items-center gap-2">
+                            <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
+                            <span>{item}</span>
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                    <button
+                      onClick={() => setSupportModal('help')}
+                      className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-blue-600 text-white font-semibold hover:bg-blue-700 transition-colors"
+                    >
+                      <MessageSquare className="w-4 h-4" />
+                      Contact Support
+                    </button>
+                  </div>
+                )}
               </div>
             </motion.div>
           </div>

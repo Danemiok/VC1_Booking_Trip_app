@@ -592,7 +592,7 @@ const RecommendedForYou = ({ onSelect }: { onSelect: (item: any) => void }) => {
   ];
 
   return (
-    <section className="py-20 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto">
+    <section id="recommended-for-you" className="py-20 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto">
       <div className="flex flex-col md:flex-row md:items-end justify-between mb-12 gap-4">
         <div>
           <span className="text-[10px] font-bold text-blue-600 dark:text-blue-400 uppercase tracking-[0.3em] mb-3 block">Curated Selection</span>
