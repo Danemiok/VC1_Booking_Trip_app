@@ -54,7 +54,6 @@ export const Login: React.FC<LoginProps> = ({ onSwitchToRegister, onBack, onSucc
       const result = await login({ email, password });
       onSuccess(result.nextView);
     } catch (error: any) {
-<<<<<<< HEAD
       // Handle backend validation errors
       if (error.errors) {
         // Set field-specific errors from backend
@@ -76,11 +75,6 @@ export const Login: React.FC<LoginProps> = ({ onSwitchToRegister, onBack, onSucc
           setFieldErrors(prev => ({ ...prev, password: errorMsg }));
         }
       }
-=======
-      console.error('âŒ Login error:', error);
-      setPassword('');
-      setErrorMessage(error?.data?.message ?? 'Login failed');
->>>>>>> rika-feature-dashboard
     } finally {
       setIsSubmitting(false);
     }
@@ -95,30 +89,18 @@ export const Login: React.FC<LoginProps> = ({ onSwitchToRegister, onBack, onSucc
       onBack={onBack}
       onClose={onClose}
     >
-<<<<<<< HEAD
       <form className="space-y-3 max-w-sm mx-auto" onSubmit={handleSubmit}>
         <div className="space-y-1">
           <label className="ml-1 text-xs font-medium text-slate-600 dark:text-slate-300">Email Address</label>
-=======
-      <form className="space-y-4" onSubmit={handleSubmit} autoComplete="off">
-        <div className="space-y-1.5">
-          <label className="ml-1 text-sm font-medium text-slate-700">Email Address</label>
->>>>>>> rika-feature-dashboard
           <div className="relative group">
             <input
               type="email"
               value={email}
-<<<<<<< HEAD
               onChange={(e) => {
                 setEmail(e.target.value);
                 setFieldErrors(prev => ({ ...prev, email: undefined }));
               }}
               placeholder="Enter your email"
-=======
-              onChange={(e) => setEmail(e.target.value)}
-              placeholder="name@example.com"
-              autoComplete="username"
->>>>>>> rika-feature-dashboard
               required
               className={`w-full rounded-lg border py-2.5 pl-3 pr-10 text-xs outline-none transition-all placeholder:text-slate-400 ${
                 fieldErrors.email 
@@ -143,17 +125,11 @@ export const Login: React.FC<LoginProps> = ({ onSwitchToRegister, onBack, onSucc
             <input
               type={showPassword ? 'text' : 'password'}
               value={password}
-<<<<<<< HEAD
               onChange={(e) => {
                 setPassword(e.target.value);
                 setFieldErrors(prev => ({ ...prev, password: undefined }));
               }}
               placeholder="Enter your password"
-=======
-              onChange={(e) => setPassword(e.target.value)}
-              placeholder="********"
-              autoComplete="current-password"
->>>>>>> rika-feature-dashboard
               required
               className={`w-full rounded-lg border py-2.5 pl-3 pr-10 text-xs outline-none transition-all placeholder:text-slate-400 ${
                 fieldErrors.password 
@@ -194,7 +170,3 @@ export const Login: React.FC<LoginProps> = ({ onSwitchToRegister, onBack, onSucc
     </AuthLayout>
   );
 };
-<<<<<<< HEAD
-=======
-
->>>>>>> rika-feature-dashboard

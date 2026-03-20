@@ -142,8 +142,6 @@ const OwnerShellInner: React.FC<{ onLogout: () => void }> = ({ onLogout }) => {
   const { isDarkMode, toggleDarkMode } = useTheme();
   const location = useLocation();
   const navigate = useNavigate();
-<<<<<<< HEAD
-=======
   const {
     notifications,
     unreadCount,
@@ -151,7 +149,6 @@ const OwnerShellInner: React.FC<{ onLogout: () => void }> = ({ onLogout }) => {
     activeNotification,
     closeNotification,
   } = useOwnerNotifications();
->>>>>>> rika-feature-dashboard
 
   const renderOwnerPage = () => {
     const path = location.pathname;
@@ -208,17 +205,11 @@ const OwnerShellInner: React.FC<{ onLogout: () => void }> = ({ onLogout }) => {
           title={title}
           isDark={isDarkMode}
           toggleTheme={toggleDarkMode}
-<<<<<<< HEAD
-          onNotificationClick={() => {}}
-          onProfileClick={() => navigate('/profile')}
-          onSettingsClick={() => navigate('/settings')}
-=======
           notifications={headerNotifications}
           unreadCount={unreadCount}
           onMarkAllNotificationsRead={markAllRead}
           onViewAllNotifications={() => navigate('/owner#recent-activities')}
           onProfileClick={() => {}}
->>>>>>> rika-feature-dashboard
           onLogoutClick={onLogout}
           user={user}
         />

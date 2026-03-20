@@ -15,11 +15,8 @@ import {
   Users, 
   CheckCircle2 
 } from 'lucide-react';
-<<<<<<< HEAD
-import { getPublicDestinations } from '../../services/destinationService';
-=======
 import { getHotels, type Hotel } from '../../data/hotels';
->>>>>>> channy/customer-destination
+import { getPublicDestinations } from '../../services/destinationService';
 
 type DestinationStatus = 'active' | 'draft';
 
@@ -35,71 +32,12 @@ interface DestinationItem {
   status: DestinationStatus;
 }
 
-<<<<<<< HEAD
-=======
-const DEFAULT_IMAGE = 'https://picsum.photos/seed/public-destination/800/600';
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL ?? 'http://127.0.0.1:8000/api';
-const API_ORIGIN = /^https?:\/\//i.test(API_BASE_URL)
-  ? API_BASE_URL.replace(/\/api\/?$/, '')
-  : '';
-const ASSET_ORIGIN =
-  import.meta.env.VITE_ASSET_ORIGIN ||
-  API_ORIGIN ||
-  (typeof window !== 'undefined' ? window.location.origin : '');
-
-const toNumber = (value: number | string | null | undefined, fallback = 0) => {
-  const parsed = typeof value === 'number' ? value : parseFloat(String(value ?? ''));
-  return Number.isFinite(parsed) ? parsed : fallback;
-};
-
->>>>>>> channy/customer-destination
 const getErrorMessage = (error: any, fallback: string) => {
   if (typeof error?.data?.message === 'string' && error.data.message.trim()) return error.data.message;
   if (typeof error?.message === 'string' && error.message.trim()) return error.message;
   return fallback;
 };
 
-<<<<<<< HEAD
-=======
-const resolveImageUrl = (value?: string | null) => {
-  if (!value) return '';
-  const cleaned = value.replace(/\\/g, '/');
-  const normalizedScheme = cleaned.replace(/^https?:\/(?!\/)/i, (match) => `${match}/`);
-  if (normalizedScheme.startsWith('data:')) return normalizedScheme;
-  if (/^https?:\/\//i.test(normalizedScheme)) return normalizedScheme;
-
-  const normalized = normalizedScheme.startsWith('/') ? normalizedScheme : `/${normalizedScheme}`;
-  if (!ASSET_ORIGIN) return normalized;
-
-  if (normalized.startsWith('/storage/')) return `${ASSET_ORIGIN}${normalized}`;
-  if (normalized.startsWith('/images/')) return `${ASSET_ORIGIN}/storage${normalized}`;
-  if (normalized.startsWith('/destinations/')) return `${ASSET_ORIGIN}/storage${normalized}`;
-
-  return `${ASSET_ORIGIN}${normalized}`;
-};
-
-const normalizeDestination = (destination: DestinationApiRecord): DestinationItem => {
-  const imageList = Array.isArray(destination.images)
-    ? destination.images.filter((image): image is string => typeof image === 'string' && image.trim().length > 0)
-    : [];
-  const resolvedList = imageList.map(resolveImageUrl).filter(Boolean);
-
-  return {
-    id: String(destination.id),
-    name: destination.name?.trim() || 'Untitled destination',
-    type: destination.type?.trim() || 'Boutique Hotel',
-    description: destination.description?.trim() || 'Discover this destination and start planning your stay.',
-    location: destination.location?.trim() || 'Unknown location',
-    price: toNumber(destination.price, 0),
-    image:
-      resolveImageUrl((typeof destination.image === 'string' && destination.image.trim()) || resolvedList[0] || '') ||
-      DEFAULT_IMAGE,
-    rating: toNumber(destination.rating, 0),
-    status: destination.status === 'active' ? 'active' : 'draft',
-  };
-};
-
->>>>>>> channy/customer-destination
 export default function Destinations() {
   const [searchTerm, setSearchTerm] = React.useState('');
   const [destinations, setDestinations] = React.useState<DestinationItem[]>([]);
@@ -338,13 +276,8 @@ export const Hotels: React.FC<HotelsPageProps> = ({ tripData, onBack, onSelectHo
   const [selectedRoomByHotel, setSelectedRoomByHotel] = useState<Record<number, string>>({});
   const [guestsByHotel, setGuestsByHotel] = useState<Record<number, number>>({});
   const [currentPage, setCurrentPage] = useState(1);
-<<<<<<< HEAD
-  const [hotels, setHotels] = useState<any[]>([]);
-  const [isLoadingHotels, setIsLoadingHotels] = useState(true);
-=======
   const [hotels, setHotels] = useState<Hotel[]>([]);
   const [hotelsLoading, setHotelsLoading] = useState(true);
->>>>>>> channy/customer-destination
   const [hotelsError, setHotelsError] = useState('');
 
   const language = (() => {
@@ -428,26 +361,6 @@ export const Hotels: React.FC<HotelsPageProps> = ({ tripData, onBack, onSelectHo
   };
   
   useEffect(() => {
-<<<<<<< HEAD
-    const loadHotels = async () => {
-      setIsLoadingHotels(true);
-      setHotelsError('');
-
-      try {
-        const data = await getPublicDestinations();
-        setHotels(data);
-      } catch (error) {
-        setHotelsError(getErrorMessage(error, 'Failed to load destinations.'));
-        setHotels([]);
-      } finally {
-        setIsLoadingHotels(false);
-      }
-    };
-
-    loadHotels();
-  }, []);
-
-=======
     let cancelled = false;
     setHotelsLoading(true);
     setHotelsError('');
@@ -467,7 +380,6 @@ export const Hotels: React.FC<HotelsPageProps> = ({ tripData, onBack, onSelectHo
       cancelled = true;
     };
   }, []);
->>>>>>> channy/customer-destination
   const defaultGuests = parseGuestCount(tripData?.guests);
   const tripNights = getTripNights(tripData);
 
@@ -740,19 +652,19 @@ export const Hotels: React.FC<HotelsPageProps> = ({ tripData, onBack, onSelectHo
               </div>
             </div>
 
-            {isLoadingHotels && (
+            {hotelsLoading && (
               <div className="rounded-2xl border border-slate-200 bg-white px-6 py-10 text-center text-slate-500 shadow-sm dark:border-slate-800 dark:bg-slate-900 dark:text-slate-400">
                 Loading destinations...
               </div>
             )}
 
-            {hotelsError && !isLoadingHotels && (
+            {hotelsError && !hotelsLoading && (
               <div className="rounded-2xl border border-red-200 bg-red-50 px-6 py-4 text-sm text-red-700 dark:border-red-900/30 dark:bg-red-900/20 dark:text-red-300">
                 {hotelsError}
               </div>
             )}
 
-            {!isLoadingHotels && !hotelsError && (
+            {!hotelsLoading && !hotelsError && (
               <motion.div
               key={`hotel-page-${currentPage}`}
               initial={{ opacity: 0, y: 10 }}

@@ -1,123 +1,34 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { socketService } from '../../services/socketService';
+import { GroupPlanningAccessPanel } from './group-planning/GroupPlanningAccessPanel';
+import { GroupPlanningModal } from './group-planning/GroupPlanningModal';
+import {
+  createId,
+  findGroupByCode,
+  loadGroupsFromStorage,
+  normalizeAccessCode,
+  upsertGroupInStorage,
+} from './group-planning/storage';
+import type { ItineraryItem, Member, Message, Poll, StoredGroup } from './group-planning/types';
 import { 
   Users, 
   Send, 
-  Copy, 
-  CheckCircle2, 
-  MessageSquare, 
   Plus, 
-  X, 
   UserPlus,
   MoreVertical,
   Smile,
   Paperclip,
-  Image as ImageIcon,
-  ChevronLeft,
   Calendar,
   BarChart3,
   MapPin,
-  Clock,
   ThumbsUp,
   Mic,
-  Phone,
   Search,
-  Bell,
-  Settings,
-  Download,
-  Map as MapIcon,
   LayoutDashboard,
-  Compass,
-  Briefcase,
   ArrowLeft,
-  Share2,
-  TrendingUp,
-  Vote,
-  Layout,
-  MessageCircle,
-  ArrowRight,
-  Heart,
-  Star
+  Heart
 } from 'lucide-react';
-
-interface Message {
-  id: string;
-  sender_name: string;
-  sender_email: string;
-  text: string;
-  created_at: string;
-  type?: 'system' | 'user';
-  attachment?: {
-    name: string;
-    mimeType: string;
-    dataUrl?: string;
-  };
-}
-
-interface Member {
-  user_email: string;
-  user_name: string;
-  role: 'Leader' | 'Member';
-}
-
-interface Poll {
-  id: string;
-  question: string;
-  options: { id: string; text: string; votes: number }[];
-}
-
-interface ItineraryItem {
-  id: string;
-  time: string;
-  activity: string;
-  location: string;
-  votes: number;
-}
-
-interface StoredGroup {
-  id: string;
-  accessCode: string;
-  name: string;
-  members: Member[];
-  messages: Message[];
-  polls: Poll[];
-  itinerary: ItineraryItem[];
-}
-
-const GROUP_STORE_KEY = 'group_planning_groups_v1';
-
-const normalizeAccessCode = (code: string): string => code.replace(/\s+/g, '').trim().toUpperCase();
-
-const loadGroupsFromStorage = (): Record<string, StoredGroup> => {
-  try {
-    const raw = localStorage.getItem(GROUP_STORE_KEY);
-    if (!raw) return {};
-    const parsed = JSON.parse(raw);
-    return parsed && typeof parsed === 'object' ? parsed : {};
-  } catch {
-    return {};
-  }
-};
-
-const saveGroupsToStorage = (groups: Record<string, StoredGroup>) => {
-  localStorage.setItem(GROUP_STORE_KEY, JSON.stringify(groups));
-};
-
-const upsertGroupInStorage = (group: StoredGroup) => {
-  const groups = loadGroupsFromStorage();
-  groups[group.id] = group;
-  saveGroupsToStorage(groups);
-};
-
-const findGroupByCode = (code: string): StoredGroup | null => {
-  const groups = loadGroupsFromStorage();
-  const normalized = normalizeAccessCode(code);
-  const match = Object.values(groups).find((g) => g.accessCode.toUpperCase() === normalized);
-  return match ?? null;
-};
-
-const createId = () => `${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 8)}`;
 
 interface GroupPlanningProps {
   onBack: () => void;
@@ -179,38 +90,6 @@ export const GroupPlanning: React.FC<GroupPlanningProps> = ({ onBack, tripTitle 
       setPolls(group.polls);
       setGroupName(group.name);
 
-<<<<<<< HEAD
-    socketService.connect();
-    socketService.emit('join-group', { groupId, email: userEmail });
-
-    const handleNewMessage = (msg: Message) => {
-      setMessages(prev => [...prev, msg]);
-    };
-
-    const handleItineraryUpdated = (items: ItineraryItem[]) => {
-      setItinerary(items);
-    };
-
-    const handlePollCreated = (poll: Poll) => {
-      setPolls(prev => [...prev, poll]);
-    };
-
-    const handlePollUpdated = (poll: Poll) => {
-      setPolls(prev => prev.map(p => (p.id === poll.id ? poll : p)));
-    };
-
-    socketService.on('new-message', handleNewMessage);
-    socketService.on('itinerary-updated', handleItineraryUpdated);
-    socketService.on('poll-created', handlePollCreated);
-    socketService.on('poll-updated', handlePollUpdated);
-
-    return () => {
-      socketService.off('new-message', handleNewMessage);
-      socketService.off('itinerary-updated', handleItineraryUpdated);
-      socketService.off('poll-created', handlePollCreated);
-      socketService.off('poll-updated', handlePollUpdated);
-    };
-=======
       const socket = socketService.connect();
       socket.emit('join-group', { groupId, email: userEmail });
 
@@ -261,7 +140,6 @@ export const GroupPlanning: React.FC<GroupPlanningProps> = ({ onBack, tripTitle 
       setGroupId(null);
       localStorage.removeItem('activeGroupId');
     }
->>>>>>> a216941f3ee0eff0692229471d62d618b84904af
   }, [groupId, userEmail]);
 
   useEffect(() => {
@@ -482,22 +360,6 @@ export const GroupPlanning: React.FC<GroupPlanningProps> = ({ onBack, tripTitle 
 
   const handleSendMessage = (e: React.FormEvent) => {
     e.preventDefault();
-<<<<<<< HEAD
-    if (!newMessage.trim() || !groupId) return;
-    socketService.emit('send-message', {
-      groupId,
-      email: userEmail,
-      text: newMessage
-    });
-    setNewMessage('');
-  };
-
-  const handleVotePoll = (pollId: string, optionId: string) => {
-    socketService.emit('vote-poll', {
-      groupId,
-      email: userEmail,
-      optionId
-=======
     sendMessage();
   };
 
@@ -523,7 +385,6 @@ export const GroupPlanning: React.FC<GroupPlanningProps> = ({ onBack, tripTitle 
       const updatedPoll = next.find((p) => p.id === pollId);
       if (updatedPoll) socketService.getSocket()?.emit('poll-updated', updatedPoll);
       return next;
->>>>>>> a216941f3ee0eff0692229471d62d618b84904af
     });
   };
 
@@ -540,9 +401,6 @@ export const GroupPlanning: React.FC<GroupPlanningProps> = ({ onBack, tripTitle 
 
   const handleAddActivity = () => {
     if (!newActivity.time || !newActivity.activity || !groupId) return;
-<<<<<<< HEAD
-    socketService.emit('update-itinerary', {
-=======
     const item: ItineraryItem = {
       id: createId(),
       time: newActivity.time,
@@ -562,7 +420,6 @@ export const GroupPlanning: React.FC<GroupPlanningProps> = ({ onBack, tripTitle 
       return next;
     });
     socketService.getSocket()?.emit('update-itinerary', {
->>>>>>> a216941f3ee0eff0692229471d62d618b84904af
       groupId,
       email: userEmail,
       item: newActivity
@@ -573,14 +430,8 @@ export const GroupPlanning: React.FC<GroupPlanningProps> = ({ onBack, tripTitle 
 
   const handleCreatePoll = () => {
     if (!newPoll.question || !groupId) return;
-<<<<<<< HEAD
-    socketService.emit('create-poll', {
-      groupId,
-      email: userEmail,
-=======
     const poll: Poll = {
       id: createId(),
->>>>>>> a216941f3ee0eff0692229471d62d618b84904af
       question: newPoll.question,
       options: newPoll.options
         .filter((o) => o.trim())
@@ -611,47 +462,13 @@ export const GroupPlanning: React.FC<GroupPlanningProps> = ({ onBack, tripTitle 
   return (
     <div className="min-h-screen bg-slate-50 dark:bg-slate-950 text-slate-600 dark:text-slate-400 font-sans selection:bg-blue-500/30 pt-20">
       {!groupId ? (
-        <div className="max-w-md mx-auto py-20 px-6">
-          <div className="bg-white dark:bg-slate-900 p-10 rounded-[3rem] shadow-2xl border border-slate-100 dark:border-white/5">
-            <h2 className="text-3xl font-bold text-slate-900 dark:text-white mb-8 text-center">Secure Planning</h2>
-            
-            <div className="space-y-8">
-              <button 
-                onClick={handleCreateGroup}
-                className="w-full py-5 bg-slate-900 dark:bg-white text-white dark:text-slate-900 rounded-2xl font-bold hover:scale-105 transition-transform shadow-xl flex items-center justify-center gap-3"
-              >
-                <Plus className="w-5 h-5" /> Create New Group
-              </button>
-
-              <div className="relative flex items-center py-4">
-                <div className="flex-1 h-px bg-slate-100 dark:bg-white/5" />
-                <span className="px-4 text-[10px] font-bold text-slate-400 uppercase tracking-widest">OR</span>
-                <div className="flex-1 h-px bg-slate-100 dark:bg-white/5" />
-              </div>
-
-              <form onSubmit={handleJoinGroup} className="space-y-4">
-                <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest block">Access Code</label>
-                <input 
-                  type="text" 
-                  value={accessCode}
-                  onChange={(e) => setAccessCode(normalizeAccessCode(e.target.value))}
-                  placeholder="ENTER CODE"
-                  className="w-full px-6 py-4 bg-slate-50 dark:bg-white/5 border border-slate-100 dark:border-white/5 rounded-2xl text-center font-mono text-xl tracking-[0.5em] outline-none focus:ring-2 focus:ring-blue-500 transition-all"
-                />
-                <button 
-                  type="submit"
-                  className="w-full py-5 bg-blue-600 text-white rounded-2xl font-bold hover:scale-105 transition-transform shadow-xl"
-                >
-                  Join Group
-                </button>
-              </form>
-
-              {error && (
-                <p className="text-center text-red-500 text-xs font-bold">{error}</p>
-              )}
-            </div>
-          </div>
-        </div>
+        <GroupPlanningAccessPanel
+          accessCode={accessCode}
+          error={error}
+          onAccessCodeChange={setAccessCode}
+          onCreateGroup={handleCreateGroup}
+          onJoinGroup={handleJoinGroup}
+        />
       ) : (
         <>
           {/* Top Header Section */}
@@ -1089,228 +906,30 @@ export const GroupPlanning: React.FC<GroupPlanningProps> = ({ onBack, tripTitle 
     </>
   )}
 
-  {/* Modals */}
-  <AnimatePresence>
-    {(isAddingActivity || isCreatingPoll || isMembersOpen || isAddMemberOpen) && (
-      <motion.div
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        exit={{ opacity: 0 }}
-        className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-950/60 backdrop-blur-sm"
-      >
-        <motion.div
-          initial={{ scale: 0.9, opacity: 0, y: 20 }}
-          animate={{ scale: 1, opacity: 1, y: 0 }}
-          exit={{ scale: 0.9, opacity: 0, y: 20 }}
-          className="bg-white dark:bg-slate-900 w-full max-w-md rounded-[3rem] p-10 shadow-2xl border border-slate-100 dark:border-white/5"
-        >
-          <div className="flex items-center justify-between mb-8">
-            <h3 className="text-2xl font-bold text-slate-900 dark:text-white">
-              {isMembersOpen
-                ? 'Members'
-                : isAddMemberOpen
-                ? 'Add Member'
-                : isAddingActivity
-                ? 'Add Activity'
-                : 'New Poll'}
-            </h3>
-            <button
-              onClick={() => {
-                setIsAddingActivity(false);
-                setIsCreatingPoll(false);
-                setIsMembersOpen(false);
-                setIsAddMemberOpen(false);
-              }}
-              className="p-3 hover:bg-slate-50 dark:hover:bg-white/5 rounded-2xl transition-colors text-slate-400"
-            >
-              <X className="w-6 h-6" />
-            </button>
-          </div>
-
-          {isMembersOpen ? (
-            <div className="space-y-6">
-              <div className="flex items-center justify-between">
-                <button
-                  type="button"
-                  onClick={() => {
-                    setIsMembersOpen(false);
-                    setIsAddMemberOpen(true);
-                  }}
-                  className="inline-flex items-center gap-2 px-5 py-3 rounded-2xl bg-blue-600 text-white text-xs font-bold shadow-lg shadow-blue-600/15"
-                >
-                  <UserPlus className="w-4 h-4" /> Add Member
-                </button>
-                <button
-                  type="button"
-                  onClick={copyToClipboard}
-                  className="inline-flex items-center gap-2 px-5 py-3 rounded-2xl bg-slate-50 dark:bg-white/5 text-slate-600 dark:text-slate-300 text-xs font-bold"
-                >
-                  {isCopied ? (
-                    <CheckCircle2 className="w-4 h-4 text-emerald-500" />
-                  ) : (
-                    <Copy className="w-4 h-4" />
-                  )}
-                  {isCopied ? 'Copied' : 'Copy invite link'}
-                </button>
-              </div>
-
-              <div className="space-y-3 max-h-[340px] overflow-y-auto pr-1">
-                {members.map((m) => (
-                  <div
-                    key={m.user_email}
-                    className="flex items-center justify-between rounded-2xl border border-slate-100 dark:border-white/10 bg-slate-50/60 dark:bg-white/5 px-4 py-3"
-                  >
-                    <div className="flex items-center gap-3">
-                      <div className="w-10 h-10 rounded-2xl bg-slate-200 dark:bg-slate-800 flex items-center justify-center text-xs font-extrabold text-slate-500">
-                        {m.user_name.charAt(0).toUpperCase()}
-                      </div>
-                      <div>
-                        <p className="text-sm font-bold text-slate-900 dark:text-white leading-tight">{m.user_name}</p>
-                        <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">{m.user_email}</p>
-                      </div>
-                    </div>
-                    <span className="text-[10px] font-bold text-blue-600 dark:text-blue-400 uppercase tracking-widest">{m.role}</span>
-                  </div>
-                ))}
-              </div>
-            </div>
-          ) : isAddMemberOpen ? (
-            <div className="space-y-6">
-              <div className="space-y-2">
-                <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest block">Name</label>
-                <input
-                  type="text"
-                  value={newMemberName}
-                  onChange={(e) => setNewMemberName(e.target.value)}
-                  placeholder="Friend name"
-                  className="w-full px-6 py-4 bg-slate-50 dark:bg-white/5 border border-slate-100 dark:border-white/10 rounded-2xl text-sm outline-none focus:ring-2 focus:ring-blue-500 transition-all"
-                />
-              </div>
-              <div className="space-y-2">
-                <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest block">Email</label>
-                <input
-                  type="email"
-                  value={newMemberEmail}
-                  onChange={(e) => setNewMemberEmail(e.target.value)}
-                  placeholder="friend@email.com"
-                  className="w-full px-6 py-4 bg-slate-50 dark:bg-white/5 border border-slate-100 dark:border-white/10 rounded-2xl text-sm outline-none focus:ring-2 focus:ring-blue-500 transition-all"
-                />
-              </div>
-
-              <div className="mt-10 flex gap-4">
-                <button
-                  type="button"
-                  onClick={() => {
-                    setIsAddMemberOpen(false);
-                    setIsMembersOpen(true);
-                  }}
-                  className="flex-1 py-5 bg-slate-50 dark:bg-white/5 text-slate-600 dark:text-slate-300 rounded-2xl text-sm font-bold hover:bg-slate-100 dark:hover:bg-white/10 transition-colors"
-                >
-                  Back
-                </button>
-                <button
-                  type="button"
-                  onClick={addMemberToGroup}
-                  disabled={!newMemberName.trim() || !newMemberEmail.trim()}
-                  className="flex-1 py-5 bg-blue-600 disabled:bg-slate-200 disabled:text-slate-400 dark:disabled:bg-white/10 dark:disabled:text-slate-500 text-white rounded-2xl text-sm font-bold hover:bg-blue-700 transition-colors shadow-xl"
-                >
-                  Add
-                </button>
-              </div>
-            </div>
-          ) : (
-            <div className="space-y-6">
-              <div>
-                <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-3 block">
-                  {isAddingActivity ? 'Activity Name' : 'Question'}
-                </label>
-                <input
-                  type="text"
-                  value={isAddingActivity ? newActivity.activity : newPoll.question}
-                  onChange={(e) =>
-                    isAddingActivity
-                      ? setNewActivity({ ...newActivity, activity: e.target.value })
-                      : setNewPoll({ ...newPoll, question: e.target.value })
-                  }
-                  placeholder={isAddingActivity ? 'e.g. Dinner at Pub Street' : 'e.g. Where should we eat?'}
-                  className="w-full px-6 py-4 bg-slate-50 dark:bg-white/5 border border-slate-100 dark:border-white/5 rounded-2xl text-sm outline-none focus:ring-2 focus:ring-blue-500 transition-all"
-                />
-              </div>
-
-              {isAddingActivity ? (
-                <div className="grid grid-cols-2 gap-6">
-                  <div>
-                    <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-3 block">Time</label>
-                    <input
-                      type="time"
-                      value={newActivity.time}
-                      onChange={(e) => setNewActivity({ ...newActivity, time: e.target.value })}
-                      className="w-full px-6 py-4 bg-slate-50 dark:bg-white/5 border border-slate-100 dark:border-white/5 rounded-2xl text-sm outline-none focus:ring-2 focus:ring-blue-500 transition-all"
-                    />
-                  </div>
-                  <div>
-                    <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-3 block">Location</label>
-                    <input
-                      type="text"
-                      value={newActivity.location}
-                      onChange={(e) => setNewActivity({ ...newActivity, location: e.target.value })}
-                      placeholder="Location"
-                      className="w-full px-6 py-4 bg-slate-50 dark:bg-white/5 border border-slate-100 dark:border-white/5 rounded-2xl text-sm outline-none focus:ring-2 focus:ring-blue-500 transition-all"
-                    />
-                  </div>
-                </div>
-              ) : (
-                <div className="space-y-4">
-                  <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-3 block">Options</label>
-                  {newPoll.options.map((opt, idx) => (
-                    <input
-                      key={idx}
-                      type="text"
-                      value={opt}
-                      onChange={(e) => {
-                        const opts = [...newPoll.options];
-                        opts[idx] = e.target.value;
-                        setNewPoll({ ...newPoll, options: opts });
-                      }}
-                      placeholder={`Option ${idx + 1}`}
-                      className="w-full px-6 py-4 bg-slate-50 dark:bg-white/5 border border-slate-100 dark:border-white/5 rounded-2xl text-sm outline-none focus:ring-2 focus:ring-blue-500 transition-all"
-                    />
-                  ))}
-                  <button
-                    type="button"
-                    onClick={() => setNewPoll({ ...newPoll, options: [...newPoll.options, ''] })}
-                    className="text-xs font-bold text-blue-600 flex items-center gap-2 mt-4"
-                  >
-                    <Plus className="w-4 h-4" /> Add Option
-                  </button>
-                </div>
-              )}
-
-              <div className="mt-10 flex gap-4">
-                <button
-                  type="button"
-                  onClick={() => {
-                    setIsAddingActivity(false);
-                    setIsCreatingPoll(false);
-                  }}
-                  className="flex-1 py-5 bg-slate-50 dark:bg-white/5 text-slate-600 dark:text-slate-400 rounded-2xl text-sm font-bold hover:bg-slate-100 dark:hover:bg-white/10 transition-colors"
-                >
-                  Cancel
-                </button>
-                <button
-                  type="button"
-                  onClick={isAddingActivity ? handleAddActivity : handleCreatePoll}
-                  className="flex-1 py-5 bg-blue-600 text-white rounded-2xl text-sm font-bold hover:bg-blue-700 transition-colors shadow-xl"
-                >
-                  {isAddingActivity ? 'Add Activity' : 'Create Poll'}
-                </button>
-              </div>
-            </div>
-          )}
-        </motion.div>
-      </motion.div>
-    )}
-  </AnimatePresence>
+  <GroupPlanningModal
+    isAddingActivity={isAddingActivity}
+    isCreatingPoll={isCreatingPoll}
+    isMembersOpen={isMembersOpen}
+    isAddMemberOpen={isAddMemberOpen}
+    isCopied={isCopied}
+    members={members}
+    newMemberName={newMemberName}
+    newMemberEmail={newMemberEmail}
+    newActivity={newActivity}
+    newPoll={newPoll}
+    setIsAddingActivity={setIsAddingActivity}
+    setIsCreatingPoll={setIsCreatingPoll}
+    setIsMembersOpen={setIsMembersOpen}
+    setIsAddMemberOpen={setIsAddMemberOpen}
+    setNewMemberName={setNewMemberName}
+    setNewMemberEmail={setNewMemberEmail}
+    setNewActivity={setNewActivity}
+    setNewPoll={setNewPoll}
+    addMemberToGroup={addMemberToGroup}
+    copyToClipboard={copyToClipboard}
+    handleAddActivity={handleAddActivity}
+    handleCreatePoll={handleCreatePoll}
+  />
     </div>
   );
 };
