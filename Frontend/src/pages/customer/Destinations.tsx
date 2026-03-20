@@ -148,10 +148,7 @@ export default function Destinations() {
                 </div>
 
                 <div className="flex items-center justify-between">
-                  <p className="flex items-center gap-1 text-sm text-slate-600 dark:text-slate-300">
-                    <Star size={15} className="text-yellow-500" />
-                    {destination.rating > 0 ? destination.rating.toFixed(1) : 'New listing'}
-                  </p>
+                  <div></div>
                   <p className="text-lg font-bold text-blue-600 dark:text-blue-400">
                     ${destination.price.toFixed(0)}
                     <span className="ml-1 text-xs font-medium text-slate-500 dark:text-slate-400">/ night</span>
@@ -738,16 +735,6 @@ export const Hotels: React.FC<HotelsPageProps> = ({ tripData, onBack, onSelectHo
                     {/* Content Container */}
                     <div className="flex-1 p-10 md:p-14 flex flex-col justify-between">
                       <div>
-                        <div className="flex items-center justify-between mb-6">
-                          <div className="flex items-center gap-3">
-                            <div className="text-left">
-                              <p className="text-[10px] font-bold text-slate-900 dark:text-white uppercase tracking-widest">{t('exceptional_stay')}</p>
-                              <p className="text-[9px] text-slate-400 font-medium uppercase tracking-widest">
-                                {typeof hotel.rating === 'number' ? `${hotel.rating.toFixed(1)} ★` : ''}
-                              </p>
-                            </div>
-                          </div>
-                        </div>
 
                         <h3 
                           className="text-3xl font-serif italic text-slate-900 dark:text-white mb-3 group-hover:text-blue-600 transition-colors cursor-pointer"
