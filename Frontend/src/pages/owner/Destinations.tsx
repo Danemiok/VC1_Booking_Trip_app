@@ -1,7 +1,7 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Search, Plus, Star, MapPin, Edit, Trash2, X } from 'lucide-react';
-import { apiRequest } from '@/src/services/api';
+import { apiRequest } from '@/services/api';
 
 type DestinationStatus = 'active' | 'draft';
 

@@ -13,8 +13,8 @@ import {
   AlertCircle
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
-import { cn } from '@/src/utils/utils';
-import { getPromotions } from '@/src/services/promotionService';
+import { cn } from '@/utils/utils';
+import { getPromotions } from '@/services/promotionService';
 
 type PromotionServiceCategory = 'hotel' | 'transport';
 

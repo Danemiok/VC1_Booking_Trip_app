@@ -1,35 +1,64 @@
 import type { StoredGroup } from './types';
 
-const GROUP_STORE_KEY = 'group_planning_groups_v1';
+const STORAGE_KEY = 'vc1.groupPlanning.groups';
 
-export const normalizeAccessCode = (code: string): string => code.replace(/\s+/g, '').trim().toUpperCase();
+type StoredGroupsMap = Record<string, StoredGroup>;
 
-export const loadGroupsFromStorage = (): Record<string, StoredGroup> => {
+const safeParseGroups = (raw: string | null): StoredGroupsMap => {
+  if (!raw) return {};
+
   try {
-    const raw = localStorage.getItem(GROUP_STORE_KEY);
-    if (!raw) return {};
-    const parsed = JSON.parse(raw);
-    return parsed && typeof parsed === 'object' ? parsed : {};
+    const parsed = JSON.parse(raw) as unknown;
+    if (!parsed || typeof parsed !== 'object') return {};
+    return parsed as StoredGroupsMap;
   } catch {
     return {};
   }
 };
 
-export const saveGroupsToStorage = (groups: Record<string, StoredGroup>) => {
-  localStorage.setItem(GROUP_STORE_KEY, JSON.stringify(groups));
+export function normalizeAccessCode(value: string): string {
+  return String(value ?? '')
+    .replace(/\s+/g, '')
+    .trim()
+    .toUpperCase();
+}
+
+export function createId(): string {
+  if (typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function') {
+    return crypto.randomUUID();
+  }
+
+  return `id_${Date.now().toString(36)}_${Math.random().toString(36).slice(2, 10)}`;
+}
+
+export function loadGroupsFromStorage(): StoredGroupsMap {
+  if (typeof window === 'undefined' || !window.localStorage) return {};
+  return safeParseGroups(window.localStorage.getItem(STORAGE_KEY));
+}
+
+const saveGroupsToStorage = (groups: StoredGroupsMap): void => {
+  if (typeof window === 'undefined' || !window.localStorage) return;
+  window.localStorage.setItem(STORAGE_KEY, JSON.stringify(groups));
 };
 
-export const upsertGroupInStorage = (group: StoredGroup) => {
+export function upsertGroupInStorage(group: StoredGroup): void {
   const groups = loadGroupsFromStorage();
   groups[group.id] = group;
   saveGroupsToStorage(groups);
-};
+}
 
-export const findGroupByCode = (code: string): StoredGroup | null => {
-  const groups = loadGroupsFromStorage();
+export function findGroupByCode(code: string): StoredGroup | null {
   const normalized = normalizeAccessCode(code);
-  const match = Object.values(groups).find((group) => group.accessCode.toUpperCase() === normalized);
-  return match ?? null;
-};
+  if (!normalized) return null;
 
-export const createId = () => `${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 8)}`;
+  const groups = loadGroupsFromStorage();
+  for (const group of Object.values(groups)) {
+    if (!group) continue;
+    const groupCode = normalizeAccessCode(group.accessCode ?? group.id);
+    const groupId = normalizeAccessCode(group.id);
+    if (normalized === groupCode || normalized === groupId) return group;
+  }
+
+  return null;
+}
+

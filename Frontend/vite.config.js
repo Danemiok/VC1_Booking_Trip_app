@@ -4,7 +4,7 @@ import path from 'path';
 import { fileURLToPath } from 'url';
 import {defineConfig, loadEnv} from 'vite';
 
-export default defineConfig(({mode}) => {
+export default defineConfig(({ mode }) => {
   const env = loadEnv(mode, '.', '');
   const rootDir = path.dirname(fileURLToPath(import.meta.url));
   const apiProxyTarget = env.VITE_BACKEND_ORIGIN || env.VITE_API_PROXY_TARGET || 'http://127.0.0.1:8000';
@@ -16,7 +16,7 @@ export default defineConfig(({mode}) => {
     },
     resolve: {
       alias: {
-        '@': path.resolve(rootDir, '.'),
+        '@': path.resolve(rootDir, 'src'),
       },
     },
     server: {
@@ -27,6 +27,7 @@ export default defineConfig(({mode}) => {
         '/api': {
           target: apiProxyTarget,
           changeOrigin: true,
+          secure: false,
         },
       },
     },

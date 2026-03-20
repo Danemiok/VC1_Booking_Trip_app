@@ -22,7 +22,7 @@ import {
   Plus,
   X
 } from 'lucide-react';
-import { cn } from '@/src/utils/utils';
+import { cn } from '@/utils/utils';
 
 const AddRoom = () => {
   const navigate = useNavigate();

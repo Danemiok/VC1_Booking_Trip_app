@@ -1,6 +1,10 @@
+import React from 'react';
 import { AnimatePresence, motion } from 'motion/react';
-import { CheckCircle2, Copy, Plus, UserPlus, X } from 'lucide-react';
+import { Copy, Plus, Users, X } from 'lucide-react';
 import type { Member } from './types';
+
+type NewActivityDraft = { time: string; activity: string; location: string };
+type NewPollDraft = { question: string; options: string[] };
 
 interface GroupPlanningModalProps {
   isAddingActivity: boolean;
@@ -11,269 +15,345 @@ interface GroupPlanningModalProps {
   members: Member[];
   newMemberName: string;
   newMemberEmail: string;
-  newActivity: { time: string; activity: string; location: string };
-  newPoll: { question: string; options: string[] };
-  setIsAddingActivity: (value: boolean) => void;
-  setIsCreatingPoll: (value: boolean) => void;
-  setIsMembersOpen: (value: boolean) => void;
-  setIsAddMemberOpen: (value: boolean) => void;
-  setNewMemberName: (value: string) => void;
-  setNewMemberEmail: (value: string) => void;
-  setNewActivity: (value: { time: string; activity: string; location: string }) => void;
-  setNewPoll: (value: { question: string; options: string[] }) => void;
+  newActivity: NewActivityDraft;
+  newPoll: NewPollDraft;
+  setIsAddingActivity: React.Dispatch<React.SetStateAction<boolean>>;
+  setIsCreatingPoll: React.Dispatch<React.SetStateAction<boolean>>;
+  setIsMembersOpen: React.Dispatch<React.SetStateAction<boolean>>;
+  setIsAddMemberOpen: React.Dispatch<React.SetStateAction<boolean>>;
+  setNewMemberName: React.Dispatch<React.SetStateAction<string>>;
+  setNewMemberEmail: React.Dispatch<React.SetStateAction<string>>;
+  setNewActivity: React.Dispatch<React.SetStateAction<NewActivityDraft>>;
+  setNewPoll: React.Dispatch<React.SetStateAction<NewPollDraft>>;
   addMemberToGroup: () => void;
   copyToClipboard: () => void;
   handleAddActivity: () => void;
   handleCreatePoll: () => void;
 }
 
-export function GroupPlanningModal({
-  isAddingActivity,
-  isCreatingPoll,
-  isMembersOpen,
-  isAddMemberOpen,
-  isCopied,
-  members,
-  newMemberName,
-  newMemberEmail,
-  newActivity,
-  newPoll,
-  setIsAddingActivity,
-  setIsCreatingPoll,
-  setIsMembersOpen,
-  setIsAddMemberOpen,
-  setNewMemberName,
-  setNewMemberEmail,
-  setNewActivity,
-  setNewPoll,
-  addMemberToGroup,
-  copyToClipboard,
-  handleAddActivity,
-  handleCreatePoll,
-}: GroupPlanningModalProps) {
-  const isOpen = isAddingActivity || isCreatingPoll || isMembersOpen || isAddMemberOpen;
+const Backdrop: React.FC<{ onClose: () => void; children: React.ReactNode }> = ({ onClose, children }) => (
+  <motion.div
+    className="fixed inset-0 z-[60] bg-black/40 backdrop-blur-sm flex items-center justify-center p-4"
+    initial={{ opacity: 0 }}
+    animate={{ opacity: 1 }}
+    exit={{ opacity: 0 }}
+    onMouseDown={(e) => {
+      if (e.target === e.currentTarget) onClose();
+    }}
+  >
+    {children}
+  </motion.div>
+);
+
+const Card: React.FC<{ title: string; onClose: () => void; children: React.ReactNode }> = ({
+  title,
+  onClose,
+  children,
+}) => (
+  <motion.div
+    className="w-full max-w-xl rounded-[2.5rem] bg-white dark:bg-slate-950 border border-slate-200/70 dark:border-white/10 shadow-2xl overflow-hidden"
+    initial={{ opacity: 0, y: 16, scale: 0.98 }}
+    animate={{ opacity: 1, y: 0, scale: 1 }}
+    exit={{ opacity: 0, y: 16, scale: 0.98 }}
+    transition={{ type: 'spring', stiffness: 260, damping: 24 }}
+  >
+    <div className="px-7 py-6 border-b border-slate-100 dark:border-white/10 flex items-center justify-between">
+      <h3 className="text-base font-extrabold text-slate-900 dark:text-white">{title}</h3>
+      <button
+        type="button"
+        onClick={onClose}
+        className="p-2 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-white/5 dark:hover:bg-white/10 text-slate-500 dark:text-slate-300"
+        aria-label="Close"
+      >
+        <X className="w-4 h-4" />
+      </button>
+    </div>
+    <div className="p-7">{children}</div>
+  </motion.div>
+);
+
+export const GroupPlanningModal: React.FC<GroupPlanningModalProps> = (props) => {
+  const {
+    isAddingActivity,
+    isCreatingPoll,
+    isMembersOpen,
+    isAddMemberOpen,
+    isCopied,
+    members,
+    newMemberName,
+    newMemberEmail,
+    newActivity,
+    newPoll,
+    setIsAddingActivity,
+    setIsCreatingPoll,
+    setIsMembersOpen,
+    setIsAddMemberOpen,
+    setNewMemberName,
+    setNewMemberEmail,
+    setNewActivity,
+    setNewPoll,
+    addMemberToGroup,
+    copyToClipboard,
+    handleAddActivity,
+    handleCreatePoll,
+  } = props;
+
+  const closeAll = () => {
+    setIsAddingActivity(false);
+    setIsCreatingPoll(false);
+    setIsMembersOpen(false);
+    setIsAddMemberOpen(false);
+  };
+
+  const active =
+    isAddMemberOpen
+      ? 'add-member'
+      : isMembersOpen
+        ? 'members'
+        : isAddingActivity
+          ? 'add-activity'
+          : isCreatingPoll
+            ? 'create-poll'
+            : null;
 
   return (
     <AnimatePresence>
-      {isOpen && (
-        <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          exit={{ opacity: 0 }}
-          className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-950/60 backdrop-blur-sm"
-        >
-          <motion.div
-            initial={{ scale: 0.9, opacity: 0, y: 20 }}
-            animate={{ scale: 1, opacity: 1, y: 0 }}
-            exit={{ scale: 0.9, opacity: 0, y: 20 }}
-            className="bg-white dark:bg-slate-900 w-full max-w-md rounded-[3rem] p-10 shadow-2xl border border-slate-100 dark:border-white/5"
-          >
-            <div className="flex items-center justify-between mb-8">
-              <h3 className="text-2xl font-bold text-slate-900 dark:text-white">
-                {isMembersOpen
-                  ? 'Members'
-                  : isAddMemberOpen
-                    ? 'Add Member'
-                    : isAddingActivity
-                      ? 'Add Activity'
-                      : 'New Poll'}
-              </h3>
-              <button
-                onClick={() => {
-                  setIsAddingActivity(false);
-                  setIsCreatingPoll(false);
-                  setIsMembersOpen(false);
-                  setIsAddMemberOpen(false);
-                }}
-                className="p-3 hover:bg-slate-50 dark:hover:bg-white/5 rounded-2xl transition-colors text-slate-400"
-              >
-                <X className="w-6 h-6" />
-              </button>
-            </div>
+      {active && (
+        <Backdrop onClose={closeAll}>
+          {active === 'members' && (
+            <Card title="Members" onClose={() => setIsMembersOpen(false)}>
+              <div className="flex items-center justify-between">
+                <button
+                  type="button"
+                  onClick={() => {
+                    copyToClipboard();
+                  }}
+                  className="inline-flex items-center gap-2 px-4 py-2 rounded-2xl bg-blue-600/10 text-blue-700 dark:text-blue-300 hover:bg-blue-600/15 font-bold text-xs"
+                >
+                  <Copy className="w-4 h-4" />
+                  {isCopied ? 'Copied!' : 'Copy invite link'}
+                </button>
 
-            {isMembersOpen ? (
-              <div className="space-y-6">
-                <div className="flex items-center justify-between">
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setIsMembersOpen(false);
-                      setIsAddMemberOpen(true);
-                    }}
-                    className="inline-flex items-center gap-2 px-5 py-3 rounded-2xl bg-blue-600 text-white text-xs font-bold shadow-lg shadow-blue-600/15"
-                  >
-                    <UserPlus className="w-4 h-4" /> Add Member
-                  </button>
-                  <button
-                    type="button"
-                    onClick={copyToClipboard}
-                    className="inline-flex items-center gap-2 px-5 py-3 rounded-2xl bg-slate-50 dark:bg-white/5 text-slate-600 dark:text-slate-300 text-xs font-bold"
-                  >
-                    {isCopied ? (
-                      <CheckCircle2 className="w-4 h-4 text-emerald-500" />
-                    ) : (
-                      <Copy className="w-4 h-4" />
-                    )}
-                    {isCopied ? 'Copied' : 'Copy invite link'}
-                  </button>
-                </div>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setIsMembersOpen(false);
+                    setIsAddMemberOpen(true);
+                  }}
+                  className="inline-flex items-center gap-2 px-4 py-2 rounded-2xl bg-slate-900 text-white dark:bg-white dark:text-slate-900 hover:opacity-90 font-bold text-xs"
+                >
+                  <Plus className="w-4 h-4" />
+                  Add member
+                </button>
+              </div>
 
-                <div className="space-y-3 max-h-[340px] overflow-y-auto pr-1">
-                  {members.map((member) => (
+              <div className="mt-6 space-y-3 max-h-[50vh] overflow-auto pr-1">
+                {members.length === 0 ? (
+                  <p className="text-sm text-slate-500">No members yet.</p>
+                ) : (
+                  members.map((m) => (
                     <div
-                      key={member.user_email}
-                      className="flex items-center justify-between rounded-2xl border border-slate-100 dark:border-white/10 bg-slate-50/60 dark:bg-white/5 px-4 py-3"
+                      key={m.user_email}
+                      className="flex items-center justify-between p-4 rounded-2xl border border-slate-200/70 dark:border-white/10 bg-slate-50/50 dark:bg-white/5"
                     >
                       <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 rounded-2xl bg-slate-200 dark:bg-slate-800 flex items-center justify-center text-xs font-extrabold text-slate-500">
-                          {member.user_name.charAt(0).toUpperCase()}
+                        <div className="w-10 h-10 rounded-2xl bg-blue-600/10 text-blue-700 dark:text-blue-300 flex items-center justify-center font-extrabold">
+                          {String(m.user_name || m.user_email || '?').charAt(0).toUpperCase()}
                         </div>
                         <div>
-                          <p className="text-sm font-bold text-slate-900 dark:text-white leading-tight">{member.user_name}</p>
-                          <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">{member.user_email}</p>
+                          <p className="text-sm font-bold text-slate-900 dark:text-white">{m.user_name}</p>
+                          <p className="text-xs text-slate-500 dark:text-slate-400">{m.user_email}</p>
                         </div>
                       </div>
-                      <span className="text-[10px] font-bold text-blue-600 dark:text-blue-400 uppercase tracking-widest">{member.role}</span>
+                      <span className="text-[10px] font-bold uppercase tracking-widest px-3 py-1 rounded-full bg-slate-900/5 dark:bg-white/10 text-slate-700 dark:text-slate-200">
+                        {m.role}
+                      </span>
                     </div>
-                  ))}
-                </div>
+                  ))
+                )}
               </div>
-            ) : isAddMemberOpen ? (
-              <div className="space-y-6">
-                <div className="space-y-2">
-                  <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest block">Name</label>
+            </Card>
+          )}
+
+          {active === 'add-member' && (
+            <Card title="Add Member" onClose={() => setIsAddMemberOpen(false)}>
+              <div className="grid grid-cols-1 gap-4">
+                <div>
+                  <label className="block text-xs font-bold text-slate-500 dark:text-slate-300 uppercase tracking-widest">
+                    Name
+                  </label>
                   <input
-                    type="text"
+                    className="mt-2 w-full px-4 py-3 rounded-2xl border border-slate-200 dark:border-white/10 bg-white dark:bg-slate-950 text-slate-900 dark:text-white"
                     value={newMemberName}
-                    onChange={(event) => setNewMemberName(event.target.value)}
-                    placeholder="Friend name"
-                    className="w-full px-6 py-4 bg-slate-50 dark:bg-white/5 border border-slate-100 dark:border-white/10 rounded-2xl text-sm outline-none focus:ring-2 focus:ring-blue-500 transition-all"
+                    onChange={(e) => setNewMemberName(e.target.value)}
+                    placeholder="Member name"
                   />
                 </div>
-                <div className="space-y-2">
-                  <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest block">Email</label>
+                <div>
+                  <label className="block text-xs font-bold text-slate-500 dark:text-slate-300 uppercase tracking-widest">
+                    Email
+                  </label>
                   <input
-                    type="email"
+                    className="mt-2 w-full px-4 py-3 rounded-2xl border border-slate-200 dark:border-white/10 bg-white dark:bg-slate-950 text-slate-900 dark:text-white"
                     value={newMemberEmail}
-                    onChange={(event) => setNewMemberEmail(event.target.value)}
-                    placeholder="friend@email.com"
-                    className="w-full px-6 py-4 bg-slate-50 dark:bg-white/5 border border-slate-100 dark:border-white/10 rounded-2xl text-sm outline-none focus:ring-2 focus:ring-blue-500 transition-all"
+                    onChange={(e) => setNewMemberEmail(e.target.value)}
+                    placeholder="email@example.com"
+                    type="email"
                   />
                 </div>
 
-                <div className="mt-10 flex gap-4">
+                <div className="flex gap-3 pt-2">
                   <button
                     type="button"
                     onClick={() => {
                       setIsAddMemberOpen(false);
                       setIsMembersOpen(true);
                     }}
-                    className="flex-1 py-5 bg-slate-50 dark:bg-white/5 text-slate-600 dark:text-slate-300 rounded-2xl text-sm font-bold hover:bg-slate-100 dark:hover:bg-white/10 transition-colors"
+                    className="flex-1 px-4 py-3 rounded-2xl bg-slate-100 hover:bg-slate-200 dark:bg-white/5 dark:hover:bg-white/10 text-slate-800 dark:text-slate-200 font-bold"
                   >
                     Back
                   </button>
                   <button
                     type="button"
                     onClick={addMemberToGroup}
-                    disabled={!newMemberName.trim() || !newMemberEmail.trim()}
-                    className="flex-1 py-5 bg-blue-600 disabled:bg-slate-200 disabled:text-slate-400 dark:disabled:bg-white/10 dark:disabled:text-slate-500 text-white rounded-2xl text-sm font-bold hover:bg-blue-700 transition-colors shadow-xl"
+                    className="flex-1 px-4 py-3 rounded-2xl bg-blue-600 hover:bg-blue-700 text-white font-bold shadow-[0_18px_40px_rgba(37,99,235,0.22)]"
                   >
                     Add
                   </button>
                 </div>
               </div>
-            ) : (
-              <div className="space-y-6">
+            </Card>
+          )}
+
+          {active === 'add-activity' && (
+            <Card title="Add Itinerary Item" onClose={() => setIsAddingActivity(false)}>
+              <div className="grid grid-cols-1 gap-4">
                 <div>
-                  <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-3 block">
-                    {isAddingActivity ? 'Activity Name' : 'Question'}
+                  <label className="block text-xs font-bold text-slate-500 dark:text-slate-300 uppercase tracking-widest">
+                    Time
                   </label>
                   <input
-                    type="text"
-                    value={isAddingActivity ? newActivity.activity : newPoll.question}
-                    onChange={(event) =>
-                      isAddingActivity
-                        ? setNewActivity({ ...newActivity, activity: event.target.value })
-                        : setNewPoll({ ...newPoll, question: event.target.value })
-                    }
-                    placeholder={isAddingActivity ? 'e.g. Dinner at Pub Street' : 'e.g. Where should we eat?'}
-                    className="w-full px-6 py-4 bg-slate-50 dark:bg-white/5 border border-slate-100 dark:border-white/5 rounded-2xl text-sm outline-none focus:ring-2 focus:ring-blue-500 transition-all"
+                    className="mt-2 w-full px-4 py-3 rounded-2xl border border-slate-200 dark:border-white/10 bg-white dark:bg-slate-950 text-slate-900 dark:text-white"
+                    value={newActivity.time}
+                    onChange={(e) => setNewActivity((prev) => ({ ...prev, time: e.target.value }))}
+                    placeholder="09:00"
+                    type="time"
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs font-bold text-slate-500 dark:text-slate-300 uppercase tracking-widest">
+                    Activity
+                  </label>
+                  <input
+                    className="mt-2 w-full px-4 py-3 rounded-2xl border border-slate-200 dark:border-white/10 bg-white dark:bg-slate-950 text-slate-900 dark:text-white"
+                    value={newActivity.activity}
+                    onChange={(e) => setNewActivity((prev) => ({ ...prev, activity: e.target.value }))}
+                    placeholder="Visit Angkor Wat"
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs font-bold text-slate-500 dark:text-slate-300 uppercase tracking-widest">
+                    Location (optional)
+                  </label>
+                  <input
+                    className="mt-2 w-full px-4 py-3 rounded-2xl border border-slate-200 dark:border-white/10 bg-white dark:bg-slate-950 text-slate-900 dark:text-white"
+                    value={newActivity.location}
+                    onChange={(e) => setNewActivity((prev) => ({ ...prev, location: e.target.value }))}
+                    placeholder="Siem Reap"
                   />
                 </div>
 
-                {isAddingActivity ? (
-                  <div className="grid grid-cols-2 gap-6">
-                    <div>
-                      <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-3 block">Time</label>
-                      <input
-                        type="time"
-                        value={newActivity.time}
-                        onChange={(event) => setNewActivity({ ...newActivity, time: event.target.value })}
-                        className="w-full px-6 py-4 bg-slate-50 dark:bg-white/5 border border-slate-100 dark:border-white/5 rounded-2xl text-sm outline-none focus:ring-2 focus:ring-blue-500 transition-all"
-                      />
-                    </div>
-                    <div>
-                      <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-3 block">Location</label>
-                      <input
-                        type="text"
-                        value={newActivity.location}
-                        onChange={(event) => setNewActivity({ ...newActivity, location: event.target.value })}
-                        placeholder="Location"
-                        className="w-full px-6 py-4 bg-slate-50 dark:bg-white/5 border border-slate-100 dark:border-white/5 rounded-2xl text-sm outline-none focus:ring-2 focus:ring-blue-500 transition-all"
-                      />
-                    </div>
-                  </div>
-                ) : (
-                  <div className="space-y-4">
-                    <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-3 block">Options</label>
-                    {newPoll.options.map((option, index) => (
-                      <input
-                        key={index}
-                        type="text"
-                        value={option}
-                        onChange={(event) => {
-                          const nextOptions = [...newPoll.options];
-                          nextOptions[index] = event.target.value;
-                          setNewPoll({ ...newPoll, options: nextOptions });
-                        }}
-                        placeholder={`Option ${index + 1}`}
-                        className="w-full px-6 py-4 bg-slate-50 dark:bg-white/5 border border-slate-100 dark:border-white/5 rounded-2xl text-sm outline-none focus:ring-2 focus:ring-blue-500 transition-all"
-                      />
-                    ))}
-                    <button
-                      type="button"
-                      onClick={() => setNewPoll({ ...newPoll, options: [...newPoll.options, ''] })}
-                      className="text-xs font-bold text-blue-600 flex items-center gap-2 mt-4"
-                    >
-                      <Plus className="w-4 h-4" /> Add Option
-                    </button>
-                  </div>
-                )}
-
-                <div className="mt-10 flex gap-4">
+                <div className="flex gap-3 pt-2">
                   <button
                     type="button"
-                    onClick={() => {
-                      setIsAddingActivity(false);
-                      setIsCreatingPoll(false);
-                    }}
-                    className="flex-1 py-5 bg-slate-50 dark:bg-white/5 text-slate-600 dark:text-slate-400 rounded-2xl text-sm font-bold hover:bg-slate-100 dark:hover:bg-white/10 transition-colors"
+                    onClick={() => setIsAddingActivity(false)}
+                    className="flex-1 px-4 py-3 rounded-2xl bg-slate-100 hover:bg-slate-200 dark:bg-white/5 dark:hover:bg-white/10 text-slate-800 dark:text-slate-200 font-bold"
                   >
                     Cancel
                   </button>
                   <button
                     type="button"
-                    onClick={isAddingActivity ? handleAddActivity : handleCreatePoll}
-                    className="flex-1 py-5 bg-blue-600 text-white rounded-2xl text-sm font-bold hover:bg-blue-700 transition-colors shadow-xl"
+                    onClick={handleAddActivity}
+                    className="flex-1 px-4 py-3 rounded-2xl bg-blue-600 hover:bg-blue-700 text-white font-bold"
                   >
-                    {isAddingActivity ? 'Add Activity' : 'Create Poll'}
+                    Add
                   </button>
                 </div>
               </div>
-            )}
-          </motion.div>
-        </motion.div>
+            </Card>
+          )}
+
+          {active === 'create-poll' && (
+            <Card title="Create Poll" onClose={() => setIsCreatingPoll(false)}>
+              <div className="grid grid-cols-1 gap-4">
+                <div>
+                  <label className="block text-xs font-bold text-slate-500 dark:text-slate-300 uppercase tracking-widest">
+                    Question
+                  </label>
+                  <input
+                    className="mt-2 w-full px-4 py-3 rounded-2xl border border-slate-200 dark:border-white/10 bg-white dark:bg-slate-950 text-slate-900 dark:text-white"
+                    value={newPoll.question}
+                    onChange={(e) => setNewPoll((prev) => ({ ...prev, question: e.target.value }))}
+                    placeholder="What should we do first?"
+                  />
+                </div>
+
+                <div>
+                  <div className="flex items-center justify-between">
+                    <label className="block text-xs font-bold text-slate-500 dark:text-slate-300 uppercase tracking-widest">
+                      Options
+                    </label>
+                    <button
+                      type="button"
+                      onClick={() => setNewPoll((prev) => ({ ...prev, options: [...prev.options, ''] }))}
+                      className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-slate-900/5 dark:bg-white/10 text-slate-700 dark:text-slate-200 font-bold text-[10px] uppercase tracking-widest"
+                    >
+                      <Plus className="w-3.5 h-3.5" />
+                      Add option
+                    </button>
+                  </div>
+
+                  <div className="mt-3 space-y-2">
+                    {newPoll.options.map((opt, idx) => (
+                      <input
+                        key={idx}
+                        className="w-full px-4 py-3 rounded-2xl border border-slate-200 dark:border-white/10 bg-white dark:bg-slate-950 text-slate-900 dark:text-white"
+                        value={opt}
+                        onChange={(e) =>
+                          setNewPoll((prev) => ({
+                            ...prev,
+                            options: prev.options.map((value, i) => (i === idx ? e.target.value : value)),
+                          }))
+                        }
+                        placeholder={`Option ${idx + 1}`}
+                      />
+                    ))}
+                  </div>
+                </div>
+
+                <div className="flex gap-3 pt-2">
+                  <button
+                    type="button"
+                    onClick={() => setIsCreatingPoll(false)}
+                    className="flex-1 px-4 py-3 rounded-2xl bg-slate-100 hover:bg-slate-200 dark:bg-white/5 dark:hover:bg-white/10 text-slate-800 dark:text-slate-200 font-bold"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="button"
+                    onClick={handleCreatePoll}
+                    className="flex-1 px-4 py-3 rounded-2xl bg-blue-600 hover:bg-blue-700 text-white font-bold inline-flex items-center justify-center gap-2"
+                  >
+                    <Users className="w-4 h-4" />
+                    Create
+                  </button>
+                </div>
+              </div>
+            </Card>
+          )}
+        </Backdrop>
       )}
     </AnimatePresence>
   );
-}
+};
+
