@@ -250,50 +250,46 @@ export const SupportModal: React.FC<SupportModalProps> = ({ isOpen, onClose, con
   return (
     <AnimatePresence>
       {isOpen && (
-        <div className="fixed inset-0 flex items-center justify-center z-50 p-4">
-          {/* Light, soft background matching your system */}
-          <div className="absolute inset-0 bg-gradient-to-br from-slate-50 via-white to-blue-50 opacity-90 backdrop-blur-sm" />
-          
-          {/* Modal */}
+        <div className="fixed inset-0 bg-[#0F172B] flex items-center justify-center z-50 p-4">
           <motion.div
             initial={{ opacity: 0, scale: 0.9, y: 20 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.9, y: 20 }}
             transition={{ duration: 0.3, ease: [0.4, 0, 0.2, 1] }}
-            className="relative bg-white/95 backdrop-blur-xl rounded-3xl shadow-2xl border border-white/20 max-w-4xl w-full max-h-[85vh] overflow-hidden"
+            className="relative bg-white rounded-3xl shadow-2xl border border-slate-200 max-w-4xl w-full max-h-[85vh] overflow-hidden"
           >
             {/* Header */}
-            <div className="relative p-8 border-b border-gray-100/50 bg-blue-50">
+            <div className="relative p-8 border-b border-slate-200 bg-gradient-to-r from-emerald-600 to-emerald-700">
               <button
                 onClick={onClose}
-                className="absolute top-6 right-6 p-3 hover:bg-white/50 rounded-xl transition-all duration-200 group"
+                className="absolute top-6 right-6 p-3 hover:bg-white/20 rounded-xl transition-all duration-200 group"
               >
-                <X className="w-5 h-5 text-gray-500 group-hover:text-gray-700" />
+                <X className="w-5 h-5 text-white/80 group-hover:text-white" />
               </button>
               
               <div className="flex items-center gap-4">
-                <div className="w-14 h-14 bg-blue-600 rounded-2xl flex items-center justify-center shadow-lg">
-                  <Icon className="w-7 h-7 text-white" />
+                <div className="w-14 h-14 bg-white rounded-2xl flex items-center justify-center shadow-lg">
+                  <Icon className="w-7 h-7 text-emerald-600" />
                 </div>
                 <div>
-                  <h2 className="text-3xl font-bold text-slate-900">{modalContent.title}</h2>
-                  <p className="text-gray-600 mt-1">{modalContent.subtitle}</p>
+                  <h2 className="text-3xl font-bold text-white">{modalContent.title}</h2>
+                  <p className="text-emerald-100 mt-1">{modalContent.subtitle}</p>
                 </div>
               </div>
             </div>
 
             {/* Content */}
-            <div className="p-8 max-h-[60vh] overflow-y-auto">
-              <div className="bg-white/50 rounded-2xl p-6">
+            <div className="p-8 max-h-[60vh] overflow-y-auto bg-slate-50">
+              <div className="bg-white rounded-2xl p-6 shadow-sm border border-slate-200">
                 {modalContent.content}
               </div>
             </div>
 
             {/* Footer */}
-            <div className="p-8 border-t border-gray-100/50 bg-slate-50">
+            <div className="p-8 border-t border-slate-200 bg-white">
               <button
                 onClick={onClose}
-                className="w-full bg-blue-600 hover:bg-blue-700 text-white px-8 py-4 rounded-2xl font-semibold transition-all duration-200 shadow-lg hover:shadow-xl transform hover:scale-[1.02]"
+                className="w-full bg-emerald-600 hover:bg-emerald-700 text-white px-8 py-4 rounded-2xl font-semibold transition-all duration-200 shadow-lg hover:shadow-xl transform hover:scale-[1.02]"
               >
                 Close
               </button>
