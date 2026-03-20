@@ -1,40 +1,27 @@
 
-import { MapPin, Search, Star } from 'lucide-react';
+import {
+  CheckCircle2,
+  ChevronLeft,
+  ChevronRight,
+  Filter,
+  Heart,
+  MapPin,
+  Search,
+  SlidersHorizontal,
+  Star,
+  Users,
+  Waves,
+} from 'lucide-react';
 import React, { useEffect, useState } from 'react';
 import { motion } from 'motion/react';
 
-import { 
-  ChevronLeft, 
-  ChevronRight, 
-  Filter, 
-  SlidersHorizontal, 
-
-  Heart, 
-
-  Waves, 
-  Users, 
-  CheckCircle2 
-} from 'lucide-react';
-import { getHotels, type Hotel } from '../../data/hotels';
-import { getPublicDestinations } from '../../services/destinationService';
+import { getHotels, type Hotel } from '@/data/hotels';
+import { getPublicDestinations } from '@/services/destinationService';
 
 type DestinationStatus = 'active' | 'draft';
 
-interface DestinationApiRecord {
-  id: string | number;
-  name?: string;
-  type?: string;
-  description?: string | null;
-  location?: string;
-  price?: number | string | null;
-  image?: string | null;
-  images?: string[] | null;
-  rating?: number | string | null;
-  status?: DestinationStatus;
-}
-
 interface DestinationItem {
-  id: string;
+  id: string | number;
   name: string;
   type: string;
   description: string;
@@ -63,7 +50,7 @@ export default function Destinations() {
 
     try {
       const data = await getPublicDestinations();
-      setDestinations(data.map((item: DestinationApiRecord) => normalizeDestination(item)));
+      setDestinations(Array.isArray(data) ? data : []);
     } catch (error) {
       setLoadError(getErrorMessage(error, 'Failed to load destinations. Please try again.'));
     } finally {
@@ -133,8 +120,12 @@ export default function Destinations() {
             >
               <div className="relative">
                 <img src={destination.image} alt={destination.name} className="h-56 w-full object-cover" />
-                <div className="absolute left-4 top-4 rounded-full bg-emerald-500 px-3 py-1 text-xs font-semibold text-white">
-                  ACTIVE
+                <div
+                  className={`absolute left-4 top-4 rounded-full px-3 py-1 text-xs font-semibold text-white ${
+                    destination.status === 'active' ? 'bg-emerald-500' : 'bg-amber-500'
+                  }`}
+                >
+                  {(destination.status ?? 'draft').toUpperCase()}
                 </div>
                 <div className="absolute right-4 top-4 rounded-full bg-white/90 px-3 py-1 text-xs font-semibold text-slate-700 dark:bg-slate-900/90 dark:text-slate-200">
                   {destination.type}

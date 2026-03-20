@@ -1,7 +1,7 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { format, subMonths, addDays, differenceInDays } from 'date-fns';
-import { 
+import {
   Star, 
   MapPin, 
   Wifi, 
@@ -18,7 +18,6 @@ import {
   Users,
   LayoutGrid
 } from 'lucide-react';
-import { apiRequest } from '../../services/api';
 import { getAuthUser } from '../../services/authService';
 
 interface RoomOption {
@@ -259,47 +258,8 @@ export const HotelDetails: React.FC<HotelDetailsProps> = ({ tripData, hotel: ini
       const user = getAuthUser();
       if (!user) {
         setBookingMessage('Please login to make a booking');
-        setIsBooking(false);
         return;
       }
-
-      const bookingData = {
-        user_id: user.id,
-        destination_id: hotel.id || null,
-        name: hotel.name,
-        type: 'Hotel Booking',
-        description: `Booking for ${selectedRoom.name} at ${hotel.name}`,
-        location: hotel.location,
-        address: hotel.location,
-        price: total,
-        image: hotel.images?.[0] || '',
-        images: hotel.images || [],
-        booking_details: {
-          roomType: selectedRoom.name,
-          roomCategory: selectedRoom.category,
-          guests,
-          maxOccupancy: selectedRoom.maxOccupancy,
-          nightlyPrice,
-          nights,
-          roomSubtotal,
-          cleaningFee,
-          serviceFee,
-          totalPrice: total,
-          checkIn: format(plannedCheckInDate, 'yyyy-MM-dd'),
-          checkOut: format(plannedCheckOutDate, 'yyyy-MM-dd'),
-          hotelId: hotel.id,
-          hotelName: hotel.name,
-          hotelLocation: hotel.location
-        }
-      };
-
-      // Store booking in destinations table
-      const response = await apiRequest('/destinations/book', {
-        method: 'POST',
-        body: JSON.stringify(bookingData),
-      });
-
-      setBookingMessage('Booking successful! Your reservation has been confirmed.');
       
       // Call the original onReserve callback if provided
       onReserve?.({
@@ -314,9 +274,6 @@ export const HotelDetails: React.FC<HotelDetailsProps> = ({ tripData, hotel: ini
         serviceFee,
         totalPrice: total
       });
-
-      // Clear success message after 3 seconds
-      setTimeout(() => setBookingMessage(''), 3000);
 
     } catch (error) {
       console.error('Booking error:', error);
