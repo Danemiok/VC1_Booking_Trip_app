@@ -51,6 +51,14 @@ export const AuthLayout: React.FC<AuthLayoutProps> = ({
 }) => {
   const { isDarkMode } = useTheme();
   const [currentSlide, setCurrentSlide] = useState(0);
+  const apiProxyTarget = (import.meta as any).env?.VITE_API_PROXY_TARGET as string | undefined;
+  const apiBaseUrl = (import.meta as any).env?.VITE_API_BASE_URL as string | undefined;
+  const resolvedApiBaseUrl =
+    apiProxyTarget ||
+    (apiBaseUrl && apiBaseUrl.startsWith('http') ? apiBaseUrl : undefined) ||
+    'http://127.0.0.1:8000';
+  const backendBaseUrl = resolvedApiBaseUrl.replace(/\/$/, '');
+  const googleAuthUrl = `${backendBaseUrl}/auth/google/redirect`;
 
   const nextSlide = () => {
     setCurrentSlide((prev) => (prev + 1) % slides.length);
@@ -254,19 +262,25 @@ export const AuthLayout: React.FC<AuthLayoutProps> = ({
             </div>
 
             <div className="grid grid-cols-2 gap-3">
-              <button className={`flex items-center justify-center gap-2 rounded-lg border px-3 py-2 text-sm font-semibold transition-all hover:bg-opacity-10 ${
+              <a
+                href={googleAuthUrl}
+                className={`flex items-center justify-center gap-2 rounded-lg border px-3 py-2 text-sm font-semibold transition-all hover:bg-opacity-10 ${
                 isDarkMode 
                   ? 'border-slate-600 text-slate-300 hover:bg-slate-700' 
                   : 'border-slate-200 text-slate-700 hover:bg-slate-50'
-              }`}>
+              }`}
+              >
                 <img src="https://www.svgrepo.com/show/475656/google-color.svg" alt="Google" className="w-4 h-4" />
                 <span>Google</span>
-              </button>
-              <button className={`flex items-center justify-center gap-2 rounded-lg border px-3 py-2 text-sm font-semibold transition-all hover:bg-opacity-10 ${
+              </a>
+              <button
+                type="button"
+                className={`flex items-center justify-center gap-2 rounded-lg border px-3 py-2 text-sm font-semibold transition-all hover:bg-opacity-10 ${
                 isDarkMode 
                   ? 'border-slate-600 text-slate-300 hover:bg-slate-700' 
                   : 'border-slate-200 text-slate-700 hover:bg-slate-50'
-              }`}>
+              }`}
+              >
                 <img src="https://www.svgrepo.com/show/475647/facebook-color.svg" alt="Facebook" className="w-4 h-4" />
                 <span>Facebook</span>
               </button>
