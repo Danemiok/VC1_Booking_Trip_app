@@ -1,39 +1,43 @@
 import tailwindcss from '@tailwindcss/vite';
 import react from '@vitejs/plugin-react';
-import path from 'path';
-import {defineConfig, loadEnv} from 'vite';
+import path from 'node:path';
+import { fileURLToPath } from 'node:url';
+import { defineConfig, loadEnv } from 'vite';
 
-export default defineConfig(({mode}) => {
+export default defineConfig(({ mode }) => {
   const env = loadEnv(mode, '.', '');
-  const apiProxyTarget = env.VITE_API_PROXY_TARGET || 'http://127.0.0.1:8000';
+  const apiProxyTarget =
+    env.VITE_API_PROXY_TARGET ||
+    env.VITE_BACKEND_ORIGIN ||
+    'http://127.0.0.1:8000';
+
+  const srcRoot = fileURLToPath(new URL('./src', import.meta.url));
+
   return {
     plugins: [react(), tailwindcss()],
     define: {
       'process.env.GEMINI_API_KEY': JSON.stringify(env.GEMINI_API_KEY),
     },
     resolve: {
-      alias: {
-        '@': path.resolve(__dirname, '.'),
-      },
+      alias: [
+        // Backward compatible with existing imports like "@/src/utils/utils"
+        { find: /^@\/src\//, replacement: `${srcRoot}${path.sep}` },
+        // Recommended form: "@/utils/utils" (points to src/)
+        { find: /^@\//, replacement: `${srcRoot}${path.sep}` },
+      ],
     },
     server: {
-      proxy: {
-        '/api': {
-          target: 'http://localhost:8081',
-          changeOrigin: true,
-          secure: false,
-        }
-      },
       // HMR is disabled in AI Studio via DISABLE_HMR env var.
-      // Do not modifyâfile watching is disabled to prevent flickering during agent edits.
+      // Do not modify—file watching is disabled to prevent flickering during agent edits.
       hmr: process.env.DISABLE_HMR !== 'true',
       proxy: {
         '/api': {
-          target: env.VITE_BACKEND_ORIGIN || 'http://127.0.0.1:8001',
-          // target: apiProxyTarget,
+          target: apiProxyTarget,
           changeOrigin: true,
+          secure: false,
         },
       },
     },
   };
 });
+

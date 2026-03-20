@@ -26,8 +26,8 @@ import {
   AreaChart,
   Area
 } from 'recharts';
-import { cn } from '@/src/utils/utils';
-import { MOCK_ANALYTICS_REVENUE } from '@/src/routes/constants';
+import { cn } from '@/utils/utils';
+import { MOCK_ANALYTICS_REVENUE } from '@/routes/constants';
 
 const Analytics = () => {
   const channelData = [

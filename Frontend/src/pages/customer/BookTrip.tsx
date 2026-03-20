@@ -1,6 +1,6 @@
 import React from 'react';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
-import { bookingService } from '@/src/services/bookingService';
+import { bookingService } from '@/services/bookingService';
 import { useAuth } from '../../context/AuthContext';
 import { apiRequest } from '../../services/api';
 import { getPublicDestinations } from '../../services/destinationService';

@@ -1,6 +1,6 @@
 import React from 'react';
-import { bookingService } from '@/src/services/bookingService';
-import { useAuth } from '@/src/context/AuthContext';
+import { bookingService } from '@/services/bookingService';
+import { useAuth } from '@/context/AuthContext';
 
 export type OwnerNotification = {
   id: number | string;

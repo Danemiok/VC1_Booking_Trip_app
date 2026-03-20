@@ -33,7 +33,7 @@ import {
   isAfter
 } from 'date-fns';
 import { useAuth } from '../../context/AuthContext';
-import { bookingService } from '@/src/services/bookingService';
+import { bookingService } from '@/services/bookingService';
 import { getPublicDestinations } from '../../services/destinationService';
 
 // --- Sub-components (could be further split) ---

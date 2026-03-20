@@ -11,7 +11,7 @@ import {
   CheckCheck,
   Circle
 } from 'lucide-react';
-import { cn } from '@/src/utils/utils';
+import { cn } from '@/utils/utils';
 
 type Contact = {
   id: number;

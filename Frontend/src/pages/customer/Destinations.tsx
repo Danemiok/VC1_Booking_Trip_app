@@ -15,13 +15,23 @@ import {
   Users, 
   CheckCircle2 
 } from 'lucide-react';
-<<<<<<< HEAD
-import { getPublicDestinations } from '../../services/destinationService';
-=======
 import { getHotels, type Hotel } from '../../data/hotels';
->>>>>>> channy/customer-destination
+import { getPublicDestinations } from '../../services/destinationService';
 
 type DestinationStatus = 'active' | 'draft';
+
+interface DestinationApiRecord {
+  id: string | number;
+  name?: string;
+  type?: string;
+  description?: string | null;
+  location?: string;
+  price?: number | string | null;
+  image?: string | null;
+  images?: string[] | null;
+  rating?: number | string | null;
+  status?: DestinationStatus;
+}
 
 interface DestinationItem {
   id: string;
@@ -35,8 +45,6 @@ interface DestinationItem {
   status: DestinationStatus;
 }
 
-<<<<<<< HEAD
-=======
 const DEFAULT_IMAGE = 'https://picsum.photos/seed/public-destination/800/600';
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL ?? 'http://127.0.0.1:8000/api';
 const API_ORIGIN = /^https?:\/\//i.test(API_BASE_URL)
@@ -52,15 +60,12 @@ const toNumber = (value: number | string | null | undefined, fallback = 0) => {
   return Number.isFinite(parsed) ? parsed : fallback;
 };
 
->>>>>>> channy/customer-destination
 const getErrorMessage = (error: any, fallback: string) => {
   if (typeof error?.data?.message === 'string' && error.data.message.trim()) return error.data.message;
   if (typeof error?.message === 'string' && error.message.trim()) return error.message;
   return fallback;
 };
 
-<<<<<<< HEAD
-=======
 const resolveImageUrl = (value?: string | null) => {
   if (!value) return '';
   const cleaned = value.replace(/\\/g, '/');
@@ -99,7 +104,6 @@ const normalizeDestination = (destination: DestinationApiRecord): DestinationIte
   };
 };
 
->>>>>>> channy/customer-destination
 export default function Destinations() {
   const [searchTerm, setSearchTerm] = React.useState('');
   const [destinations, setDestinations] = React.useState<DestinationItem[]>([]);
@@ -112,17 +116,7 @@ export default function Destinations() {
 
     try {
       const data = await getPublicDestinations();
-      setDestinations(data.map((item: any) => ({
-        id: String(item.id),
-        name: item.name,
-        type: item.type,
-        description: item.description,
-        location: item.location,
-        price: item.price,
-        image: item.image,
-        rating: item.rating,
-        status: item.status === 'active' ? 'active' : 'draft',
-      })));
+      setDestinations(data.map((item: DestinationApiRecord) => normalizeDestination(item)));
     } catch (error) {
       setLoadError(getErrorMessage(error, 'Failed to load destinations. Please try again.'));
     } finally {
@@ -338,13 +332,8 @@ export const Hotels: React.FC<HotelsPageProps> = ({ tripData, onBack, onSelectHo
   const [selectedRoomByHotel, setSelectedRoomByHotel] = useState<Record<number, string>>({});
   const [guestsByHotel, setGuestsByHotel] = useState<Record<number, number>>({});
   const [currentPage, setCurrentPage] = useState(1);
-<<<<<<< HEAD
-  const [hotels, setHotels] = useState<any[]>([]);
-  const [isLoadingHotels, setIsLoadingHotels] = useState(true);
-=======
   const [hotels, setHotels] = useState<Hotel[]>([]);
   const [hotelsLoading, setHotelsLoading] = useState(true);
->>>>>>> channy/customer-destination
   const [hotelsError, setHotelsError] = useState('');
 
   const language = (() => {
@@ -428,26 +417,6 @@ export const Hotels: React.FC<HotelsPageProps> = ({ tripData, onBack, onSelectHo
   };
   
   useEffect(() => {
-<<<<<<< HEAD
-    const loadHotels = async () => {
-      setIsLoadingHotels(true);
-      setHotelsError('');
-
-      try {
-        const data = await getPublicDestinations();
-        setHotels(data);
-      } catch (error) {
-        setHotelsError(getErrorMessage(error, 'Failed to load destinations.'));
-        setHotels([]);
-      } finally {
-        setIsLoadingHotels(false);
-      }
-    };
-
-    loadHotels();
-  }, []);
-
-=======
     let cancelled = false;
     setHotelsLoading(true);
     setHotelsError('');
@@ -467,7 +436,6 @@ export const Hotels: React.FC<HotelsPageProps> = ({ tripData, onBack, onSelectHo
       cancelled = true;
     };
   }, []);
->>>>>>> channy/customer-destination
   const defaultGuests = parseGuestCount(tripData?.guests);
   const tripNights = getTripNights(tripData);
 
@@ -740,19 +708,19 @@ export const Hotels: React.FC<HotelsPageProps> = ({ tripData, onBack, onSelectHo
               </div>
             </div>
 
-            {isLoadingHotels && (
+            {hotelsLoading && (
               <div className="rounded-2xl border border-slate-200 bg-white px-6 py-10 text-center text-slate-500 shadow-sm dark:border-slate-800 dark:bg-slate-900 dark:text-slate-400">
-                Loading destinations...
+                Loading hotels...
               </div>
             )}
 
-            {hotelsError && !isLoadingHotels && (
+            {hotelsError && !hotelsLoading && (
               <div className="rounded-2xl border border-red-200 bg-red-50 px-6 py-4 text-sm text-red-700 dark:border-red-900/30 dark:bg-red-900/20 dark:text-red-300">
                 {hotelsError}
               </div>
             )}
 
-            {!isLoadingHotels && !hotelsError && (
+            {!hotelsLoading && !hotelsError && (
               <motion.div
               key={`hotel-page-${currentPage}`}
               initial={{ opacity: 0, y: 10 }}
