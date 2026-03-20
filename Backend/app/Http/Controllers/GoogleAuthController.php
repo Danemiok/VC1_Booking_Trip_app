@@ -38,7 +38,7 @@ class GoogleAuthController extends Controller
 
             $user = User::query()
                 ->where('google_id', $googleId)
-                ->when($googleEmail, fn ($query) => $query->orWhere('email', $googleEmail))
+                ->when($googleEmail, fn($query) => $query->orWhere('email', $googleEmail))
                 ->first();
 
             if (!$user) {
@@ -68,7 +68,6 @@ class GoogleAuthController extends Controller
             $token = $user->createToken('auth_token')->plainTextToken;
 
             return redirect()->away($this->buildFrontendSuccessUrl($user, $token));
-            
         } catch (Exception $e) {
             Log::warning('Google authentication failed.', [
                 'message' => $e->getMessage(),
@@ -78,7 +77,6 @@ class GoogleAuthController extends Controller
                 'Failed to authenticate with Google. Check GOOGLE_REDIRECT_URI and your Google Cloud OAuth settings.'
             ));
         }
-
     }
 
     private function hasGoogleCredentials(): bool
