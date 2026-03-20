@@ -212,7 +212,6 @@ const OwnerShellInner: React.FC<{ onLogout: () => void }> = ({ onLogout }) => {
           unreadCount={unreadCount}
           onMarkAllNotificationsRead={markAllRead}
           onViewAllNotifications={() => navigate('/owner#recent-activities')}
-          // onProfileClick={() => {}}
           onLogoutClick={onLogout}
           user={user}
         />

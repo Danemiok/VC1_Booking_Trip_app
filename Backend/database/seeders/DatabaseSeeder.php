@@ -41,21 +41,10 @@ class DatabaseSeeder extends Seeder
             ]
         );
 
-<<<<<<< HEAD
-        // Extra dev account (matches common demo login input)
-=======
->>>>>>> leakk/new-feature-owner
         User::updateOrCreate(
             ['email' => 'owner@test.com'],
             [
                 'name' => 'Owner Test',
-<<<<<<< HEAD
-                // Match the credentials you want to use in the UI.
-                'password' => Hash::make('Password@123'),
-                'role' => 'owner',
-            ]
-        );
-=======
                 'password' => Hash::make('password123'),
                 'role' => 'owner',
             ]
@@ -66,27 +55,7 @@ class DatabaseSeeder extends Seeder
             'email' => 'owner1@test.com',
             'role' => 'owner'
         ]);
->>>>>>> leakk/new-feature-owner
 
-<<<<<<< HEAD
-        User::updateOrCreate(
-            ['email' => 'owner1@test.com'],
-            [
-                'name' => 'Owner 1',
-                'password' => Hash::make('password123'),
-                'role' => 'owner',
-            ]
-        );
-
-        User::updateOrCreate(
-            ['email' => 'customer1@test.com'],
-            [
-                'name' => 'Customer 1',
-                'password' => Hash::make('password123'),
-                'role' => 'customer',
-            ]
-        );
-=======
 User::factory()->create([
             'name' => 'Customer 1',
             'email' => 'customer1@test.com',
@@ -94,7 +63,6 @@ User::factory()->create([
         ]);
 
 $this->call(HotelSeeder::class);
->>>>>>> channy/customer-destination
     }
 
 }
