@@ -175,7 +175,9 @@ export const BookingHistory: React.FC<BookingHistoryProps> = ({
           id: a.id,
           name: a.name,
           price: a.price,
-          guests: a.guests
+          guests: a.guests,
+          image: a.image,
+          date: a.date,
         })),
         reference: tripData.reference,
         totalAmount: financialSummary.total,

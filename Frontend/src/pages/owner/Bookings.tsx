@@ -1,5 +1,5 @@
 import React from 'react';
-import { 
+import {
   Search, 
   Download, 
   FileText,
@@ -19,7 +19,7 @@ import {
   DollarSign,
   X
 } from 'lucide-react';
-import { useNavigate } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 import { cn } from '@/src/utils/utils';
 import { bookingService } from '@/src/services/bookingService';
 import { useAuth } from '../../context/AuthContext';
@@ -28,6 +28,7 @@ import { RENTAL_VEHICLES } from '../../data/rentals';
 
 const Bookings = () => {
   const navigate = useNavigate();
+  const location = useLocation();
   const { user, token, isAuthenticated, logout } = useAuth();
   const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://127.0.0.1:8000/api';
   
@@ -58,6 +59,13 @@ const Bookings = () => {
   const [authError, setAuthError] = React.useState<string | null>(null);
   const [pageError, setPageError] = React.useState<string | null>(null);
   const [successMessage, setSuccessMessage] = React.useState<string | null>(null);
+  const [focusBookingId, setFocusBookingId] = React.useState<string | null>(null);
+
+  React.useEffect(() => {
+    const params = new URLSearchParams(location.search || '');
+    const id = params.get('booking_id');
+    setFocusBookingId(id ? String(id) : null);
+  }, [location.search]);
 
   type OwnerNotification = {
     id: number | string;
@@ -333,7 +341,8 @@ const Bookings = () => {
         search: searchTerm || undefined,
         status: filters.status !== 'all' ? filters.status : undefined,
         min_amount: filters.minAmount || undefined,
-        max_amount: filters.maxAmount || undefined
+        max_amount: filters.maxAmount || undefined,
+        booking_id: focusBookingId || undefined,
       };
       
       console.log('📡 FetchBookings - Calling API with filters:', apiFilters);
@@ -345,6 +354,13 @@ const Bookings = () => {
       const next = Array.isArray(response.data) ? response.data : [];
       console.log(`✅ FetchBookings - Got ${next.length} bookings from API`);
       setBookings(next);
+
+      if (focusBookingId) {
+        const match = next.find((b: any) => String(b?.id ?? '') === String(focusBookingId));
+        if (match) {
+          openBookingDetails(match);
+        }
+      }
       try {
         localStorage.setItem(BOOKINGS_CACHE_KEY, JSON.stringify(next));
       } catch {
@@ -356,7 +372,7 @@ const Bookings = () => {
     } finally {
       setLoading(false);
     }
-  }, [serviceFilter, dateRange, searchTerm, filters, isAuthenticated]);
+  }, [serviceFilter, dateRange, searchTerm, filters, isAuthenticated, focusBookingId]);
 
   // Fetch booking statistics
   const fetchStats = React.useCallback(async () => {

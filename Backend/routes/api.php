@@ -22,6 +22,7 @@ use App\Http\Controllers\Owner\PromotionController;
 // use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Api\BookingController; // ADD THIS
 use App\Http\Controllers\Api\OwnerNotificationController;
+use App\Http\Controllers\Api\TripGroupController;
 
 // Simple health check (useful for confirming API + DB connectivity from the frontend).
 Route::get('/health', function () {
@@ -114,6 +115,12 @@ Route::middleware(['auth:sanctum'])->group(function () {
         // Backwards-compatible aliases
         Route::get('/customer/bookings', [BookingController::class, 'myBookings']);
         Route::post('/customer/bookings', [BookingController::class, 'store']);
+
+        // Trip group planning (group chat + access code join)
+        Route::post('/trip-groups', [TripGroupController::class, 'create']);
+        Route::post('/trip-groups/join', [TripGroupController::class, 'join']);
+        Route::get('/trip-groups/{groupId}', [TripGroupController::class, 'show']);
+        Route::post('/trip-groups/{groupId}/messages', [TripGroupController::class, 'sendMessage']);
     });
 
     // Owner routes - accessible by owners and admins

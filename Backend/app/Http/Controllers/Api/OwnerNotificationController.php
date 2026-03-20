@@ -109,4 +109,3 @@ class OwnerNotificationController extends Controller
         ]);
     }
 }
-
