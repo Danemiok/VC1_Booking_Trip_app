@@ -51,6 +51,7 @@ export const AuthLayout: React.FC<AuthLayoutProps> = ({
 }) => {
   const { isDarkMode } = useTheme();
   const [currentSlide, setCurrentSlide] = useState(0);
+  const [oauthError, setOauthError] = useState('');
   const apiProxyTarget = (import.meta as any).env?.VITE_API_PROXY_TARGET as string | undefined;
   const apiBaseUrl = (import.meta as any).env?.VITE_API_BASE_URL as string | undefined;
   const resolvedApiBaseUrl =
@@ -77,6 +78,22 @@ export const AuthLayout: React.FC<AuthLayoutProps> = ({
     const timer = setInterval(nextSlide, 3000);
     return () => clearInterval(timer);
   }, []);
+
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const error = params.get('oauth_error');
+
+    if (!error) return;
+
+    setOauthError(error);
+    params.delete('oauth_error');
+    params.delete('auth');
+
+    const nextQuery = params.toString();
+    const nextUrl = `${window.location.pathname}${nextQuery ? `?${nextQuery}` : ''}${window.location.hash}`;
+    window.history.replaceState({}, '', nextUrl);
+  }, []);
+
   return (
     <div className="flex min-h-screen items-center justify-center p-4 transition-colors duration-300">
       <div
@@ -243,6 +260,15 @@ export const AuthLayout: React.FC<AuthLayoutProps> = ({
           </div>
 
           <div className="flex-1">
+            {oauthError && (
+              <div className={`mx-auto mb-4 max-w-sm rounded-lg border px-3 py-2 text-sm ${
+                isDarkMode
+                  ? 'border-amber-500/40 bg-amber-500/10 text-amber-200'
+                  : 'border-amber-300 bg-amber-50 text-amber-800'
+              }`}>
+                {oauthError}
+              </div>
+            )}
             {children}
           </div>
 
