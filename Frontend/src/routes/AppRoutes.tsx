@@ -1,45 +1,48 @@
 import React from 'react';
 import { AnimatePresence, motion } from 'motion/react';
-import { useAuth } from '../context/AuthContext';
-import { useTheme } from '../context/ThemeContext';
-import { Sidebar } from '../components/layout/Sidebar';
-import { Header } from '../components/layout/Header';
-import { AdminNotification } from '../components/common/NotificationDropdown';
-import { Login } from '../pages/auth/Login';
-import { Register } from '../pages/auth/Register';
-import VisitorHome from '../pages/public/VisitorHome';
-import { Dashboard as CustomerDashboard } from '../pages/customer/Dashboard';
-import { Hotels } from '../pages/customer/Destinations';
-import { HotelDetails } from '../pages/customer/HotelDetails';
-import { TripPlanner } from '../pages/customer/TripPlanner';
-import { BookingHistory } from '../pages/customer/BookingHistory';
-import { GroupInvite } from '../pages/customer/GroupInvite';
-import { GroupPlanning } from '../pages/customer/GroupPlanning';
-import { Rentals } from '../pages/customer/Rentals';
-import { Activities } from '../pages/customer/Activities';
-import { Profile } from '../pages/customer/Profile';
-import { Promotions } from '../pages/customer/Promotions';
-import { BookTrip } from '../pages/customer/BookTrip';
-import { CustomerBookings } from '../pages/customer/CustomerBookings';
-import Payment from '../pages/customer/Payment';
-import OwnerDashboard from '../pages/owner/Dashboard';
-import OwnerDestinations from '../pages/owner/Destinations';
-import OwnerTransport from '../pages/owner/Transport';
-import OwnerBookings from '../pages/owner/Bookings';
-import OwnerMessages from '../pages/owner/Messages';
-import OwnerPromotions from '../pages/owner/Promotions';
-import OwnerCreatePromotion from '../pages/owner/CreatePromotion';
-import OwnerAnalytics from '../pages/owner/Analytics';
-import OwnerFinancials from '../pages/owner/Financials';
-import OwnerProfile from '../pages/owner/Profile';
-import OwnerSettings from '../pages/owner/Settings';
-import OwnerRegisterVehicle from '../pages/owner/RegisterVehicle';
-import OwnerPropertyDetail from '../pages/owner/PropertyDetail';
-import OwnerAddRoom from '../pages/owner/AddRoom';
-import OwnerAddProperty from '../pages/owner/AddProperty';
-import OwnerEditProperty from '../pages/owner/EditProperty';
-import { useLocation } from 'react-router-dom';
-import OwnerSidebar from '../components/layout/owner/Sidebar';
+import { useAuth } from '@/context/AuthContext';
+import { useTheme } from '@/context/ThemeContext';
+import { Sidebar } from '@/components/layout/Sidebar';
+import { Header } from '@/components/layout/Header';
+import { AdminNotification } from '@/components/common/NotificationDropdown';
+import { Login } from '@/pages/auth/Login';
+import { Register } from '@/pages/auth/Register';
+import VisitorHome from '@/pages/public/VisitorHome';
+import { Dashboard as CustomerDashboard } from '@/pages/customer/Dashboard';
+import { Hotels } from '@/pages/customer/Destinations';
+import { HotelDetails } from '@/pages/customer/HotelDetails';
+import { TripPlanner } from '@/pages/customer/TripPlanner';
+import { BookingHistory } from '@/pages/customer/BookingHistory';
+import { GroupInvite } from '@/pages/customer/GroupInvite';
+import { GroupPlanning } from '@/pages/customer/GroupPlanning';
+import { Rentals } from '@/pages/customer/Rentals';
+import { Activities } from '@/pages/customer/Activities';
+import { Profile } from '@/pages/customer/Profile';
+import { Promotions } from '@/pages/customer/Promotions';
+import { BookTrip } from '@/pages/customer/BookTrip';
+import { CustomerBookings } from '@/pages/customer/CustomerBookings';
+import Payment from '@/pages/customer/Payment';
+import OwnerDashboard from '@/pages/owner/Dashboard';
+import OwnerDestinations from '@/pages/owner/Destinations';
+import OwnerTransport from '@/pages/owner/Transport';
+import OwnerBookings from '@/pages/owner/Bookings';
+import OwnerMessages from '@/pages/owner/Messages';
+import OwnerPromotions from '@/pages/owner/Promotions';
+import OwnerCreatePromotion from '@/pages/owner/CreatePromotion';
+import OwnerAnalytics from '@/pages/owner/Analytics';
+import OwnerFinancials from '@/pages/owner/Financials';
+import OwnerSettings from '@/pages/owner/Settings';
+import OwnerProfile from '@/pages/owner/Profile';
+import OwnerRegisterVehicle from '@/pages/owner/RegisterVehicle';
+import OwnerPropertyDetail from '@/pages/owner/PropertyDetail';
+import OwnerAddRoom from '@/pages/owner/AddRoom';
+import OwnerAddProperty from '@/pages/owner/AddProperty';
+import OwnerEditProperty from '@/pages/owner/EditProperty';
+import { useLocation, useNavigate } from 'react-router-dom';
+import OwnerSidebar from '@/components/layout/owner/Sidebar';
+import { OwnerNotificationsProvider, useOwnerNotifications } from '@/context/OwnerNotificationsContext';
+import { formatRelativeTime } from '@/utils/utils';
+import { OwnerNotificationModal } from '@/components/owner/OwnerNotificationModal';
 import {
   Dashboard as AdminDashboard,
   UserManagement,
@@ -53,7 +56,7 @@ import {
   AuditLogs,
   Settings,
   AdminProfile,
-} from '../pages/admin';
+} from '@/pages/admin';
 
 interface AppRoutesProps {
   view: string;
@@ -130,18 +133,28 @@ const getOwnerTitle = (pathname: string): string => {
   if (pathname.startsWith('/profile')) return 'Profile';
   if (pathname.startsWith('/settings')) return 'Settings';
   if (pathname.startsWith('/destinations')) return 'Destinations';
+  if (pathname.startsWith('/profile')) return 'Profile';
   return 'Overview Dashboard';
 };
 
-const OwnerShell: React.FC<{ onLogout: () => void }> = ({ onLogout }) => {
+const OwnerShellInner: React.FC<{ onLogout: () => void }> = ({ onLogout }) => {
   const { user } = useAuth();
   const { isDarkMode, toggleDarkMode } = useTheme();
   const location = useLocation();
+  const navigate = useNavigate();
+  const {
+    notifications,
+    unreadCount,
+    markAllRead,
+    activeNotification,
+    closeNotification,
+  } = useOwnerNotifications();
 
   const renderOwnerPage = () => {
     const path = location.pathname;
 
     if (path === '/' || path === '/owner') return <OwnerDashboard />;
+    if (path.startsWith('/profile')) return <OwnerProfile />;
     if (path.startsWith('/destinations') && path.includes('/add-room')) return <OwnerAddRoom />;
     if (path.startsWith('/destinations') && path.includes('/edit')) return <OwnerEditProperty />;
     if (path.startsWith('/destinations') && path.includes('/new')) return <OwnerAddProperty />;
@@ -164,6 +177,26 @@ const OwnerShell: React.FC<{ onLogout: () => void }> = ({ onLogout }) => {
 
   const title = getOwnerTitle(location.pathname);
 
+  const headerNotifications: AdminNotification[] = React.useMemo(
+    () =>
+      notifications.map((n) => ({
+        id: String(n.id),
+        title: n.title,
+        description: n.message ?? '',
+        time: formatRelativeTime(n.createdAt),
+        type: n.bookingId ? 'booking' : 'system',
+        read: Boolean(n.readAt),
+        meta: {
+          ownerNotificationId: n.id,
+          bookingId: n.bookingId ?? n?.data?.id ?? null,
+        },
+      })),
+    [notifications],
+  );
+
+  // Clicking items in the bell dropdown is intentionally disabled for owners.
+  // Owners open details via Overview → Recent Activities (or "View all notifications").
+
   return (
     <div className="flex h-screen overflow-hidden font-sans transition-colors duration-200">
       <OwnerSidebar />
@@ -173,9 +206,20 @@ const OwnerShell: React.FC<{ onLogout: () => void }> = ({ onLogout }) => {
           isDark={isDarkMode}
           toggleTheme={toggleDarkMode}
           onNotificationClick={() => {}}
-          onProfileClick={() => {}}
+          onProfileClick={() => navigate('/profile')}
+          onSettingsClick={() => navigate('/settings')}
+          notifications={headerNotifications}
+          unreadCount={unreadCount}
+          onMarkAllNotificationsRead={markAllRead}
+          onViewAllNotifications={() => navigate('/owner#recent-activities')}
           onLogoutClick={onLogout}
           user={user}
+        />
+
+        <OwnerNotificationModal
+          notification={activeNotification}
+          onClose={closeNotification}
+          onOpenBooking={(bookingId) => navigate(`/bookings?openBookingId=${encodeURIComponent(String(bookingId))}`)}
         />
         <div className="flex-1 overflow-y-auto">
           <AnimatePresence mode="wait">
@@ -193,6 +237,14 @@ const OwnerShell: React.FC<{ onLogout: () => void }> = ({ onLogout }) => {
         </div>
       </main>
     </div>
+  );
+};
+
+const OwnerShell: React.FC<{ onLogout: () => void }> = ({ onLogout }) => {
+  return (
+    <OwnerNotificationsProvider>
+      <OwnerShellInner onLogout={onLogout} />
+    </OwnerNotificationsProvider>
   );
 };
 
@@ -330,6 +382,7 @@ const AdminShell: React.FC<{ view: string; setView: (view: string) => void; onLo
           toggleTheme={toggleDarkMode}
           onNotificationClick={handleNotificationClick}
           onProfileClick={() => safeSetView('profile')}
+          onSettingsClick={() => safeSetView('settings')}
           onLogoutClick={onLogout}
           user={user}
         />
@@ -723,7 +776,6 @@ export const AppRoutes: React.FC<AppRoutesProps> = ({
             setView('group-planning');
           }}
           selectedActivityIds={selectedActivityIds}
-          setSelectedActivityIds={setSelectedActivityIds}
           tripData={tripData}
           setTripData={setTripData}
         />

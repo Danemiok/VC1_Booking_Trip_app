@@ -61,6 +61,14 @@ class AuthController extends Controller
     public function update(UserUpdateRequest $request, User $user): JsonResponse
     {
         $validated = $request->validated();
+        if (array_key_exists('password', $validated)) {
+            if ($validated['password']) {
+                $validated['password'] = Hash::make($validated['password']);
+            } else {
+                unset($validated['password']);
+            }
+        }
+        $user->update($validated);
 
         return response()->json([
             'message' => 'User updated successfully',

@@ -41,16 +41,28 @@ class DatabaseSeeder extends Seeder
             ]
         );
 
+        User::updateOrCreate(
+            ['email' => 'owner@test.com'],
+            [
+                'name' => 'Owner Test',
+                'password' => Hash::make('password123'),
+                'role' => 'owner',
+            ]
+        );
+
         User::factory()->create([
             'name' => 'Owner 1',
             'email' => 'owner1@test.com',
             'role' => 'owner'
         ]);
 
-        User::factory()->create([
+User::factory()->create([
             'name' => 'Customer 1',
             'email' => 'customer1@test.com',
             'role' => 'customer'
         ]);
+
+$this->call(HotelSeeder::class);
     }
+
 }

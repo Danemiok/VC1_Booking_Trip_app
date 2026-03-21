@@ -13,17 +13,35 @@ class Booking extends Model
 
     protected $fillable = [
         'id',
+        'user_id',
         'guest',
+        'customer_email',
+        'customer_phone',
         'service',
         'route',
-        'dateStart',
-        'dateEnd',
+        'category',
+        'date_start',
+        'date_end',
         'date',
         'time',
         'pax',
+        'guests',
+        'nights',
+        'room_type',
+        'vehicle_type',
         'amount',
+        'total_amount',
+        'payment_method',
         'status',
-        'category',
+        'rental',
+        'activities',
+        'reference',
+        'special_requests',
+        'destination_id',
+        'transport_id',
+        // Legacy camelCase columns (kept for backwards compatibility with earlier migrations).
+        'dateStart',
+        'dateEnd',
         'roomType',
         'vehicleType',
         'customerEmail',
@@ -31,20 +49,20 @@ class Booking extends Model
         'specialRequests',
         'paymentMethod',
         'createdAt',
-        'user_id',
-        'destination_id',
-        'transport_id'
     ];
 
     protected $casts = [
         'amount' => 'decimal:2',
+        'total_amount' => 'decimal:2',
         'pax' => 'integer',
+        'nights' => 'integer',
         'destination_id' => 'integer',
         'transport_id' => 'integer',
-        'dateStart' => 'date',
-        'dateEnd' => 'date',
-        'date' => 'date',
-        'createdAt' => 'datetime'
+        'rental' => 'array',
+        'activities' => 'array',
+        'created_at' => 'datetime',
+        'updated_at' => 'datetime',
+        'createdAt' => 'datetime',
     ];
 
     // Relationship with User

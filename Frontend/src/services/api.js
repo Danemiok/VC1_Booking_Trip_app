@@ -35,15 +35,23 @@ export async function apiRequest(path, options = {}) {
     options?.headers &&
       Object.keys(options.headers).some((key) => key.toLowerCase() === 'authorization'),
   );
+  const isFormData =
+    typeof FormData !== 'undefined' && options?.body instanceof FormData;
+
+  const headers = {
+    Accept: 'application/json',
+    ...(token && !hasAuthHeader ? { Authorization: `Bearer ${token}` } : {}),
+    ...(options.headers ?? {}),
+  };
+
+  if (!isFormData) {
+    headers['Content-Type'] = 'application/json';
+  }
 
   const response = await fetch(`${API_BASE_URL}${path}`, {
     ...options,
-    headers: {
-      Accept: 'application/json',
-      'Content-Type': 'application/json',
-      ...(token && !hasAuthHeader ? { Authorization: `Bearer ${token}` } : {}),
-      ...(options.headers ?? {}),
-    },
+    credentials: 'include',
+    headers,
   });
 
   const rawBody = await response.text();
@@ -61,6 +69,7 @@ export async function apiRequest(path, options = {}) {
     const error = new Error(data?.message ?? 'Request failed');
     error.status = response.status;
     error.data = data;
+    error.errors = data?.errors ?? null;
     throw error;
   }
 

@@ -12,6 +12,7 @@ import {
   Car,
   Hotel
 } from 'lucide-react';
+import type { LucideIcon } from 'lucide-react';
 
 export interface MenuItem {
   id: string;

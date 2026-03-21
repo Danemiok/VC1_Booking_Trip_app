@@ -1,6 +1,6 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
-import { bookingService } from '@/src/services/bookingService';
+import { bookingService } from '@/services/bookingService';
 import { useAuth } from '../../context/AuthContext';
 
 const formatDate = (value: any) => {
@@ -9,15 +9,33 @@ const formatDate = (value: any) => {
   return d.toLocaleDateString('en-US', { month: 'short', day: '2-digit', year: 'numeric' });
 };
 
+const formatMoney = (value: any) => {
+  const n = Number(value);
+  if (!Number.isFinite(n)) return '$0.00';
+  return `$${n.toFixed(2)}`;
+};
+
+const getBookingDateLabel = (booking: any) => {
+  if (booking?.category === 'hotel') {
+    const start = formatDate(booking?.dateStart);
+    const end = formatDate(booking?.dateEnd);
+    if (start && end) return `${start} to ${end}`;
+    return start || end || '';
+  }
+  const date = formatDate(booking?.date);
+  const time = booking?.time ? String(booking.time) : '';
+  return time ? `${date} ${time}` : date;
+};
+
 export const CustomerBookings: React.FC = () => {
-  const { user, isAuthenticated } = useAuth();
+  const { isAuthenticated } = useAuth();
   const [loading, setLoading] = React.useState(true);
   const [error, setError] = React.useState<string | null>(null);
   const [bookings, setBookings] = React.useState<any[]>([]);
 
   React.useEffect(() => {
     const run = async () => {
-      if (!isAuthenticated || !user?.id) {
+      if (!isAuthenticated) {
         setLoading(false);
         return;
       }
@@ -25,7 +43,7 @@ export const CustomerBookings: React.FC = () => {
       try {
         setLoading(true);
         setError(null);
-        const response = await bookingService.getCustomerBookings(user.id);
+        const response = await bookingService.getMyBookings();
         setBookings(Array.isArray(response.data) ? response.data : []);
       } catch (err: any) {
         setError(err?.data?.message ?? err?.message ?? 'Failed to load bookings');
@@ -36,7 +54,7 @@ export const CustomerBookings: React.FC = () => {
     };
 
     run();
-  }, [isAuthenticated, user?.id]);
+  }, [isAuthenticated]);
 
   if (!isAuthenticated) {
     return (
@@ -99,6 +117,7 @@ export const CustomerBookings: React.FC = () => {
                   <th className="px-6 py-4">Destination</th>
                   <th className="px-6 py-4">Travel date</th>
                   <th className="px-6 py-4">Travelers</th>
+                  <th className="px-6 py-4">Amount</th>
                   <th className="px-6 py-4">Status</th>
                 </tr>
               </thead>
@@ -110,8 +129,9 @@ export const CustomerBookings: React.FC = () => {
                       <div className="font-semibold text-slate-900 dark:text-slate-100">{b.service}</div>
                       <div className="text-xs text-slate-500 dark:text-slate-400">{b.route}</div>
                     </td>
-                    <td className="px-6 py-4 text-sm font-semibold">{formatDate(b.date)}</td>
+                    <td className="px-6 py-4 text-sm font-semibold">{getBookingDateLabel(b)}</td>
                     <td className="px-6 py-4 text-sm font-semibold">{b.pax}</td>
+                    <td className="px-6 py-4 text-sm font-semibold">{formatMoney(b.amount)}</td>
                     <td className="px-6 py-4 text-sm font-semibold capitalize">{String(b.status ?? '').toLowerCase()}</td>
                   </tr>
                 ))}

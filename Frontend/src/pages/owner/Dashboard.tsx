@@ -23,8 +23,10 @@ import {
   AreaChart,
   Area
 } from 'recharts';
-import { cn } from '@/src/utils/utils';
-import { MOCK_REVENUE_DATA } from '@/src/routes/constants';
+import { cn, formatRelativeTime } from '@/utils/utils';
+import { MOCK_REVENUE_DATA } from '@/routes/constants';
+import { useOwnerNotifications } from '@/context/OwnerNotificationsContext';
+import { useLocation, useNavigate } from 'react-router-dom';
 
 const StatCard = ({ title, value, change, changeType, icon: Icon, subtitle }: any) => (
   <div className="bg-white dark:bg-slate-900 p-6 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm hover:shadow-lg transition-shadow">
@@ -70,6 +72,17 @@ const StatCard = ({ title, value, change, changeType, icon: Icon, subtitle }: an
 );
 
 const Dashboard = () => {
+  const navigate = useNavigate();
+  const location = useLocation();
+  const { notifications, loading, markRead, openNotification } = useOwnerNotifications();
+  const recentActivities = React.useMemo(() => notifications.slice(0, 4), [notifications]);
+
+  React.useEffect(() => {
+    if (location.hash !== '#recent-activities') return;
+    const el = document.getElementById('recent-activities');
+    el?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }, [location.hash]);
+
   return (
     <div className="p-8 max-w-[1440px] mx-auto space-y-8">
       <section className="grid grid-cols-1 md:grid-cols-3 gap-6">
@@ -152,29 +165,56 @@ const Dashboard = () => {
         </div>
 
         <div className="space-y-6">
-          <div className="bg-white dark:bg-slate-900 p-6 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm">
+          <div id="recent-activities" className="bg-white dark:bg-slate-900 p-6 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm">
             <div className="flex items-center justify-between mb-6">
               <h4 className="font-bold">Recent Activities</h4>
-              <button className="text-xs text-blue-600 font-bold hover:bg-blue-600/5 px-2 py-1 rounded transition-colors uppercase tracking-wider">View All</button>
+              <button
+                onClick={() => navigate('/bookings')}
+                className="text-xs text-blue-600 font-bold hover:bg-blue-600/5 px-2 py-1 rounded transition-colors uppercase tracking-wider"
+                type="button"
+              >
+                View All
+              </button>
             </div>
             <div className="space-y-6">
-              {[
-                { icon: CalendarCheck, title: 'Booking from Siem Reap', desc: 'Shared Shuttle • 2 Guests', time: '10 mins ago' },
-                { icon: CreditCard, title: 'Payout successful', desc: 'ABA Bank • $1,240.00', time: '2 hours ago' },
-                { icon: MessageSquare, title: 'Message from Sopheap', desc: 'Route timing question', time: '5 hours ago' },
-                { icon: Star, title: 'New 5-star review', desc: '"Excellent service!"', time: 'Yesterday' },
-              ].map((activity, i) => (
-                <div key={i} className="flex gap-4 group">
-                  <div className="w-10 h-10 rounded-xl bg-blue-50 dark:bg-blue-900/20 flex items-center justify-center text-blue-600 flex-shrink-0">
-                    <activity.icon size={20} />
-                  </div>
-                  <div className={cn("flex-1 pb-4", i !== 3 && "border-b border-slate-50 dark:border-slate-800/50")}>
-                    <p className="text-sm font-bold">{activity.title}</p>
-                    <p className="text-xs text-slate-500 mt-1 font-medium">{activity.desc}</p>
-                    <span className="text-[10px] font-bold text-slate-400 mt-2 block uppercase">{activity.time}</span>
-                  </div>
-                </div>
-              ))}
+              {loading && recentActivities.length === 0 ? (
+                <p className="text-xs text-slate-500 font-medium">Loading recent activity…</p>
+              ) : recentActivities.length === 0 ? (
+                <p className="text-xs text-slate-500 font-medium">No recent activity yet.</p>
+              ) : (
+                recentActivities.map((n, i) => {
+                  const Icon = n.bookingId ? CalendarCheck : CheckCircle2;
+                  const time = formatRelativeTime(n.createdAt);
+
+                  return (
+                    <button
+                      key={String(n.id)}
+                      onClick={async () => {
+                        if (!n.readAt) await markRead(n.id);
+                        openNotification(n);
+                      }}
+                      className="w-full text-left flex gap-4 group"
+                      type="button"
+                    >
+                      <div className="w-10 h-10 rounded-xl bg-blue-50 dark:bg-blue-900/20 flex items-center justify-center text-blue-600 flex-shrink-0">
+                        <Icon size={20} />
+                      </div>
+                      <div
+                        className={cn(
+                          "flex-1 pb-4",
+                          i !== recentActivities.length - 1 && "border-b border-slate-50 dark:border-slate-800/50",
+                        )}
+                      >
+                        <p className="text-sm font-bold">{n.title}</p>
+                        <p className="text-xs text-slate-500 mt-1 font-medium">{n.message ?? ''}</p>
+                        {time && (
+                          <span className="text-[10px] font-bold text-slate-400 mt-2 block uppercase">{time}</span>
+                        )}
+                      </div>
+                    </button>
+                  );
+                })
+              )}
             </div>
           </div>
 

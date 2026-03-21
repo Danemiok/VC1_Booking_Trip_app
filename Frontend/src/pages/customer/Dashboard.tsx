@@ -8,6 +8,7 @@ import {
   Users, 
   Hotel, 
   Ship, 
+  Car,
   Waves, 
   Star, 
   CheckCircle2, 
@@ -32,9 +33,9 @@ import {
   isBefore,
   isAfter
 } from 'date-fns';
-import { ALL_HOTELS } from '../../data/hotels';
 import { useAuth } from '../../context/AuthContext';
-import { bookingService } from '@/src/services/bookingService';
+import { bookingService } from '@/services/bookingService';
+import { getPublicDestinations } from '../../services/destinationService';
 
 // --- Sub-components (could be further split) ---
 const normalizeSearchText = (value: string): string =>
@@ -482,7 +483,7 @@ const Categories = ({
 }) => {
   const categories = [
     { icon: Hotel, title: "Hotel", desc: "Villas & Resorts", color: "bg-blue-500/10 text-blue-500", onClick: onHotelsClick },
-    { icon: Ship, title: "Rental", desc: "Ferries & Boats", color: "bg-emerald-500/10 text-emerald-500", onClick: onRentalsClick },
+    { icon: Car, title: "Transport", desc: "Cars, Buses & Trains", color: "bg-emerald-500/10 text-emerald-500", onClick: onRentalsClick },
     { icon: Waves, title: "Activities", desc: "Tours & Diving", color: "bg-amber-500/10 text-amber-500", onClick: onActivitiesClick },
   ];
 
@@ -1017,6 +1018,7 @@ export const Dashboard: React.FC<DashboardProps> = ({
   const [searchQuery, setSearchQuery] = useState('');
   const [searchResults, setSearchResults] = useState<any[]>([]);
   const [hasSearched, setHasSearched] = useState(false);
+  const [destinations, setDestinations] = useState<any[]>([]);
   const { user, isAuthenticated } = useAuth();
   const [myBookings, setMyBookings] = useState<any[]>([]);
   const [myBookingsLoading, setMyBookingsLoading] = useState(false);
@@ -1047,6 +1049,19 @@ export const Dashboard: React.FC<DashboardProps> = ({
     setLocation(String(tripData?.destination?.name || ''));
   }, [tripData?.destination?.name]);
 
+  useEffect(() => {
+    const load = async () => {
+      try {
+        const data = await getPublicDestinations();
+        setDestinations(data);
+      } catch {
+        setDestinations([]);
+      }
+    };
+
+    load();
+  }, []);
+
   const handleSearchInternal = (query: string, dates: { start: Date | null, end: Date | null }, guests: { adults: number, children: number }) => {
     const trimmedQuery = query.trim();
     setSearchQuery(trimmedQuery);
@@ -1064,7 +1079,7 @@ export const Dashboard: React.FC<DashboardProps> = ({
     }
 
     const queryTokens = normalizeSearchText(trimmedQuery).split(/\s+/).filter(Boolean);
-    const results = ALL_HOTELS.filter((hotel) => {
+    const results = destinations.filter((hotel) => {
       const searchableText = normalizeSearchText(
         [
           hotel.name,
