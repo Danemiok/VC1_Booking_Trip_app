@@ -5,10 +5,13 @@ namespace App\Http\Controllers;
 use App\Models\User;
 use Carbon\Carbon;
 use Exception;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
 use Laravel\Socialite\Facades\Socialite;
+use Laravel\Socialite\Two\InvalidStateException;
+
 
 class GoogleAuthController extends Controller
 {
@@ -23,10 +26,16 @@ class GoogleAuthController extends Controller
         return Socialite::driver('google')->redirect();
     }
 
-    public function CallbackGoogle()
+    public function callbackGoogle()
     {
         try {
-            $googleUser = Socialite::driver('google')->user();
+            try {
+                $googleUser = Socialite::driver('google')->user();
+            } catch (InvalidStateException $e) {
+                // In SPA setups, sessions/cookies can be lost between redirect and callback.
+                $googleUser = Socialite::driver('google')->stateless()->user();
+            }
+
             $googleId = (string) $googleUser->getId();
             $googleEmail = Str::lower(trim((string) $googleUser->getEmail()));
 
@@ -36,33 +45,73 @@ class GoogleAuthController extends Controller
                 ));
             }
 
-            $user = User::query()
-                ->where('google_id', $googleId)
-                ->when($googleEmail, fn ($query) => $query->orWhere('email', $googleEmail))
-                ->first();
+            $isEmailVerified = data_get($googleUser, 'user.email_verified', data_get($googleUser, 'user.verified_email'));
+            if ($isEmailVerified !== null && !$isEmailVerified) {
+                return redirect()->away($this->buildFrontendAuthUrl(
+                    'Your Google email is not verified. Please verify your email and try again.'
+                ));
+            }
 
-            if (!$user) {
-                $user = User::create([
-                    'name' => $googleUser->getName() ?: 'Google User',
-                    'email' => $googleEmail,
-                    'password' => Hash::make(Str::random(40)),
-                    'role' => 'customer',
-                    'google_id' => $googleId,
-                    'email_verified_at' => Carbon::now(),
-                ]);
-            } else {
+            $user = DB::transaction(function () use ($googleId, $googleEmail, $googleUser) {
+                $userByGoogleId = User::query()->where('google_id', $googleId)->first();
+                $userByEmail = User::query()->where('email', $googleEmail)->first();
+
+                if ($userByGoogleId && $userByEmail && $userByGoogleId->id !== $userByEmail->id) {
+                    Log::warning('Google OAuth account conflict.', [
+                        'google_id' => $googleId,
+                        'google_email' => $googleEmail,
+                        'user_google_id' => $userByGoogleId->id,
+                        'user_email' => $userByEmail->id,
+                    ]);
+
+                    return null;
+                }
+
+                $user = $userByGoogleId ?: $userByEmail;
+                $displayName = trim((string) ($googleUser->getName() ?: $googleUser->getNickname() ?: 'Google User'));
+
+                if (!$user) {
+                    return User::create([
+                        'name' => $displayName,
+                        'email' => $googleEmail,
+                        'password' => Hash::make(Str::random(40)),
+                        'role' => 'customer',
+                        'google_id' => $googleId,
+                        'email_verified_at' => Carbon::now(),
+                    ]);
+                }
+
                 $user->forceFill([
-                    'name' => $user->name ?: ($googleUser->getName() ?: 'Google User'),
-                    'email' => $googleEmail,
+                    'name' => $user->name ?: $displayName,
                     'google_id' => $googleId,
                     'email_verified_at' => $user->email_verified_at ?: Carbon::now(),
                 ]);
+
+                // Only update the email when it won't conflict with another account.
+                if (Str::lower(trim((string) $user->email)) !== $googleEmail) {
+                    $emailTaken = User::query()
+                        ->where('email', $googleEmail)
+                        ->whereKeyNot($user->getKey())
+                        ->exists();
+
+                    if (!$emailTaken) {
+                        $user->email = $googleEmail;
+                    }
+                }
 
                 if (empty($user->password)) {
                     $user->password = Hash::make(Str::random(40));
                 }
 
                 $user->save();
+
+                return $user;
+            });
+
+            if (!$user) {
+                return redirect()->away($this->buildFrontendAuthUrl(
+                    'This Google account is already linked to a different user. Please contact support.'
+                ));
             }
 
             $token = $user->createToken('auth_token')->plainTextToken;
@@ -102,25 +151,32 @@ class GoogleAuthController extends Controller
 
     private function buildFrontendAuthUrl(string $message): string
     {
-        $frontendBaseUrl = $this->getFrontendBaseUrl();
-
-        return $frontendBaseUrl . '/?auth=login&oauth_error=' . urlencode($message);
+        return $this->buildFrontendUrl([
+            'auth' => 'login',
+            'oauth_error' => $message,
+        ]);
     }
 
     private function buildFrontendSuccessUrl(User $user, string $token): string
     {
-        $frontendBaseUrl = $this->getFrontendBaseUrl();
         $userPayload = [
             'id' => $user->id,
             'name' => $user->name,
             'email' => $user->email,
             'role' => $user->role,
-            'created_at' => $user->created_at,
+            'created_at' => optional($user->created_at)->toISOString(),
         ];
 
-        return $frontendBaseUrl . '/?access_token=' . urlencode($token)
-            . '&auth_user=' . urlencode(json_encode($userPayload))
-            . '&next_view=' . urlencode($this->resolveNextView($user->role));
+        $userJson = json_encode($userPayload);
+        if ($userJson === false) {
+            $userJson = '{}';
+        }
+
+        return $this->buildFrontendUrl([
+            'access_token' => $token,
+            'auth_user' => $userJson,
+            'next_view' => $this->resolveNextView($user->role),
+        ]);
     }
 
     private function resolveNextView(string $role): string
@@ -134,11 +190,23 @@ class GoogleAuthController extends Controller
 
     private function getFrontendBaseUrl(): string
     {
-        $frontendOrigins = array_filter(array_map(
-            'trim',
-            explode(',', (string) env('FRONTEND_URLS', 'http://localhost:5173,http://127.0.0.1:5173'))
-        ));
+        $configuredOrigins = config('cors.allowed_origins');
+        $origins = is_array($configuredOrigins) ? $configuredOrigins : [];
 
-        return rtrim($frontendOrigins[0] ?? 'http://localhost:5173', '/');
+        if (empty($origins)) {
+            $origins = array_filter(array_map(
+                'trim',
+                explode(',', (string) env('FRONTEND_URLS', 'http://localhost:5173,http://127.0.0.1:5173'))
+            ));
+        }
+
+        return rtrim((string) ($origins[0] ?? 'http://localhost:5173'), '/');
+    }
+
+    private function buildFrontendUrl(array $query): string
+    {
+        $frontendBaseUrl = $this->getFrontendBaseUrl();
+
+        return $frontendBaseUrl . '/?' . http_build_query($query, '', '&', PHP_QUERY_RFC3986);
     }
 }
