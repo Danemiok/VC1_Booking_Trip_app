@@ -12,7 +12,7 @@ import {
   Info
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
-import { cn } from '@/src/utils/utils';
+import { cn } from '@/utils/utils';
 
 const NewBooking = () => {
   const navigate = useNavigate();
@@ -69,7 +69,7 @@ const NewBooking = () => {
                 <div className="space-y-2">
                   <label className="text-[10px] uppercase font-bold tracking-widest text-slate-400">Service Type</label>
                   <select className="w-full px-4 py-3 bg-slate-50 dark:bg-slate-800 border-transparent rounded-xl text-sm focus:bg-white dark:focus:bg-slate-900 focus:ring-2 focus:ring-blue-600/10 transition-all font-medium appearance-none">
-                    <option>Shared Shuttle</option>
+                    <option>Shared Train</option>
                     <option>Private SUV</option>
                     <option>Luxury Villa</option>
                     <option>Boutique Hotel</option>

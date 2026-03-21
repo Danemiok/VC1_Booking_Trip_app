@@ -10,7 +10,7 @@ import {
   ArrowUpRight
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
-import { cn } from '@/src/utils/utils';
+import { cn } from '@/utils/utils';
 
 const WithdrawFunds = () => {
   const navigate = useNavigate();

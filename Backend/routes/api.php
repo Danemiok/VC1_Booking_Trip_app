@@ -7,8 +7,12 @@ use App\Http\Controllers\Auth\LoginController;
 use App\Http\Controllers\Auth\LogoutController;
 use App\Http\Controllers\Auth\RegisterController;
 use App\Http\Controllers\AuthController;
+use App\Http\Controllers\Owner\TransportController;
 use App\Http\Controllers\Owner\MessageController;
 use App\Http\Controllers\Customer\MessageController as CustomerMessageController;
+use Illuminate\Support\Facades\DB;
+use App\Http\Controllers\PublicFileController;
+use App\Http\Controllers\ImageUploadController;
 
 /*
 |--------------------------------------------------------------------------
@@ -21,8 +25,57 @@ use App\Http\Controllers\Owner\OwnerProfileController;
 // use Illuminate\Http\Request;
 // use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Api\BookingController; // ADD THIS
+use App\Http\Controllers\Api\OwnerNotificationController;
+
+// Simple health check (useful for confirming API + DB connectivity from the frontend).
+Route::get('/health', function () {
+    try {
+        DB::connection()->getPdo();
+
+        return response()->json([
+            'ok' => true,
+            'db' => true,
+            'driver' => DB::connection()->getDriverName(),
+            'database' => method_exists(DB::connection(), 'getDatabaseName') ? DB::connection()->getDatabaseName() : null,
+            'demo_owner_exists' => \App\Models\User::query()->where('email', 'owner@test.com')->exists(),
+        ]);
+    } catch (\Throwable $e) {
+        return response()->json([
+            'ok' => false,
+            'db' => false,
+            'message' => $e->getMessage(),
+        ], 500);
+    }
+});
+use App\Http\Controllers\Owner\AccommodationController;
+// use Illuminate\Http\Request;
+// use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\Api\HotelSelectionController;
+use App\Http\Controllers\Api\HotelController;
+
+/*
+|--------------------------------------------------------------------------
+| Public Routes (No Authentication Required)
+|--------------------------------------------------------------------------
+*/
+
+Route::get('/files/{path}', [PublicFileController::class, 'show'])->where('path', '.*');
+
+// Get all active hotels for customers
+Route::get('/hotels/public', [HotelController::class, 'index']);
+Route::get('/hotels-public', [HotelController::class, 'index']);
 
 Route::prefix('auth')->group(function () {
+
+    Route::get('/test', function () {
+        return response()->json([
+            'message' => 'Laravel API is working!',
+            'database' => 'Connected',
+            'timestamp' => now()->toDateTimeString(),
+            'environment' => app()->environment(),
+            'users_count' => \App\Models\User::count()
+        ]);
+    });
 
     Route::post('/register', [RegisterController::class, 'register']);
     Route::post('/login', [LoginController::class, 'login']);
@@ -50,6 +103,12 @@ Route::prefix('auth')->group(function () {
     });
 });
 
+Route::get('/transports', [TransportController::class, 'publicIndex']);
+Route::get('/destinations/public/all', [DestinationController::class, 'getAllPublic']);
+
+Route::middleware(['auth:sanctum', 'role:admin'])->get('/admin/access', function () {
+    return response()->json(['message' => 'Admin access granted']);
+});
 /*
 |--------------------------------------------------------------------------
 | Role Protected Routes
@@ -81,12 +140,23 @@ Route::middleware(['auth:sanctum', 'role:owner'])->group(function () {
     
     // Owner promotions routes
     Route::apiResource('promotions', PromotionController::class);
+    Route::apiResource('hotels', AccommodationController::class);
 });
 
+Route::middleware(['auth:sanctum', 'role:owner'])->get('/owner/transports', [TransportController::class, 'index']);
+Route::middleware(['auth:sanctum', 'role:owner'])->post('/owner/transports', [TransportController::class, 'store']);
+Route::middleware(['auth:sanctum', 'role:owner'])->put('/owner/transports/{transport}', [TransportController::class, 'update']);
+Route::middleware(['auth:sanctum', 'role:owner'])->patch('/owner/transports/{transport}', [TransportController::class, 'update']);
+Route::middleware(['auth:sanctum', 'role:owner'])->delete('/owner/transports/{transport}', [TransportController::class, 'destroy']);
+
+Route::apiResource('users', AuthController::class);
 
 
 // PROTECTED ROUTES (require authentication)
 Route::middleware(['auth:sanctum'])->group(function () {
+    // Image Upload
+    Route::post('/upload/image', [ImageUploadController::class, 'upload']);
+
     // Customer booking routes
     Route::middleware(['role:customer,admin'])->group(function () {
         Route::post('/bookings', [BookingController::class, 'store']);
@@ -95,6 +165,12 @@ Route::middleware(['auth:sanctum'])->group(function () {
         // Backwards-compatible aliases
         Route::get('/customer/bookings', [BookingController::class, 'myBookings']);
         Route::post('/customer/bookings', [BookingController::class, 'store']);
+
+        // Customer hotel selection routes
+        Route::apiResource('hotel-selections', HotelSelectionController::class);
+        Route::get('/hotel-selections/status/{status}', [HotelSelectionController::class, 'getByStatus']);
+        Route::post('/hotel-selections/{hotelSelection}/confirm', [HotelSelectionController::class, 'confirm']);
+        Route::post('/hotel-selections/{hotelSelection}/cancel', [HotelSelectionController::class, 'cancel']);
     });
 
     // Owner routes - accessible by owners and admins
@@ -103,6 +179,12 @@ Route::middleware(['auth:sanctum'])->group(function () {
         Route::get('/bookings/stats', [BookingController::class, 'stats']);
         Route::get('/bookings/export', [BookingController::class, 'export']);
         Route::patch('/bookings/{id}/status', [BookingController::class, 'updateStatus']);
+
+        // Owner notifications (new bookings, etc.)
+        Route::get('/owner/notifications', [OwnerNotificationController::class, 'index']);
+        Route::get('/owner/notifications/unread-count', [OwnerNotificationController::class, 'unreadCount']);
+        Route::post('/owner/notifications/read-all', [OwnerNotificationController::class, 'markAllRead']);
+        Route::post('/owner/notifications/{id}/read', [OwnerNotificationController::class, 'markRead']);
     });
     
     // Admin only routes

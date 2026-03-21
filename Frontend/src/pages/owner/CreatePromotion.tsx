@@ -11,8 +11,8 @@ import {
   Layout
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
-import { cn } from '@/src/utils/utils';
-import { createPromotion } from '@/src/services/promotionService';
+import { cn } from '@/utils/utils';
+import { createPromotion } from '@/services/promotionService';
 
 type PromotionServiceCategory = 'hotel' | 'transport';
 
