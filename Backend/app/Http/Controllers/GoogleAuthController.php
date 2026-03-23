@@ -45,13 +45,10 @@ class GoogleAuthController extends Controller
                 ));
             }
 
-<<<<<<< HEAD
-=======
             $user = User::query()
                 ->where('google_id', $googleId)
                 ->when($googleEmail, fn($query) => $query->orWhere('email', $googleEmail))
                 ->first();
->>>>>>> a1b7c73d5f67eae5ec2df1801f1b325d4bb64b26
             $isEmailVerified = data_get($googleUser, 'user.email_verified', data_get($googleUser, 'user.verified_email'));
             if ($isEmailVerified !== null && !$isEmailVerified) {
                 return redirect()->away($this->buildFrontendAuthUrl(
