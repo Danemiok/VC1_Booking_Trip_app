@@ -45,12 +45,10 @@ class GoogleAuthController extends Controller
                 ));
             }
 
-<<<<<<< HEAD
             $user = User::query()
                 ->where('google_id', $googleId)
                 ->when($googleEmail, fn($query) => $query->orWhere('email', $googleEmail))
                 ->first();
-=======
             $isEmailVerified = data_get($googleUser, 'user.email_verified', data_get($googleUser, 'user.verified_email'));
             if ($isEmailVerified !== null && !$isEmailVerified) {
                 return redirect()->away($this->buildFrontendAuthUrl(
@@ -86,7 +84,6 @@ class GoogleAuthController extends Controller
                         'email_verified_at' => Carbon::now(),
                     ]);
                 }
->>>>>>> social-account
 
                 $user->forceFill([
                     'name' => $user->name ?: $displayName,
