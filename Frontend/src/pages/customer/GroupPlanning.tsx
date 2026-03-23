@@ -27,7 +27,8 @@ import {
   Search,
   LayoutDashboard,
   ArrowLeft,
-  Heart
+  Heart,
+  X,
 } from 'lucide-react';
 
 interface GroupPlanningProps {
