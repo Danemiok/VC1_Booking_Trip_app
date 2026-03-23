@@ -49,6 +49,7 @@ export const Footer: React.FC<FooterProps> = ({
                   className="w-full h-full object-contain"
                   referrerPolicy="no-referrer"
                 />
+              </div>
               <div className="w-10 h-10 rounded-lg overflow-hidden flex-shrink-0 bg-slate-900 dark:bg-white p-2 shadow-md">
                 <Compass className="w-full h-full text-white dark:text-slate-900" />
               </div>

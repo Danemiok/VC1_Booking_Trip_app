@@ -1,11 +1,12 @@
-import React, { useEffect, useState } from 'react';
-import { AnimatePresence, motion } from 'motion/react';
+import React, { useEffect, useRef, useState } from 'react';
+import { AnimatePresence } from 'motion/react';
 import { Navbar } from './components/layout/Navbar';
 import { Footer } from './components/layout/Footer';
 
+import { DestinationModal } from './components/common/DestinationModal';
+import { RecommendationModal } from './components/common/RecommendationModal';
+import { HelpCenterLayout } from './components/layout/HelpCenterLayout';
 import { AppRoutes } from './routes/AppRoutes';
-import { Login } from './pages/auth/Login';
-import { Register } from './pages/auth/Register';
 import { useAuth } from './context/AuthContext';
 import { ThemeProvider } from './context/ThemeContext';
 
@@ -13,6 +14,7 @@ const AppContent = () => {
   const [view, setView] = useState('landing');
   const [activeProfileTab, setActiveProfileTab] = useState<any>('profile');
   const { user, logout } = useAuth();
+  const previousUserRef = useRef(user);
 
   const handleProfileClick = (tab?: any) => {
     if (tab) setActiveProfileTab(tab);
@@ -22,9 +24,7 @@ const AppContent = () => {
   const [selectedDestination, setSelectedDestination] = useState<any | null>(null);
   const [selectedHotel, setSelectedHotel] = useState<any | null>(null);
   const [selectedActivityIds, setSelectedActivityIds] = useState<number[]>([]);
-  const isAdminUser = user?.role === 'admin';
-  const isOwnerUser = user?.role === 'owner';
-  
+
   // Initialize real-time dates
   const today = new Date('2026-03-03T00:34:03-08:00');
   const startDate = new Date(today);
@@ -105,16 +105,12 @@ const AppContent = () => {
     }
   };
 
-  const [returnToPlanner, setReturnToPlanner] = useState(false);
-
   const handleTripPlannerClick = () => {
-    setReturnToPlanner(true);
     setView('trip-planner');
   };
 
   const handleTourGuidesClick = () => {
     // Navigate to landing page and scroll to "Recommended for You" section
-    setReturnToPlanner(false);
     setView('landing');
     
     // Scroll to the recommended section after component mounts
@@ -127,15 +123,13 @@ const AppContent = () => {
   };
 
   const handleLogout = () => {
-    logout();
-    setReturnToPlanner(false);
+    void logout();
     setView('landing');
   };
 
   useEffect(() => {
     // Redirect to home after logout, regardless of where logout was triggered.
     if (previousUserRef.current && !user) {
-      setReturnToPlanner(false);
       setSelectedRecommendation(null);
       setSelectedDestination(null);
       setSelectedHotel(null);
@@ -156,15 +150,12 @@ const AppContent = () => {
           notifications={notifications}
           onMarkAsRead={handleMarkAsRead}
           onMarkAllAsRead={handleMarkAllAsRead}
-          onHotelsClick={() => { 
-            setReturnToPlanner(false); 
-            setView('hotels'); 
-          }}
-          onRentalsClick={() => { setReturnToPlanner(false); setView('rentals'); }}
-          onHomeClick={() => { setReturnToPlanner(false); setView('landing'); }}
-          onBookingsClick={() => { setReturnToPlanner(false); setView('bookings'); }}
+          onHotelsClick={() => setView('hotels')}
+          onRentalsClick={() => setView('rentals')}
+          onHomeClick={() => setView('landing')}
+          onBookingsClick={() => setView('bookings')}
           onTripPlannerClick={handleTripPlannerClick}
-          onActivitiesClick={() => { setReturnToPlanner(false); setView('activities'); }}
+          onActivitiesClick={() => setView('activities')}
           currentView={view}
         />
 
@@ -174,10 +165,7 @@ const AppContent = () => {
           onSelectRecommendation={handleSelectRecommendation}
           onSelectDestination={handleSelectDestination}
           onPromotionsClick={() => setView('promotions')}
-          onHotelsClick={() => { 
-            setReturnToPlanner(false); 
-            setView('hotels'); 
-          }}
+          onHotelsClick={() => setView('hotels')}
           onRentalsClick={() => setView('rentals')}
           onActivitiesClick={() => setView('activities')}
           notifications={notifications}
@@ -190,31 +178,22 @@ const AppContent = () => {
           setSelectedActivityIds={setSelectedActivityIds}
           tripData={tripData}
           setTripData={setTripData}
-          onSearch={handleSearch}
-          returnToPlanner={returnToPlanner}
-          setReturnToPlanner={setReturnToPlanner}
         />
 
         <Footer
           onLoginClick={() => setView('login')}
           onHomeClick={() => {
-            setReturnToPlanner(false);
             setView('landing');
           }}
           onTripPlannerClick={() => {
-            setReturnToPlanner(true);
             setView('trip-planner');
           }}
           onBookingsClick={() => {
-            setReturnToPlanner(false);
             setView('bookings');
           }}
-          onHotelsClick={() => { 
-            setReturnToPlanner(false); 
-            setView('hotels'); 
-          }}
-          onRentalsClick={() => { setReturnToPlanner(false); setView('rentals'); }}
-          onActivitiesClick={() => { setReturnToPlanner(false); setView('activities'); }}
+          onHotelsClick={() => setView('hotels')}
+          onRentalsClick={() => setView('rentals')}
+          onActivitiesClick={() => setView('activities')}
           onTourGuidesClick={handleTourGuidesClick}
           user={user}
         />
