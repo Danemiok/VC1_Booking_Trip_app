@@ -107,7 +107,7 @@ class PromotionController extends Controller
             ], 201);
         } catch (\Exception $e) {
             DB::rollBack();
-            \Log::error('Promotion creation error: ' . $e->getMessage(), [
+            Log::error('Promotion creation error: ' . $e->getMessage(), [
                 'trace' => $e->getTraceAsString(),
                 'file' => $e->getFile(),
                 'line' => $e->getLine()

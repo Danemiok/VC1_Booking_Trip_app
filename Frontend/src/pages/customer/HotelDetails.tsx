@@ -42,6 +42,11 @@ export interface HotelReservationSelection {
   cleaningFee: number;
   serviceFee: number;
   totalPrice: number;
+  hasPromotion?: boolean;
+  promotion?: any;
+  originalPrice?: number;
+  discountedPrice?: number;
+  discountPercentage?: number;
 }
 
 interface HotelDetailsProps {
@@ -146,6 +151,8 @@ export const HotelDetails: React.FC<HotelDetailsProps> = ({ tripData, hotel: ini
   };
 
   const hotelPrice = parsePrice(hotel.price);
+  const discountedPrice = parsePrice(hotel.discounted_price ?? hotel.price);
+  const hasPromotion = (hotel as any).has_promotion === true && (hotel as any).promotion;
 
   const roomOptions = useMemo<RoomOption[]>(() => {
     const basePrice = hotelPrice || 120;
@@ -241,7 +248,9 @@ export const HotelDetails: React.FC<HotelDetailsProps> = ({ tripData, hotel: ini
       ? requestedCheckOutDate
       : addDays(plannedCheckInDate, 1);
   const nights = Math.max(differenceInDays(plannedCheckOutDate, plannedCheckInDate), 1);
-  const nightlyPrice = selectedRoom?.basePrice || hotelPrice;
+  const baseNightlyPrice = selectedRoom?.basePrice || hotelPrice;
+  // Use discounted price for calculations if promotion is available
+  const nightlyPrice = (hasPromotion && selectedRoom?.id === roomOptions[0]?.id) ? discountedPrice : baseNightlyPrice;
   const cleaningFee = Math.max(25, Math.round(nightlyPrice * 0.12));
   const serviceFee = Math.max(20, Math.round(nightlyPrice * nights * 0.08));
   const roomSubtotal = nightlyPrice * nights;
@@ -272,7 +281,14 @@ export const HotelDetails: React.FC<HotelDetailsProps> = ({ tripData, hotel: ini
         roomSubtotal,
         cleaningFee,
         serviceFee,
-        totalPrice: total
+        totalPrice: total,
+        // Promotion data
+        hasPromotion,
+        promotion: (hotel as any).promotion,
+        originalPrice: hotelPrice,
+        discountedPrice: discountedPrice !== hotelPrice ? discountedPrice : undefined,
+        discountPercentage: hasPromotion && hotelPrice > 0 ? 
+          Math.round(((hotelPrice - discountedPrice) / hotelPrice) * 100) : 0
       });
 
     } catch (error) {
@@ -461,12 +477,25 @@ export const HotelDetails: React.FC<HotelDetailsProps> = ({ tripData, hotel: ini
                 {/* Price Header */}
                 <div className="flex items-center justify-between">
                   <div className="flex items-baseline gap-2">
-                    <span className="text-4xl font-serif italic text-slate-900 dark:text-white">${nightlyPrice}</span>
+                    <span className="text-4xl font-serif italic text-slate-900 dark:text-white">
+                      ${hasPromotion ? discountedPrice.toFixed(0) : nightlyPrice.toFixed(0)}
+                    </span>
                     <span className="text-sm font-bold text-slate-400 uppercase tracking-widest">/ night</span>
+                    {hasPromotion && (
+                      <span className="ml-2 line-through text-sm text-slate-400 dark:text-slate-500">
+                        ${nightlyPrice.toFixed(0)}
+                      </span>
+                    )}
                   </div>
-                  <div className="text-[10px] font-bold text-emerald-600 bg-emerald-50 dark:bg-emerald-900/20 px-3 py-1 rounded-full uppercase tracking-widest">
-                    Best Price Guarantee
-                  </div>
+                  {hasPromotion ? (
+                    <div className="text-[10px] font-bold text-red-600 bg-red-50 dark:bg-red-900/20 px-3 py-1 rounded-full uppercase tracking-widest">
+                      {(hotel as any).discount_percentage}% OFF
+                    </div>
+                  ) : (
+                    <div className="text-[10px] font-bold text-emerald-600 bg-emerald-50 dark:bg-emerald-900/20 px-3 py-1 rounded-full uppercase tracking-widest">
+                      Best Price Guarantee
+                    </div>
+                  )}
                 </div>
 
                 {/* Date/Guest Picker */}

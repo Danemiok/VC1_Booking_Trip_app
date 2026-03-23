@@ -524,7 +524,24 @@ class DestinationController extends Controller
 
             return response()->json([
                 'success' => true,
-                'data' => $destinations->map(fn (Destination $destination) => $this->formatDestination($destination)),
+                'data' => $destinations->map(function (Destination $destination) {
+                    $formatted = $this->formatDestination($destination);
+                    
+                    // Add promotion data
+                    $promotionInfo = \App\Services\PromotionService::getBestPromotionForDestination(
+                        floatval($destination->price),
+                        $destination->destination_id
+                    );
+                    
+                    $formatted['original_price'] = $promotionInfo['original_price'];
+                    $formatted['discounted_price'] = $promotionInfo['discounted_price'];
+                    $formatted['discount_amount'] = $promotionInfo['discount_amount'];
+                    $formatted['discount_percentage'] = $promotionInfo['discount_percentage'];
+                    $formatted['has_promotion'] = $promotionInfo['promotion'] !== null;
+                    $formatted['promotion'] = $promotionInfo['promotion'];
+                    
+                    return $formatted;
+                }),
                 'message' => 'Public destinations retrieved successfully'
             ]);
         } catch (\Exception $e) {

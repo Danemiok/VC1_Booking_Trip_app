@@ -12,6 +12,7 @@ import {
 } from 'lucide-react';
 import { ScanToPay } from './ScanTopay';
 import { AVAILABLE_ACTIVITIES } from '../../data/activities';
+import { calculateTripPricing } from '@/utils/pricing';
 
 interface PaymentProps {
   tripData?: any;
@@ -128,13 +129,7 @@ export const Payment: React.FC<PaymentProps> = ({ tripData, onBackToHome, select
   });
 
   const selectedActivities = AVAILABLE_ACTIVITIES.filter(a => selectedActivityIds.includes(a.id));
-  const activitiesTotal = selectedActivities.reduce((sum, a) => sum + (a.price * a.guests), 0);
-  const hotelPrice = tripData?.hotel?.price || 0;
-  const rentalPrice = tripData?.rental?.isBooked ? (tripData?.rental?.price || 0) : 0;
-  const subtotal = hotelPrice + rentalPrice + activitiesTotal;
-  const taxes = subtotal * 0.05;
-  const serviceFee = 5.00;
-  const total = subtotal + taxes + serviceFee;
+  const pricing = calculateTripPricing({ tripData, selectedActivities });
 
   const bookingData = {
     title: tripData?.title || "Adventure in Siem Reap",
@@ -143,10 +138,10 @@ export const Payment: React.FC<PaymentProps> = ({ tripData, onBackToHome, select
     details: `${tripData?.guests || '2 Adults'} • ${tripData?.hotel?.roomType || 'Deluxe Room'}`,
     image: tripData?.hotel?.image || "https://images.unsplash.com/photo-1542314831-068cd1dbfeeb?auto=format&fit=crop&q=80&w=800",
     pricing: {
-      subtotal,
-      taxes,
-      serviceFee,
-      total
+      subtotal: pricing.subtotal,
+      taxes: pricing.taxes,
+      serviceFee: pricing.serviceFee,
+      total: pricing.total
     }
   };
 
@@ -277,7 +272,7 @@ export const Payment: React.FC<PaymentProps> = ({ tripData, onBackToHome, select
                         <span className="font-bold text-slate-900 dark:text-white">{tripData?.hotel?.name}</span>
                         <span className="text-slate-500">Accommodation</span>
                       </div>
-                      <span className="font-bold text-slate-900 dark:text-white">${(tripData?.hotel?.price || 0).toFixed(2)}</span>
+                      <span className="font-bold text-slate-900 dark:text-white">${pricing.hotelTotal.toFixed(2)}</span>
                     </div>
 
                     {tripData?.rental?.isBooked && (
@@ -286,7 +281,7 @@ export const Payment: React.FC<PaymentProps> = ({ tripData, onBackToHome, select
                           <span className="font-bold text-slate-900 dark:text-white">{tripData?.rental?.name}</span>
                           <span className="text-slate-500">Transport</span>
                         </div>
-                        <span className="font-bold text-slate-900 dark:text-white">${(tripData?.rental?.price || 0).toFixed(2)}</span>
+                        <span className="font-bold text-slate-900 dark:text-white">${pricing.rentalTotal.toFixed(2)}</span>
                       </div>
                     )}
 
@@ -413,7 +408,7 @@ export const Payment: React.FC<PaymentProps> = ({ tripData, onBackToHome, select
                           <p className="font-bold text-slate-900 dark:text-white">{tripData?.hotel?.name}</p>
                           <p className="text-slate-500">{tripData?.hotel?.roomType}</p>
                         </div>
-                        <span className="font-bold text-slate-900 dark:text-white">${(tripData?.hotel?.price || 0).toFixed(2)}</span>
+                        <span className="font-bold text-slate-900 dark:text-white">${pricing.hotelTotal.toFixed(2)}</span>
                       </div>
                     </div>
 
@@ -426,7 +421,7 @@ export const Payment: React.FC<PaymentProps> = ({ tripData, onBackToHome, select
                             <p className="font-bold text-slate-900 dark:text-white">{tripData?.rental?.name}</p>
                             <p className="text-slate-500">{tripData?.rental?.features}</p>
                           </div>
-                          <span className="font-bold text-slate-900 dark:text-white">${(tripData?.rental?.price || 0).toFixed(2)}</span>
+                          <span className="font-bold text-slate-900 dark:text-white">${pricing.rentalTotal.toFixed(2)}</span>
                         </div>
                       </div>
                     )}

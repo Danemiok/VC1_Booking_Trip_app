@@ -7,6 +7,7 @@ use App\Models\Booking;
 use App\Models\AppNotification;
 use App\Models\OwnerNotification;
 use App\Models\User;
+use App\Services\PromotionService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\Log;
@@ -62,6 +63,9 @@ class BookingController extends Controller
             'user_id' => $booking->user_id,
             'destination_id' => $booking->destination_id,
             'transport_id' => $booking->transport_id,
+            'promotion_id' => $booking->promotion_id,
+            'original_amount' => $booking->original_amount,
+            'discounted_amount' => $booking->discounted_amount,
             'user' => $booking->relationLoaded('user') ? $booking->user : null,
         ];
     }
@@ -327,6 +331,24 @@ class BookingController extends Controller
             $createdAt = $createdAtRaw ? \Illuminate\Support\Carbon::parse($createdAtRaw) : now();
             $createdAtIso = $createdAt->toIso8601String();
 
+            // Handle promotion fields
+            $promotionId = $payload['promotion_id'] ?? null;
+            $originalAmount = $payload['original_amount'] ?? null;
+            $discountedAmount = $payload['discounted_amount'] ?? null;
+
+            $originalAmount = is_numeric($originalAmount) ? (float) $originalAmount : null;
+            $discountedAmount = is_numeric($discountedAmount) ? (float) $discountedAmount : null;
+
+            // Calculate discount if we have an original amount but no discount amount
+            if ($originalAmount !== null && $discountedAmount === null && is_numeric($amount)) {
+                $discountedAmount = max(0, $originalAmount - (float) $amount);
+            }
+
+            // If both original and discount are provided, trust them and derive amount
+            if ($originalAmount !== null && $discountedAmount !== null) {
+                $amount = max(0, $originalAmount - $discountedAmount);
+            }
+
             // Store into snake_case columns (matches the provided SQL schema),
             // while still accepting the frontend's camelCase payload.
             $data = [
@@ -357,6 +379,9 @@ class BookingController extends Controller
                 'special_requests' => $payload['specialRequests'] ?? null,
                 'destination_id' => $payload['destination_id'] ?? null,
                 'transport_id' => $payload['transport_id'] ?? null,
+                'promotion_id' => $promotionId,
+                'original_amount' => $originalAmount,
+                'discounted_amount' => $discountedAmount,
                 'created_at' => $createdAt,
                 'updated_at' => now(),
                 // Keep legacy createdAt for older consumers (harmless if column exists)

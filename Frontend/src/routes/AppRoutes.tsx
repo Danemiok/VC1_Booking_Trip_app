@@ -474,6 +474,13 @@ export const AppRoutes: React.FC<AppRoutesProps> = ({
     if (!requireAuth()) return;
     setTripData((prev: any) => {
       const next = { ...(prev || {}) };
+      const destinationId =
+        selectedHotel?.destination_id ??
+        selectedHotel?.destinationId ??
+        selectedHotel?.id ??
+        next.hotel?.destination_id ??
+        next.hotel?.destinationId ??
+        null;
       next.hotel = {
         ...(next.hotel || {}),
         name: selectedHotel?.name ?? next.hotel?.name,
@@ -484,7 +491,15 @@ export const AppRoutes: React.FC<AppRoutesProps> = ({
         nights: selection?.nights ?? next.hotel?.nights,
         price: selection?.totalPrice ?? selection?.roomSubtotal ?? next.hotel?.price,
         dailyPrice: selection?.nightlyPrice ?? next.hotel?.dailyPrice,
+        destination_id: destinationId,
+        destinationId,
         status: 'Reserved',
+        // Promotion fields
+        hasPromotion: selection?.hasPromotion ?? next.hotel?.hasPromotion,
+        promotion: selection?.promotion ?? next.hotel?.promotion,
+        originalPrice: selection?.originalPrice ?? next.hotel?.originalPrice,
+        discountedPrice: selection?.discountedPrice ?? next.hotel?.discountedPrice,
+        discountPercentage: selection?.discountPercentage ?? next.hotel?.discountPercentage,
       };
       return next;
     });
@@ -496,15 +511,38 @@ export const AppRoutes: React.FC<AppRoutesProps> = ({
     if (!requireAuth()) return;
     setTripData((prev: any) => {
       const next = { ...(prev || {}) };
+      const basePrice =
+        typeof vehicle?.price === 'number'
+          ? vehicle.price
+          : typeof vehicle?.price_per_km === 'number'
+            ? vehicle.price_per_km
+            : Number(vehicle?.price ?? 0);
+      const discountedPrice =
+        typeof vehicle?.discounted_price === 'number'
+          ? vehicle.discounted_price
+          : Number(vehicle?.discounted_price ?? basePrice);
+      const hasPromotion = Boolean(vehicle?.has_promotion ?? vehicle?.hasPromotion);
+      const effectivePrice = hasPromotion && Number.isFinite(discountedPrice) ? discountedPrice : basePrice;
+      const transportId = vehicle?.transport_id ?? vehicle?.transportId ?? vehicle?.id ?? null;
       next.rental = {
         ...(next.rental || {}),
         name: vehicle?.name ?? next.rental?.name,
         features: vehicle?.type ?? next.rental?.features,
         image: vehicle?.image ?? next.rental?.image,
-        dailyPrice: vehicle?.price ?? next.rental?.dailyPrice,
-        price: typeof vehicle?.price === 'number' ? vehicle.price : next.rental?.price,
+        dailyPrice: effectivePrice ?? next.rental?.dailyPrice,
+        price: Number.isFinite(effectivePrice) ? effectivePrice : next.rental?.price,
         isBooked: true,
         status: 'Pending',
+        transport_id: transportId,
+        transportId,
+        // Promotion fields
+        hasPromotion: hasPromotion ?? next.rental?.hasPromotion,
+        promotion: vehicle?.promotion ?? next.rental?.promotion,
+        originalPrice: vehicle?.original_price ?? basePrice ?? next.rental?.originalPrice,
+        discountedPrice: discountedPrice ?? next.rental?.discountedPrice,
+        originalDailyPrice: vehicle?.original_price ?? basePrice ?? next.rental?.originalDailyPrice,
+        discountedDailyPrice: discountedPrice ?? next.rental?.discountedDailyPrice,
+        discountPercentage: vehicle?.discount_percentage ?? next.rental?.discountPercentage,
       };
       return next;
     });

@@ -142,11 +142,38 @@ export default function Destinations() {
                 </div>
 
                 <div className="flex items-center justify-between">
-                  <div></div>
-                  <p className="text-lg font-bold text-blue-600 dark:text-blue-400">
-                    ${destination.price.toFixed(0)}
-                    <span className="ml-1 text-xs font-medium text-slate-500 dark:text-slate-400">/ night</span>
-                  </p>
+                  <div>
+                    {(destination as any).has_promotion && (destination as any).promotion && (
+                      <div className="flex flex-col gap-1">
+                        <span className="inline-block rounded-full bg-red-100 px-2 py-1 text-xs font-semibold text-red-600 dark:bg-red-900/30 dark:text-red-300">
+                          {(destination as any).discount_percentage}% OFF
+                        </span>
+                        {(destination as any).promotion.expiry && (
+                          <span className="text-xs text-slate-500 dark:text-slate-400">
+                            Expires: {new Date((destination as any).promotion.expiry).toLocaleDateString()}
+                          </span>
+                        )}
+                      </div>
+                    )}
+                  </div>
+                  <div className="text-right">
+                    {(destination as any).has_promotion ? (
+                      <div className="flex flex-col gap-1">
+                        <p className="text-lg font-bold text-blue-600 dark:text-blue-400">
+                          ${(destination as any).discounted_price.toFixed(0)}
+                          <span className="ml-1 text-xs font-medium text-slate-500 dark:text-slate-400">/ night</span>
+                        </p>
+                        <p className="text-sm line-through text-slate-400 dark:text-slate-500">
+                          ${destination.price.toFixed(0)}
+                        </p>
+                      </div>
+                    ) : (
+                      <p className="text-lg font-bold text-blue-600 dark:text-blue-400">
+                        ${destination.price.toFixed(0)}
+                        <span className="ml-1 text-xs font-medium text-slate-500 dark:text-slate-400">/ night</span>
+                      </p>
+                    )}
+                  </div>
                 </div>
 
                 <p className="text-sm leading-6 text-slate-600 dark:text-slate-300">{destination.description}</p>
