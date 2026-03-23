@@ -336,17 +336,10 @@ class BookingController extends Controller
             $originalAmount = $payload['original_amount'] ?? null;
             $discountedAmount = $payload['discounted_amount'] ?? null;
 
-            $originalAmount = is_numeric($originalAmount) ? (float) $originalAmount : null;
-            $discountedAmount = is_numeric($discountedAmount) ? (float) $discountedAmount : null;
-
-            // Calculate discount if we have an original amount but no discount amount
-            if ($originalAmount !== null && $discountedAmount === null && is_numeric($amount)) {
+            // Calculate discount if original and current amounts are available
+            if ($originalAmount === null && is_numeric($amount) && is_numeric($payload['original_amount'] ?? null)) {
+                $originalAmount = (float) $payload['original_amount'];
                 $discountedAmount = max(0, $originalAmount - (float) $amount);
-            }
-
-            // If both original and discount are provided, trust them and derive amount
-            if ($originalAmount !== null && $discountedAmount !== null) {
-                $amount = max(0, $originalAmount - $discountedAmount);
             }
 
             // Store into snake_case columns (matches the provided SQL schema),
