@@ -22,18 +22,23 @@ type PromotionStatus = 'active' | 'scheduled' | 'expired';
 
 type Promotion = {
   id: string | number;
-  name: string;
+  name?: string;
+  title?: string;
   type: string;
-  discount_value: number;
-  discount_type: string;
+  discount_value?: number;
+  discount_type?: string;
   discount?: string;
   status: PromotionStatus;
-  reach: string;
-  conversions: string;
+  reach?: string;
+  conversions?: string;
   end: string;
   end_date?: string;
+  expiry?: string;
   service_category?: PromotionServiceCategory;
   created_at?: string;
+  is_active?: boolean;
+  linked_destinations?: number[];
+  linked_transports?: number[];
 };
 
 
@@ -214,8 +219,15 @@ const Promotions = () => {
               {filteredPromotions.map((campaign) => (
                 <tr key={campaign.id} className="hover:bg-slate-50/30 dark:hover:bg-slate-800/30 transition-colors group">
                   <td className="px-6 py-4">
-                    <p className="text-sm font-bold">{campaign.name}</p>
+                    <p className="text-sm font-bold">{campaign.name || campaign.title}</p>
                     <p className="text-[10px] text-slate-400 font-bold uppercase tracking-wider">{campaign.id}</p>
+                    {(campaign.linked_destinations?.length || campaign.linked_transports?.length) ? (
+                      <p className="text-[10px] text-emerald-600 font-medium mt-1">
+                        {campaign.linked_destinations?.length ? `${campaign.linked_destinations.length} destinations` : ''}
+                        {campaign.linked_destinations?.length && campaign.linked_transports?.length ? ', ' : ''}
+                        {campaign.linked_transports?.length ? `${campaign.linked_transports.length} transports` : ''}
+                      </p>
+                    ) : null}
                   </td>
                   <td className="px-6 py-4">
                     <span className="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">

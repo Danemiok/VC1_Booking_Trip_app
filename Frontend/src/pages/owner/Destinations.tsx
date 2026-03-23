@@ -1,6 +1,6 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Search, Plus, Star, MapPin, Edit, Trash2, X } from 'lucide-react';
+import { Search, Plus, Star, MapPin, Edit, Trash2, X, RefreshCw, Building2, CheckCircle2, Clock, TrendingUp } from 'lucide-react';
 import { apiRequest } from '@/services/api';
 
 type DestinationStatus = 'active' | 'draft';
@@ -209,90 +209,102 @@ const PropertyCard = ({ property, onView, onEdit, onDelete, activePromotion }: P
 
   return (
     <div
-      className="bg-white dark:bg-gray-800 rounded-lg shadow-lg overflow-hidden transform hover:scale-[1.02] transition-transform duration-300 cursor-pointer"
+      className="group bg-white dark:bg-slate-800 rounded-2xl shadow-md hover:shadow-xl hover:shadow-blue-500/10 border border-slate-100 dark:border-slate-700 overflow-hidden transform hover:-translate-y-1 transition-all duration-300 cursor-pointer"
       onClick={() => onView(property)}
     >
-      <div className="relative">
-        <img src={property.image} alt={property.name} className="w-full h-48 object-cover" />
-        <div className={`absolute top-2 left-2 px-3 py-1 rounded-full text-xs font-semibold text-white ${property.status === 'active' ? 'bg-green-500' : 'bg-yellow-500'}`}>
+      <div className="relative overflow-hidden">
+        <img 
+          src={property.image} 
+          alt={property.name} 
+          className="w-full h-52 object-cover transform group-hover:scale-105 transition-transform duration-500" 
+        />
+        <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+        
+        {/* Status Badge */}
+        <div className={`absolute top-3 left-3 px-3 py-1.5 rounded-full text-xs font-bold text-white shadow-lg ${
+          property.status === 'active' 
+            ? 'bg-emerald-500 shadow-emerald-500/30' 
+            : 'bg-amber-500 shadow-amber-500/30'
+        }`}>
           {getStatusLabel(property.status)}
         </div>
-        <div className="absolute top-2 right-2 flex space-x-2">
+        
+        {/* Action Buttons */}
+        <div className="absolute top-3 right-3 flex gap-2 opacity-0 group-hover:opacity-100 transition-all duration-300 translate-y-2 group-hover:translate-y-0">
           <button
-            className="p-2 rounded-full bg-white/85 text-gray-700 hover:bg-white transition-colors"
+            className="p-2.5 rounded-xl bg-white/95 text-slate-700 hover:text-blue-600 hover:bg-white shadow-lg hover:shadow-xl transition-all duration-200"
             onClick={(event) => {
               event.stopPropagation();
               onEdit(property);
             }}
             title="Edit Property"
           >
-            <Edit size={18} />
+            <Edit size={16} />
           </button>
           <button
-            className="p-2 rounded-full bg-white/85 text-red-600 hover:bg-white transition-colors"
+            className="p-2.5 rounded-xl bg-white/95 text-slate-700 hover:text-red-600 hover:bg-white shadow-lg hover:shadow-xl transition-all duration-200"
             onClick={(event) => {
               event.stopPropagation();
               onDelete(property);
             }}
             title="Delete Property"
           >
-            <Trash2 size={18} />
+            <Trash2 size={16} />
           </button>
         </div>
       </div>
 
-      <div className="p-4">
-        <div className="flex items-start justify-between gap-3 mb-1">
-          <h3 className="text-xl font-semibold text-gray-900 dark:text-white line-clamp-2">{property.name}</h3>
-          <span className="shrink-0 text-xs font-medium px-2 py-1 rounded-full bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-200">
+      <div className="p-5">
+        {/* Title & Type */}
+        <div className="flex items-start justify-between gap-3 mb-2">
+          <h3 className="text-lg font-bold text-slate-900 dark:text-white line-clamp-1 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">{property.name}</h3>
+          <span className="shrink-0 text-xs font-semibold px-2.5 py-1 rounded-full bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-slate-600">
             {property.type}
           </span>
         </div>
 
-        <p className="text-sm text-gray-600 dark:text-gray-300 flex items-center mb-4">
-          <Star className="text-yellow-500 mr-1" size={14} />
-          {property.rating > 0 ? property.rating.toFixed(1) : 'N/A'}
-          <span className="mx-2">•</span>
-          <MapPin size={14} className="mr-1 shrink-0" />
-          <span className="truncate">{property.location}</span>
-        </p>
+        {/* Rating & Location */}
+        <div className="flex items-center gap-3 text-sm text-slate-500 dark:text-slate-400 mb-4">
+          <div className="flex items-center gap-1">
+            <Star className="text-amber-400 fill-amber-400" size={14} />
+            <span className="font-medium">{property.rating > 0 ? property.rating.toFixed(1) : 'N/A'}</span>
+          </div>
+          <span className="w-1 h-1 rounded-full bg-slate-300" />
+          <div className="flex items-center gap-1 truncate">
+            <MapPin size={14} className="shrink-0 text-slate-400" />
+            <span className="truncate">{property.location}</span>
+          </div>
+        </div>
 
-        <div className="flex justify-between items-center">
-          <div>
-            <p className="text-sm text-gray-500 dark:text-gray-400">Total Bookings</p>
-            <p className="text-lg font-bold text-blue-600 dark:text-blue-400">{property.totalBookings}</p>
+        {/* Stats Row */}
+        <div className="flex items-center justify-between pt-4 border-t border-slate-100 dark:border-slate-700">
+          <div className="flex items-center gap-2">
+            <div className="p-1.5 bg-blue-50 dark:bg-blue-900/20 rounded-lg">
+              <TrendingUp size={14} className="text-blue-600 dark:text-blue-400" />
+            </div>
+            <div>
+              <p className="text-xs text-slate-500 dark:text-slate-400">Bookings</p>
+              <p className="text-sm font-bold text-slate-900 dark:text-white">{property.totalBookings}</p>
+            </div>
           </div>
 
+          {/* Price Section */}
           <div className="text-right">
-            {activePromotion && (
-              <span className="inline-flex items-center px-2 py-1 rounded-full text-[10px] font-bold bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-300 mb-1">
+            {activePromotion?.discount && (
+              <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-300 mb-1">
                 {activePromotion.discount}
               </span>
             )}
             {typeof basePrice === 'number' && (
               <div>
-                {hasDiscount && <p className="text-xs text-gray-400 line-through">${basePrice.toFixed(0)}</p>}
-                <p className="text-lg font-bold text-gray-900 dark:text-white">${(finalPrice ?? basePrice).toFixed(0)}</p>
-                <p className="text-[10px] text-gray-500 dark:text-gray-400 font-semibold">per night</p>
+                {hasDiscount && (
+                  <p className="text-xs text-slate-400 line-through">${basePrice.toFixed(0)}</p>
+                )}
+                <p className="text-xl font-bold text-slate-900 dark:text-white">${(finalPrice ?? basePrice).toFixed(0)}</p>
+                <p className="text-[10px] text-slate-500 dark:text-slate-400 font-medium">per night</p>
               </div>
             )}
           </div>
-        </div>
-        <div className="text-right">
-          {activePromotion && (
-            <span className="inline-flex items-center px-2 py-1 rounded-full text-[10px] font-bold bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-300 mb-1">
-              {activePromotion.discount}
-            </span>
-          )}
-          {typeof basePrice === 'number' && (
-            <div>
-              {hasDiscount && (
-                <p className="text-xs text-gray-400 line-through">${basePrice.toFixed(0)}</p>
-              )}
-              <p className="text-lg font-bold text-gray-900 dark:text-white">${(finalPrice ?? basePrice).toFixed(0)}</p>
-              <p className="text-[10px] text-gray-500 dark:text-gray-400 font-semibold">per night</p>
-            </div>
-          )}
         </div>
       </div>
     </div>
@@ -499,15 +511,20 @@ const Destinations = () => {
   const [propertyToDelete, setPropertyToDelete] = React.useState<DestinationItem | null>(null);
   const [deleteError, setDeleteError] = React.useState('');
   const [isDeleting, setIsDeleting] = React.useState(false);
+  const [promotions, setPromotions] = React.useState<any[]>([]);
 
   const loadDestinations = React.useCallback(async () => {
     setIsLoading(true);
     setLoadError('');
 
     try {
-      const response = await apiRequest('/destinations');
-      const data = Array.isArray(response?.data) ? response.data : [];
+      const [destResponse, promoResponse] = await Promise.all([
+        apiRequest('/destinations'),
+        apiRequest('/promotions').catch(() => ({ data: [] })),
+      ]);
+      const data = Array.isArray(destResponse?.data) ? destResponse.data : [];
       setProperties(data.map((item: DestinationApiRecord) => normalizeDestination(item)));
+      setPromotions(Array.isArray(promoResponse?.data) ? promoResponse.data : []);
     } catch (error) {
       setLoadError(getErrorMessage(error, 'Failed to load destinations. Please try again.'));
     } finally {
@@ -515,29 +532,20 @@ const Destinations = () => {
     }
   }, []);
 
-  React.useEffect(() => {
-    void loadDestinations();
-  }, [loadDestinations]);
+  const getActivePromotionForDestination = React.useCallback((destinationId: string) => {
+    const now = new Date();
+    return promotions.find((promo: any) => {
+      if (!promo.is_active) return false;
 
-  React.useEffect(() => {
-    if (!feedbackMessage) return undefined;
-    const timeoutId = window.setTimeout(() => setFeedbackMessage(''), 3500);
-    return () => window.clearTimeout(timeoutId);
-  }, [feedbackMessage]);
+      if (promo.expiry) {
+        const expiryDate = new Date(promo.expiry);
+        if (now > expiryDate) return false;
+      }
 
-  const activeHotelPromotion = React.useMemo(() => {
-    try {
-      const stored = JSON.parse(localStorage.getItem('ownerPromotions') || '[]');
-      const promotions = Array.isArray(stored) ? stored : [];
-      const hotelPromotions = promotions.filter(
-        (promotion: any) =>
-          promotion?.serviceCategory === 'hotel' && (promotion?.status === 'active' || !promotion?.status),
-      );
-      return hotelPromotions[0] ?? null;
-    } catch {
-      return null;
-    }
-  }, []);
+      const linkedDestinations = promo.linked_destinations || [];
+      return linkedDestinations.includes(parseInt(destinationId));
+    }) || null;
+  }, [promotions]);
 
   const filteredProperties = React.useMemo(() => {
     return properties.filter((property) => {
@@ -762,28 +770,94 @@ const Destinations = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-900 p-6">
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50/30 to-indigo-50/20 dark:from-slate-950 dark:via-slate-900 dark:to-slate-800 p-6">
       <div className="max-w-7xl mx-auto">
-        <div className="flex flex-col gap-4 md:flex-row md:justify-between md:items-center mb-8">
-          <div>
-            <h1 className="text-3xl font-bold text-gray-900 dark:text-white">Destinations</h1>
-            <p className="text-gray-600 dark:text-gray-400 mt-1">Manage your property listings with live backend data.</p>
-          </div>
+        {/* Hero Header */}
+        <div className="relative mb-10">
+          <div className="absolute inset-0 bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 rounded-3xl opacity-10 blur-3xl" />
+          <div className="relative flex flex-col gap-6 md:flex-row md:justify-between md:items-end pb-2">
+            <div>
+              <div className="flex items-center gap-3 mb-2">
+                <div className="p-3 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-2xl shadow-lg shadow-blue-500/25">
+                  <MapPin className="text-white" size={28} />
+                </div>
+                <div>
+                  <h1 className="text-4xl font-bold bg-gradient-to-r from-slate-900 via-blue-800 to-indigo-900 dark:from-white dark:via-blue-200 dark:to-indigo-200 bg-clip-text text-transparent">
+                    Destinations
+                  </h1>
+                </div>
+              </div>
+              <p className="text-slate-600 dark:text-slate-400 text-lg ml-16">
+                Manage your property listings with <span className="font-semibold text-blue-600 dark:text-blue-400">live backend data</span>
+              </p>
+            </div>
 
-          <div className="flex gap-3">
-            <button
-              onClick={() => void loadDestinations()}
-              className="px-5 py-3 rounded-lg border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-200 font-medium hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
-            >
-              Refresh
-            </button>
-            <button
-              onClick={handleOpenCreate}
-              className="flex items-center px-6 py-3 bg-blue-600 text-white font-medium rounded-lg hover:bg-blue-700 transition-colors"
-            >
-              <Plus size={20} className="mr-2" />
-              Add New Destination
-            </button>
+            <div className="flex gap-3">
+              <button
+                onClick={() => void loadDestinations()}
+                className="group px-5 py-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-white/80 dark:bg-slate-800/80 backdrop-blur-sm text-slate-700 dark:text-slate-200 font-semibold hover:bg-white dark:hover:bg-slate-800 hover:border-blue-300 dark:hover:border-blue-700 hover:shadow-lg hover:shadow-blue-500/10 transition-all duration-300 flex items-center gap-2"
+              >
+                <RefreshCw size={18} className="group-hover:rotate-180 transition-transform duration-500" />
+                Refresh
+              </button>
+              <button
+                onClick={handleOpenCreate}
+                className="group flex items-center px-6 py-3 bg-gradient-to-r from-blue-600 to-indigo-600 text-white font-semibold rounded-xl hover:from-blue-700 hover:to-indigo-700 transition-all duration-300 shadow-lg shadow-blue-500/25 hover:shadow-xl hover:shadow-blue-500/30 hover:-translate-y-0.5"
+              >
+                <Plus size={20} className="mr-2 group-hover:scale-110 transition-transform" />
+                Add New Destination
+              </button>
+            </div>
+          </div>
+        </div>
+
+        {/* Stats Overview */}
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
+          <div className="bg-white dark:bg-slate-800 rounded-2xl p-5 shadow-sm border border-slate-100 dark:border-slate-700 hover:shadow-md transition-shadow">
+            <div className="flex items-center gap-3">
+              <div className="p-2.5 bg-blue-100 dark:bg-blue-900/30 rounded-xl">
+                <Building2 className="text-blue-600 dark:text-blue-400" size={20} />
+              </div>
+              <div>
+                <p className="text-2xl font-bold text-slate-900 dark:text-white">{properties.length}</p>
+                <p className="text-xs text-slate-500 dark:text-slate-400 font-medium uppercase tracking-wider">Total</p>
+              </div>
+            </div>
+          </div>
+          <div className="bg-white dark:bg-slate-800 rounded-2xl p-5 shadow-sm border border-slate-100 dark:border-slate-700 hover:shadow-md transition-shadow">
+            <div className="flex items-center gap-3">
+              <div className="p-2.5 bg-emerald-100 dark:bg-emerald-900/30 rounded-xl">
+                <CheckCircle2 className="text-emerald-600 dark:text-emerald-400" size={20} />
+              </div>
+              <div>
+                <p className="text-2xl font-bold text-slate-900 dark:text-white">{properties.filter(p => p.status === 'active').length}</p>
+                <p className="text-xs text-slate-500 dark:text-slate-400 font-medium uppercase tracking-wider">Active</p>
+              </div>
+            </div>
+          </div>
+          <div className="bg-white dark:bg-slate-800 rounded-2xl p-5 shadow-sm border border-slate-100 dark:border-slate-700 hover:shadow-md transition-shadow">
+            <div className="flex items-center gap-3">
+              <div className="p-2.5 bg-amber-100 dark:bg-amber-900/30 rounded-xl">
+                <Clock className="text-amber-600 dark:text-amber-400" size={20} />
+              </div>
+              <div>
+                <p className="text-2xl font-bold text-slate-900 dark:text-white">{properties.filter(p => p.status === 'draft').length}</p>
+                <p className="text-xs text-slate-500 dark:text-slate-400 font-medium uppercase tracking-wider">Upcoming</p>
+              </div>
+            </div>
+          </div>
+          <div className="bg-white dark:bg-slate-800 rounded-2xl p-5 shadow-sm border border-slate-100 dark:border-slate-700 hover:shadow-md transition-shadow">
+            <div className="flex items-center gap-3">
+              <div className="p-2.5 bg-purple-100 dark:bg-purple-900/30 rounded-xl">
+                <TrendingUp className="text-purple-600 dark:text-purple-400" size={20} />
+              </div>
+              <div>
+                <p className="text-2xl font-bold text-slate-900 dark:text-white">
+                  {properties.reduce((sum, p) => sum + p.totalBookings, 0)}
+                </p>
+                <p className="text-xs text-slate-500 dark:text-slate-400 font-medium uppercase tracking-wider">Bookings</p>
+              </div>
+            </div>
           </div>
         </div>
 
@@ -805,38 +879,46 @@ const Destinations = () => {
           </div>
         )}
 
-        <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-4 mb-8">
+        {/* Search & Filter Bar */}
+        <div className="bg-white dark:bg-slate-800 rounded-2xl shadow-lg shadow-slate-200/50 dark:shadow-slate-900/50 border border-slate-100 dark:border-slate-700 p-5 mb-8 backdrop-blur-sm">
           <div className="flex flex-col lg:flex-row gap-4 lg:items-center">
-            <div className="flex-1 relative">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={20} />
+            <div className="flex-1 relative group">
+              <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-blue-500 transition-colors" size={20} />
               <input
                 type="text"
                 placeholder="Search destinations by name, type, or location..."
                 value={searchTerm}
                 onChange={(event) => setSearchTerm(event.target.value)}
-                className="w-full pl-10 pr-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white"
+                className="w-full pl-12 pr-4 py-3 bg-slate-50 dark:bg-slate-900/50 border border-slate-200 dark:border-slate-700 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 dark:focus:border-blue-500 transition-all dark:text-white placeholder:text-slate-400"
               />
             </div>
 
             <div className="flex flex-wrap gap-2">
-              <button
-                onClick={() => setFilterStatus('all')}
-                className={`px-4 py-2 rounded-lg font-medium transition-colors ${filterStatus === 'all' ? 'bg-blue-600 text-white' : 'bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-300 dark:hover:bg-gray-600'}`}
-              >
-                All ({properties.length})
-              </button>
-              <button
-                onClick={() => setFilterStatus('active')}
-                className={`px-4 py-2 rounded-lg font-medium transition-colors ${filterStatus === 'active' ? 'bg-blue-600 text-white' : 'bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-300 dark:hover:bg-gray-600'}`}
-              >
-                Active ({properties.filter((property) => property.status === 'active').length})
-              </button>
-              <button
-                onClick={() => setFilterStatus('draft')}
-                className={`px-4 py-2 rounded-lg font-medium transition-colors ${filterStatus === 'draft' ? 'bg-blue-600 text-white' : 'bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-300 dark:hover:bg-gray-600'}`}
-              >
-                Upcoming ({properties.filter((property) => property.status === 'draft').length})
-              </button>
+              {[
+                { key: 'all', label: 'All', count: properties.length, icon: Building2, color: 'blue' },
+                { key: 'active', label: 'Active', count: properties.filter((p) => p.status === 'active').length, icon: CheckCircle2, color: 'emerald' },
+                { key: 'draft', label: 'Upcoming', count: properties.filter((p) => p.status === 'draft').length, icon: Clock, color: 'amber' },
+              ].map((filter) => (
+                <button
+                  key={filter.key}
+                  onClick={() => setFilterStatus(filter.key as typeof filterStatus)}
+                  className={`flex items-center gap-2 px-4 py-2.5 rounded-xl font-semibold text-sm transition-all duration-200 ${
+                    filterStatus === filter.key
+                      ? `bg-${filter.color}-100 dark:bg-${filter.color}-900/30 text-${filter.color}-700 dark:text-${filter.color}-300 border-2 border-${filter.color}-200 dark:border-${filter.color}-800 shadow-sm`
+                      : 'bg-slate-100 dark:bg-slate-700/50 text-slate-600 dark:text-slate-400 border-2 border-transparent hover:bg-slate-200 dark:hover:bg-slate-700'
+                  }`}
+                >
+                  <filter.icon size={16} />
+                  {filter.label}
+                  <span className={`ml-1 px-2 py-0.5 text-xs rounded-full ${
+                    filterStatus === filter.key
+                      ? 'bg-white/50 dark:bg-black/20'
+                      : 'bg-slate-200 dark:bg-slate-600 text-slate-600 dark:text-slate-400'
+                  }`}>
+                    {filter.count}
+                  </span>
+                </button>
+              ))}
             </div>
           </div>
         </div>
@@ -852,7 +934,7 @@ const Destinations = () => {
                 onView={handleView}
                 onEdit={handleOpenEdit}
                 onDelete={handleDelete}
-                activePromotion={activeHotelPromotion}
+                activePromotion={getActivePromotionForDestination(property.id)}
               />
             ))}
           </div>
