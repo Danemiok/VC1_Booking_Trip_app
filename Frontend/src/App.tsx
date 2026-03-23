@@ -39,8 +39,16 @@ const AppContent = () => {
     title: "Adventure in Siem Reap",
     emoji: "🇰🇭",
     dates: dateRangeString,
+    startDate: startDate,
+    endDate: endDate,
     guests: "2 Adults",
     reference: "#TP-48291",
+    destination: {
+      name: "Siem Reap",
+      country: "Cambodia",
+      description: "Gateway to Angkor Wat and Khmer heritage.",
+      image: "https://images.unsplash.com/photo-1528127269322-539801943592?auto=format&fit=crop&q=80&w=800"
+    },
     hotel: {
       name: "Raffles Grand Hotel d'Angkor",
       location: "1 Vithei Charles de Gaulle, Siem Reap, Cambodia",
@@ -96,64 +104,80 @@ const AppContent = () => {
       setSelectedDestination(dest);
     }
   };
-  const isAuthModalOpen = view === 'login' || view === 'register';
-  const mainView = isAuthModalOpen ? 'landing' : view;
-  const shouldShowFooter = !isAdminUser && user === null;
-  const handleAuthSuccess = (nextView: string) => {
-    setView(nextView);
+
+  const [returnToPlanner, setReturnToPlanner] = useState(false);
+
+  const handleTripPlannerClick = () => {
+    setReturnToPlanner(true);
+    setView('trip-planner');
+  };
+
+  const handleTourGuidesClick = () => {
+    // Navigate to landing page and scroll to "Recommended for You" section
+    setReturnToPlanner(false);
+    setView('landing');
+    
+    // Scroll to the recommended section after component mounts
+    setTimeout(() => {
+      const element = document.getElementById('recommended-for-you');
+      if (element) {
+        element.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }
+    }, 100);
+  };
+
+  const handleLogout = () => {
+    logout();
+    setReturnToPlanner(false);
+    setView('landing');
   };
 
   useEffect(() => {
-    const params = new URLSearchParams(window.location.search);
-    const authView = params.get('auth');
-    const nextView = params.get('next_view');
-
-    if (nextView) {
-      setView(nextView);
-
-      params.delete('next_view');
-      params.delete('auth');
-
-      const nextQuery = params.toString();
-      const nextUrl = `${window.location.pathname}${nextQuery ? `?${nextQuery}` : ''}${window.location.hash}`;
-      window.history.replaceState({}, '', nextUrl);
-      return;
+    // Redirect to home after logout, regardless of where logout was triggered.
+    if (previousUserRef.current && !user) {
+      setReturnToPlanner(false);
+      setSelectedRecommendation(null);
+      setSelectedDestination(null);
+      setSelectedHotel(null);
+      setView('landing');
     }
 
-    if (authView === 'login' || authView === 'register') {
-      setView(authView);
-    }
-  }, []);
+    previousUserRef.current = user;
+  }, [user]);
 
   return (
-    <div className="min-h-screen bg-white dark:bg-slate-900 transition-colors duration-300">
-      {!isAdminUser && !isOwnerUser && (
-        <Navbar
+    <HelpCenterLayout>
+      <div className="min-h-screen bg-white dark:bg-slate-900 transition-colors duration-300">
+        <Navbar 
           onLoginClick={() => setView('login')}
           user={user}
-          onLogout={logout}
+          onLogout={handleLogout}
           onProfileClick={handleProfileClick}
           notifications={notifications}
           onMarkAsRead={handleMarkAsRead}
           onMarkAllAsRead={handleMarkAllAsRead}
-          onHotelsClick={() => setView('hotels')}
-          onRentalsClick={() => setView('rentals')}
-          onHomeClick={() => setView('landing')}
-          onBookingsClick={() => setView('bookings')}
-          onTripPlannerClick={() => setView('trip-planner')}
-          onActivitiesClick={() => setView('activities')}
+          onHotelsClick={() => { 
+            setReturnToPlanner(false); 
+            setView('hotels'); 
+          }}
+          onRentalsClick={() => { setReturnToPlanner(false); setView('rentals'); }}
+          onHomeClick={() => { setReturnToPlanner(false); setView('landing'); }}
+          onBookingsClick={() => { setReturnToPlanner(false); setView('bookings'); }}
+          onTripPlannerClick={handleTripPlannerClick}
+          onActivitiesClick={() => { setReturnToPlanner(false); setView('activities'); }}
           currentView={view}
         />
-      )}
 
-      {isAdminUser ? (
-        <AppRoutes
-          view={mainView}
+        <AppRoutes 
+          view={view}
           setView={setView}
           onSelectRecommendation={handleSelectRecommendation}
           onSelectDestination={handleSelectDestination}
           onPromotionsClick={() => setView('promotions')}
-          onHotelsClick={() => setView('hotels')}
+          onHotelsClick={() => { 
+            setReturnToPlanner(false); 
+            setView('hotels'); 
+          }}
           onRentalsClick={() => setView('rentals')}
           onActivitiesClick={() => setView('activities')}
           notifications={notifications}
@@ -166,81 +190,51 @@ const AppContent = () => {
           setSelectedActivityIds={setSelectedActivityIds}
           tripData={tripData}
           setTripData={setTripData}
+          onSearch={handleSearch}
+          returnToPlanner={returnToPlanner}
+          setReturnToPlanner={setReturnToPlanner}
         />
-      ) : (
-        <AnimatePresence mode="wait">
-          <motion.div
-            key={mainView}
-            initial={{ opacity: 0, y: 16 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -10 }}
-            transition={{ duration: 0.22, ease: 'easeOut' }}
-            className={isOwnerUser ? undefined : "pt-24"}
-          >
-            <AppRoutes
-              view={mainView}
-              setView={setView}
-              onSelectRecommendation={handleSelectRecommendation}
-              onSelectDestination={handleSelectDestination}
-              onPromotionsClick={() => setView('promotions')}
-              onHotelsClick={() => setView('hotels')}
-              onRentalsClick={() => setView('rentals')}
-              onActivitiesClick={() => setView('activities')}
-              notifications={notifications}
-              onMarkAsRead={handleMarkAsRead}
-              onMarkAllAsRead={handleMarkAllAsRead}
-              activeProfileTab={activeProfileTab}
-              selectedHotel={selectedHotel}
-              setSelectedHotel={setSelectedHotel}
-              selectedActivityIds={selectedActivityIds}
-              setSelectedActivityIds={setSelectedActivityIds}
-              tripData={tripData}
-              setTripData={setTripData}
+
+        <Footer
+          onLoginClick={() => setView('login')}
+          onHomeClick={() => {
+            setReturnToPlanner(false);
+            setView('landing');
+          }}
+          onTripPlannerClick={() => {
+            setReturnToPlanner(true);
+            setView('trip-planner');
+          }}
+          onBookingsClick={() => {
+            setReturnToPlanner(false);
+            setView('bookings');
+          }}
+          onHotelsClick={() => { 
+            setReturnToPlanner(false); 
+            setView('hotels'); 
+          }}
+          onRentalsClick={() => { setReturnToPlanner(false); setView('rentals'); }}
+          onActivitiesClick={() => { setReturnToPlanner(false); setView('activities'); }}
+          onTourGuidesClick={handleTourGuidesClick}
+          user={user}
+        />
+
+        <AnimatePresence>
+          {selectedRecommendation && (
+            <RecommendationModal 
+              item={selectedRecommendation} 
+              onClose={() => setSelectedRecommendation(null)} 
             />
-          </motion.div>
+          )}
+          {selectedDestination && (
+            <DestinationModal 
+              dest={selectedDestination} 
+              onClose={() => setSelectedDestination(null)} 
+            />
+          )}
         </AnimatePresence>
-      )}
-
-      {shouldShowFooter && <Footer onLoginClick={() => setView('login')} user={user} />}
-
-      <AnimatePresence>
-        {isAuthModalOpen && (
-          <motion.div
-            className="fixed inset-0 z-[100] bg-slate-950/55 backdrop-blur-[1px] overflow-y-auto"
-            onClick={() => setView('landing')}
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            transition={{ duration: 0.35, ease: 'easeOut' }}
-          >
-            <motion.div
-              onClick={(event) => event.stopPropagation()}
-              initial={{ opacity: 0, y: 40, scale: 0.96 }}
-              animate={{ opacity: 1, y: 0, scale: 1 }}
-              exit={{ opacity: 0, y: 18, scale: 0.98 }}
-              transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
-            >
-              {view === 'login' ? (
-                <Login
-                  onSwitchToRegister={() => setView('register')}
-                  onBack={() => setView('landing')}
-                  onSuccess={handleAuthSuccess}
-                  onClose={() => setView('landing')}
-                />
-              ) : (
-                <Register
-                  onSwitchToLogin={() => setView('login')}
-                  onBack={() => setView('landing')}
-                  onSuccess={handleAuthSuccess}
-                  onClose={() => setView('landing')}
-                />
-              )}
-            </motion.div>
-          </motion.div>
-        )}
-      </AnimatePresence>
-
-    </div>
+      </div>
+    </HelpCenterLayout>
   );
 };
 

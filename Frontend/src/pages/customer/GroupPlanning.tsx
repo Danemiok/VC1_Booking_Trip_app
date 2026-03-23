@@ -19,17 +19,62 @@ import {
   MoreVertical,
   Smile,
   Paperclip,
+  Image as ImageIcon,
+  ChevronLeft,
   Calendar,
   BarChart3,
   MapPin,
+  Clock,
   ThumbsUp,
   Mic,
+  Phone,
   Search,
+  Bell,
+  Settings,
+  Download,
+  Map as MapIcon,
   LayoutDashboard,
+  Compass,
+  Briefcase,
   ArrowLeft,
+  Share2,
+  TrendingUp,
+  Vote,
+  Layout,
+  MessageCircle,
+  ArrowRight,
   Heart,
-  X,
+  Star
 } from 'lucide-react';
+
+interface Message {
+  id: string;
+  sender_name: string;
+  sender_email: string;
+  text: string;
+  created_at: string;
+  type?: 'system' | 'user';
+}
+
+interface Member {
+  user_email: string;
+  user_name: string;
+  role: 'Leader' | 'Member';
+}
+
+interface Poll {
+  id: string;
+  question: string;
+  options: { id: string; text: string; votes: number }[];
+}
+
+interface ItineraryItem {
+  id: string;
+  time: string;
+  activity: string;
+  location: string;
+  votes: number;
+}
 
 interface GroupPlanningProps {
   onBack: () => void;
@@ -907,30 +952,117 @@ export const GroupPlanning: React.FC<GroupPlanningProps> = ({ onBack, tripTitle 
     </>
   )}
 
-  <GroupPlanningModal
-    isAddingActivity={isAddingActivity}
-    isCreatingPoll={isCreatingPoll}
-    isMembersOpen={isMembersOpen}
-    isAddMemberOpen={isAddMemberOpen}
-    isCopied={isCopied}
-    members={members}
-    newMemberName={newMemberName}
-    newMemberEmail={newMemberEmail}
-    newActivity={newActivity}
-    newPoll={newPoll}
-    setIsAddingActivity={setIsAddingActivity}
-    setIsCreatingPoll={setIsCreatingPoll}
-    setIsMembersOpen={setIsMembersOpen}
-    setIsAddMemberOpen={setIsAddMemberOpen}
-    setNewMemberName={setNewMemberName}
-    setNewMemberEmail={setNewMemberEmail}
-    setNewActivity={setNewActivity}
-    setNewPoll={setNewPoll}
-    addMemberToGroup={addMemberToGroup}
-    copyToClipboard={copyToClipboard}
-    handleAddActivity={handleAddActivity}
-    handleCreatePoll={handleCreatePoll}
-  />
+  {/* Modals */}
+  <AnimatePresence>
+        {(isAddingActivity || isCreatingPoll) && (
+          <motion.div 
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-950/60 backdrop-blur-sm"
+          >
+            <motion.div 
+              initial={{ scale: 0.9, opacity: 0, y: 20 }}
+              animate={{ scale: 1, opacity: 1, y: 0 }}
+              exit={{ scale: 0.9, opacity: 0, y: 20 }}
+              className="bg-white dark:bg-slate-900 w-full max-w-md rounded-[3rem] p-10 shadow-2xl border border-slate-100 dark:border-white/5"
+            >
+              <div className="flex items-center justify-between mb-8">
+                <h3 className="text-2xl font-bold text-slate-900 dark:text-white">
+                  {isAddingActivity ? 'Add Activity' : 'New Poll'}
+                </h3>
+                <button 
+                  onClick={() => { setIsAddingActivity(false); setIsCreatingPoll(false); }}
+                  className="p-3 hover:bg-slate-50 dark:hover:bg-white/5 rounded-2xl transition-colors text-slate-400"
+                >
+                  <X className="w-6 h-6" />
+                </button>
+              </div>
+
+              <div className="space-y-6">
+                <div>
+                  <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-3 block">
+                    {isAddingActivity ? 'Activity Name' : 'Question'}
+                  </label>
+                  <input 
+                    type="text" 
+                    value={isAddingActivity ? newActivity.activity : newPoll.question}
+                    onChange={(e) => isAddingActivity 
+                      ? setNewActivity({...newActivity, activity: e.target.value})
+                      : setNewPoll({...newPoll, question: e.target.value})
+                    }
+                    placeholder={isAddingActivity ? "e.g. Dinner at Pub Street" : "e.g. Where should we eat?"}
+                    className="w-full px-6 py-4 bg-slate-50 dark:bg-white/5 border border-slate-100 dark:border-white/5 rounded-2xl text-sm outline-none focus:ring-2 focus:ring-blue-500 transition-all"
+                  />
+                </div>
+                
+                {isAddingActivity ? (
+                  <div className="grid grid-cols-2 gap-6">
+                    <div>
+                      <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-3 block">Time</label>
+                      <input 
+                        type="time" 
+                        value={newActivity.time}
+                        onChange={(e) => setNewActivity({...newActivity, time: e.target.value})}
+                        className="w-full px-6 py-4 bg-slate-50 dark:bg-white/5 border border-slate-100 dark:border-white/5 rounded-2xl text-sm outline-none focus:ring-2 focus:ring-blue-500 transition-all" 
+                      />
+                    </div>
+                    <div>
+                      <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-3 block">Location</label>
+                      <input 
+                        type="text" 
+                        value={newActivity.location}
+                        onChange={(e) => setNewActivity({...newActivity, location: e.target.value})}
+                        placeholder="Location" 
+                        className="w-full px-6 py-4 bg-slate-50 dark:bg-white/5 border border-slate-100 dark:border-white/5 rounded-2xl text-sm outline-none focus:ring-2 focus:ring-blue-500 transition-all" 
+                      />
+                    </div>
+                  </div>
+                ) : (
+                  <div className="space-y-4">
+                    <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-3 block">Options</label>
+                    {newPoll.options.map((opt, idx) => (
+                      <input 
+                        key={idx}
+                        type="text" 
+                        value={opt}
+                        onChange={(e) => {
+                          const opts = [...newPoll.options];
+                          opts[idx] = e.target.value;
+                          setNewPoll({...newPoll, options: opts});
+                        }}
+                        placeholder={`Option ${idx + 1}`} 
+                        className="w-full px-6 py-4 bg-slate-50 dark:bg-white/5 border border-slate-100 dark:border-white/5 rounded-2xl text-sm outline-none focus:ring-2 focus:ring-blue-500 transition-all" 
+                      />
+                    ))}
+                    <button 
+                      onClick={() => setNewPoll({...newPoll, options: [...newPoll.options, '']})}
+                      className="text-xs font-bold text-blue-600 flex items-center gap-2 mt-4"
+                    >
+                      <Plus className="w-4 h-4" /> Add Option
+                    </button>
+                  </div>
+                )}
+              </div>
+
+              <div className="mt-10 flex gap-4">
+                <button 
+                  onClick={() => { setIsAddingActivity(false); setIsCreatingPoll(false); }}
+                  className="flex-1 py-5 bg-slate-50 dark:bg-white/5 text-slate-600 dark:text-slate-400 rounded-2xl text-sm font-bold hover:bg-slate-100 dark:hover:bg-white/10 transition-colors"
+                >
+                  Cancel
+                </button>
+                <button 
+                  onClick={isAddingActivity ? handleAddActivity : handleCreatePoll}
+                  className="flex-1 py-5 bg-blue-600 text-white rounded-2xl text-sm font-bold hover:bg-blue-700 transition-colors shadow-xl"
+                >
+                  {isAddingActivity ? 'Add Activity' : 'Create Poll'}
+                </button>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 };

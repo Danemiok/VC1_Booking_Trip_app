@@ -438,6 +438,69 @@ Booked via Cambodia Travel`;
     }
   };
 
+  const supportContent = {
+    help: {
+      title: 'Help Center',
+      subtitle: 'We are here to make your trip smooth and stress-free.',
+      intro:
+        'Welcome to our Help Center! You can contact us via email or live chat. Here you’ll find answers to the most common questions and tips to get the best experience.',
+      details: [
+        'Company: Cambodia Travel (local-first travel platform)',
+        'Email: support@cambodiatravel.com',
+        'Live chat: 24/7 in-app concierge',
+        'Typical response time: under 15 minutes'
+      ],
+      faqsTitle: 'Common FAQs',
+      faqs: [
+        'How do I change my hotel or transport booking?',
+        'Can I add or remove guests after booking?',
+        'Where can I download my receipt?',
+        'How do refunds work if plans change?'
+      ],
+      tipsTitle: 'Helpful tips',
+      tips: [
+        'Double-check dates and guest counts before paying.',
+        'Download your receipt for quick hotel check-in.',
+        'Share your itinerary with fellow travelers.'
+      ]
+    },
+    terms: {
+      title: 'Terms of Service',
+      subtitle: 'A quick summary of the rules that keep everyone safe.',
+      intro:
+        'By booking with us, you agree to use the service responsibly and provide accurate information. These terms protect both travelers and partners.',
+      highlights: [
+        'Provide accurate traveler details and payment information.',
+        'No resale or unauthorized commercial use of bookings.',
+        'Respect property rules and local regulations.',
+        'Changes and cancellations follow the stated policy for each booking.'
+      ]
+    },
+    privacy: {
+      title: 'Privacy Policy',
+      subtitle: 'Clear, simple information about how we handle your data.',
+      intro:
+        'We collect only the data needed to manage bookings, provide support, and improve your experience. We never sell your personal information.',
+      controlsTitle: 'Your controls',
+      controls: [
+        'Request a copy of your data.',
+        'Update communication preferences.',
+        'Ask for account deletion or anonymization.'
+      ]
+    },
+    refund: {
+      title: 'Refund Policy',
+      subtitle: 'Refund eligibility and timelines at a glance.',
+      intro:
+        'Refunds depend on the cancellation window and the provider policy. We will always show the refundable amount before you confirm a cancellation.',
+      details: [
+        'Eligibility: within the provider’s cancellation window.',
+        'Timeline: 5–10 business days after approval.',
+        'Process: submit a request and we handle the provider follow-up.'
+      ]
+    }
+  } as const;
+
   return (
     <div className="min-h-screen bg-slate-50 dark:bg-slate-950 pt-24 pb-20 px-4 sm:px-6 lg:px-8">
       <div className="max-w-7xl mx-auto">

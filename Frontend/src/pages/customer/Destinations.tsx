@@ -271,50 +271,7 @@ export const Hotels: React.FC<HotelsPageProps> = ({ tripData, onBack, onSelectHo
   const [hotelsLoading, setHotelsLoading] = useState(true);
   const [hotelsError, setHotelsError] = useState('');
 
-  const language = (() => {
-    try {
-      return localStorage.getItem('customer_language') || 'English (US)';
-    } catch {
-      return 'English (US)';
-    }
-  })();
-
-  const isKhmer = language === 'Khmer' || language === 'ខ្មែរ';
-
   const t = (key: string): string => {
-    const km: Record<string, string> = {
-      curated_collection: 'បញ្ជីជ្រើសរើសពិសេស',
-      prestige_stays: 'ស្នាក់នៅប្រណិត',
-      prestige_stays_desc: 'ស្វែងរកសណ្ឋាគារ និងរមណីយដ្ឋានដែលបានជ្រើសរើសសម្រាប់ភាពផាសុកភាព រចនាប័ទ្ម និងទិដ្ឋភាពដ៏អស្ចារ្យ។',
-      where_to_next: 'ទៅណាបន្ទាប់?',
-      explore: 'ស្វែងរក',
-      home: 'ទំព័រដើម',
-      hotels_resorts: 'សណ្ឋាគារ និង រមណីយដ្ឋាន',
-      filters: 'តម្រង',
-      nightly_rate: 'តម្លៃក្នុងមួយយប់',
-      up_to: 'រហូតដល់',
-      star_rating: 'ចំនួនផ្កាយ',
-      stars: 'ផ្កាយ',
-      amenities: 'សេវាកម្ម',
-      view_on_map: 'មើលលើផែនទី',
-      showing: 'បង្ហាញ',
-      property_singular: 'ទីតាំង',
-      property_plural: 'ទីតាំង',
-      for_query: 'សម្រាប់',
-      sort_by: 'តម្រៀបតាម',
-      recommended: 'ផ្ដល់អនុសាសន៍',
-      exceptional_stay: 'ការស្នាក់នៅពិសេស',
-      prestige_stay_badge: 'ស្នាក់នៅប្រណិត',
-      breakfast_included: 'អាហារពេលព្រឹករួមបញ្ចូល',
-      quick_booking: 'ការកក់រហ័ស',
-      nights_estimate: 'ប៉ាន់ស្មានចំនួនយប់',
-      night: 'យប់',
-      nights: 'យប់',
-      room_type: 'ប្រភេទបន្ទប់',
-      guests: 'ភ្ញៀវ',
-      night_suffix: '/យប់',
-    };
-
     const en: Record<string, string> = {
       curated_collection: 'Curated Collection',
       prestige_stays: 'The Prestige Stays',
@@ -348,9 +305,9 @@ export const Hotels: React.FC<HotelsPageProps> = ({ tripData, onBack, onSelectHo
       night_suffix: '/night',
     };
 
-    return (isKhmer ? km : en)[key] ?? key;
+    return en[key] ?? key;
   };
-  
+
   useEffect(() => {
     let cancelled = false;
     setHotelsLoading(true);
@@ -729,6 +686,14 @@ export const Hotels: React.FC<HotelsPageProps> = ({ tripData, onBack, onSelectHo
                     {/* Content Container */}
                     <div className="flex-1 p-10 md:p-14 flex flex-col justify-between">
                       <div>
+                        <div className="flex items-center justify-between mb-6">
+                          <div className="flex items-center gap-3">
+                            <div className="text-left">
+                              <p className="text-[10px] font-bold text-slate-900 dark:text-white uppercase tracking-widest">Exceptional Stay</p>
+                              <p className="text-[9px] text-slate-400 font-medium uppercase tracking-widest">{hotel.reviews}</p>
+                            </div>
+                          </div>
+                        </div>
 
                         <h3 
                           className="text-3xl font-serif italic text-slate-900 dark:text-white mb-3 group-hover:text-blue-600 transition-colors cursor-pointer"

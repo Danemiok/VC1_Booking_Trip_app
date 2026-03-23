@@ -52,27 +52,7 @@ export const Profile: React.FC<ProfileProps> = ({
     currency: 'USD ($)'
   });
 
-  const isKhmer = profileData.language === 'Khmer' || profileData.language === 'ខ្មែរ';
   const t = (key: string): string => {
-    const km: Record<string, string> = {
-      profile: 'ប្រវត្តិរូប',
-      documents: 'ឯកសារ',
-      notifications: 'ការជូនដំណឹង',
-      settings: 'ការកំណត់',
-      security: 'សុវត្ថិភាព',
-      edit_profile: 'កែប្រែប្រវត្តិរូប',
-      save_changes: 'រក្សាទុកការផ្លាស់ប្តូរ',
-      contact_information: 'ព័ត៌មានទំនាក់ទំនង',
-      travel_preferences: 'ចំណូលចិត្តការធ្វើដំណើរ',
-      email_address: 'អាសយដ្ឋានអ៊ីមែល',
-      phone_number: 'លេខទូរស័ព្ទ',
-      location: 'ទីតាំង',
-      language: 'ភាសា',
-      currency: 'រូបិយប័ណ្ណ',
-      english_us: 'អង់គ្លេស (អាមេរិក)',
-      khmer: 'ខ្មែរ',
-    };
-
     const en: Record<string, string> = {
       profile: 'Profile',
       documents: 'Documents',
@@ -92,7 +72,7 @@ export const Profile: React.FC<ProfileProps> = ({
       khmer: 'Khmer',
     };
 
-    return (isKhmer ? km : en)[key] ?? key;
+    return en[key] ?? key;
   };
 
   const [settings, setSettings] = useState({
