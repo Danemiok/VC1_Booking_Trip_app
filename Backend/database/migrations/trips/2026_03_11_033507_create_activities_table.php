@@ -11,12 +11,16 @@ return new class extends Migration
      */
     public function up(): void
     {
+        if (Schema::hasTable('activities')) {
+            return;
+        }
+
         Schema::create('activities', function (Blueprint $table) {
             $table->id();
 
             $table->unsignedBigInteger('destination_id');
             $table->foreign('destination_id')
-                ->references('destination_id')
+                ->references('id')
                 ->on('destinations')
                 ->onDelete('cascade');
 

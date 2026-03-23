@@ -11,6 +11,10 @@ return new class extends Migration
      */
     public function up(): void
     {
+        if (!Schema::hasTable('transports') || Schema::hasColumn('transports', 'is_free')) {
+            return;
+        }
+
         Schema::table('transports', function (Blueprint $table) {
             $table->boolean('is_free')->default(false)->after('price_per_km');
         });
@@ -21,6 +25,10 @@ return new class extends Migration
      */
     public function down(): void
     {
+        if (!Schema::hasTable('transports') || !Schema::hasColumn('transports', 'is_free')) {
+            return;
+        }
+
         Schema::table('transports', function (Blueprint $table) {
             $table->dropColumn('is_free');
         });

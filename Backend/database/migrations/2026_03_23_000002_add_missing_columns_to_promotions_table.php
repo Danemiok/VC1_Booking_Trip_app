@@ -11,6 +11,10 @@ return new class extends Migration
      */
     public function up(): void
     {
+        if (!Schema::hasTable('promotions')) {
+            return;
+        }
+
         Schema::table('promotions', function (Blueprint $table) {
             // Add missing columns if they don't exist
             if (!Schema::hasColumn('promotions', 'service_category')) {
@@ -24,6 +28,10 @@ return new class extends Migration
      */
     public function down(): void
     {
+        if (!Schema::hasTable('promotions')) {
+            return;
+        }
+
         Schema::table('promotions', function (Blueprint $table) {
             if (Schema::hasColumn('promotions', 'service_category')) {
                 $table->dropColumn('service_category');

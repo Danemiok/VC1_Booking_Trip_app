@@ -530,7 +530,7 @@ class DestinationController extends Controller
                     // Add promotion data
                     $promotionInfo = \App\Services\PromotionService::getBestPromotionForDestination(
                         floatval($destination->price),
-                        $destination->destination_id
+                        $destination->id
                     );
                     
                     $formatted['original_price'] = $promotionInfo['original_price'];

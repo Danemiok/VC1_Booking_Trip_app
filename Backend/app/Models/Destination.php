@@ -8,14 +8,6 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Destination extends Model
 {
-    protected $primaryKey = 'destination_id';
-
-    protected $keyType = 'int';
-
-    public $incrementing = true;
-
-    protected $appends = ['id'];
-
     protected $fillable = [
         'user_id',
         'name',
@@ -37,13 +29,6 @@ class Destination extends Model
         'rating' => 'decimal:1',
         'total_bookings' => 'integer',
     ];
-
-    public function getIdAttribute(): ?int
-    {
-        $value = $this->getAttribute('destination_id');
-
-        return $value === null ? null : (int) $value;
-    }
 
     /**
      * Get the user that owns this destination

@@ -22,12 +22,12 @@ class HotelController extends Controller
                 // Get promotion info for this destination
                 $promotionInfo = PromotionService::getBestPromotionForDestination(
                     floatval($destination->price),
-                    $destination->destination_id
+                    $destination->id
                 );
 
                 return [
                     'id' => $destination->id,
-                    'destination_id' => $destination->destination_id,
+                    'destination_id' => $destination->id,
                     'name' => $destination->name,
                     'hotel_name' => $destination->name,
                     'location' => $destination->location,
