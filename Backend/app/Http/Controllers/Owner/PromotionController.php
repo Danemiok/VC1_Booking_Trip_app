@@ -5,11 +5,65 @@ namespace App\Http\Controllers\Owner;
 use App\Http\Controllers\Controller;
 use App\Models\Promotion;
 use App\Models\PromotionLink;
+use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 
 class PromotionController extends Controller
 {
+    private function findOverlappingPromotion(
+        array $linkedDestinations,
+        array $linkedTransports,
+        ?string $expiry,
+        ?int $excludePromotionId = null
+    ): ?Promotion {
+        if (empty($linkedDestinations) && empty($linkedTransports)) {
+            return null;
+        }
+
+        $ownerId = auth()->id();
+        $now = now();
+        $newEnd = $expiry ? Carbon::parse($expiry)->endOfDay() : null;
+
+        $query = Promotion::where('owner_id', $ownerId)
+            ->where('is_active', true)
+            ->when($excludePromotionId, fn ($q) => $q->where('id', '!=', $excludePromotionId))
+            ->whereHas('promotionLinks', function ($q) use ($linkedDestinations, $linkedTransports) {
+                $q->where(function ($sub) use ($linkedDestinations, $linkedTransports) {
+                    if (!empty($linkedDestinations)) {
+                        $sub->orWhere(function ($inner) use ($linkedDestinations) {
+                            $inner->where('link_type', 'destination')
+                                  ->whereIn('link_id', $linkedDestinations);
+                        });
+                    }
+
+                    if (!empty($linkedTransports)) {
+                        $sub->orWhere(function ($inner) use ($linkedTransports) {
+                            $inner->where('link_type', 'transport')
+                                  ->whereIn('link_id', $linkedTransports);
+                        });
+                    }
+                });
+            })
+            ->where(function ($q) use ($now, $newEnd) {
+                if ($newEnd) {
+                    $q->where('created_at', '<=', $newEnd)
+                      ->where(function ($inner) use ($now) {
+                          $inner->whereNull('expiry')
+                                ->orWhere('expiry', '>=', $now);
+                      });
+                } else {
+                    $q->where(function ($inner) use ($now) {
+                        $inner->whereNull('expiry')
+                              ->orWhere('expiry', '>=', $now);
+                    });
+                }
+            });
+
+        return $query->first();
+    }
+
     public function index()
     {
         $userId = auth()->id();
@@ -69,6 +123,22 @@ class PromotionController extends Controller
         $linkedDestinations = $validated['linked_destinations'] ?? [];
         $linkedTransports = $validated['linked_transports'] ?? [];
         unset($validated['linked_destinations'], $validated['linked_transports']);
+
+        $conflict = $this->findOverlappingPromotion(
+            $linkedDestinations,
+            $linkedTransports,
+            $validated['expiry'] ?? null
+        );
+
+        if ($conflict) {
+            return response()->json([
+                'success' => false,
+                'message' => 'A promotion is already active for one or more selected items. Please wait until the current promotion ends.',
+                'errors' => [
+                    'overlap' => ['One or more selected items already have an active promotion in this date range.']
+                ],
+            ], 422);
+        }
 
         DB::beginTransaction();
         try {
@@ -169,6 +239,40 @@ class PromotionController extends Controller
         $linkedDestinations = $validated['linked_destinations'] ?? null;
         $linkedTransports = $validated['linked_transports'] ?? null;
         unset($validated['linked_destinations'], $validated['linked_transports']);
+
+        $nextLinkedDestinations = $linkedDestinations ?? $promotion->promotionLinks()
+            ->where('link_type', 'destination')
+            ->pluck('link_id')
+            ->values()
+            ->toArray();
+
+        $nextLinkedTransports = $linkedTransports ?? $promotion->promotionLinks()
+            ->where('link_type', 'transport')
+            ->pluck('link_id')
+            ->values()
+            ->toArray();
+
+        $nextExpiry = $validated['expiry'] ?? $promotion->expiry;
+        $nextIsActive = $validated['is_active'] ?? $promotion->is_active;
+
+        if ($nextIsActive) {
+            $conflict = $this->findOverlappingPromotion(
+                $nextLinkedDestinations,
+                $nextLinkedTransports,
+                $nextExpiry ? (string) $nextExpiry : null,
+                (int) $promotion->id
+            );
+
+            if ($conflict) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'A promotion is already active for one or more selected items. Please wait until the current promotion ends.',
+                    'errors' => [
+                        'overlap' => ['One or more selected items already have an active promotion in this date range.']
+                    ],
+                ], 422);
+            }
+        }
 
         DB::beginTransaction();
         try {
