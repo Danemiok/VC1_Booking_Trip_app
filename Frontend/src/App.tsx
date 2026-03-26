@@ -7,12 +7,6 @@ import { DestinationModal } from './components/common/DestinationModal';
 import { RecommendationModal } from './components/common/RecommendationModal';
 import { HelpCenterLayout } from './components/layout/HelpCenterLayout';
 import { AppRoutes } from './routes/AppRoutes';
-<<<<<<< HEAD
-import { Login } from './pages/auth/Login';
-import { Register } from './pages/auth/Register';
-import CustomerMessagesPage from './pages/customer/Messages';
-=======
->>>>>>> promotion-feature/vanna
 import { useAuth } from './context/AuthContext';
 import { ThemeProvider } from './context/ThemeContext';
 
@@ -393,86 +387,6 @@ const AppContent = () => {
           tripData={tripData}
           setTripData={setTripData}
         />
-<<<<<<< HEAD
-      ) : (
-        mainView === 'messages' && user?.role === 'customer' ? (
-          <CustomerMessagesPage />
-        ) : (
-          <AnimatePresence mode="wait">
-            <motion.div
-              key={mainView}
-              initial={{ opacity: 0, y: 16 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -10 }}
-              transition={{ duration: 0.22, ease: 'easeOut' }}
-              className={isOwnerUser ? undefined : "pt-24"}
-            >
-              <AppRoutes
-                view={mainView}
-                setView={setView}
-                onSelectRecommendation={handleSelectRecommendation}
-                onSelectDestination={handleSelectDestination}
-                onPromotionsClick={() => setView('promotions')}
-                onHotelsClick={() => setView('hotels')}
-                onRentalsClick={() => setView('rentals')}
-                onActivitiesClick={() => setView('activities')}
-                notifications={notifications}
-                onMarkAsRead={handleMarkAsRead}
-                onMarkAllAsRead={handleMarkAllAsRead}
-                activeProfileTab={activeProfileTab}
-                selectedHotel={selectedHotel}
-                setSelectedHotel={setSelectedHotel}
-                selectedActivityIds={selectedActivityIds}
-                setSelectedActivityIds={setSelectedActivityIds}
-                tripData={tripData}
-                setTripData={setTripData}
-              />
-            </motion.div>
-          </AnimatePresence>
-        )
-      )}
-
-      {shouldShowFooter && <Footer onLoginClick={() => setView('login')} user={user} />}
-
-      <AnimatePresence>
-        {isAuthModalOpen && (
-          <motion.div
-            className="fixed inset-0 z-[100] bg-slate-950/55 backdrop-blur-[1px] overflow-y-auto"
-            onClick={() => setView('landing')}
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            transition={{ duration: 0.35, ease: 'easeOut' }}
-          >
-            <motion.div
-              onClick={(event) => event.stopPropagation()}
-              initial={{ opacity: 0, y: 40, scale: 0.96 }}
-              animate={{ opacity: 1, y: 0, scale: 1 }}
-              exit={{ opacity: 0, y: 18, scale: 0.98 }}
-              transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
-            >
-              {view === 'login' ? (
-                <Login
-                  onSwitchToRegister={() => setView('register')}
-                  onBack={() => setView('landing')}
-                  onSuccess={handleAuthSuccess}
-                  onClose={() => setView('landing')}
-                />
-              ) : (
-                <Register
-                  onSwitchToLogin={() => setView('login')}
-                  onBack={() => setView('landing')}
-                  onSuccess={handleAuthSuccess}
-                  onClose={() => setView('landing')}
-                />
-              )}
-            </motion.div>
-          </motion.div>
-        )}
-      </AnimatePresence>
-
-    </div>
-=======
 
         <Footer
           onLoginClick={() => setView('login')}
@@ -508,7 +422,6 @@ const AppContent = () => {
         </AnimatePresence>
       </div>
     </HelpCenterLayout>
->>>>>>> promotion-feature/vanna
   );
 };
 

@@ -92,19 +92,6 @@ export const Navbar: React.FC<NavbarProps> = ({
   return (
     <nav className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${isScrolled ? 'bg-white dark:bg-slate-900 shadow-md py-3' : 'bg-white dark:bg-slate-900 py-4'}`}>
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex items-center justify-between">
-        <div 
-          className="flex items-center gap-3 cursor-pointer group"
-          onClick={onHomeClick}
-        >
-          <div className="w-12 h-12 rounded-2xl overflow-hidden flex-shrink-0 bg-slate-900 dark:bg-white p-2.5 group-hover:scale-110 group-hover:rotate-3 transition-all shadow-xl shadow-blue-500/10">
-            <Compass className="w-full h-full text-white dark:text-slate-900" />
-          </div>
-          <div className="flex flex-col">
-            <span className="text-xl font-bold text-slate-900 dark:text-white leading-none tracking-tighter">Komrong</span>
-            <span className="text-[9px] font-bold text-blue-600 dark:text-blue-400 uppercase tracking-[0.4em] mt-0.5">Kingdom of Wonder</span>
-          </div>
-        </div>
-        
         {/* Desktop Menu */}
         <div className="hidden lg:flex items-center gap-10">
           <button 
