@@ -134,6 +134,7 @@ const Bookings = () => {
   const [selectedBooking, setSelectedBooking] = React.useState<any | null>(null);
   const [showBookingModal, setShowBookingModal] = React.useState(false);
   const [updatingBookingId, setUpdatingBookingId] = React.useState<string | null>(null);
+  const receiptRef = React.useRef<HTMLDivElement>(null);
   
   const pageSize = 10;
 
@@ -460,6 +461,84 @@ const Bookings = () => {
     }
     const d = new Date(String(value));
     return Number.isNaN(d.getTime()) ? null : d;
+  };
+
+  const parseDateOnlyLocal = (value: any) => {
+    if (!value) return null;
+    if (value instanceof Date) return Number.isNaN(value.getTime()) ? null : value;
+    const text = String(value).trim();
+    const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(text);
+    if (m) {
+      const y = Number(m[1]);
+      const mo = Number(m[2]);
+      const d = Number(m[3]);
+      const date = new Date(y, mo - 1, d);
+      return Number.isNaN(date.getTime()) ? null : date;
+    }
+    const parsed = new Date(text);
+    return Number.isNaN(parsed.getTime()) ? null : parsed;
+  };
+
+  const formatDateTime = (value: any) => {
+    const d = parseBookingDate(value);
+    if (!d) return value ? String(value) : '-';
+    return d.toLocaleString('en-US', {
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit',
+    });
+  };
+
+  const formatDateOnly = (value: any) => {
+    const d = parseDateOnlyLocal(value);
+    if (!d) return value ? String(value) : '-';
+    return d.toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: '2-digit' });
+  };
+
+  const formatStay = (booking: any) => {
+    const start = booking?.dateStart ?? booking?.date_start;
+    const end = booking?.dateEnd ?? booking?.date_end;
+    if (start && end) return `${formatDateOnly(start)} → ${formatDateOnly(end)}`;
+    if (start) return formatDateOnly(start);
+    return '-';
+  };
+
+  const downloadReceiptPdf = async () => {
+    if (!receiptRef.current || !selectedBooking) return;
+
+    try {
+      const loadLib = async (name: string) => {
+        const importer = Function('n', 'return import(n)') as (n: string) => Promise<any>;
+        return importer(name);
+      };
+
+      const [html2canvasMod, jsPDFMod] = await Promise.all([loadLib('html2canvas'), loadLib('jspdf')]);
+      const html2canvas = html2canvasMod?.default;
+      const jsPDF = jsPDFMod?.default;
+      if (!html2canvas || !jsPDF) throw new Error('Missing PDF dependencies');
+
+      const canvas = await html2canvas(receiptRef.current, {
+        scale: 2,
+        useCORS: true,
+        logging: false,
+        backgroundColor: '#ffffff',
+      });
+
+      const imgData = canvas.toDataURL('image/png');
+      const pdf = new jsPDF({
+        orientation: 'portrait',
+        unit: 'px',
+        format: [canvas.width, canvas.height],
+      });
+
+      pdf.addImage(imgData, 'PNG', 0, 0, canvas.width, canvas.height);
+      pdf.save(`Receipt-${String(selectedBooking.id ?? 'booking')}.pdf`);
+    } catch (error) {
+      console.error('Error generating receipt PDF:', error);
+      window.print();
+    }
   };
 
   const isWithinSelectedRange = (value: string) => {
@@ -1488,7 +1567,7 @@ const Bookings = () => {
             aria-label="Booking details"
           >
             <div
-              className="bg-white dark:bg-slate-900 rounded-2xl p-6 max-w-2xl w-full mx-4 shadow-xl"
+              className="bg-white dark:bg-slate-900 rounded-2xl p-5 max-w-xl w-full mx-4 shadow-2xl max-h-[85vh] overflow-y-auto"
               onClick={(e) => e.stopPropagation()}
             >
               <div className="flex items-start justify-between gap-4">
@@ -1508,95 +1587,135 @@ const Bookings = () => {
                     </span>
                   </div>
                 </div>
-                <button
-                  type="button"
-                  onClick={closeBookingDetails}
-                  className="p-2 text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-xl transition-colors"
-                  aria-label="Close"
-                >
-                  <X size={18} />
-                </button>
+                <div className="flex items-center gap-2">
+                  <button
+                    type="button"
+                    onClick={downloadReceiptPdf}
+                    className="px-3 py-2 rounded-xl text-xs font-bold border border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors inline-flex items-center gap-2"
+                    aria-label="Download receipt"
+                  >
+                    <Download size={16} />
+                    Receipt
+                  </button>
+                  <button
+                    type="button"
+                    onClick={closeBookingDetails}
+                    className="p-2 text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-xl transition-colors"
+                    aria-label="Close"
+                  >
+                    <X size={18} />
+                  </button>
+                </div>
               </div>
 
-              {(() => {
-                const bookingImage = getBookingImage(selectedBooking);
-                if (!bookingImage) return null;
-
-                return (
-                  <div className="mt-5 rounded-2xl overflow-hidden border border-slate-200 dark:border-slate-800">
-                    <img
-                      src={bookingImage}
-                      alt={selectedBooking.service || 'Booking'}
-                      className="w-full h-44 object-cover"
-                      referrerPolicy="no-referrer"
-                      loading="lazy"
-                    />
-                  </div>
-                );
-              })()}
-
-              <div className="mt-6 grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <div className="rounded-xl border border-slate-200 dark:border-slate-800 p-4">
-                  <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Guest</p>
-                  <p className="mt-1 text-sm font-bold">{selectedBooking.guest}</p>
-                  {selectedBooking.customerEmail && (
-                    <p className="mt-0.5 text-xs text-slate-500">{selectedBooking.customerEmail}</p>
-                  )}
-                  {selectedBooking.customerPhone && (
-                    <p className="mt-0.5 text-xs text-slate-500">{selectedBooking.customerPhone}</p>
-                  )}
+              <div
+                ref={receiptRef}
+                id="owner-booking-receipt"
+                className="mt-5 bg-white dark:bg-slate-900 rounded-xl overflow-hidden border border-slate-200 dark:border-slate-800"
+              >
+                <div className="bg-blue-600 px-5 py-4 text-white">
+                  <p className="text-[10px] font-bold uppercase tracking-[0.2em] opacity-80">Official Receipt</p>
+                  <h2 className="text-lg font-serif italic mt-1">Komrong Sanctuary</h2>
+                  <p className="text-[11px] opacity-90 mt-0.5">Owner Booking Receipt</p>
                 </div>
 
-                <div className="rounded-xl border border-slate-200 dark:border-slate-800 p-4">
-                  <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Service</p>
-                  <p className="mt-1 text-sm font-bold">{selectedBooking.service}</p>
-                  <p className="mt-0.5 text-xs text-slate-500">{selectedBooking.route}</p>
-                  {selectedBooking.roomType && <p className="mt-0.5 text-xs text-slate-500">{selectedBooking.roomType}</p>}
-                  {selectedBooking.vehicleType && (
-                    <p className="mt-0.5 text-xs text-slate-500">{selectedBooking.vehicleType}</p>
-                  )}
-                </div>
-
-                <div className="rounded-xl border border-slate-200 dark:border-slate-800 p-4">
-                  <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Date & Time</p>
-                  {selectedBooking.date ? (
-                    <div className="mt-1">
-                      <p className="text-sm font-bold">
-                        {selectedBooking.date}{' '}
-                        <span className="text-slate-400 font-bold text-xs">{selectedBooking.time}</span>
+                <div className="p-5 space-y-4">
+                  <div className="flex flex-col sm:flex-row justify-between gap-4 border-b border-slate-100 dark:border-slate-800 pb-4">
+                    <div>
+                      <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">Booking ID</p>
+                      <p className="text-sm font-mono font-bold text-slate-900 dark:text-white">{selectedBooking.id}</p>
+                    </div>
+                    <div className="sm:text-right">
+                      <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">Date & Time</p>
+                      <p className="text-sm font-bold text-slate-900 dark:text-white">
+                        {formatDateTime(selectedBooking.createdAt ?? selectedBooking.created_at ?? selectedBooking.date)}
                       </p>
-                      {selectedBooking.category === 'hotel' && selectedBooking.dateStart && selectedBooking.dateEnd && (
-                        <p className="mt-0.5 text-xs text-slate-500">Stay: {selectedBooking.dateStart} to {selectedBooking.dateEnd}</p>
+                      {String(selectedBooking.category ?? '').toLowerCase() === 'hotel' && (
+                        <p className="mt-0.5 text-xs text-slate-500">Check-in / Check-out: {formatStay(selectedBooking)}</p>
                       )}
                     </div>
-                  ) : selectedBooking.category === 'hotel' ? (
-                    <p className="mt-1 text-sm font-bold">
-                      {selectedBooking.dateStart} <span className="text-slate-400 font-bold text-xs">to</span> {selectedBooking.dateEnd}
-                    </p>
-                  ) : (
-                    <p className="mt-1 text-sm font-bold">
-                      {selectedBooking.date || '-'}{' '}
-                      <span className="text-slate-400 font-bold text-xs">{selectedBooking.time || ''}</span>
-                    </p>
+                  </div>
+
+                  {(() => {
+                    const bookingImage = getBookingImage(selectedBooking);
+                    if (!bookingImage) return null;
+
+                    return (
+                      <div className="rounded-xl overflow-hidden border border-slate-200 dark:border-slate-800">
+                        <img
+                          src={bookingImage}
+                          alt={selectedBooking.service || 'Booking'}
+                          className="w-full h-40 object-cover"
+                          referrerPolicy="no-referrer"
+                          loading="lazy"
+                        />
+                      </div>
+                    );
+                  })()}
+
+                  <div className="space-y-3">
+                    <div className="flex items-start justify-between gap-6 border-b border-slate-100 dark:border-slate-800 pb-3">
+                      <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Guest</p>
+                      <div className="text-right">
+                        <p className="text-sm font-bold text-slate-900 dark:text-white">{selectedBooking.guest || '-'}</p>
+                        {selectedBooking.customerEmail && (
+                          <p className="mt-0.5 text-xs text-slate-500">{selectedBooking.customerEmail}</p>
+                        )}
+                        {selectedBooking.customerPhone && (
+                          <p className="mt-0.5 text-xs text-slate-500">{selectedBooking.customerPhone}</p>
+                        )}
+                      </div>
+                    </div>
+
+                    <div className="flex items-start justify-between gap-6 border-b border-slate-100 dark:border-slate-800 pb-3">
+                      <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Service</p>
+                      <div className="text-right">
+                        <p className="text-sm font-bold text-slate-900 dark:text-white">{selectedBooking.service || '-'}</p>
+                        {selectedBooking.route && <p className="mt-0.5 text-xs text-slate-500">{selectedBooking.route}</p>}
+                        {selectedBooking.roomType && <p className="mt-0.5 text-xs text-slate-500">{selectedBooking.roomType}</p>}
+                        {selectedBooking.vehicleType && <p className="mt-0.5 text-xs text-slate-500">{selectedBooking.vehicleType}</p>}
+                      </div>
+                    </div>
+
+                    <div className="flex items-start justify-between gap-6 border-b border-slate-100 dark:border-slate-800 pb-3">
+                      <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Payment</p>
+                      <div className="text-right">
+                        <p className="text-sm font-bold text-slate-900 dark:text-white">${formatMoney(selectedBooking.amount)}</p>
+                        <p className="mt-0.5 text-xs text-slate-500">{selectedBooking.pax ?? '-'} pax</p>
+                        {selectedBooking.paymentMethod && (
+                          <p className="mt-0.5 text-xs text-slate-500">Method: {selectedBooking.paymentMethod}</p>
+                        )}
+                      </div>
+                    </div>
+
+                    <div className="flex items-start justify-between gap-6">
+                      <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Status</p>
+                      <div className="text-right">
+                        <p className="text-sm font-bold text-slate-900 dark:text-white">
+                          {String(selectedBooking.status || 'pending').charAt(0).toUpperCase() +
+                            String(selectedBooking.status || 'pending').slice(1)}
+                        </p>
+                        {selectedBooking.reference && (
+                          <p className="mt-0.5 text-xs text-slate-500">Ref: {selectedBooking.reference}</p>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+
+                  {selectedBooking.specialRequests && (
+                    <div className="pt-3 border-t border-slate-100 dark:border-slate-800">
+                      <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Special Requests</p>
+                      <p className="mt-1 text-sm text-slate-700 dark:text-slate-300">{selectedBooking.specialRequests}</p>
+                    </div>
                   )}
                 </div>
 
-                <div className="rounded-xl border border-slate-200 dark:border-slate-800 p-4">
-                  <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Payment</p>
-                  <p className="mt-1 text-sm font-bold">${formatMoney(selectedBooking.amount)}</p>
-                  <p className="mt-0.5 text-xs text-slate-500">{selectedBooking.pax} pax</p>
-                  {selectedBooking.paymentMethod && (
-                    <p className="mt-0.5 text-xs text-slate-500">Method: {selectedBooking.paymentMethod}</p>
-                  )}
+                <div className="bg-slate-50 dark:bg-slate-800/40 p-3 text-center">
+                  <p className="text-[10px] text-slate-400 font-medium uppercase tracking-widest">
+                    Thank you for using Komrong Explorer.
+                  </p>
                 </div>
               </div>
-
-              {selectedBooking.specialRequests && (
-                <div className="mt-4 rounded-xl border border-slate-200 dark:border-slate-800 p-4">
-                  <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Special Requests</p>
-                  <p className="mt-1 text-sm text-slate-700 dark:text-slate-300">{selectedBooking.specialRequests}</p>
-                </div>
-              )}
 
               <div className="mt-6 flex flex-col sm:flex-row gap-3 sm:justify-end">
                 <button

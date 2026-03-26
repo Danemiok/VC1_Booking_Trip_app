@@ -55,16 +55,44 @@ export const Payment: React.FC<PaymentProps> = ({ tripData, onBackToHome, select
   const [selectedMethod, setSelectedMethod] = useState<'aba' | 'acleda' | 'wing' | 'amret'>('aba');
   const [paymentStatus, setPaymentStatus] = useState<'idle' | 'processing' | 'success'>('idle');
   const [showReceipt, setShowReceipt] = useState(false);
+  const [transactionAt, setTransactionAt] = useState<Date | null>(null);
+
+  const formatTransactionDateTime = (value: Date) => {
+    // Use a single, consistent formatter so Date & Time always reflects the booking moment.
+    return value.toLocaleString('en-US', {
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit',
+    });
+  };
+
+  const coerceDate = (value: any): Date | null => {
+    if (!value) return null;
+    if (value instanceof Date) return Number.isNaN(value.getTime()) ? null : value;
+    const parsed = new Date(value);
+    return Number.isNaN(parsed.getTime()) ? null : parsed;
+  };
+
+  const formatStayRange = (start: Date, end: Date) => {
+    const fmt: Intl.DateTimeFormatOptions = { year: 'numeric', month: 'short', day: 'numeric' };
+    const startLabel = start.toLocaleDateString('en-US', fmt);
+    const endLabel = end.toLocaleDateString('en-US', fmt);
+    return startLabel === endLabel ? startLabel : `${startLabel} - ${endLabel}`;
+  };
 
   const handleDone = () => {
     setShowReceipt(false);
     setPaymentStatus('idle');
+    setTransactionAt(null);
     onBackToHome?.();
   };
 
   const handlePayment = () => {
     setShowReceipt(false);
     setPaymentStatus('processing');
+    setTransactionAt((prev) => prev ?? new Date());
     setTimeout(() => {
       setPaymentStatus('success');
     }, 6000);
@@ -114,16 +142,7 @@ export const Payment: React.FC<PaymentProps> = ({ tripData, onBackToHome, select
 
   const receiptRef = useRef<HTMLDivElement>(null);
   const transactionId = useRef("KMR-" + Math.random().toString(36).substring(2, 10).toUpperCase()).current;
-  
-  // Use provided real-time date
-  const now = new Date('2026-03-03T00:34:03-08:00');
-  const transactionDate = now.toLocaleDateString('en-US', { 
-    year: 'numeric', 
-    month: 'long', 
-    day: 'numeric',
-    hour: '2-digit',
-    minute: '2-digit'
-  });
+  const transactionDate = transactionAt ? formatTransactionDateTime(transactionAt) : '';
 
   const selectedActivities = AVAILABLE_ACTIVITIES.filter(a => selectedActivityIds.includes(a.id));
   const activitiesTotal = selectedActivities.reduce((sum, a) => sum + (a.price * a.guests), 0);
@@ -134,10 +153,15 @@ export const Payment: React.FC<PaymentProps> = ({ tripData, onBackToHome, select
   const serviceFee = 5.00;
   const total = subtotal + taxes + serviceFee;
 
+  const checkIn = coerceDate(tripData?.startDate) ?? coerceDate(tripData?.dateStart);
+  const checkOut = coerceDate(tripData?.endDate) ?? coerceDate(tripData?.dateEnd);
+  const stayDatesLabel =
+    checkIn && checkOut ? formatStayRange(checkIn, checkOut) : (tripData?.dates || "Oct 12 - Oct 19, 2024");
+
   const bookingData = {
     title: tripData?.title || "Adventure in Siem Reap",
     location: tripData?.hotel?.location || "Siem Reap, Cambodia",
-    dates: tripData?.dates || "Oct 12 - Oct 19, 2024",
+    dates: stayDatesLabel,
     details: `${tripData?.guests || '2 Adults'} • ${tripData?.hotel?.roomType || 'Deluxe Room'}`,
     image: tripData?.hotel?.image || "https://images.unsplash.com/photo-1542314831-068cd1dbfeeb?auto=format&fit=crop&q=80&w=800",
     pricing: {

@@ -11,7 +11,7 @@ export const AVAILABLE_ACTIVITIES: AvailableActivity[] = [
   {
     id: 1,
     name: 'Angkor Wat Sunrise Tour',
-    price: 35,
+    price: 15,
     guests: 2,
     image:
       'https://images.unsplash.com/photo-1545048702-79362596cdc9?auto=format&fit=crop&q=80&w=800',
@@ -20,7 +20,7 @@ export const AVAILABLE_ACTIVITIES: AvailableActivity[] = [
   {
     id: 2,
     name: 'Floating Village Experience',
-    price: 28,
+    price: 12,
     guests: 2,
     image:
       'https://images.unsplash.com/photo-1524492449094-dc2f73c30b6a?auto=format&fit=crop&q=80&w=800',
@@ -29,7 +29,7 @@ export const AVAILABLE_ACTIVITIES: AvailableActivity[] = [
   {
     id: 3,
     name: 'Khmer Cooking Class',
-    price: 22,
+    price: 10,
     guests: 2,
     image:
       'https://images.unsplash.com/photo-1540189549336-e6e99c3679fe?auto=format&fit=crop&q=80&w=800',
@@ -38,7 +38,7 @@ export const AVAILABLE_ACTIVITIES: AvailableActivity[] = [
   {
     id: 4,
     name: 'Phnom Penh City Highlights',
-    price: 30,
+    price: 14,
     guests: 2,
     image:
       'https://images.unsplash.com/photo-1585653621032-0b2b0c1c2b8a?auto=format&fit=crop&q=80&w=800',
@@ -56,7 +56,7 @@ export const AVAILABLE_ACTIVITIES: AvailableActivity[] = [
   {
     id: 6,
     name: 'Koh Rong Island Day Trip',
-    price: 45,
+    price: 20,
     guests: 2,
     image:
       'https://images.unsplash.com/photo-1500375592092-40eb2168fd21?auto=format&fit=crop&q=80&w=800',

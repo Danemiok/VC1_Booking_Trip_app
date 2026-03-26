@@ -110,25 +110,57 @@ export const BookingHistory: React.FC<BookingHistoryProps> = ({
     try {
       setIsSubmitting(true);
       setBookingError(null);
-      
-      // Parse dates from "Mar 15 - Mar 18" format
-      const dates = tripData.dates.split(' - ');
-      const startDate = dates[0];
-      const endDate = dates[1] || dates[0];
-      
-      // Get current year
-      const currentYear = new Date().getFullYear();
-      
-      const toIsoDate = (dateStr: string) => {
-        const parsed = new Date(`${dateStr} ${currentYear}`);
-        if (Number.isNaN(parsed.getTime())) return null;
-        return parsed.toISOString().split('T')[0];
+
+      const toLocalIsoDate = (d: Date) => {
+        const tzOffsetMs = d.getTimezoneOffset() * 60000;
+        return new Date(d.getTime() - tzOffsetMs).toISOString().slice(0, 10);
       };
 
-      const normalizeDateForDB = (dateStr: string) => {
-        const iso = toIsoDate(dateStr);
-        return iso ?? `${dateStr}, ${currentYear}`;
+      const coerceDate = (value: any): Date | null => {
+        if (!value) return null;
+        if (value instanceof Date) return Number.isNaN(value.getTime()) ? null : value;
+        const parsed = new Date(value);
+        return Number.isNaN(parsed.getTime()) ? null : parsed;
       };
+
+      const ensureYear = (value: string, year: number) => {
+        if (/\b\d{4}\b/.test(value)) return value;
+        return `${value.trim()}, ${year}`;
+      };
+
+      const tryParseDateString = (value: string) => {
+        const cleaned = String(value ?? '').trim();
+        if (!cleaned) return null;
+        const parsed = new Date(cleaned);
+        return Number.isNaN(parsed.getTime()) ? null : parsed;
+      };
+
+      // Prefer the actual selected dates from TripPlanner (startDate/endDate) if available.
+      let checkIn = coerceDate(tripData?.startDate) ?? coerceDate(tripData?.dateStart);
+      let checkOut = coerceDate(tripData?.endDate) ?? coerceDate(tripData?.dateEnd);
+
+      // Fallback: parse from the human-readable range string.
+      if ((!checkIn || !checkOut) && typeof tripData?.dates === 'string') {
+        const parts = tripData.dates.split(' - ').map((s: string) => s.trim()).filter(Boolean);
+        const startPart = parts[0] ?? '';
+        const endPart = parts[1] ?? parts[0] ?? '';
+
+        const currentYear = new Date().getFullYear();
+        const endParsed =
+          tryParseDateString(endPart) ?? tryParseDateString(ensureYear(endPart, currentYear));
+        const yearForStart = endParsed?.getFullYear() ?? currentYear;
+        const startParsed =
+          tryParseDateString(startPart) ?? tryParseDateString(ensureYear(startPart, yearForStart));
+
+        checkIn = checkIn ?? startParsed;
+        checkOut = checkOut ?? endParsed ?? startParsed;
+      }
+
+      const checkInIso = checkIn ? toLocalIsoDate(checkIn) : null;
+      const checkOutIso = checkOut ? toLocalIsoDate(checkOut) : null;
+      if (!checkInIso || !checkOutIso) {
+        throw new Error('Missing Check-in / Check-out dates');
+      }
       
       // Create booking ID (reduce collision risk)
       const bookingId = `BK-${Date.now()}-${Math.random().toString(16).slice(2, 6)}`;
@@ -148,8 +180,8 @@ export const BookingHistory: React.FC<BookingHistoryProps> = ({
         image: tripData.hotel.image,
         serviceImage: tripData.hotel.image,
         hotelImage: tripData.hotel.image,
-        dateStart: normalizeDateForDB(startDate),
-        dateEnd: normalizeDateForDB(endDate),
+        dateStart: checkInIso,
+        dateEnd: checkOutIso,
         date: opts?.paymentDate ?? null,
         time: opts?.paymentTime ?? null,
         pax: parseInt(tripData.guests) || 2,
@@ -201,7 +233,7 @@ export const BookingHistory: React.FC<BookingHistoryProps> = ({
       return true;
     } catch (error) {
       console.error('❌ Error saving booking:', error);
-      setBookingError('Failed to save booking. Please try again.');
+      setBookingError(error instanceof Error ? error.message : 'Failed to save booking. Please try again.');
       return false;
     } finally {
       setIsSubmitting(false);
@@ -240,16 +272,23 @@ export const BookingHistory: React.FC<BookingHistoryProps> = ({
       setBookingError('Please enter your phone number to continue.');
       return;
     }
-    if (!paymentForm.paymentDate) {
-      setBookingError('Please select a payment date to continue.');
-      return;
-    }
-    if (!paymentForm.paymentTime) {
-      setBookingError('Please select a payment time to continue.');
-      return;
+
+    const paymentDate = paymentForm.paymentDate || getLocalDateInputValue();
+    const paymentTime = paymentForm.paymentTime || getLocalTimeInputValue();
+
+    // For ABA we keep date/time internally but don't ask the user for it.
+    if (paymentForm.method !== 'aba') {
+      if (!paymentDate) {
+        setBookingError('Please select a payment date to continue.');
+        return;
+      }
+      if (!paymentTime) {
+        setBookingError('Please select a payment time to continue.');
+        return;
+      }
     }
 
-    await handlePaymentAndSave(paymentForm.method, paymentForm.paymentDate, paymentForm.paymentTime, phone);
+    await handlePaymentAndSave(paymentForm.method, paymentDate, paymentTime, phone);
   };
 
   const toggleRentalBooking = (e: React.MouseEvent) => {
@@ -1034,25 +1073,29 @@ Booked via Cambodia Travel`;
                 )}
 
                 <div className="space-y-6">
-                  <div>
-                    <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-2">Payment Date</label>
-                    <input 
-                      type="date"
-                      value={paymentForm.paymentDate}
-                      onChange={(e) => setPaymentForm((prev) => ({ ...prev, paymentDate: e.target.value }))}
-                      className="w-full px-4 py-3 bg-slate-50 dark:bg-slate-800 border border-slate-100 dark:border-slate-700 rounded-xl text-slate-900 dark:text-white font-medium focus:ring-2 focus:ring-blue-500 outline-none transition-all"
-                    />
-                  </div>
+                  {paymentForm.method !== 'aba' && (
+                    <>
+                      <div>
+                        <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-2">Payment Date</label>
+                        <input 
+                          type="date"
+                          value={paymentForm.paymentDate}
+                          onChange={(e) => setPaymentForm((prev) => ({ ...prev, paymentDate: e.target.value }))}
+                          className="w-full px-4 py-3 bg-slate-50 dark:bg-slate-800 border border-slate-100 dark:border-slate-700 rounded-xl text-slate-900 dark:text-white font-medium focus:ring-2 focus:ring-blue-500 outline-none transition-all"
+                        />
+                      </div>
 
-                  <div>
-                    <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-2">Payment Time</label>
-                    <input 
-                      type="time"
-                      value={paymentForm.paymentTime}
-                      onChange={(e) => setPaymentForm((prev) => ({ ...prev, paymentTime: e.target.value }))}
-                      className="w-full px-4 py-3 bg-slate-50 dark:bg-slate-800 border border-slate-100 dark:border-slate-700 rounded-xl text-slate-900 dark:text-white font-medium focus:ring-2 focus:ring-blue-500 outline-none transition-all"
-                    />
-                  </div>
+                      <div>
+                        <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-2">Payment Time</label>
+                        <input 
+                          type="time"
+                          value={paymentForm.paymentTime}
+                          onChange={(e) => setPaymentForm((prev) => ({ ...prev, paymentTime: e.target.value }))}
+                          className="w-full px-4 py-3 bg-slate-50 dark:bg-slate-800 border border-slate-100 dark:border-slate-700 rounded-xl text-slate-900 dark:text-white font-medium focus:ring-2 focus:ring-blue-500 outline-none transition-all"
+                        />
+                      </div>
+                    </>
+                  )}
 
                   <div>
                     <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-2">Phone Number</label>

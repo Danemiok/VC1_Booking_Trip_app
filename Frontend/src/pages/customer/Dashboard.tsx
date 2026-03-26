@@ -1097,16 +1097,18 @@ export const Dashboard: React.FC<DashboardProps> = ({
       />
 
       <section className="py-10 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto">
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          <div className="lg:col-span-1 card p-6">
-            <h3 className="text-sm font-extrabold tracking-widest uppercase text-slate-500 dark:text-slate-300">
-              Booking
-            </h3>
-            <p className="mt-3 text-xl font-extrabold text-slate-900 dark:text-white">Book a trip</p>
-            <p className="mt-2 text-sm text-slate-600 dark:text-slate-300">
-              Choose a destination, transport, date, and travelers.
-            </p>
-            <div className="mt-6 flex gap-3">
+        <div className="card p-6">
+          <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
+            <div>
+              <h3 className="text-sm font-extrabold tracking-widest uppercase text-slate-500 dark:text-slate-300">
+                Recent bookings
+              </h3>
+              <p className="mt-2 text-sm text-slate-600 dark:text-slate-300">
+                Your latest reservations appear here.
+              </p>
+            </div>
+
+            <div className="flex flex-wrap items-center gap-3">
               {isAuthenticated && user?.role === 'customer' ? (
                 <Link
                   to="/customer/book"
@@ -1126,60 +1128,44 @@ export const Dashboard: React.FC<DashboardProps> = ({
                 to="/customer/bookings"
                 className="h-11 px-5 rounded-xl border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-200 font-bold hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors inline-flex items-center justify-center"
               >
-                My bookings
+                View all
               </Link>
             </div>
           </div>
 
-          <div className="lg:col-span-2 card p-6">
-            <div className="flex items-start justify-between gap-4">
-              <div>
-                <h3 className="text-sm font-extrabold tracking-widest uppercase text-slate-500 dark:text-slate-300">
-                  Recent bookings
-                </h3>
-                <p className="mt-2 text-sm text-slate-600 dark:text-slate-300">
-                  Your latest reservations appear here.
-                </p>
+          <div className="mt-6">
+            {!isAuthenticated || user?.role !== 'customer' ? (
+              <div className="py-10 text-center text-slate-600 dark:text-slate-300 font-semibold">
+                Login as a customer to see your bookings.
               </div>
-              <Link to="/customer/bookings" className="text-sm font-bold text-blue-600 hover:text-blue-700">
-                View all
-              </Link>
-            </div>
-
-            <div className="mt-6">
-              {!isAuthenticated || user?.role !== 'customer' ? (
-                <div className="py-10 text-center text-slate-600 dark:text-slate-300 font-semibold">
-                  Login as a customer to see your bookings.
-                </div>
-              ) : myBookingsLoading ? (
-                <div className="flex justify-center items-center py-10">
-                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
-                </div>
-              ) : myBookings.length === 0 ? (
-                <div className="py-10 text-center text-slate-600 dark:text-slate-300 font-semibold">
-                  No bookings yet.
-                </div>
-              ) : (
-                <div className="divide-y divide-slate-100 dark:divide-slate-800 rounded-xl overflow-hidden border border-slate-200/60 dark:border-slate-800/60">
-                  {myBookings.map((b) => (
-                    <div key={b.id} className="px-5 py-4 bg-white/70 dark:bg-slate-900/40">
-                      <div className="flex items-center justify-between gap-4">
-                        <div className="min-w-0">
-                          <p className="font-extrabold text-slate-900 dark:text-white truncate">{b.service}</p>
-                          <p className="text-xs text-slate-500 dark:text-slate-400 truncate">{b.route}</p>
-                        </div>
-                        <div className="text-right">
-                          <p className="text-xs font-bold text-slate-500 dark:text-slate-400">{b.id}</p>
-                          <p className="text-xs font-bold text-slate-700 dark:text-slate-200 capitalize">
-                            {String(b.status ?? '').toLowerCase()}
-                          </p>
-                        </div>
+            ) : myBookingsLoading ? (
+              <div className="flex justify-center items-center py-10">
+                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+              </div>
+            ) : myBookings.length === 0 ? (
+              <div className="py-10 text-center text-slate-600 dark:text-slate-300 font-semibold">
+                No bookings yet.
+              </div>
+            ) : (
+              <div className="divide-y divide-slate-100 dark:divide-slate-800 rounded-xl overflow-hidden border border-slate-200/60 dark:border-slate-800/60">
+                {myBookings.map((b) => (
+                  <div key={b.id} className="px-5 py-4 bg-white/70 dark:bg-slate-900/40">
+                    <div className="flex items-center justify-between gap-4">
+                      <div className="min-w-0">
+                        <p className="font-extrabold text-slate-900 dark:text-white truncate">{b.service}</p>
+                        <p className="text-xs text-slate-500 dark:text-slate-400 truncate">{b.route}</p>
+                      </div>
+                      <div className="text-right">
+                        <p className="text-xs font-bold text-slate-500 dark:text-slate-400">{b.id}</p>
+                        <p className="text-xs font-bold text-slate-700 dark:text-slate-200 capitalize">
+                          {String(b.status ?? '').toLowerCase()}
+                        </p>
                       </div>
                     </div>
-                  ))}
-                </div>
-              )}
-            </div>
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
         </div>
       </section>

@@ -81,7 +81,7 @@ export const HotelDetails: React.FC<HotelDetailsProps> = ({ tripData, hotel: ini
     rating: 5.0,
     category: "Star Resort",
     reviewsCount: 420,
-    price: 185,
+    price: 20,
     description: "Nestled along the serene banks of the Komrong River, the Royal Riverside Sanctuary offers a transcendental escape from the bustle of modern life. This architectural masterpiece blends traditional Khmer motifs with contemporary luxury. Experience the ultimate \"Sanctuary Vibe\" as you wake up to the gentle mist on the water and spend your days unwinding in our world-class infinity pool or award-winning riverside spa.",
     images: [
       "https://images.unsplash.com/photo-1544013587-41428e7177e9?auto=format&fit=crop&q=80&w=1200",
@@ -145,7 +145,7 @@ export const HotelDetails: React.FC<HotelDetailsProps> = ({ tripData, hotel: ini
   const hotelPrice = parsePrice(hotel.price);
 
   const roomOptions = useMemo<RoomOption[]>(() => {
-    const basePrice = hotelPrice || 120;
+    const basePrice = hotelPrice || 20;
     const fallbackRooms: RoomOption[] = [
       {
         id: 'deluxe-king-suite',
@@ -161,7 +161,7 @@ export const HotelDetails: React.FC<HotelDetailsProps> = ({ tripData, hotel: ini
         id: 'executive-river-view',
         name: 'Executive River View',
         category: 'Executive Room',
-        basePrice: basePrice + 65,
+        basePrice: Math.min(20, basePrice + 2),
         maxOccupancy: 4,
         sizeSqm: 68,
         description: 'Panoramic river view with lounge corner and premium bathroom.',
@@ -171,7 +171,7 @@ export const HotelDetails: React.FC<HotelDetailsProps> = ({ tripData, hotel: ini
         id: 'family-connecting-suite',
         name: 'Family Connecting Suite',
         category: 'Family Suite',
-        basePrice: basePrice + 110,
+        basePrice: Math.min(20, basePrice + 4),
         maxOccupancy: 5,
         sizeSqm: 85,
         description: 'Two connected rooms, ideal for families and small groups.',
@@ -239,8 +239,8 @@ export const HotelDetails: React.FC<HotelDetailsProps> = ({ tripData, hotel: ini
       : addDays(plannedCheckInDate, 1);
   const nights = Math.max(differenceInDays(plannedCheckOutDate, plannedCheckInDate), 1);
   const nightlyPrice = selectedRoom?.basePrice || hotelPrice;
-  const cleaningFee = Math.max(25, Math.round(nightlyPrice * 0.12));
-  const serviceFee = Math.max(20, Math.round(nightlyPrice * nights * 0.08));
+  const cleaningFee = Math.max(3, Math.round(nightlyPrice * 0.05));
+  const serviceFee = Math.max(2, Math.round(nightlyPrice * nights * 0.02));
   const roomSubtotal = nightlyPrice * nights;
   const total = roomSubtotal + cleaningFee + serviceFee;
   const perPerson = total / guests;

@@ -495,6 +495,20 @@ class BookingController extends Controller
             $createdAt = $createdAtRaw ? \Illuminate\Support\Carbon::parse($createdAtRaw) : now();
             $createdAtIso = $createdAt->toIso8601String();
 
+            $normalizeDate = function ($value): ?string {
+                if ($value === null) return null;
+                if (is_string($value) && trim($value) === '') return null;
+
+                try {
+                    return \Illuminate\Support\Carbon::parse($value)->toDateString();
+                } catch (\Throwable $e) {
+                    return is_string($value) ? trim($value) : null;
+                }
+            };
+
+            $dateStartNormalized = $normalizeDate($payload['dateStart'] ?? null);
+            $dateEndNormalized = $normalizeDate($payload['dateEnd'] ?? null);
+
             // Store into snake_case columns (matches the provided SQL schema),
             // while still accepting the frontend's camelCase payload.
             $data = [
@@ -503,11 +517,13 @@ class BookingController extends Controller
                 'guest' => $guestName,
                 'customer_email' => $payload['customerEmail'] ?? null,
                 'customer_phone' => $payload['customerPhone'] ?? null,
+                'customerEmail' => $payload['customerEmail'] ?? null,
+                'customerPhone' => $payload['customerPhone'] ?? null,
                 'service' => $payload['service'],
                 'route' => $payload['route'],
                 'category' => $payload['category'],
-                'date_start' => $payload['dateStart'] ?? null,
-                'date_end' => $payload['dateEnd'] ?? null,
+                'date_start' => $dateStartNormalized,
+                'date_end' => $dateEndNormalized,
                 'date' => $payload['date'] ?? ($payload['travel_date'] ?? null),
                 'time' => $payload['time'] ?? null,
                 'pax' => (int) ($payload['pax'] ?? 1),
@@ -529,6 +545,14 @@ class BookingController extends Controller
                 'updated_at' => now(),
                 // Keep legacy createdAt for older consumers (harmless if column exists)
                 'createdAt' => $createdAtIso,
+                // Also write legacy/camelCase date columns when present (some deployments use this schema).
+                'dateStart' => $dateStartNormalized,
+                'dateEnd' => $dateEndNormalized,
+                'roomType' => $payload['roomType'] ?? null,
+                'vehicleType' => $payload['vehicleType'] ?? null,
+                'totalAmount' => $payload['totalAmount'] ?? null,
+                'paymentMethod' => $payload['paymentMethod'] ?? null,
+                'specialRequests' => $payload['specialRequests'] ?? null,
             ];
 
             // Not all deployments have the same `bookings` table columns (some use a pure MySQL schema).

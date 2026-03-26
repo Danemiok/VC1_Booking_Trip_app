@@ -31,91 +31,91 @@ const activityOptions: ActivityOption[] = [
   {
     id: 1,
     name: 'Swimming',
-    price: 50,
+    price: 10,
     description: 'Access to heated pool and private beach area.',
     icon: <Waves className="w-5 h-5" />
   },
   {
     id: 2,
     name: 'Fishing',
-    price: 75,
+    price: 12,
     description: 'Equipment rental and local guide for 4 hours.',
     icon: <Fish className="w-5 h-5" />
   },
   {
     id: 3,
     name: 'BBQ / Food',
-    price: 40,
+    price: 11,
     description: 'Ready-to-grill meat and veggie pack.',
     icon: <Utensils className="w-5 h-5" />
   },
   {
     id: 4,
     name: 'Camping',
-    price: 100,
+    price: 15,
     description: 'Full tent set-up under the stars.',
     icon: <Tent className="w-5 h-5" />
   },
   {
     id: 5,
     name: 'Tour Guide',
-    price: 120,
+    price: 18,
     description: 'Local expert for wilderness hiking.',
     icon: <Compass className="w-5 h-5" />
   },
   {
     id: 6,
     name: 'Photography',
-    price: 150,
+    price: 20,
     description: 'Professional 1-hour session.',
     icon: <Camera className="w-5 h-5" />
   },
   {
     id: 7,
     name: 'Sunset Cruise',
-    price: 90,
+    price: 14,
     description: 'Golden-hour boat ride with refreshments.',
     icon: <Waves className="w-5 h-5" />
   },
   {
     id: 8,
     name: 'Night Fishing',
-    price: 95,
+    price: 13,
     description: 'Evening fishing session with local crew.',
     icon: <Fish className="w-5 h-5" />
   },
   {
     id: 9,
     name: 'Private Chef Dinner',
-    price: 130,
+    price: 20,
     description: 'Personalized Khmer menu at your cabin.',
     icon: <Utensils className="w-5 h-5" />
   },
   {
     id: 10,
     name: 'Campfire Movie Night',
-    price: 55,
+    price: 10,
     description: 'Outdoor cinema set-up with snacks.',
     icon: <Tent className="w-5 h-5" />
   },
   {
     id: 11,
     name: 'Jungle Trek',
-    price: 110,
+    price: 16,
     description: 'Half-day guided hike through forest trails.',
     icon: <Compass className="w-5 h-5" />
   },
   {
     id: 12,
     name: 'Drone Footage',
-    price: 140,
+    price: 19,
     description: 'Aerial highlight clips of your retreat.',
     icon: <Camera className="w-5 h-5" />
   },
   {
     id: 13,
     name: 'Kayak Challenge',
-    price: 65,
+    price: 12,
     description: 'Friendly race setup with safety briefing.',
     icon: <Waves className="w-5 h-5" />
   }
@@ -141,7 +141,7 @@ export const Activities: React.FC<{
   const [currentPage, setCurrentPage] = useState(1);
   const [showGuestPrompt, setShowGuestPrompt] = useState(false);
   const [showConfirmed, setShowConfirmed] = useState(false);
-  const basePrice = 250;
+  const basePrice = 10;
 
   const effectiveSelectedIds = selectedActivityIds ?? selectedOptions;
 

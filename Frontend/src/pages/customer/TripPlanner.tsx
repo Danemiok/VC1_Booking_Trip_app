@@ -329,12 +329,12 @@ export const TripPlanner: React.FC<TripPlannerProps> = ({
           hotel: {
             ...tripData.hotel,
             nights: days,
-            price: (tripData.hotel.dailyPrice || 350) * days
+            price: (tripData.hotel.dailyPrice || 20) * days
           },
           rental: {
             ...tripData.rental,
             days: days,
-            price: (tripData.rental.dailyPrice || 80) * days
+            price: (tripData.rental.dailyPrice || 15) * days
           }
         });
       } else {
@@ -346,12 +346,12 @@ export const TripPlanner: React.FC<TripPlannerProps> = ({
           hotel: {
             ...tripData.hotel,
             nights: 1,
-            price: (tripData.hotel.dailyPrice || 350)
+            price: (tripData.hotel.dailyPrice || 20)
           },
           rental: {
             ...tripData.rental,
             days: 1,
-            price: (tripData.rental.dailyPrice || 80)
+            price: (tripData.rental.dailyPrice || 15)
           }
         });
       }

@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { AnimatePresence, motion } from 'motion/react';
+import { useLocation, useNavigate } from 'react-router-dom';
 import { Navbar } from './components/layout/Navbar';
 import { Footer } from './components/layout/Footer';
 
@@ -13,6 +14,8 @@ const AppContent = () => {
   const [view, setView] = useState('landing');
   const [activeProfileTab, setActiveProfileTab] = useState<any>('profile');
   const { user, logout } = useAuth();
+  const navigate = useNavigate();
+  const location = useLocation();
 
   const handleProfileClick = (tab?: any) => {
     if (tab) setActiveProfileTab(tab);
@@ -46,7 +49,7 @@ const AppContent = () => {
       location: "1 Vithei Charles de Gaulle, Siem Reap, Cambodia",
       roomType: "Landmark Garden View Room",
       guests: "2 Adults",
-      dailyPrice: 350.00,
+      dailyPrice: 20.00,
       price: 0.00,
       nights: 7,
       status: "Not booked",
@@ -57,7 +60,7 @@ const AppContent = () => {
       name: "Lexus LX570 SUV",
       pickup: "Siem Reap Angkor International (SAI)",
       features: "Automatic • Premium Interior",
-      dailyPrice: 80.00,
+      dailyPrice: 15.00,
       price: 0.00,
       days: 7,
       status: "Not booked",
@@ -103,6 +106,15 @@ const AppContent = () => {
     setView(nextView);
   };
 
+  const leaveCustomerRouteIfNeeded = React.useCallback(() => {
+    // Some pages are bound to explicit routes (e.g. `/customer/bookings`) and
+    // ignore `view` changes. When navigating via the Navbar, move back to `/`
+    // so the view-based screens (Home / My Plan / My booking) work everywhere.
+    if (location.pathname.startsWith('/customer/')) {
+      navigate('/');
+    }
+  }, [location.pathname, navigate]);
+
   return (
     <div className="min-h-screen bg-white dark:bg-slate-900 transition-colors duration-300">
       {!isAdminUser && !isOwnerUser && (
@@ -110,16 +122,37 @@ const AppContent = () => {
           onLoginClick={() => setView('login')}
           user={user}
           onLogout={logout}
-          onProfileClick={handleProfileClick}
+          onProfileClick={(tab?: any) => {
+            leaveCustomerRouteIfNeeded();
+            handleProfileClick(tab);
+          }}
           notifications={notifications}
           onMarkAsRead={handleMarkAsRead}
           onMarkAllAsRead={handleMarkAllAsRead}
-          onHotelsClick={() => setView('hotels')}
-          onRentalsClick={() => setView('rentals')}
-          onHomeClick={() => setView('landing')}
-          onBookingsClick={() => setView('bookings')}
-          onTripPlannerClick={() => setView('trip-planner')}
-          onActivitiesClick={() => setView('activities')}
+          onHotelsClick={() => {
+            leaveCustomerRouteIfNeeded();
+            setView('hotels');
+          }}
+          onRentalsClick={() => {
+            leaveCustomerRouteIfNeeded();
+            setView('rentals');
+          }}
+          onHomeClick={() => {
+            leaveCustomerRouteIfNeeded();
+            setView('landing');
+          }}
+          onBookingsClick={() => {
+            leaveCustomerRouteIfNeeded();
+            setView('bookings');
+          }}
+          onTripPlannerClick={() => {
+            leaveCustomerRouteIfNeeded();
+            setView('trip-planner');
+          }}
+          onActivitiesClick={() => {
+            leaveCustomerRouteIfNeeded();
+            setView('activities');
+          }}
           currentView={view}
         />
       )}
