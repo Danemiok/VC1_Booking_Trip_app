@@ -16,6 +16,12 @@ import { getAuthToken } from '@/services/authService';
 
 const RegisterVehicle = () => {
   const navigate = useNavigate();
+  const priceOptions = [
+    { label: '$0.50', value: '0.50', isFree: false },
+    { label: '$1', value: '1.00', isFree: false },
+    { label: '$1.50', value: '1.50', isFree: false },
+    { label: 'Free only', value: '0', isFree: true },
+  ] as const;
 
   const [formData, setFormData] = React.useState({
     name: '',
@@ -42,6 +48,23 @@ const RegisterVehicle = () => {
   const [errors, setErrors] = React.useState<Record<string, string>>({});
   const [submitError, setSubmitError] = React.useState('');
   const [isSubmitting, setIsSubmitting] = React.useState(false);
+
+  const selectedPriceOption = React.useMemo(() => {
+    if (formData.is_free) return '0';
+    const matched = priceOptions.find((option) => !option.isFree && Number(option.value) === Number(formData.price_per_KM));
+    return matched?.value ?? '';
+  }, [formData.is_free, formData.price_per_KM]);
+
+  const applyPriceOption = (value: string) => {
+    const option = priceOptions.find((item) => item.value === value);
+    if (!option) return;
+
+    setFormData((prev) => ({
+      ...prev,
+      is_free: option.isFree,
+      price_per_KM: option.isFree ? '0' : option.value,
+    }));
+  };
 
   const validate = (): boolean => {
     const newErrors: Record<string, string> = {};
@@ -217,42 +240,28 @@ const RegisterVehicle = () => {
                 </div>
                 <div className="space-y-2">
                   <label className="text-[10px] uppercase font-bold tracking-widest text-slate-400">Price per KM</label>
-                  <input
-                    name="price_per_KM"
-                    type="number"
-                    step="0.01"
-                    min="0"
-                    value={formData.price_per_KM}
-                    onChange={(e) => setFormData({ ...formData, price_per_KM: e.target.value })}
-                    disabled={formData.is_free}
-                    className={cn(
-                      "w-full px-4 py-3 bg-slate-50 dark:bg-slate-800 border-transparent rounded-xl text-sm focus:bg-white dark:focus:bg-slate-900 focus:ring-2 focus:ring-blue-600/10 transition-all font-medium disabled:opacity-60 disabled:cursor-not-allowed",
-                      errors.price_per_KM && 'border border-red-500'
-                    )}
-                    placeholder="e.g. 1.50"
-                  />
+                  <div className="grid grid-cols-2 gap-3">
+                    {priceOptions.map((option) => (
+                      <label
+                        key={option.value}
+                        className={cn(
+                          'flex items-center gap-3 cursor-pointer rounded-xl border px-4 py-3 text-sm font-semibold transition-all',
+                          selectedPriceOption === option.value
+                            ? 'border-blue-500 bg-blue-50 text-blue-700 dark:bg-blue-900/20 dark:text-blue-300'
+                            : 'border-slate-200 bg-slate-50 text-slate-600 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200'
+                        )}
+                      >
+                        <input
+                          type="checkbox"
+                          checked={selectedPriceOption === option.value}
+                          onChange={() => applyPriceOption(option.value)}
+                          className="h-4 w-4 rounded border-slate-300 text-blue-600 focus:ring-blue-500"
+                        />
+                        <span>{option.label}</span>
+                      </label>
+                    ))}
+                  </div>
                   {errors.price_per_KM && <p className="text-xs text-red-500 mt-1">{errors.price_per_KM}</p>}
-                </div>
-                <div className="space-y-2">
-                  <label className="text-[10px] uppercase font-bold tracking-widest text-slate-400">Free Transport</label>
-                  <button
-                    type="button"
-                    onClick={() =>
-                      setFormData((prev) => ({
-                        ...prev,
-                        is_free: !prev.is_free,
-                        price_per_KM: !prev.is_free ? '0' : prev.price_per_KM,
-                      }))
-                    }
-                    className={cn(
-                      "w-full px-4 py-3 rounded-xl text-sm font-bold transition-all border",
-                      formData.is_free
-                        ? 'bg-emerald-100 border-emerald-200 text-emerald-700'
-                        : 'bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-200'
-                    )}
-                  >
-                    {formData.is_free ? 'Yes, this transport is free' : 'No, paid transport'}
-                  </button>
                 </div>
                 <div className="space-y-2">
                   <label className="text-[10px] uppercase font-bold tracking-widest text-slate-400">Route</label>

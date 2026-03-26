@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { format, addDays } from 'date-fns';
+import { format } from 'date-fns';
 import { Link } from 'react-router-dom';
 import { 
   Search, 
@@ -80,11 +80,7 @@ const getDatesFromTripData = (tripData?: any): { start: Date | null; end: Date |
     return { start, end };
   }
 
-  const today = new Date();
-  return {
-    start: addDays(today, 7),
-    end: addDays(today, 14)
-  };
+  return { start: null, end: null };
 };
 
 const Hero = ({ 
@@ -101,7 +97,9 @@ const Hero = ({
   const [showDatePicker, setShowDatePicker] = useState(false);
   const [showGuestPicker, setShowGuestPicker] = useState(false);
   const initialDates = getDatesFromTripData(tripData);
-  const [guests, setGuests] = useState(() => parseGuestsFromLabel(tripData?.guests));
+  const [guests, setGuests] = useState(() => (
+    tripData?.guests ? parseGuestsFromLabel(tripData?.guests) : { adults: 0, children: 0 }
+  ));
   
   const today = new Date();
   const [dates, setDates] = useState<{ start: Date | null, end: Date | null }>(initialDates);
@@ -115,7 +113,7 @@ const Hero = ({
     if (nextDates.start) {
       setCurrentMonth(nextDates.start);
     }
-    setGuests(parseGuestsFromLabel(tripData?.guests));
+    setGuests(tripData?.guests ? parseGuestsFromLabel(tripData?.guests) : { adults: 0, children: 0 });
   }, [tripData?.startDate, tripData?.endDate, tripData?.dates, tripData?.guests]);
 
   const handleSearch = () => {
@@ -381,7 +379,7 @@ const Hero = ({
                   className="text-sm font-bold text-white whitespace-nowrap flex items-center gap-3"
                 >
                   <Users className="w-4 h-4 text-white/60" />
-                  {guests.adults + guests.children} Guests
+                  {guests.adults + guests.children > 0 ? `${guests.adults + guests.children} Guests` : 'Guests'}
                 </button>
 
                 <AnimatePresence>
@@ -1014,7 +1012,7 @@ export const Dashboard: React.FC<DashboardProps> = ({
   onActivitiesClick,
   onSearch
 }) => {
-  const [location, setLocation] = useState(() => String(tripData?.destination?.name || ''));
+  const [location, setLocation] = useState(() => '');
   const [searchQuery, setSearchQuery] = useState('');
   const [searchResults, setSearchResults] = useState<any[]>([]);
   const [hasSearched, setHasSearched] = useState(false);

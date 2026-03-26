@@ -32,14 +32,22 @@ const normalizeSearchText = (value: string): string =>
 
 export const Rentals: React.FC<RentalsProps> = ({ onBack, onSelectVehicle }) => {
   const ITEMS_PER_PAGE = 6;
+  const priceFilterOptions = [
+    { label: '$0.50', value: '0.50' },
+    { label: '$1', value: '1.00' },
+    { label: '$1.50', value: '1.50' },
+    { label: 'Free only', value: 'free' },
+  ] as const;
   const [vehicles, setVehicles] = useState<any[]>([]);
   const [vehiclesError, setVehiclesError] = useState<string | null>(null);
   const [isLoadingVehicles, setIsLoadingVehicles] = useState(false);
   const [activeTab, setActiveTab] = useState<'vehicles' | 'homes'>('vehicles');
-  const [priceRange, setPriceRange] = useState(500);
+  const [selectedPriceFilters, setSelectedPriceFilters] = useState<Array<(typeof priceFilterOptions)[number]['value']>>([]);
   const [showInstantOnly, setShowInstantOnly] = useState(false);
   const [selectedVehicleClasses, setSelectedVehicleClasses] = useState<string[]>([]);
   const [searchQuery, setSearchQuery] = useState('');
+  const [locationQuery, setLocationQuery] = useState('');
+  const [checkInQuery, setCheckInQuery] = useState('');
   const [sortBy, setSortBy] = useState<'recommended' | 'price-low' | 'price-high' | 'rating'>('recommended');
   const [currentPage, setCurrentPage] = useState(1);
 
@@ -184,10 +192,30 @@ export const Rentals: React.FC<RentalsProps> = ({ onBack, onSelectVehicle }) => 
     );
   };
 
-  const queryTokens = normalizeSearchText(searchQuery).trim().split(/\s+/).filter(Boolean);
+  const togglePriceFilter = (value: (typeof priceFilterOptions)[number]['value']) => {
+    setSelectedPriceFilters((prev) =>
+      prev.includes(value)
+        ? prev.filter((selectedValue) => selectedValue !== value)
+        : [...prev, value]
+    );
+  };
+
+  const matchesSelectedPriceFilters = (price: number, isFree: boolean) => {
+    if (selectedPriceFilters.length === 0) return true;
+
+    return selectedPriceFilters.some((filter) => {
+      if (filter === 'free') return isFree || price === 0;
+      return !isFree && Math.abs(price - Number(filter)) < 0.01;
+    });
+  };
+
+  const queryTokens = normalizeSearchText([searchQuery, locationQuery, checkInQuery].join(' '))
+    .trim()
+    .split(/\s+/)
+    .filter(Boolean);
 
   const filteredVehicles = vehicles.filter((vehicle: any) => {
-    if (vehicle.price > priceRange) return false;
+    if (!matchesSelectedPriceFilters(Number(vehicle.price ?? 0), Boolean(vehicle.is_free))) return false;
     if (showInstantOnly && !vehicle.instantBook) return false;
     if (selectedVehicleClasses.length > 0) {
       const vehicleType = normalizeSearchText(vehicle.type || '');
@@ -199,13 +227,13 @@ export const Rentals: React.FC<RentalsProps> = ({ onBack, onSelectVehicle }) => 
     if (queryTokens.length === 0) return true;
 
     const searchableText = normalizeSearchText(
-      [vehicle.name, vehicle.type, vehicle.transmission || '', vehicle.engine || '', vehicle.style || ''].join(' ')
+      [vehicle.name, vehicle.type, vehicle.transmission || '', vehicle.engine || '', vehicle.style || '', vehicle.mileage || ''].join(' ')
     );
     return queryTokens.every((token) => searchableText.includes(token));
   });
 
   const filteredStays = stays.filter((stay: any) => {
-    if (stay.price > priceRange) return false;
+    if (!matchesSelectedPriceFilters(Number(stay.price ?? 0), Boolean(stay.is_free))) return false;
     if (showInstantOnly && !stay.instantBook) return false;
     if (queryTokens.length === 0) return true;
 
@@ -252,7 +280,7 @@ export const Rentals: React.FC<RentalsProps> = ({ onBack, onSelectVehicle }) => 
 
   useEffect(() => {
     setCurrentPage(1);
-  }, [activeTab, priceRange, selectedVehicleClasses, showInstantOnly, searchQuery, sortBy]);
+  }, [activeTab, selectedPriceFilters, selectedVehicleClasses, showInstantOnly, searchQuery, sortBy]);
 
   return (
     <div className="min-h-screen bg-[#FDFDFD] dark:bg-slate-950 pt-20 pb-20">
@@ -338,14 +366,26 @@ export const Rentals: React.FC<RentalsProps> = ({ onBack, onSelectVehicle }) => 
               <MapPin className="w-5 h-5 text-blue-500 group-hover:scale-110 transition-transform" />
               <div className="flex-1">
                 <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-0.5">Location</p>
-                <p className="text-sm font-bold text-slate-900 dark:text-white">Phnom Penh, Cambodia</p>
+                <input
+                  type="text"
+                  value={locationQuery}
+                  onChange={(e) => setLocationQuery(e.target.value)}
+                  placeholder="Enter a location"
+                  className="bg-transparent border-none p-0 text-sm font-bold text-slate-900 dark:text-white placeholder:text-slate-300 focus:ring-0 w-full"
+                />
               </div>
             </div>
             <div className="flex items-center gap-3 px-6 py-4 hover:bg-slate-50 dark:hover:bg-slate-800/50 rounded-2xl transition-colors cursor-pointer group border-l border-slate-100 dark:border-slate-800">
               <Calendar className="w-5 h-5 text-blue-500 group-hover:scale-110 transition-transform" />
               <div className="flex-1">
                 <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-0.5">Check in - out</p>
-                <p className="text-sm font-bold text-slate-900 dark:text-white">12 Oct - 15 Oct 2026</p>
+                <input
+                  type="text"
+                  value={checkInQuery}
+                  onChange={(e) => setCheckInQuery(e.target.value)}
+                  placeholder="Select check-in and check-out"
+                  className="bg-transparent border-none p-0 text-sm font-bold text-slate-900 dark:text-white placeholder:text-slate-300 focus:ring-0 w-full"
+                />
               </div>
             </div>
           </div>
@@ -368,25 +408,35 @@ export const Rentals: React.FC<RentalsProps> = ({ onBack, onSelectVehicle }) => 
               </div>
 
               <div className="space-y-8">
-                {/* Price Range */}
+                {/* Price Filter */}
                 <div className="space-y-4">
                   <div className="flex justify-between items-end">
                     <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">
-                      Price Range ({activeTab === 'vehicles' ? 'per km' : 'per night'})
+                      Price Filter ({activeTab === 'vehicles' ? 'per km' : 'per night'})
                     </label>
                   </div>
-                  <div className="flex justify-between text-[10px] font-bold text-slate-400">
-                    <span>$0</span>
-                    <span>${priceRange}+</span>
+                  <div className="space-y-3">
+                    {priceFilterOptions.map((option) => (
+                      <label key={option.value} className="flex items-center gap-3 cursor-pointer group">
+                        <input
+                          type="checkbox"
+                          checked={selectedPriceFilters.includes(option.value)}
+                          onChange={() => togglePriceFilter(option.value)}
+                          className="w-4 h-4 rounded border-slate-200 text-blue-600 focus:ring-blue-500"
+                        />
+                        <span className="text-xs font-medium text-slate-600 dark:text-slate-400 group-hover:text-slate-900 dark:group-hover:text-white transition-colors">
+                          {option.label}
+                        </span>
+                      </label>
+                    ))}
                   </div>
-                  <input 
-                    type="range" 
-                    min="0" 
-                    max="1000" 
-                    value={priceRange}
-                    onChange={(e) => setPriceRange(parseInt(e.target.value))}
-                    className="w-full h-1 bg-slate-100 dark:bg-slate-800 rounded-lg appearance-none cursor-pointer accent-blue-600"
-                  />
+                  <p className="text-[10px] text-slate-400 font-medium">
+                    {selectedPriceFilters.length === 0
+                      ? 'Showing all price levels'
+                      : selectedPriceFilters.length === 1 && selectedPriceFilters[0] === 'free'
+                        ? 'Showing only free options'
+                        : 'Showing selected price levels'}
+                  </p>
                 </div>
 
                 {/* Vehicle Class */}

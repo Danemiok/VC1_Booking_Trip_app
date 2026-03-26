@@ -94,6 +94,12 @@ const TransportCardImage: React.FC<{ src: string; alt: string; className?: strin
 
 const Transport = () => {
   const navigate = useNavigate();
+  const priceOptions = [
+    { label: '$0.50', value: '0.50', isFree: false },
+    { label: '$1', value: '1.00', isFree: false },
+    { label: '$1.50', value: '1.50', isFree: false },
+    { label: 'Free only', value: '0', isFree: true },
+  ] as const;
   const [searchTerm, setSearchTerm] = React.useState('');
   const [activeTab, setActiveTab] = React.useState('all');
   const [currentPage, setCurrentPage] = React.useState(1);
@@ -199,6 +205,23 @@ const Transport = () => {
   const [services, setServices] = React.useState<TransportService[]>([]);
   const [loadError, setLoadError] = React.useState('');
   const allServices = services;
+
+  const selectedEditPriceOption = React.useMemo(() => {
+    if (editForm.is_free) return '0';
+    const matched = priceOptions.find((option) => !option.isFree && Number(option.value) === Number(editForm.price_per_KM));
+    return matched?.value ?? '';
+  }, [editForm.is_free, editForm.price_per_KM]);
+
+  const applyEditPriceOption = (value: string) => {
+    const option = priceOptions.find((item) => item.value === value);
+    if (!option) return;
+
+    setEditForm((prev) => ({
+      ...prev,
+      is_free: option.isFree,
+      price_per_KM: option.isFree ? '0' : option.value,
+    }));
+  };
 
   React.useEffect(() => {
     const loadOwnerTransports = async () => {
@@ -824,39 +847,29 @@ const Transport = () => {
                     <option value="Waiting">Waiting</option>
                   </select>
                 </div>
-                <div className="space-y-1">
+                <div className="space-y-1 sm:col-span-2">
                   <label className="text-xs font-medium text-slate-700 dark:text-slate-300">Price per KM</label>
-                  <input
-                    type="number"
-                    step="0.01"
-                    min="0"
-                    value={editForm.price_per_KM}
-                    onChange={(e) => setEditForm({ ...editForm, price_per_KM: e.target.value })}
-                    disabled={editForm.is_free}
-                    className="w-full px-3 py-2 border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-60 disabled:cursor-not-allowed"
-                    placeholder="e.g. 1.50"
-                  />
-                </div>
-                <div className="space-y-1">
-                  <label className="text-xs font-medium text-slate-700 dark:text-slate-300">Free Transport</label>
-                  <button
-                    type="button"
-                    onClick={() =>
-                      setEditForm((prev) => ({
-                        ...prev,
-                        is_free: !prev.is_free,
-                        price_per_KM: !prev.is_free ? '0' : prev.price_per_KM,
-                      }))
-                    }
-                    className={cn(
-                      'w-full px-3 py-2 rounded-lg border text-sm font-semibold transition-colors',
-                      editForm.is_free
-                        ? 'bg-emerald-100 border-emerald-200 text-emerald-700'
-                        : 'bg-white dark:bg-slate-800 border-slate-300 dark:border-slate-700 text-slate-700 dark:text-slate-200'
-                    )}
-                  >
-                    {editForm.is_free ? 'Yes, this transport is free' : 'No, paid transport'}
-                  </button>
+                  <div className="grid grid-cols-2 gap-3">
+                    {priceOptions.map((option) => (
+                      <label
+                        key={option.value}
+                        className={cn(
+                          'flex items-center gap-3 cursor-pointer rounded-lg border px-3 py-2 text-sm font-semibold transition-colors',
+                          selectedEditPriceOption === option.value
+                            ? 'border-blue-500 bg-blue-50 text-blue-700 dark:bg-blue-900/20 dark:text-blue-300'
+                            : 'border-slate-300 bg-white text-slate-700 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200'
+                        )}
+                      >
+                        <input
+                          type="checkbox"
+                          checked={selectedEditPriceOption === option.value}
+                          onChange={() => applyEditPriceOption(option.value)}
+                          className="h-4 w-4 rounded border-slate-300 text-blue-600 focus:ring-blue-500"
+                        />
+                        <span>{option.label}</span>
+                      </label>
+                    ))}
+                  </div>
                 </div>
               </div>
             </div>
