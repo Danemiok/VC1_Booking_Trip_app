@@ -84,6 +84,10 @@ class GoogleAuthController extends Controller
                         'email_verified_at' => Carbon::now(),
                     ]);
                 }
+            $user = User::query()
+                ->where('google_id', $googleId)
+                ->when($googleEmail, fn($query) => $query->orWhere('email', $googleEmail))
+                ->first();
 
                 $user->forceFill([
                     'name' => $user->name ?: $displayName,
