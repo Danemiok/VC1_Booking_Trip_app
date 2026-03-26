@@ -5,7 +5,41 @@ import { useAuth } from '../../context/AuthContext';
 import { apiRequest } from '../../services/api';
 import { getPublicDestinations } from '../../services/destinationService';
 
+type DestinationOption = {
+  id: number;
+  name: string;
+  location: string;
+};
+
+type TransportOption = {
+  id: number;
+  name: string;
+  type: string;
+  is_free: boolean;
+};
+
 const buildBookingId = () => `BK-${Date.now()}`;
+
+const toDateInputValue = (value: Date) => {
+  const date = new Date(value);
+  const timezoneOffsetMs = date.getTimezoneOffset() * 60 * 1000;
+  return new Date(date.getTime() - timezoneOffsetMs).toISOString().slice(0, 10);
+};
+
+const parsePositiveInteger = (value: unknown): number | null => {
+  const parsed = typeof value === 'number' ? value : parseInt(String(value ?? ''), 10);
+  return Number.isInteger(parsed) && parsed > 0 ? parsed : null;
+};
+
+const parseBooleanFlag = (value: unknown): boolean => {
+  if (typeof value === 'boolean') return value;
+  if (typeof value === 'number') return value === 1;
+  if (typeof value === 'string') {
+    const normalized = value.trim().toLowerCase();
+    return normalized === '1' || normalized === 'true' || normalized === 'yes';
+  }
+  return false;
+};
 
 export const BookTrip: React.FC = () => {
   const navigate = useNavigate();
@@ -13,51 +47,46 @@ export const BookTrip: React.FC = () => {
   const [searchParams] = useSearchParams();
 
   const [destinationId, setDestinationId] = React.useState<number | null>(null);
-  const [destinations, setDestinations] = React.useState<Array<{
-    id: number;
-    name: string;
-    location: string;
-  }>>([]);
+  const [destinations, setDestinations] = React.useState<DestinationOption[]>([]);
   const [destinationError, setDestinationError] = React.useState<string | null>(null);
   const [loadingDestinations, setLoadingDestinations] = React.useState(false);
   const [transportId, setTransportId] = React.useState<number | null>(null);
-  const [transports, setTransports] = React.useState<Array<{
-    id: number;
-    name: string;
-    type: string;
-    is_free: boolean;
-  }>>([]);
+  const [transports, setTransports] = React.useState<TransportOption[]>([]);
   const [transportError, setTransportError] = React.useState<string | null>(null);
   const [loadingTransports, setLoadingTransports] = React.useState(false);
   const [travelDate, setTravelDate] = React.useState<string>(() => {
-    const d = new Date();
-    d.setDate(d.getDate() + 7);
-    return d.toISOString().slice(0, 10);
+    const date = new Date();
+    date.setDate(date.getDate() + 7);
+    return toDateInputValue(date);
   });
   const [travelers, setTravelers] = React.useState<number>(2);
   const [submitting, setSubmitting] = React.useState(false);
   const [error, setError] = React.useState<string | null>(null);
+  const todayDate = React.useMemo(() => toDateInputValue(new Date()), []);
 
   const loadTransports = React.useCallback(async () => {
     setLoadingTransports(true);
     setTransportError(null);
 
     try {
-      const response = await apiRequest('/transports') as { data?: any[] };
+      const response = (await apiRequest('/transports')) as { data?: any[] };
       const mapped = (response?.data ?? [])
         .map((item: any) => {
-          const rawType = String(item?.transport_type ?? 'Car Rental');
+          const id = parsePositiveInteger(item?.transport_id ?? item?.id);
+          const name = String(item?.service_name ?? item?.name ?? '').trim();
+          if (!id || !name) return null;
+
+          const rawType = String(item?.transport_type ?? item?.type ?? 'Car Rental');
           const type = rawType === 'Shuttle' ? 'Train' : rawType === 'Other' ? 'Car Rental' : rawType;
-          const rawId = item?.transport_id ?? item?.id;
-          const id = typeof rawId === 'number' ? rawId : parseInt(String(rawId), 10);
+
           return {
-            id: Number.isFinite(id) ? id : 0,
-            name: String(item?.service_name ?? '').trim(),
+            id,
+            name,
             type: String(type),
-            is_free: Boolean(item?.is_free ?? item?.isFree ?? false),
+            is_free: parseBooleanFlag(item?.is_free ?? item?.isFree ?? false),
           };
         })
-        .filter((item: any) => item.id && item.name);
+        .filter((item): item is TransportOption => item !== null);
 
       setTransports(mapped);
     } catch (err: any) {
@@ -74,11 +103,20 @@ export const BookTrip: React.FC = () => {
 
       try {
         const data = await getPublicDestinations();
-        const mapped = data.map((item: any) => ({
-          id: item.id,
-          name: item.name,
-          location: item.location,
-        }));
+        const mapped = (data ?? [])
+          .map((item: any) => {
+            const id = parsePositiveInteger(item?.id ?? item?.destination_id);
+            const name = String(item?.name ?? '').trim();
+            if (!id || !name) return null;
+
+            return {
+              id,
+              name,
+              location: String(item?.location ?? '').trim() || 'Unknown location',
+            };
+          })
+          .filter((item): item is DestinationOption => item !== null);
+
         setDestinations(mapped);
       } catch (err: any) {
         setDestinationError(err?.data?.message ?? err?.message ?? 'Failed to load destinations.');
@@ -96,6 +134,7 @@ export const BookTrip: React.FC = () => {
     const handleVisibility = () => {
       if (document.visibilityState === 'visible') loadTransports();
     };
+
     window.addEventListener('focus', handleFocus);
     document.addEventListener('visibilitychange', handleVisibility);
 
@@ -106,39 +145,36 @@ export const BookTrip: React.FC = () => {
   }, [loadTransports]);
 
   React.useEffect(() => {
-    const destinationParam = searchParams.get('destinationId');
-    const transportParam = searchParams.get('transportId');
+    const destinationParam = parsePositiveInteger(searchParams.get('destinationId'));
+    const transportParam = parsePositiveInteger(searchParams.get('transportId'));
 
-    const nextDestinationId = destinationParam ? parseInt(destinationParam, 10) : NaN;
-    const nextTransportId = transportParam ? parseInt(transportParam, 10) : NaN;
-
-    if (Number.isFinite(nextDestinationId) && destinations.some((h) => h.id === nextDestinationId)) {
-      setDestinationId(nextDestinationId);
+    if (destinationParam && destinations.some((destination) => destination.id === destinationParam)) {
+      setDestinationId(destinationParam);
     }
 
-    if (Number.isFinite(nextTransportId) && transports.some((v) => v.id === nextTransportId)) {
-      setTransportId(nextTransportId);
+    if (transportParam && transports.some((transport) => transport.id === transportParam)) {
+      setTransportId(transportParam);
     }
   }, [searchParams, destinations, transports]);
 
   React.useEffect(() => {
     if (destinations.length === 0) return;
-    if (destinationId && destinations.some((d) => d.id === destinationId)) return;
+    if (destinationId && destinations.some((destination) => destination.id === destinationId)) return;
     setDestinationId(destinations[0].id);
   }, [destinations, destinationId]);
 
   React.useEffect(() => {
     if (transports.length === 0) return;
-    if (transportId && transports.some((t) => t.id === transportId)) return;
+    if (transportId && transports.some((transport) => transport.id === transportId)) return;
     setTransportId(transports[0].id);
   }, [transports, transportId]);
 
   const selectedDestination = React.useMemo(
-    () => destinations.find((h) => h.id === destinationId) ?? destinations[0],
+    () => destinations.find((destination) => destination.id === destinationId) ?? destinations[0],
     [destinationId, destinations],
   );
   const selectedTransport = React.useMemo(
-    () => transports.find((v) => v.id === transportId) ?? transports[0],
+    () => transports.find((transport) => transport.id === transportId) ?? transports[0],
     [transportId, transports],
   );
 
@@ -239,14 +275,14 @@ export const BookTrip: React.FC = () => {
             <select
               className="select-base w-full mt-2"
               value={destinationId ?? ''}
-              onChange={(e) => setDestinationId(parseInt(e.target.value, 10))}
+              onChange={(event) => setDestinationId(parsePositiveInteger(event.target.value))}
               disabled={loadingDestinations || destinations.length === 0}
             >
               {loadingDestinations && <option value="">Loading destinations...</option>}
               {!loadingDestinations && destinations.length === 0 && <option value="">No destinations available</option>}
-              {destinations.map((hotel) => (
-                <option key={hotel.id} value={hotel.id}>
-                  {hotel.name} — {hotel.location}
+              {destinations.map((destination) => (
+                <option key={destination.id} value={destination.id}>
+                  {destination.name} - {destination.location}
                 </option>
               ))}
             </select>
@@ -260,14 +296,14 @@ export const BookTrip: React.FC = () => {
             <select
               className="select-base w-full mt-2"
               value={transportId ?? ''}
-              onChange={(e) => setTransportId(parseInt(e.target.value, 10))}
+              onChange={(event) => setTransportId(parsePositiveInteger(event.target.value))}
               disabled={loadingTransports || transports.length === 0}
             >
               {loadingTransports && <option value="">Loading transports...</option>}
               {!loadingTransports && transports.length === 0 && <option value="">No transports available</option>}
-              {transports.map((v) => (
-                <option key={v.id} value={v.id}>
-                  {v.name} — {v.type}{v.is_free ? ' (Free)' : ''}
+              {transports.map((transport) => (
+                <option key={transport.id} value={transport.id}>
+                  {transport.name} - {transport.type}{transport.is_free ? ' (Free)' : ''}
                 </option>
               ))}
             </select>
@@ -283,7 +319,8 @@ export const BookTrip: React.FC = () => {
                 type="date"
                 className="input-base mt-2"
                 value={travelDate}
-                onChange={(e) => setTravelDate(e.target.value)}
+                min={todayDate}
+                onChange={(event) => setTravelDate(event.target.value)}
               />
             </div>
             <div>
@@ -293,7 +330,14 @@ export const BookTrip: React.FC = () => {
                 min={1}
                 className="input-base mt-2"
                 value={travelers}
-                onChange={(e) => setTravelers(parseInt(e.target.value, 10) || 1)}
+                onChange={(event) => {
+                  const nextValue = parseInt(event.target.value, 10);
+                  if (!Number.isFinite(nextValue)) {
+                    setTravelers(1);
+                    return;
+                  }
+                  setTravelers(Math.max(1, nextValue));
+                }}
               />
             </div>
           </div>
@@ -310,7 +354,7 @@ export const BookTrip: React.FC = () => {
               disabled={!canSubmit || submitting}
               className="h-11 px-5 rounded-xl bg-blue-600 text-white font-bold hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
             >
-              {submitting ? 'Creating…' : 'Create booking'}
+              {submitting ? 'Creating...' : 'Create booking'}
             </button>
           </div>
         </form>

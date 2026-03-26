@@ -26,6 +26,7 @@ use App\Http\Controllers\Owner\OwnerProfileController;
 // use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Api\BookingController; // ADD THIS
 use App\Http\Controllers\Api\OwnerNotificationController;
+use App\Http\Controllers\Api\TripGroupController;
 
 // Simple health check (useful for confirming API + DB connectivity from the frontend).
 Route::get('/health', function () {
@@ -171,6 +172,11 @@ Route::middleware(['auth:sanctum'])->group(function () {
         Route::get('/hotel-selections/status/{status}', [HotelSelectionController::class, 'getByStatus']);
         Route::post('/hotel-selections/{hotelSelection}/confirm', [HotelSelectionController::class, 'confirm']);
         Route::post('/hotel-selections/{hotelSelection}/cancel', [HotelSelectionController::class, 'cancel']);
+        // Trip group planning (group chat + access code join)
+        Route::post('/trip-groups', [TripGroupController::class, 'create']);
+        Route::post('/trip-groups/join', [TripGroupController::class, 'join']);
+        Route::get('/trip-groups/{groupId}', [TripGroupController::class, 'show']);
+        Route::post('/trip-groups/{groupId}/messages', [TripGroupController::class, 'sendMessage']);
     });
 
     // Owner routes - accessible by owners and admins

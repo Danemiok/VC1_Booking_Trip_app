@@ -8,6 +8,7 @@ use App\Models\AppNotification;
 use App\Models\OwnerNotification;
 use App\Models\User;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Schema;
@@ -15,6 +16,163 @@ use Laravel\Sanctum\PersonalAccessToken;
 
 class BookingController extends Controller
 {
+    private function bookingHistoryColumns(): array
+    {
+        static $columns = null;
+
+        if ($columns === null) {
+            try {
+                $columns = Schema::getColumnListing('booking_history');
+            } catch (\Throwable $e) {
+                $columns = [];
+            }
+        }
+
+        return $columns;
+    }
+
+    private function hasBookingHistoryColumn(string $column): bool
+    {
+        return in_array($column, $this->bookingHistoryColumns(), true);
+    }
+
+    private function bookingHistoryTableExists(): bool
+    {
+        try {
+            return Schema::hasTable('booking_history');
+        } catch (\Throwable $e) {
+            return false;
+        }
+    }
+
+    private function safeIntFromBookingCode(string $bookingCode): int
+    {
+        // Prefer numeric portion from "BK-<digits>-xxxx", but keep it safely within signed INT range.
+        if (preg_match('/BK-(\d+)/', $bookingCode, $m)) {
+            $digits = $m[1];
+            // If it's already small enough, use it directly.
+            if (strlen($digits) <= 9) {
+                return max(1, (int) $digits);
+            }
+        }
+
+        // Stable fallback: CRC32 reduced to <= 2,000,000,000 to fit signed INT columns.
+        $unsigned = (int) sprintf('%u', crc32($bookingCode));
+        $bounded = $unsigned % 2000000000;
+        return $bounded > 0 ? $bounded : 1;
+    }
+
+    private function formatTravelDate(?string $dateStart, ?string $dateEnd, ?string $date, ?string $time): ?string
+    {
+        $dateStart = $dateStart ? trim($dateStart) : null;
+        $dateEnd = $dateEnd ? trim($dateEnd) : null;
+        $date = $date ? trim($date) : null;
+        $time = $time ? trim($time) : null;
+
+        if ($dateStart && $dateEnd) {
+            return $dateStart . ' to ' . $dateEnd;
+        }
+
+        if ($dateStart) {
+            return $dateStart;
+        }
+
+        if ($date && $time) {
+            return $date . ' ' . $time;
+        }
+
+        return $date;
+    }
+
+    private function writeBookingHistoryRow(Booking $booking): void
+    {
+        if (! $this->bookingHistoryTableExists()) {
+            return;
+        }
+
+        try {
+            $bookingCode = (string) $booking->id;
+            $bookingId = $this->safeIntFromBookingCode($bookingCode);
+
+            $dateStart = $booking->date_start ?? $booking->dateStart ?? null;
+            $dateEnd = $booking->date_end ?? $booking->dateEnd ?? null;
+            $date = $booking->date ?? null;
+            $time = $booking->time ?? null;
+
+            $destination = trim((string) ($booking->service ?? ''));
+            if ($destination === '') {
+                $destination = '-';
+            }
+
+            $travelDate = $this->formatTravelDate(
+                is_string($dateStart) ? $dateStart : null,
+                is_string($dateEnd) ? $dateEnd : null,
+                is_string($date) ? $date : null,
+                is_string($time) ? $time : null,
+            );
+            $travelDate = $travelDate ? trim($travelDate) : '';
+            if ($travelDate === '') {
+                $travelDate = '-';
+            }
+
+            $row = [
+                'booking_id' => $bookingId,
+                'user_id' => (int) $booking->user_id,
+                'booking_code' => $bookingCode,
+                'destination' => $destination,
+                'travel_date' => $travelDate,
+                'travelers' => (int) ($booking->pax ?? 0),
+                'amount' => (float) ($booking->amount ?? 0),
+                'status' => (string) ($booking->status ?? 'pending'),
+            ];
+
+            // Optional columns (some DBs added these later)
+            if ($this->hasBookingHistoryColumn('customer_name') || $this->hasBookingHistoryColumn('customer_email')) {
+                $customerName = trim((string) ($booking->guest ?? ''));
+                $customerEmail = trim((string) (($booking->customer_email ?? $booking->customerEmail) ?? ''));
+
+                if (($customerName === '' || $customerEmail === '') && $booking->user_id) {
+                    try {
+                        $user = $booking->relationLoaded('user')
+                            ? $booking->user
+                            : User::query()->find($booking->user_id, ['id', 'name', 'email']);
+
+                        if ($user) {
+                            if ($customerName === '') $customerName = trim((string) ($user->name ?? ''));
+                            if ($customerEmail === '') $customerEmail = trim((string) ($user->email ?? ''));
+                        }
+                    } catch (\Throwable $e) {
+                        // ignore
+                    }
+                }
+
+                if ($this->hasBookingHistoryColumn('customer_name')) {
+                    $row['customer_name'] = $customerName !== '' ? $customerName : null;
+                }
+                if ($this->hasBookingHistoryColumn('customer_email')) {
+                    $row['customer_email'] = $customerEmail !== '' ? $customerEmail : null;
+                }
+            }
+
+            $exists = DB::table('booking_history')
+                ->where('booking_code', $bookingCode)
+                ->where('user_id', (int) $booking->user_id)
+                ->exists();
+
+            if ($exists) {
+                DB::table('booking_history')
+                    ->where('booking_code', $bookingCode)
+                    ->where('user_id', (int) $booking->user_id)
+                    ->update($row);
+            } else {
+                $row['created_at'] = $booking->created_at ?? now();
+                DB::table('booking_history')->insert($row);
+            }
+        } catch (\Throwable $e) {
+            Log::error('Failed to write booking_history row: ' . $e->getMessage());
+        }
+    }
+
     private function hasBookingColumn(string $column): bool
     {
         static $columns = null;
@@ -209,6 +367,11 @@ class BookingController extends Controller
 
             $bookings = $bookings->get();
 
+            // Lazy sync to booking_history so existing bookings appear in history without changing the frontend.
+            foreach ($bookings as $booking) {
+                $this->writeBookingHistoryRow($booking);
+            }
+
             return response()->json([
                 'success' => true,
                 'data' => $bookings->map(fn (Booking $b) => $this->toFrontendBooking($b)),
@@ -249,6 +412,11 @@ class BookingController extends Controller
             }
 
             $bookings = $bookings->get();
+
+            // Best-effort: keep booking_history in sync for this customer.
+            foreach ($bookings as $booking) {
+                $this->writeBookingHistoryRow($booking);
+            }
 
             return response()->json([
                 'success' => true,
@@ -373,9 +541,19 @@ class BookingController extends Controller
 
             Log::info('Booking saved successfully! ID: ' . $booking->id);
 
+            // Write booking summary into booking_history table (best-effort; never fail booking creation).
+            $this->writeBookingHistoryRow($booking);
+
             // Create owner/admin notifications (best-effort: never fail the booking request because of notifications)
             try {
                 $snapshot = $this->toFrontendBooking($booking);
+
+                // Enrich notification snapshot with images coming from the frontend payload.
+                // These keys are used only for owner notifications UI and do not require DB columns.
+                $snapshot['image'] = $payload['image'] ?? $payload['serviceImage'] ?? $payload['hotelImage'] ?? null;
+                $snapshot['hotelImage'] = $payload['hotelImage'] ?? $payload['image'] ?? null;
+                $snapshot['rentalImage'] = $payload['rentalImage'] ?? ($payload['rental']['image'] ?? null);
+
                 $guest = (string) ($snapshot['guest'] ?? 'A customer');
                 $service = (string) ($snapshot['service'] ?? 'a service');
                 $route = (string) ($snapshot['route'] ?? '');
@@ -384,9 +562,93 @@ class BookingController extends Controller
                 $title = 'New booking: ' . $booking->id;
                 $message = trim($guest . ' booked ' . $service . ($route ? ' (' . $route . ')' : '') . ' • $' . number_format($amount, 2));
 
-                // Role values can vary by casing across deployments ("Owner" vs "owner").
+                // Resolve a single owner recipient so "one booking = one row" in `notifications` table.
+                $recipientUserId = null;
+                $transportId = $payload['transport_id'] ?? null;
+                $destinationId = $payload['destination_id'] ?? null;
+
+                if ($transportId) {
+                    try {
+                        $recipientUserId = DB::table('transports')->where('transport_id', $transportId)->value('owner_id');
+                    } catch (\Throwable $e) {
+                        // ignore
+                    }
+                }
+
+                if (! $recipientUserId && $destinationId) {
+                    try {
+                        $recipientUserId = DB::table('destinations')->where('destination_id', $destinationId)->value('user_id');
+                    } catch (\Throwable $e) {
+                        // ignore
+                    }
+                }
+
+                if (! $recipientUserId) {
+                    try {
+                        $recipientUserId = DB::table('hotels')->where('hotel_name', $payload['service'])->value('owner_id');
+                    } catch (\Throwable $e) {
+                        // ignore
+                    }
+                }
+
+                if (! $recipientUserId) {
+                    try {
+                        $recipientUserId = DB::table('destinations')->where('name', $payload['service'])->value('user_id');
+                    } catch (\Throwable $e) {
+                        // ignore
+                    }
+                }
+
+                if (! $recipientUserId) {
+                    $recipientUserId = User::query()->where('role', 'owner')->orderBy('id')->value('id');
+                }
+
+                if (! $recipientUserId) {
+                    $recipientUserId = User::query()->where('role', 'admin')->orderBy('id')->value('id');
+                }
+
+                // New notifications table (single row per booking).
+                try {
+                    $numericBookingId = null;
+                    if (is_string($booking->id)) {
+                        // Prefer the numeric portion from IDs like "BK-1773970671972-423d".
+                        if (preg_match('/BK-(\d+)/', $booking->id, $m)) {
+                            $numericBookingId = $m[1];
+                        } elseif (preg_match('/(\d{6,})/', $booking->id, $m)) {
+                            // Fallback: first long digit run.
+                            $numericBookingId = $m[1];
+                        }
+                    }
+                    if (! $numericBookingId) {
+                        // Last resort: still write the notification row (even if booking ID isn't numeric).
+                        $numericBookingId = (string) (int) round(microtime(true) * 1000);
+                    }
+
+                    if ($recipientUserId) {
+                        BookingDbNotification::updateOrCreate(
+                            [
+                                'booking_id' => $numericBookingId,
+                                'type' => 'new_booking',
+                            ],
+                            [
+                                'user_id' => $recipientUserId,
+                                'title' => $title,
+                                'message' => $message,
+                                'is_read' => false,
+                                'data' => [
+                                    'booking_code' => (string) $booking->id,
+                                    'snapshot' => $snapshot,
+                                ],
+                            ],
+                        );
+                    }
+                } catch (\Throwable $e) {
+                    Log::error('Failed to write notifications row: ' . $e->getMessage());
+                }
+
+                // Legacy owner_notifications: still notify all owners so the owner UI keeps working as-is.
                 $owners = User::query()
-                    ->whereRaw('LOWER(role) IN (?, ?)', ['owner', 'admin'])
+                    ->where('role', 'owner')
                     ->get(['id']);
 
                 $useNotificationsTable = Schema::hasTable('notifications');
@@ -417,6 +679,18 @@ class BookingController extends Controller
                     } else {
                         OwnerNotification::create($payload);
                     }
+                    OwnerNotification::firstOrCreate(
+                        [
+                            'user_id' => $owner->id,
+                            'booking_id' => (string) $booking->id,
+                            'title' => $title,
+                        ],
+                        [
+                            'message' => $message,
+                            'data' => $snapshot,
+                            'read_at' => null,
+                        ],
+                    );
                 }
             } catch (\Throwable $e) {
                 Log::error('Failed to create owner notification: ' . $e->getMessage());
@@ -559,6 +833,9 @@ class BookingController extends Controller
             $booking->save();
 
             Log::info('Booking status updated: ' . $id . ' to ' . $request->status);
+
+            // Keep booking_history in sync (best-effort).
+            $this->writeBookingHistoryRow($booking);
 
             return response()->json([
                 'success' => true,

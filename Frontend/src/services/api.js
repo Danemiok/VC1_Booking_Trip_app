@@ -48,11 +48,26 @@ export async function apiRequest(path, options = {}) {
     headers['Content-Type'] = 'application/json';
   }
 
-  const response = await fetch(`${API_BASE_URL}${path}`, {
-    ...options,
-    credentials: 'include',
-    headers,
-  });
+  let response;
+  try {
+    response = await fetch(`${API_BASE_URL}${path}`, {
+      headers: {
+        Accept: 'application/json',
+        'Content-Type': 'application/json',
+        ...(token && !hasAuthHeader ? { Authorization: `Bearer ${token}` } : {}),
+        ...(options.headers ?? {}),
+      },
+      ...options,
+    });
+  } catch (cause) {
+    const error = new Error(
+      `Failed to reach API at ${API_BASE_URL}. Make sure the Laravel backend is running and CORS allows this origin.`,
+    );
+    error.cause = cause;
+    error.status = 0;
+    error.data = { message: error.message };
+    throw error;
+  }
 
   const rawBody = await response.text();
   let data = {};

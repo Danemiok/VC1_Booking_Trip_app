@@ -3,14 +3,8 @@ import { motion, AnimatePresence } from 'motion/react';
 import { socketService } from '../../services/socketService';
 import { GroupPlanningAccessPanel } from './group-planning/GroupPlanningAccessPanel';
 import { GroupPlanningModal } from './group-planning/GroupPlanningModal';
-import {
-  createId,
-  findGroupByCode,
-  loadGroupsFromStorage,
-  normalizeAccessCode,
-  upsertGroupInStorage,
-} from './group-planning/storage';
-import type { ItineraryItem, Member, Message, Poll, StoredGroup } from './group-planning/types';
+import { tripGroupService } from '../../services/tripGroupService';
+import { useAuth } from '../../context/AuthContext';
 import { 
   Users, 
   Send, 
@@ -30,6 +24,89 @@ import {
   Heart,
   X,
 } from 'lucide-react';
+
+interface Message {
+  id: string;
+  sender_name: string;
+  sender_email: string;
+  text: string;
+  created_at: string;
+  type?: 'system' | 'user';
+  attachment?: {
+    name: string;
+    mimeType: string;
+    dataUrl?: string;
+  };
+}
+
+interface Member {
+  user_email: string;
+  user_name: string;
+  role: 'Leader' | 'Member';
+}
+
+interface Poll {
+  id: string;
+  question: string;
+  options: { id: string; text: string; votes: number }[];
+}
+
+interface ItineraryItem {
+  id: string;
+  time: string;
+  activity: string;
+  location: string;
+  votes: number;
+}
+
+interface StoredGroup {
+  id: string;
+  accessCode: string;
+  name: string;
+  members: Member[];
+  messages: Message[];
+  polls: Poll[];
+  itinerary: ItineraryItem[];
+}
+
+const GROUP_STORE_KEY = 'group_planning_groups_v1';
+const ACTIVE_GROUP_ID_KEY = 'activeGroupId';
+const ACTIVE_GROUP_CODE_KEY = 'activeGroupAccessCode';
+
+// Prefer server-backed groups so multiple accounts/devices can join and chat.
+const USE_SERVER_GROUPS = true;
+
+const normalizeAccessCode = (code: string): string => code.replace(/\s+/g, '').trim().toUpperCase();
+
+const loadGroupsFromStorage = (): Record<string, StoredGroup> => {
+  try {
+    const raw = localStorage.getItem(GROUP_STORE_KEY);
+    if (!raw) return {};
+    const parsed = JSON.parse(raw);
+    return parsed && typeof parsed === 'object' ? parsed : {};
+  } catch {
+    return {};
+  }
+};
+
+const saveGroupsToStorage = (groups: Record<string, StoredGroup>) => {
+  localStorage.setItem(GROUP_STORE_KEY, JSON.stringify(groups));
+};
+
+const upsertGroupInStorage = (group: StoredGroup) => {
+  const groups = loadGroupsFromStorage();
+  groups[group.id] = group;
+  saveGroupsToStorage(groups);
+};
+
+const findGroupByCode = (code: string): StoredGroup | null => {
+  const groups = loadGroupsFromStorage();
+  const normalized = normalizeAccessCode(code);
+  const match = Object.values(groups).find((g) => g.accessCode.toUpperCase() === normalized);
+  return match ?? null;
+};
+
+const createId = () => `${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 8)}`;
 
 interface GroupPlanningProps {
   onBack: () => void;
@@ -54,10 +131,13 @@ export const GroupPlanning: React.FC<GroupPlanningProps> = ({ onBack, tripTitle 
   const audioChunksRef = useRef<BlobPart[]>([]);
   const [isRecording, setIsRecording] = useState(false);
   
+  const { user } = useAuth();
+
   // Auth/Group State
-  const [userEmail] = useState('hanchantrea38@gmail.com');
-  const [userName] = useState('Vannak');
-  const [groupId, setGroupId] = useState<string | null>(localStorage.getItem('activeGroupId'));
+  const userEmail = String(user?.email || '').trim().toLowerCase();
+  const userName = String(user?.name || 'User').trim();
+  const [groupId, setGroupId] = useState<string | null>(() => localStorage.getItem(ACTIVE_GROUP_ID_KEY));
+  const [groupAccessCode, setGroupAccessCode] = useState<string>(() => localStorage.getItem(ACTIVE_GROUP_CODE_KEY) || '');
   const [accessCode, setAccessCode] = useState('');
   const [isJoining, setIsJoining] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -75,24 +155,96 @@ export const GroupPlanning: React.FC<GroupPlanningProps> = ({ onBack, tripTitle 
   useEffect(() => {
     if (!groupId) return;
 
+    const clearActiveGroup = () => {
+      setGroupId(null);
+      setGroupAccessCode('');
+      localStorage.removeItem(ACTIVE_GROUP_ID_KEY);
+      localStorage.removeItem(ACTIVE_GROUP_CODE_KEY);
+    };
+
+    const parseAttachment = (raw: any) => {
+      if (!raw) return undefined;
+      if (typeof raw === 'object') return raw;
+      if (typeof raw === 'string') {
+        try {
+          return JSON.parse(raw);
+        } catch {
+          return undefined;
+        }
+      }
+      return undefined;
+    };
+
+    if (USE_SERVER_GROUPS) {
+      let cancelled = false;
+
+      const loadServerGroup = async () => {
+        try {
+          const resp = await tripGroupService.get(groupId);
+          const payload = resp?.data ?? resp;
+          const group = payload?.group;
+          const membersRaw = Array.isArray(payload?.members) ? payload.members : [];
+          const messagesRaw = Array.isArray(payload?.messages) ? payload.messages : [];
+
+          if (!group || cancelled) return;
+
+          setGroupAccessCode(String(group.access_code || ''));
+          localStorage.setItem(ACTIVE_GROUP_CODE_KEY, String(group.access_code || ''));
+          setGroupName(String(group.name || tripTitle));
+
+          setMembers(
+            membersRaw.map((m: any) => ({
+              user_email: String(m.user_email || '').toLowerCase(),
+              user_name: String(m.user_name || 'User'),
+              role: (m.role === 'Leader' ? 'Leader' : 'Member') as any,
+            })),
+          );
+
+          setMessages(
+            messagesRaw.map((msg: any) => ({
+              id: String(msg.id),
+              sender_name: String(msg.sender_name || 'User'),
+              sender_email: String(msg.sender_email || ''),
+              text: String(msg.text || ''),
+              created_at: String(msg.created_at || new Date().toISOString()),
+              type: (msg.type === 'system' ? 'system' : 'user') as any,
+              attachment: parseAttachment(msg.attachment),
+            })),
+          );
+        } catch (e: any) {
+          if (cancelled) return;
+          setError(e?.data?.message || e?.message || 'Access denied or group not found');
+          clearActiveGroup();
+        }
+      };
+
+      loadServerGroup();
+      const interval = window.setInterval(loadServerGroup, 2500);
+      return () => {
+        cancelled = true;
+        window.clearInterval(interval);
+      };
+    }
+
+    // Legacy/local mode (single-browser only)
     try {
       const groups = loadGroupsFromStorage();
       const group = groups[groupId];
       if (!group) {
         setError('Access denied or group not found');
-        setGroupId(null);
-        localStorage.removeItem('activeGroupId');
+        clearActiveGroup();
         return;
       }
 
+      setGroupAccessCode(group.accessCode);
       setMembers(group.members);
       setMessages(group.messages);
       setItinerary(group.itinerary);
       setPolls(group.polls);
       setGroupName(group.name);
 
-      const socket = socketService.connect();
-      socket.emit('join-group', { groupId, email: userEmail });
+        const socket = socketService.connect();
+        socket.emit('join-group', { groupId, email: userEmail });
 
       const onNewMessage = (msg: Message) => {
         setMessages((prev) => {
@@ -138,10 +290,9 @@ export const GroupPlanning: React.FC<GroupPlanningProps> = ({ onBack, tripTitle 
       };
     } catch {
       setError('Access denied or group not found');
-      setGroupId(null);
-      localStorage.removeItem('activeGroupId');
-    }
-  }, [groupId, userEmail]);
+        clearActiveGroup();
+      }
+    }, [groupId, userEmail]);
 
   useEffect(() => {
     chatEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -149,6 +300,13 @@ export const GroupPlanning: React.FC<GroupPlanningProps> = ({ onBack, tripTitle 
 
   const addMemberToGroup = () => {
     if (!groupId) return;
+    if (USE_SERVER_GROUPS) {
+      setError('To add members, share the access code so they can join.');
+      setIsAddMemberOpen(false);
+      setNewMemberName('');
+      setNewMemberEmail('');
+      return;
+    }
     const name = newMemberName.trim();
     const email = newMemberEmail.trim().toLowerCase();
     if (!name || !email) return;
@@ -187,6 +345,56 @@ export const GroupPlanning: React.FC<GroupPlanningProps> = ({ onBack, tripTitle 
 
   const handleCreateGroup = async () => {
     setError(null);
+
+    if (USE_SERVER_GROUPS) {
+      try {
+        const resp = await tripGroupService.create({ name: tripTitle });
+        const payload = resp?.data ?? resp;
+        const group = payload?.group;
+        const membersRaw = Array.isArray(payload?.members) ? payload.members : [];
+        const messagesRaw = Array.isArray(payload?.messages) ? payload.messages : [];
+
+        if (!group) {
+          setError('Failed to create group');
+          return;
+        }
+
+        setGroupId(String(group.id));
+        setGroupAccessCode(String(group.access_code || ''));
+        setGroupName(String(group.name || tripTitle));
+
+        setMembers(
+          membersRaw.map((m: any) => ({
+            user_email: String(m.user_email || '').toLowerCase(),
+            user_name: String(m.user_name || 'User'),
+            role: (m.role === 'Leader' ? 'Leader' : 'Member') as any,
+          })),
+        );
+        setMessages(
+          messagesRaw.map((msg: any) => ({
+            id: String(msg.id),
+            sender_name: String(msg.sender_name || 'User'),
+            sender_email: String(msg.sender_email || ''),
+            text: String(msg.text || ''),
+            created_at: String(msg.created_at || new Date().toISOString()),
+            type: (msg.type === 'system' ? 'system' : 'user') as any,
+            attachment: msg.attachment ? (typeof msg.attachment === 'string' ? (() => { try { return JSON.parse(msg.attachment); } catch { return undefined; } })() : msg.attachment) : undefined,
+          })),
+        );
+
+        // Polls/itinerary remain client-side for now
+        setItinerary([]);
+        setPolls([]);
+
+        localStorage.setItem(ACTIVE_GROUP_ID_KEY, String(group.id));
+        localStorage.setItem(ACTIVE_GROUP_CODE_KEY, String(group.access_code || ''));
+        setAccessCode('');
+      } catch (e: any) {
+        setError(e?.data?.message || e?.message || 'Failed to create group');
+      }
+      return;
+    }
+
     const code = Math.random().toString(36).substring(2, 8).toUpperCase();
     const id = code;
 
@@ -217,7 +425,9 @@ export const GroupPlanning: React.FC<GroupPlanningProps> = ({ onBack, tripTitle 
     setPolls(group.polls);
     setGroupName(group.name);
     setGroupId(group.id);
-    localStorage.setItem('activeGroupId', group.id);
+    setGroupAccessCode(group.accessCode);
+    localStorage.setItem(ACTIVE_GROUP_ID_KEY, group.id);
+    localStorage.setItem(ACTIVE_GROUP_CODE_KEY, group.accessCode);
   };
 
   const handleJoinGroup = async (e: React.FormEvent) => {
@@ -226,6 +436,46 @@ export const GroupPlanning: React.FC<GroupPlanningProps> = ({ onBack, tripTitle 
     setError(null);
 
     try {
+      if (USE_SERVER_GROUPS) {
+        const resp = await tripGroupService.join({ access_code: normalizeAccessCode(accessCode) });
+        const payload = resp?.data ?? resp;
+        const group = payload?.group;
+        const membersRaw = Array.isArray(payload?.members) ? payload.members : [];
+        const messagesRaw = Array.isArray(payload?.messages) ? payload.messages : [];
+
+        if (!group) {
+          setError('Invalid access code');
+          return;
+        }
+
+        setGroupId(String(group.id));
+        setGroupAccessCode(String(group.access_code || ''));
+        setGroupName(String(group.name || tripTitle));
+        setMembers(
+          membersRaw.map((m: any) => ({
+            user_email: String(m.user_email || '').toLowerCase(),
+            user_name: String(m.user_name || 'User'),
+            role: (m.role === 'Leader' ? 'Leader' : 'Member') as any,
+          })),
+        );
+        setMessages(
+          messagesRaw.map((msg: any) => ({
+            id: String(msg.id),
+            sender_name: String(msg.sender_name || 'User'),
+            sender_email: String(msg.sender_email || ''),
+            text: String(msg.text || ''),
+            created_at: String(msg.created_at || new Date().toISOString()),
+            type: (msg.type === 'system' ? 'system' : 'user') as any,
+            attachment: msg.attachment ? (typeof msg.attachment === 'string' ? (() => { try { return JSON.parse(msg.attachment); } catch { return undefined; } })() : msg.attachment) : undefined,
+          })),
+        );
+
+        localStorage.setItem(ACTIVE_GROUP_ID_KEY, String(group.id));
+        localStorage.setItem(ACTIVE_GROUP_CODE_KEY, String(group.access_code || ''));
+        setAccessCode('');
+        return;
+      }
+
       const code = normalizeAccessCode(accessCode);
       const found = findGroupByCode(code);
       if (!found) {
@@ -265,14 +515,22 @@ export const GroupPlanning: React.FC<GroupPlanningProps> = ({ onBack, tripTitle 
       setPolls(nextGroup.polls);
       setGroupName(nextGroup.name);
       setGroupId(nextGroup.id);
-      localStorage.setItem('activeGroupId', nextGroup.id);
+      setGroupAccessCode(nextGroup.accessCode);
+      localStorage.setItem(ACTIVE_GROUP_ID_KEY, nextGroup.id);
+      localStorage.setItem(ACTIVE_GROUP_CODE_KEY, nextGroup.accessCode);
       setAccessCode('');
+    } catch (e: any) {
+      if (USE_SERVER_GROUPS) {
+        setError(e?.data?.message || e?.message || 'Invalid access code');
+      } else {
+        setError(e?.message || 'Failed to join group');
+      }
     } finally {
       setIsJoining(false);
     }
   };
 
-  const sendMessage = () => {
+  const sendMessage = async () => {
     if (!groupId) return;
     const trimmed = newMessage.trim();
     if (!trimmed && !pendingAttachment) return;
@@ -287,6 +545,43 @@ export const GroupPlanning: React.FC<GroupPlanningProps> = ({ onBack, tripTitle 
       created_at: new Date().toISOString(),
       attachment: pendingAttachment ?? undefined
     };
+
+    if (USE_SERVER_GROUPS) {
+      try {
+        setNewMessage('');
+        setPendingAttachment(null);
+        const resp = await tripGroupService.sendMessage(groupId, {
+          text: nextText,
+          attachment: pendingAttachment ?? null,
+        });
+        const raw = resp?.data ?? resp;
+        const created: Message = {
+          id: String(raw?.id ?? msg.id),
+          sender_name: String(raw?.sender_name ?? userName),
+          sender_email: String(raw?.sender_email ?? userEmail),
+          text: String(raw?.text ?? nextText),
+          created_at: String(raw?.created_at ?? new Date().toISOString()),
+          type: (raw?.type === 'system' ? 'system' : 'user') as any,
+          attachment:
+            raw?.attachment
+              ? typeof raw.attachment === 'string'
+                ? (() => {
+                    try {
+                      return JSON.parse(raw.attachment);
+                    } catch {
+                      return undefined;
+                    }
+                  })()
+                : raw.attachment
+              : pendingAttachment ?? undefined,
+        };
+
+        setMessages((prev) => (prev.some((m) => m.id === created.id) ? prev : [...prev, created]));
+      } catch (e: any) {
+        setError(e?.data?.message || e?.message || 'Failed to send message');
+      }
+      return;
+    }
 
     setMessages((prev) => {
       const next = [...prev, msg];
@@ -383,16 +678,16 @@ export const GroupPlanning: React.FC<GroupPlanningProps> = ({ onBack, tripTitle 
         upsertGroupInStorage({ ...group, polls: next });
       }
 
-      const updatedPoll = next.find((p) => p.id === pollId);
-      if (updatedPoll) socketService.getSocket()?.emit('poll-updated', updatedPoll);
-      return next;
-    });
+        const updatedPoll = next.find((p) => p.id === pollId);
+        if (updatedPoll) socketService.getSocket()?.emit('poll-updated', updatedPoll);
+        return next;
+      });
   };
 
   const [isAddingActivity, setIsAddingActivity] = useState(false);
   const [isCreatingPoll, setIsCreatingPoll] = useState(false);
   const [isCopied, setIsCopied] = useState(false);
-  const inviteLink = `${window.location.origin}/join/${groupId}`;
+  const inviteLink = `${window.location.origin}/join/${groupAccessCode || groupId}`;
 
   const handleVoteItinerary = (itemId: string) => {
     // Voting logic for itinerary
@@ -419,12 +714,9 @@ export const GroupPlanning: React.FC<GroupPlanningProps> = ({ onBack, tripTitle 
       }
       socketService.getSocket()?.emit('itinerary-updated', next);
       return next;
-    });
-    socketService.getSocket()?.emit('update-itinerary', {
-      groupId,
-      email: userEmail,
-      item: newActivity
-    });
+      });
+
+    socketService.getSocket()?.emit('update-itinerary', { groupId, email: userEmail, item });
     setIsAddingActivity(false);
     setNewActivity({ time: '', activity: '', location: '' });
   };
@@ -505,7 +797,7 @@ export const GroupPlanning: React.FC<GroupPlanningProps> = ({ onBack, tripTitle 
                 </div>
                 <div className="px-4 py-2 bg-slate-100 dark:bg-white/5 rounded-xl border border-slate-200 dark:border-white/10">
                   <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest block">Code</span>
-                  <span className="text-sm font-mono font-bold text-slate-900 dark:text-white tracking-widest">{groupId}</span>
+                  <span className="text-sm font-mono font-bold text-slate-900 dark:text-white tracking-widest">{groupAccessCode || groupId}</span>
                 </div>
                 <button
                   type="button"

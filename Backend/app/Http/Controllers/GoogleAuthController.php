@@ -196,17 +196,33 @@ class GoogleAuthController extends Controller
 
     private function getFrontendBaseUrl(): string
     {
+        $explicit = trim((string) env('FRONTEND_URL', ''));
+        if ($explicit !== '' && str_starts_with($explicit, 'http')) {
+            return rtrim($explicit, '/');
+        }
+
+        $envOrigins = array_values(array_filter(array_map(
+            static fn ($origin) => trim((string) $origin),
+            explode(',', (string) env('FRONTEND_URLS', ''))
+        )));
+
+        foreach ($envOrigins as $origin) {
+            if ($origin !== '' && $origin !== '*' && str_starts_with($origin, 'http')) {
+                return rtrim($origin, '/');
+            }
+        }
+
         $configuredOrigins = config('cors.allowed_origins');
         $origins = is_array($configuredOrigins) ? $configuredOrigins : [];
 
-        if (empty($origins)) {
-            $origins = array_filter(array_map(
-                'trim',
-                explode(',', (string) env('FRONTEND_URLS', 'http://localhost:5173,http://127.0.0.1:5173'))
-            ));
+        foreach ($origins as $origin) {
+            $origin = trim((string) $origin);
+            if ($origin !== '' && $origin !== '*' && str_starts_with($origin, 'http')) {
+                return rtrim($origin, '/');
+            }
         }
 
-        return rtrim((string) ($origins[0] ?? 'http://localhost:5173'), '/');
+        return 'http://localhost:5173';
     }
 
     private function buildFrontendUrl(array $query): string

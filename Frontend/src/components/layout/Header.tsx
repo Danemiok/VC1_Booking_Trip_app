@@ -8,11 +8,10 @@ interface HeaderProps {
   title: string;
   isDark: boolean;
   toggleTheme: () => void;
-  onNotificationClick?: (notification: AdminNotification) => void;
+  onNotificationClick: (notification: AdminNotification) => void;
   notifications?: AdminNotification[];
-  unreadCount?: number;
+  onMarkNotificationRead?: (id: string) => void;
   onMarkAllNotificationsRead?: () => void;
-  onViewAllNotifications?: () => void;
   onProfileClick: () => void;
   onSettingsClick?: () => void;
   onLogoutClick: () => void;
@@ -25,9 +24,8 @@ export const Header: React.FC<HeaderProps> = ({
   toggleTheme,
   onNotificationClick,
   notifications,
-  unreadCount,
+  onMarkNotificationRead,
   onMarkAllNotificationsRead,
-  onViewAllNotifications,
   onProfileClick,
   onSettingsClick,
   onLogoutClick,
@@ -36,6 +34,8 @@ export const Header: React.FC<HeaderProps> = ({
   const [isNotificationsOpen, setIsNotificationsOpen] = useState(false);
   const [isProfileDropdownOpen, setIsProfileDropdownOpen] = useState(false);
   const [isLogoutConfirmOpen, setIsLogoutConfirmOpen] = useState(false);
+  const unreadNotificationCount = notifications ? notifications.filter((n) => !n.read).length : null;
+  const hasUnreadNotifications = unreadNotificationCount === null ? true : unreadNotificationCount > 0;
   
   const avatarName = user?.name || 'User';
   const avatarSrc = `https://ui-avatars.com/api/?name=${encodeURIComponent(avatarName)}&background=f1f5f9&color=0f172a&size=128`;
@@ -87,13 +87,16 @@ export const Header: React.FC<HeaderProps> = ({
 
           >
             <Bell size={20} />
-            {computedUnreadCount === null && (
-              <span className="absolute top-2 right-2 min-w-2 h-2 bg-red-500 rounded-full border-2 border-white dark:border-slate-900" />
-            )}
-            {typeof computedUnreadCount === 'number' && computedUnreadCount > 0 && (
-              <span className="absolute -top-1 -right-1 min-w-5 h-5 px-1 rounded-full bg-red-600 text-white text-[10px] font-extrabold flex items-center justify-center border-2 border-white dark:border-slate-900">
-                {computedUnreadCount > 99 ? '99+' : computedUnreadCount}
-              </span>
+            {unreadNotificationCount !== null ? (
+              unreadNotificationCount > 0 ? (
+                <span className="absolute -top-0.5 -right-0.5 min-w-5 h-5 px-1 bg-red-500 text-white text-[10px] font-extrabold rounded-full flex items-center justify-center border-2 border-white dark:border-slate-900">
+                  {unreadNotificationCount > 99 ? '99+' : unreadNotificationCount}
+                </span>
+              ) : null
+            ) : (
+              hasUnreadNotifications && (
+                <span className="absolute top-2 right-2 w-2 h-2 bg-red-500 rounded-full border-2 border-white dark:border-slate-900"></span>
+              )
             )}
           </button>
           
@@ -101,16 +104,12 @@ export const Header: React.FC<HeaderProps> = ({
             isOpen={isNotificationsOpen} 
             onClose={() => setIsNotificationsOpen(false)} 
             notifications={notifications}
+            onMarkAsRead={onMarkNotificationRead}
             onMarkAllAsRead={onMarkAllNotificationsRead}
-            onViewAll={onViewAllNotifications}
-            onNotificationClick={
-              onNotificationClick
-                ? (notification) => {
-                    setIsNotificationsOpen(false);
-                    onNotificationClick(notification);
-                  }
-                : undefined
-            }
+            onNotificationClick={(notification) => {
+              setIsNotificationsOpen(false);
+              onNotificationClick(notification);
+            }}
           />
         </div>
 

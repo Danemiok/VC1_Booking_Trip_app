@@ -5,6 +5,8 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
+use Illuminate\Database\Eloquent\Casts\Attribute;
+use Illuminate\Support\Str;
 use Laravel\Sanctum\HasApiTokens;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
@@ -55,6 +57,13 @@ class User extends Authenticatable
     public function accommodations(): HasMany
     {
         return $this->hasMany(Accommodation::class, 'owner_id');
+    }
+
+    protected function role(): Attribute
+    {
+        return Attribute::make(
+            set: static fn ($value) => Str::lower(trim((string) $value)),
+        );
     }
 }
 

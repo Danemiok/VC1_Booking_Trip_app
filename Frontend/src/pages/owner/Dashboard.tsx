@@ -10,7 +10,8 @@ import {
   CalendarCheck,
   MessageSquare,
   CheckCircle2,
-  Rocket
+  Rocket,
+  X
 } from 'lucide-react';
 import { 
   LineChart, 
@@ -23,10 +24,10 @@ import {
   AreaChart,
   Area
 } from 'recharts';
-import { cn, formatRelativeTime } from '@/utils/utils';
+import { cn } from '@/utils/utils';
 import { MOCK_REVENUE_DATA } from '@/routes/constants';
-import { useOwnerNotifications } from '@/context/OwnerNotificationsContext';
-import { useLocation, useNavigate } from 'react-router-dom';
+import type { AdminNotification } from '@/components/common/NotificationDropdown';
+import { bookingService } from '@/services/bookingService';
 
 const StatCard = ({ title, value, change, changeType, icon: Icon, subtitle }: any) => (
   <div className="bg-white dark:bg-slate-900 p-6 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm hover:shadow-lg transition-shadow">
@@ -71,17 +72,103 @@ const StatCard = ({ title, value, change, changeType, icon: Icon, subtitle }: an
   </div>
 );
 
-const Dashboard = () => {
-  const navigate = useNavigate();
-  const location = useLocation();
-  const { notifications, loading, markRead, openNotification } = useOwnerNotifications();
-  const recentActivities = React.useMemo(() => notifications.slice(0, 4), [notifications]);
+interface OwnerDashboardProps {
+  notifications?: AdminNotification[];
+  onOpenBooking?: (bookingId: string) => void;
+  onMarkNotificationRead?: (notificationId: string) => void;
+  onViewAllActivities?: () => void;
+}
 
-  React.useEffect(() => {
-    if (location.hash !== '#recent-activities') return;
-    const el = document.getElementById('recent-activities');
-    el?.scrollIntoView({ behavior: 'smooth', block: 'start' });
-  }, [location.hash]);
+const Dashboard: React.FC<OwnerDashboardProps> = ({ notifications, onOpenBooking, onMarkNotificationRead, onViewAllActivities }) => {
+  const defaultActivities = [
+    { icon: CalendarCheck, title: 'Booking from Siem Reap', desc: 'Shared Shuttle â€¢ 2 Guests', time: '10 mins ago' },
+    { icon: CreditCard, title: 'Payout successful', desc: 'ABA Bank â€¢ $1,240.00', time: '2 hours ago' },
+    { icon: MessageSquare, title: 'Message from Sopheap', desc: 'Route timing question', time: '5 hours ago' },
+    { icon: Star, title: 'New 5-star review', desc: '"Excellent service!"', time: 'Yesterday' },
+  ];
+
+  const getActivityIcon = (type: AdminNotification['type']) => {
+    switch (type) {
+      case 'booking':
+        return CalendarCheck;
+      case 'alert':
+        return Star;
+      case 'message':
+        return MessageSquare;
+      case 'system':
+      default:
+        return CheckCircle2;
+    }
+  };
+
+  const notificationActivities = (notifications ?? [])
+    .slice(0, 4)
+    .map((n) => ({
+      icon: getActivityIcon(n.type),
+      title: n.title,
+      desc: n.description,
+      time: n.time,
+      bookingId: n.bookingId ?? null,
+      notificationId: n.id,
+      data: n.data ?? null,
+      read: n.read,
+    }));
+
+  const activities = notificationActivities.length > 0 ? notificationActivities : defaultActivities;
+  const unreadCount = (notifications ?? []).filter((n) => !n.read).length;
+
+  const [selectedActivity, setSelectedActivity] = React.useState<any | null>(null);
+  const [isDetailsOpen, setIsDetailsOpen] = React.useState(false);
+  const [updatingStatus, setUpdatingStatus] = React.useState(false);
+
+  const closeDetails = () => {
+    setIsDetailsOpen(false);
+    setSelectedActivity(null);
+  };
+
+  const getBookingImage = (booking: any) => {
+    return (
+      booking?.image ||
+      booking?.serviceImage ||
+      booking?.hotelImage ||
+      booking?.rentalImage ||
+      booking?.transportImage ||
+      booking?.data?.image ||
+      null
+    );
+  };
+
+  const getStatusColor = (status: string) => {
+    const s = String(status || 'pending').toLowerCase();
+    if (s === 'paid') return 'bg-emerald-50 text-emerald-700 dark:bg-emerald-500/10 dark:text-emerald-300';
+    if (s === 'canceled' || s === 'cancelled') return 'bg-rose-50 text-rose-700 dark:bg-rose-500/10 dark:text-rose-300';
+    return 'bg-amber-50 text-amber-700 dark:bg-amber-500/10 dark:text-amber-300';
+  };
+
+  const openActivityDetails = (activity: any) => {
+    if (!activity?.bookingId) return;
+    setSelectedActivity(activity);
+    setIsDetailsOpen(true);
+    if (activity?.notificationId) onMarkNotificationRead?.(String(activity.notificationId));
+  };
+
+  const updateBookingStatus = async (nextStatus: 'pending' | 'paid' | 'canceled') => {
+    const bookingId = selectedActivity?.bookingId || selectedActivity?.data?.id;
+    if (!bookingId || updatingStatus) return;
+
+    try {
+      setUpdatingStatus(true);
+      await bookingService.updateBookingStatus(String(bookingId), nextStatus);
+      setSelectedActivity((prev: any) => ({
+        ...prev,
+        data: { ...(prev?.data ?? {}), status: nextStatus },
+      }));
+    } catch (e) {
+      console.error('Failed to update booking status', e);
+    } finally {
+      setUpdatingStatus(false);
+    }
+  };
 
   return (
     <div className="p-8 max-w-[1440px] mx-auto space-y-8">
@@ -167,56 +254,205 @@ const Dashboard = () => {
         <div className="space-y-6">
           <div id="recent-activities" className="bg-white dark:bg-slate-900 p-6 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm">
             <div className="flex items-center justify-between mb-6">
-              <h4 className="font-bold">Recent Activities</h4>
+              <div className="flex items-center gap-3">
+                <h4 className="font-bold">Recent Activities</h4>
+                {unreadCount > 0 && (
+                  <span className="text-[10px] font-extrabold bg-blue-600 text-white px-2 py-1 rounded-full uppercase tracking-wider">
+                    {unreadCount} new
+                  </span>
+                )}
+              </div>
               <button
-                onClick={() => navigate('/bookings')}
+                onClick={onViewAllActivities}
                 className="text-xs text-blue-600 font-bold hover:bg-blue-600/5 px-2 py-1 rounded transition-colors uppercase tracking-wider"
-                type="button"
               >
                 View All
               </button>
             </div>
-            <div className="space-y-6">
-              {loading && recentActivities.length === 0 ? (
-                <p className="text-xs text-slate-500 font-medium">Loading recent activity…</p>
-              ) : recentActivities.length === 0 ? (
-                <p className="text-xs text-slate-500 font-medium">No recent activity yet.</p>
-              ) : (
-                recentActivities.map((n, i) => {
-                  const Icon = n.bookingId ? CalendarCheck : CheckCircle2;
-                  const time = formatRelativeTime(n.createdAt);
-
-                  return (
-                    <button
-                      key={String(n.id)}
-                      onClick={async () => {
-                        if (!n.readAt) await markRead(n.id);
-                        openNotification(n);
-                      }}
-                      className="w-full text-left flex gap-4 group"
-                      type="button"
-                    >
-                      <div className="w-10 h-10 rounded-xl bg-blue-50 dark:bg-blue-900/20 flex items-center justify-center text-blue-600 flex-shrink-0">
-                        <Icon size={20} />
-                      </div>
-                      <div
-                        className={cn(
-                          "flex-1 pb-4",
-                          i !== recentActivities.length - 1 && "border-b border-slate-50 dark:border-slate-800/50",
-                        )}
-                      >
-                        <p className="text-sm font-bold">{n.title}</p>
-                        <p className="text-xs text-slate-500 mt-1 font-medium">{n.message ?? ''}</p>
-                        {time && (
-                          <span className="text-[10px] font-bold text-slate-400 mt-2 block uppercase">{time}</span>
-                        )}
-                      </div>
-                    </button>
-                  );
-                })
-              )}
+            <div className="space-y-3">
+              {(activities.length > 0 ? activities : [
+                { icon: CalendarCheck, title: 'Booking from Siem Reap', desc: 'Shared Shuttle • 2 Guests', time: '10 mins ago' },
+                { icon: CreditCard, title: 'Payout successful', desc: 'ABA Bank • $1,240.00', time: '2 hours ago' },
+                { icon: MessageSquare, title: 'Message from Sopheap', desc: 'Route timing question', time: '5 hours ago' },
+                { icon: Star, title: 'New 5-star review', desc: '"Excellent service!"', time: 'Yesterday' },
+              ]).map((activity, i) => (
+                <div
+                  key={i}
+                  onClick={() => {
+                    if (activity?.data) {
+                      openActivityDetails(activity);
+                      return;
+                    }
+                    if (activity?.bookingId && onOpenBooking) onOpenBooking(String(activity.bookingId));
+                  }}
+                  className={cn(
+                    "flex items-center gap-3 group rounded-xl px-2.5 py-2.5 -mx-2 transition-colors",
+                    activity?.bookingId ? "cursor-pointer" : "cursor-default",
+                    i !== 3 && "border-b border-slate-50 dark:border-slate-800/50",
+                    activity?.read === false && "bg-blue-50/80 dark:bg-blue-900/20",
+                  )}
+                >
+                  <div className="w-9 h-9 rounded-lg bg-blue-50 dark:bg-blue-900/20 flex items-center justify-center text-blue-600 flex-shrink-0">
+                    <activity.icon size={18} />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-[12px] font-semibold text-slate-900 dark:text-white truncate leading-tight">{activity.title}</p>
+                    <p className="text-[10px] text-slate-500 dark:text-slate-400 mt-0.5 font-medium line-clamp-2 leading-snug">
+                      {activity.desc}
+                    </p>
+                  </div>
+                  <div className="flex items-center gap-3 flex-shrink-0">
+                    <span className="text-[9px] font-bold text-slate-400 uppercase whitespace-nowrap">{activity.time}</span>
+                    {activity?.read === false && <div className="w-2.5 h-2.5 rounded-full bg-blue-600" />}
+                  </div>
+                </div>
+              ))}
             </div>
           </div>
+
+          {/* Recent Activity Details Modal (from customer booking notification) */}
+          {isDetailsOpen && selectedActivity?.data && (
+            <div
+              className="fixed inset-0 bg-black/50 flex items-center justify-center z-50"
+              onClick={closeDetails}
+              role="dialog"
+              aria-modal="true"
+              aria-label="Booking details"
+            >
+              <div
+                className="bg-white dark:bg-slate-900 rounded-2xl p-6 max-w-2xl w-full mx-4 shadow-xl"
+                onClick={(e) => e.stopPropagation()}
+              >
+                <div className="flex items-start justify-between gap-4">
+                  <div>
+                    <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Booking</p>
+                    <h3 className="text-xl font-bold text-slate-900 dark:text-slate-100">{selectedActivity.data.id}</h3>
+                    <div className="mt-2">
+                      <span className={cn("inline-flex items-center gap-1.5 px-2.5 py-1 text-[11px] font-bold rounded-full", getStatusColor(selectedActivity.data.status))}>
+                        {String(selectedActivity.data.status || 'pending').charAt(0).toUpperCase() + String(selectedActivity.data.status || 'pending').slice(1)}
+                      </span>
+                    </div>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={closeDetails}
+                    className="p-2 text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-xl transition-colors"
+                    aria-label="Close"
+                  >
+                    <X size={18} />
+                  </button>
+                </div>
+
+                {(() => {
+                  const primaryImage =
+                    selectedActivity.data?.hotelImage ||
+                    selectedActivity.data?.image ||
+                    getBookingImage(selectedActivity.data);
+                  const rentalImage =
+                    selectedActivity.data?.rentalImage ||
+                    selectedActivity.data?.rental?.image ||
+                    null;
+
+                  if (!primaryImage && !rentalImage) return null;
+
+                  const activityImages = Array.isArray(selectedActivity.data?.activities)
+                    ? (selectedActivity.data.activities
+                        .map((a: any) => a?.image)
+                        .filter(Boolean) as string[])
+                    : [];
+
+                  const images = Array.from(new Set([primaryImage, rentalImage, ...activityImages].filter(Boolean))) as string[];
+                  return (
+                    <div className="mt-5 rounded-2xl overflow-hidden border border-slate-200 dark:border-slate-800">
+                      <div
+                        className={cn(
+                          "grid",
+                          images.length > 2 ? "grid-cols-2 sm:grid-cols-3" : images.length > 1 ? "grid-cols-2" : "grid-cols-1",
+                        )}
+                      >
+                        {images.map((src, idx) => (
+                          <img
+                            key={idx}
+                            src={src}
+                            alt={selectedActivity.data.service || 'Booking'}
+                            className={cn("w-full object-cover", images.length > 1 ? "h-44" : "h-48")}
+                            referrerPolicy="no-referrer"
+                            loading="lazy"
+                          />
+                        ))}
+                      </div>
+                    </div>
+                  );
+                })()}
+
+                <div className="mt-6 grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div className="rounded-xl border border-slate-200 dark:border-slate-800 p-4">
+                    <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Guest</p>
+                    <p className="mt-1 text-sm font-bold">{selectedActivity.data.guest}</p>
+                    {selectedActivity.data.customerEmail && <p className="mt-0.5 text-xs text-slate-500">{selectedActivity.data.customerEmail}</p>}
+                    {selectedActivity.data.customerPhone && <p className="mt-0.5 text-xs text-slate-500">{selectedActivity.data.customerPhone}</p>}
+                  </div>
+
+                  <div className="rounded-xl border border-slate-200 dark:border-slate-800 p-4">
+                    <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Service</p>
+                    <p className="mt-1 text-sm font-bold">{selectedActivity.data.service}</p>
+                    <p className="mt-0.5 text-xs text-slate-500">{selectedActivity.data.route}</p>
+                    {selectedActivity.data.roomType && <p className="mt-0.5 text-xs text-slate-500">{selectedActivity.data.roomType}</p>}
+                    {selectedActivity.data.vehicleType && <p className="mt-0.5 text-xs text-slate-500">{selectedActivity.data.vehicleType}</p>}
+                  </div>
+
+                  <div className="rounded-xl border border-slate-200 dark:border-slate-800 p-4">
+                    <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Date & Time</p>
+                    <p className="mt-1 text-sm font-bold">
+                      {selectedActivity.data.date || selectedActivity.data.dateStart || '-'}{' '}
+                      {selectedActivity.data.time ? <span className="text-slate-400 font-bold text-xs">{selectedActivity.data.time}</span> : null}
+                    </p>
+                    {selectedActivity.data.dateStart && selectedActivity.data.dateEnd && (
+                      <p className="mt-0.5 text-xs text-slate-500">
+                        Stay: {selectedActivity.data.dateStart} to {selectedActivity.data.dateEnd}
+                      </p>
+                    )}
+                  </div>
+
+                  <div className="rounded-xl border border-slate-200 dark:border-slate-800 p-4">
+                    <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Payment</p>
+                    <p className="mt-1 text-sm font-bold">${Number(selectedActivity.data.amount ?? 0).toFixed(2)}</p>
+                    <p className="mt-0.5 text-xs text-slate-500">{selectedActivity.data.pax ?? 0} pax</p>
+                    {selectedActivity.data.paymentMethod && (
+                      <p className="mt-0.5 text-xs text-slate-500">Method: {selectedActivity.data.paymentMethod}</p>
+                    )}
+                  </div>
+                </div>
+
+                <div className="mt-6 flex flex-col sm:flex-row gap-3 sm:justify-end">
+                  <button
+                    type="button"
+                    onClick={() => updateBookingStatus('pending')}
+                    disabled={updatingStatus || String(selectedActivity.data.status || '').toLowerCase() === 'pending'}
+                    className="px-4 py-2 rounded-xl text-sm font-bold border border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-800 disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    Mark Pending
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => updateBookingStatus('paid')}
+                    disabled={updatingStatus || String(selectedActivity.data.status || '').toLowerCase() === 'paid'}
+                    className="px-4 py-2 rounded-xl text-sm font-bold bg-emerald-600 text-white hover:bg-emerald-700 disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    Mark Paid
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => updateBookingStatus('canceled')}
+                    disabled={updatingStatus || String(selectedActivity.data.status || '').toLowerCase() === 'canceled'}
+                    className="px-4 py-2 rounded-xl text-sm font-bold bg-rose-600 text-white hover:bg-rose-700 disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    Cancel Booking
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
 
           <div className="bg-blue-600/5 dark:bg-blue-600/10 p-6 rounded-xl border border-blue-600/10 dark:border-blue-600/20 relative overflow-hidden group">
             <div className="absolute -right-4 -top-4 w-24 h-24 bg-blue-600/10 rounded-full blur-2xl group-hover:scale-125 transition-transform"></div>

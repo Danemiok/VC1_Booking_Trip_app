@@ -1,6 +1,6 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Search, Plus, Star, MapPin, Edit, Trash2, X, RefreshCw, Building2, CheckCircle2, Clock, TrendingUp } from 'lucide-react';
+import { Search, Plus, Star, MapPin, Edit, Trash2, X } from 'lucide-react';
 import { apiRequest } from '@/services/api';
 
 type DestinationStatus = 'active' | 'draft';

@@ -821,7 +821,7 @@ const AngkorWatGallery = () => {
   );
 };
 
-const SplitBillFeature = () => {
+const SplitBillFeature = ({ onStartGroupBooking }: { onStartGroupBooking?: () => void }) => {
   return (
     <section className="py-24 px-4 sm:px-6 lg:px-8 bg-slate-50 dark:bg-slate-900/50 overflow-hidden">
       <div className="max-w-7xl mx-auto flex flex-col lg:flex-row items-center gap-16 lg:gap-32">
@@ -859,7 +859,13 @@ const SplitBillFeature = () => {
                 </div>
               ))}
             </div>
-            <button className="w-full sm:w-auto bg-slate-900 dark:bg-white text-white dark:text-slate-900 px-10 py-5 rounded-[2rem] font-bold shadow-2xl transition-all hover:scale-105 active:scale-95">
+            <button
+              type="button"
+              onClick={onStartGroupBooking}
+              className="w-full sm:w-auto bg-slate-900 dark:bg-white text-white dark:text-slate-900 px-10 py-5 rounded-[2rem] font-bold shadow-2xl transition-all hover:scale-105 active:scale-95 disabled:opacity-60 disabled:hover:scale-100"
+              disabled={!onStartGroupBooking}
+              title={!onStartGroupBooking ? 'Group booking is not available here' : undefined}
+            >
               Start Group Booking
             </button>
           </motion.div>
@@ -1002,6 +1008,7 @@ interface DashboardProps {
   onRentalsClick: () => void;
   onActivitiesClick: () => void;
   onSearch?: (query: string, dates: { start: Date | null, end: Date | null }, guests: { adults: number, children: number }) => void;
+  onStartGroupBooking?: () => void;
 }
 
 export const Dashboard: React.FC<DashboardProps> = ({ 
@@ -1012,7 +1019,8 @@ export const Dashboard: React.FC<DashboardProps> = ({
   onHotelsClick,
   onRentalsClick,
   onActivitiesClick,
-  onSearch
+  onSearch,
+  onStartGroupBooking,
 }) => {
   const [location, setLocation] = useState(() => String(tripData?.destination?.name || ''));
   const [searchQuery, setSearchQuery] = useState('');
@@ -1270,7 +1278,7 @@ export const Dashboard: React.FC<DashboardProps> = ({
           <RecommendedForYou onSelect={onSelectRecommendation} />
           <AngkorWatGallery />
           <TrendingDestinations onSelect={onSelectDestination} />
-          <SplitBillFeature />
+          <SplitBillFeature onStartGroupBooking={onStartGroupBooking} />
           <Newsletter />
         </>
       )}

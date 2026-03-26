@@ -17,7 +17,6 @@ import {
 import { useNavigate } from 'react-router-dom';
 import { cn } from '@/utils/utils';
 import { createPromotion } from '@/services/promotionService';
-import { apiRequest } from '@/services/api';
 
 type PromotionServiceCategory = 'hotel' | 'transport';
 

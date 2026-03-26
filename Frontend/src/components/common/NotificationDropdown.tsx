@@ -15,9 +15,11 @@ export interface AdminNotification {
   title: string;
   description: string;
   time: string;
-  type: 'user' | 'booking' | 'system' | 'alert';
+  type: 'user' | 'booking' | 'system' | 'alert' | 'message';
   read: boolean;
   meta?: any;
+  bookingId?: string | null;
+  data?: any;
 }
 
 const notifications: AdminNotification[] = [
@@ -60,8 +62,8 @@ interface NotificationDropdownProps {
   onClose: () => void;
   notifications?: AdminNotification[];
   onNotificationClick?: (notification: AdminNotification) => void;
+  onMarkAsRead?: (id: string) => void;
   onMarkAllAsRead?: () => void;
-  onViewAll?: () => void;
 }
 
 export const NotificationDropdown: React.FC<NotificationDropdownProps> = ({
@@ -69,14 +71,16 @@ export const NotificationDropdown: React.FC<NotificationDropdownProps> = ({
   onClose,
   notifications: notificationsProp,
   onNotificationClick,
+  onMarkAsRead,
   onMarkAllAsRead,
-  onViewAll,
 }) => {
   if (!isOpen) return null;
 
-  const items = notificationsProp ?? notifications;
-  const hasUnread = items.some((n) => !n.read);
-  const isClickable = typeof onNotificationClick === 'function';
+  const [items, setItems] = React.useState<AdminNotification[]>(() => notificationsProp ?? notifications);
+
+  React.useEffect(() => {
+    if (notificationsProp) setItems(notificationsProp);
+  }, [notificationsProp]);
 
   const getIcon = (type: string) => {
     switch (type) {
@@ -84,8 +88,22 @@ export const NotificationDropdown: React.FC<NotificationDropdownProps> = ({
       case 'booking': return <Calendar size={16} className="text-emerald-500" />;
       case 'system': return <CheckCircle2 size={16} className="text-slate-500" />;
       case 'alert': return <AlertCircle size={16} className="text-red-500" />;
+      case 'message': return <UserPlus size={16} className="text-indigo-500" />;
       default: return <Bell size={16} />;
     }
+  };
+
+  const handleMarkAllAsRead = () => {
+    if (onMarkAllAsRead) onMarkAllAsRead();
+    setItems((prev) => prev.map((n) => ({ ...n, read: true })));
+  };
+
+  const handleItemClick = (notif: AdminNotification) => {
+    if (!notif.read) {
+      onMarkAsRead?.(notif.id);
+      setItems((prev) => prev.map((n) => (n.id === notif.id ? { ...n, read: true } : n)));
+    }
+    onNotificationClick?.(notif);
   };
 
   return (
@@ -111,6 +129,7 @@ export const NotificationDropdown: React.FC<NotificationDropdownProps> = ({
                 Mark all as read
               </button>
             )}
+            <button onClick={handleMarkAllAsRead} className="text-[11px] font-bold text-primary hover:underline">Mark all as read</button>
             <button onClick={onClose} className="p-1.5 text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-md transition-colors">
               <X size={16} />
             </button>
@@ -123,7 +142,7 @@ export const NotificationDropdown: React.FC<NotificationDropdownProps> = ({
               {items.map((notif) => (
                 <div 
                   key={notif.id} 
-                  onClick={isClickable ? () => onNotificationClick(notif) : undefined}
+                  onClick={() => handleItemClick(notif)}
                   className={cn(
                     "px-4 py-3 transition-colors flex gap-3",
                     isClickable
