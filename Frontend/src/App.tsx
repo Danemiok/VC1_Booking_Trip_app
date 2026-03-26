@@ -10,8 +10,25 @@ import { AppRoutes } from './routes/AppRoutes';
 import { useAuth } from './context/AuthContext';
 import { ThemeProvider } from './context/ThemeContext';
 
+const resolveInitialView = (): string => {
+  if (typeof window === 'undefined') return 'landing';
+
+  const params = new URLSearchParams(window.location.search);
+  const nextView = params.get('next_view')?.trim();
+  if (nextView) {
+    return nextView;
+  }
+
+  const authTab = params.get('auth');
+  if (authTab === 'login' || authTab === 'register') {
+    return authTab;
+  }
+
+  return 'landing';
+};
+
 const AppContent = () => {
-  const [view, setView] = useState('landing');
+  const [view, setView] = useState<string>(() => resolveInitialView());
   const [activeProfileTab, setActiveProfileTab] = useState<any>('profile');
   const { user, logout } = useAuth();
   const previousUserRef = useRef(user);
@@ -126,6 +143,19 @@ const AppContent = () => {
     void logout();
     setView('landing');
   };
+
+  useEffect(() => {
+    if (!user) return;
+    if (view !== 'login' && view !== 'register') return;
+
+    const nextView =
+      user.role === 'admin'
+        ? 'admin-dashboard'
+        : user.role === 'owner'
+          ? 'owner-dashboard'
+          : 'customer-dashboard';
+    setView(nextView);
+  }, [user, view]);
 
   useEffect(() => {
     // Redirect to home after logout, regardless of where logout was triggered.

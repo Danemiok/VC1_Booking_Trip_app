@@ -41,6 +41,36 @@ interface AuthLayoutProps {
   onTabChange: (tab: 'login' | 'register') => void;
 }
 
+const normalizeBackendOrigin = (value?: string): string | null => {
+  const raw = String(value ?? '').trim();
+  if (!raw) return null;
+  const fallbackBase = typeof window !== 'undefined' ? window.location.origin : 'http://localhost';
+
+  try {
+    const parsed = new URL(raw, fallbackBase);
+    const pathname = parsed.pathname.replace(/\/+$/, '');
+    if (pathname.endsWith('/api')) {
+      parsed.pathname = pathname.slice(0, -4) || '/';
+    }
+    return parsed.origin + parsed.pathname.replace(/\/+$/, '');
+  } catch {
+    return null;
+  }
+};
+
+const resolveGoogleAuthUrl = (activeTab: 'login' | 'register'): string => {
+  const env = (import.meta as any).env ?? {};
+  const backendOrigin =
+    normalizeBackendOrigin(env.VITE_BACKEND_ORIGIN) ||
+    normalizeBackendOrigin(env.VITE_API_PROXY_TARGET) ||
+    normalizeBackendOrigin(env.VITE_API_BASE_URL) ||
+    'http://127.0.0.1:8000';
+
+  const target = new URL('/auth/google/redirect', `${backendOrigin}/`);
+  target.searchParams.set('auth', activeTab);
+  return target.toString();
+};
+
 export const AuthLayout: React.FC<AuthLayoutProps> = ({
   children,
   title,
@@ -52,14 +82,7 @@ export const AuthLayout: React.FC<AuthLayoutProps> = ({
   const { isDarkMode } = useTheme();
   const [currentSlide, setCurrentSlide] = useState(0);
   const [oauthError, setOauthError] = useState('');
-  const apiProxyTarget = (import.meta as any).env?.VITE_API_PROXY_TARGET as string | undefined;
-  const apiBaseUrl = (import.meta as any).env?.VITE_API_BASE_URL as string | undefined;
-  const resolvedApiBaseUrl =
-    apiProxyTarget ||
-    (apiBaseUrl && apiBaseUrl.startsWith('http') ? apiBaseUrl : undefined) ||
-    'http://127.0.0.1:8000';
-  const backendBaseUrl = resolvedApiBaseUrl.replace(/\/$/, '');
-  const googleAuthUrl = `${backendBaseUrl}/auth/google/redirect`;
+  const googleAuthUrl = resolveGoogleAuthUrl(activeTab);
 
   const nextSlide = () => {
     setCurrentSlide((prev) => (prev + 1) % slides.length);

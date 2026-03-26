@@ -82,6 +82,8 @@ const mapApiUserToContextUser = (apiUser: any): User | null => {
 const clearHandledAuthParams = (params: URLSearchParams) => {
   params.delete('access_token');
   params.delete('auth_user');
+  params.delete('next_view');
+  params.delete('auth');
 
   const nextQuery = params.toString();
   const nextUrl = `${window.location.pathname}${nextQuery ? `?${nextQuery}` : ''}${window.location.hash}`;

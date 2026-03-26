@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\User;
 use Carbon\Carbon;
 use Exception;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Log;
@@ -15,19 +16,25 @@ use Laravel\Socialite\Two\InvalidStateException;
 
 class GoogleAuthController extends Controller
 {
-    public function redirect()
+    public function redirect(Request $request)
     {
+        $authTab = $this->resolveAuthTab((string) $request->query('auth', 'login'));
+        $request->session()->put('google_auth_tab', $authTab);
+
         if (!$this->hasGoogleCredentials()) {
             return redirect()->away($this->buildFrontendAuthUrl(
-                'Google sign-in is not configured. Add GOOGLE_CLIENT_ID and GOOGLE_CLIENT_SECRET in Backend/.env.'
+                'Google sign-in is not configured. Add GOOGLE_CLIENT_ID and GOOGLE_CLIENT_SECRET in Backend/.env.',
+                $authTab
             ));
         }
 
         return Socialite::driver('google')->redirect();
     }
 
-    public function callbackGoogle()
+    public function callbackGoogle(Request $request)
     {
+        $authTab = $this->resolveAuthTab((string) $request->session()->pull('google_auth_tab', 'login'));
+
         try {
             try {
                 $googleUser = Socialite::driver('google')->user();
@@ -41,7 +48,8 @@ class GoogleAuthController extends Controller
 
             if ($googleEmail === '') {
                 return redirect()->away($this->buildFrontendAuthUrl(
-                    'Google did not provide an email address for this account.'
+                    'Google did not provide an email address for this account.',
+                    $authTab
                 ));
             }
 
@@ -52,7 +60,8 @@ class GoogleAuthController extends Controller
             $isEmailVerified = data_get($googleUser, 'user.email_verified', data_get($googleUser, 'user.verified_email'));
             if ($isEmailVerified !== null && !$isEmailVerified) {
                 return redirect()->away($this->buildFrontendAuthUrl(
-                    'Your Google email is not verified. Please verify your email and try again.'
+                    'Your Google email is not verified. Please verify your email and try again.',
+                    $authTab
                 ));
             }
 
@@ -118,20 +127,22 @@ class GoogleAuthController extends Controller
 
             if (!$user) {
                 return redirect()->away($this->buildFrontendAuthUrl(
-                    'This Google account is already linked to a different user. Please contact support.'
+                    'This Google account is already linked to a different user. Please contact support.',
+                    $authTab
                 ));
             }
 
             $token = $user->createToken('auth_token')->plainTextToken;
 
-            return redirect()->away($this->buildFrontendSuccessUrl($user, $token));
+            return redirect()->away($this->buildFrontendSuccessUrl($user, $token, $authTab));
         } catch (Exception $e) {
             Log::warning('Google authentication failed.', [
                 'message' => $e->getMessage(),
             ]);
 
             return redirect()->away($this->buildFrontendAuthUrl(
-                'Failed to authenticate with Google. Check GOOGLE_REDIRECT_URI and your Google Cloud OAuth settings.'
+                'Failed to authenticate with Google. Check GOOGLE_REDIRECT_URI and your Google Cloud OAuth settings.',
+                $authTab
             ));
         }
     }
@@ -155,15 +166,15 @@ class GoogleAuthController extends Controller
             && filled($redirect);
     }
 
-    private function buildFrontendAuthUrl(string $message): string
+    private function buildFrontendAuthUrl(string $message, string $authTab = 'login'): string
     {
         return $this->buildFrontendUrl([
-            'auth' => 'login',
+            'auth' => $this->resolveAuthTab($authTab),
             'oauth_error' => $message,
         ]);
     }
 
-    private function buildFrontendSuccessUrl(User $user, string $token): string
+    private function buildFrontendSuccessUrl(User $user, string $token, string $authTab = 'login'): string
     {
         $userPayload = [
             'id' => $user->id,
@@ -183,6 +194,11 @@ class GoogleAuthController extends Controller
             'auth_user' => $userJson,
             'next_view' => $this->resolveNextView($user->role),
         ]);
+    }
+
+    private function resolveAuthTab(string $value): string
+    {
+        return Str::lower(trim($value)) === 'register' ? 'register' : 'login';
     }
 
     private function resolveNextView(string $role): string
