@@ -206,11 +206,11 @@ export const Register: React.FC<RegisterProps> = ({
           )}
         </div>
 
-        {/* {errorMessage && (
+        {errorMessage && (
           <p className="rounded-md border border-rose-400/40 bg-rose-500/10 px-2 py-1.5 text-xs text-rose-600 dark:text-rose-400 max-w-sm mx-auto">
             {errorMessage}
           </p>
-        )} */}
+        )}
 
         <div className="max-w-sm mx-auto">
           <button

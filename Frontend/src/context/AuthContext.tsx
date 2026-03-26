@@ -50,7 +50,7 @@ interface AuthContextType {
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 const normalizeRole = (role: unknown): UserRole | null => {
-  const value = String(role ?? '').toLowerCase();
+  const value = String(role ?? '').trim().toLowerCase();
   if (value === 'admin' || value === 'owner' || value === 'customer') {
     return value;
   }
@@ -90,7 +90,7 @@ const clearHandledAuthParams = (params: URLSearchParams) => {
   window.history.replaceState({}, '', nextUrl);
 };
 
-export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(() => mapApiUserToContextUser(getAuthUser()));
   const [token, setToken] = useState<string | null>(() => getAuthToken());
 
@@ -281,12 +281,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
-};
+}
 
-export const useAuth = (): AuthContextType => {
+export function useAuth(): AuthContextType {
   const context = useContext(AuthContext);
   if (context === undefined) {
     throw new Error('useAuth must be used within an AuthProvider');
   }
   return context;
-};
+}

@@ -150,12 +150,11 @@ export const Login: React.FC<LoginProps> = ({ onSwitchToRegister, onBack, onSucc
           )}
           <a href="#" className="ml-auto text-xs font-medium text-blue-600 hover:underline dark:text-blue-400">Forgot password?</a>
         </div>
-{/* 
         {errorMessage && (
-          // <div className="rounded-md border border-red-400/40 bg-red-500/10 px-2 py-1.5 text-xs text-red-600 dark:text-red-400 max-w-sm mx-auto">
-          //   {errorMessage}
-          // </div>
-        )} */}
+          <div className="rounded-md border border-red-400/40 bg-red-500/10 px-2 py-1.5 text-xs text-red-600 dark:text-red-400 max-w-sm mx-auto">
+            {errorMessage}
+          </div>
+        )}
 
         <div className="max-w-sm mx-auto block">
           <button

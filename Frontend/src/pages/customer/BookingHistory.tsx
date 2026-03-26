@@ -34,8 +34,8 @@ interface BookingHistoryProps {
   onHotelClick: () => void;
   onRentalClick: () => void;
   onGroupPlanningClick: () => void;
-  selectedActivityIds: number[] | undefined;
-  setSelectedActivityIds: React.Dispatch<React.SetStateAction<number[] | undefined>>;
+  selectedActivityIds: number[];
+  setSelectedActivityIds: React.Dispatch<React.SetStateAction<number[]>>;
   tripData: any;
   setTripData: React.Dispatch<React.SetStateAction<any>>;
 }
@@ -92,9 +92,7 @@ export const BookingHistory: React.FC<BookingHistoryProps> = ({
   const [bookingError, setBookingError] = useState<string | null>(null);
   const [bookingSuccess, setBookingSuccess] = useState(false);
 
-  const selectedActivities = availableActivities.filter(a => 
-    selectedActivityIds?.includes(a.id) || false
-  );
+  const selectedActivities = availableActivities.filter((a) => selectedActivityIds.includes(a.id));
   const pricing = calculateTripPricing({ tripData, selectedActivities });
 
   // Function to save booking to database
@@ -265,11 +263,8 @@ export const BookingHistory: React.FC<BookingHistoryProps> = ({
   };
 
   const toggleActivity = (id: number) => {
-    setSelectedActivityIds((prev: number[] | undefined) => {
-      const currentArray = Array.isArray(prev) ? prev : [];
-      return currentArray.includes(id) 
-        ? currentArray.filter(aId => aId !== id) 
-        : [...currentArray, id];
+    setSelectedActivityIds((prev) => {
+      return prev.includes(id) ? prev.filter((aId) => aId !== id) : [...prev, id];
     });
   };
 
@@ -774,7 +769,7 @@ Booked via Cambodia Travel`;
               </div>
               <div className="space-y-4">
                 {availableActivities.map((activity) => {
-                  const isSelected = selectedActivityIds?.includes(activity.id) || false;
+                  const isSelected = selectedActivityIds.includes(activity.id);
                   return (
                     <div 
                       key={activity.id} 
@@ -832,7 +827,7 @@ Booked via Cambodia Travel`;
                   <span className="font-bold text-slate-900 dark:text-white">${pricing.rentalTotal.toLocaleString(undefined, {minimumFractionDigits: 2})}</span>
                 </div>
                 <div className="flex justify-between text-sm">
-                  <span className="text-slate-400">Activities ({selectedActivityIds?.length ?? 0} selected)</span>
+                  <span className="text-slate-400">Activities ({selectedActivityIds.length} selected)</span>
                   <span className="font-bold text-slate-900 dark:text-white">${pricing.activitiesTotal.toLocaleString(undefined, {minimumFractionDigits: 2})}</span>
                 </div>
                 <div className="flex justify-between text-sm">

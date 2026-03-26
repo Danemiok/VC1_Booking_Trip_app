@@ -31,6 +31,7 @@ import OwnerPromotions from '../pages/owner/Promotions';
 import OwnerCreatePromotion from '../pages/owner/CreatePromotion';
 import OwnerAnalytics from '../pages/owner/Analytics';
 import OwnerFinancials from '../pages/owner/Financials';
+import OwnerProfile from '../pages/owner/Profile';
 import OwnerSettings from '../pages/owner/Settings';
 import OwnerRegisterVehicle from '../pages/owner/RegisterVehicle';
 import OwnerPropertyDetail from '../pages/owner/PropertyDetail';
@@ -246,23 +247,6 @@ const OwnerShellInner: React.FC<{ onLogout: () => void }> = ({ onLogout }) => {
 
   const title = getOwnerTitle(location.pathname);
 
-  const headerNotifications: AdminNotification[] = React.useMemo(
-    () =>
-      notifications.map((n) => ({
-        id: String(n.id),
-        title: n.title,
-        description: n.message ?? '',
-        time: formatRelativeTime(n.createdAt),
-        type: n.bookingId ? 'booking' : 'system',
-        read: Boolean(n.readAt),
-        meta: {
-          ownerNotificationId: n.id,
-          bookingId: n.bookingId ?? n?.data?.id ?? null,
-        },
-      })),
-    [notifications],
-  );
-
   // Clicking items in the bell dropdown is intentionally disabled for owners.
   // Owners open details via Overview → Recent Activities (or "View all notifications").
 
@@ -290,11 +274,6 @@ const OwnerShellInner: React.FC<{ onLogout: () => void }> = ({ onLogout }) => {
           user={user}
         />
 
-        <OwnerNotificationModal
-          notification={activeNotification}
-          onClose={closeNotification}
-          onOpenBooking={(bookingId) => navigate(`/bookings?openBookingId=${encodeURIComponent(String(bookingId))}`)}
-        />
         <div className="flex-1 overflow-y-auto">
           <AnimatePresence mode="wait">
             <motion.div
@@ -315,11 +294,7 @@ const OwnerShellInner: React.FC<{ onLogout: () => void }> = ({ onLogout }) => {
 };
 
 const OwnerShell: React.FC<{ onLogout: () => void }> = ({ onLogout }) => {
-  return (
-    <OwnerNotificationsProvider>
-      <OwnerShellInner onLogout={onLogout} />
-    </OwnerNotificationsProvider>
-  );
+  return <OwnerShellInner onLogout={onLogout} />;
 };
 
 const getAdminTitle = (view: AdminView): string => {
@@ -889,6 +864,7 @@ export const AppRoutes: React.FC<AppRoutesProps> = ({
             setView('group-planning');
           }}
           selectedActivityIds={selectedActivityIds}
+          setSelectedActivityIds={setSelectedActivityIds}
           tripData={tripData}
           setTripData={setTripData}
         />
