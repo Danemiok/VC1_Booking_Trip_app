@@ -32,6 +32,10 @@ const AddRoom = () => {
   const [step, setStep] = React.useState(1);
   const [showDeleteModal, setShowDeleteModal] = React.useState(false);
 
+  const goToDestinations = React.useCallback(() => {
+    navigate('/destinations', { replace: true, state: null });
+  }, [navigate]);
+
   const [formData, setFormData] = React.useState({
     name: '',
     type: 'Standard',
@@ -239,15 +243,24 @@ const AddRoom = () => {
     });
   };
 
+  React.useEffect(() => {
+    if (!property) {
+      goToDestinations();
+    }
+  }, [goToDestinations, property]);
+
   if (!property) {
     return (
       <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex items-center justify-center">
         <div className="text-center">
           <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-4">Property not found</h2>
+          <p className="text-sm text-gray-600 dark:text-gray-300 mb-4">Returning to destination list...</p>
           <button
-            onClick={() => navigate('/destinations')}
-            className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+            type="button"
+            onClick={goToDestinations}
+            className="inline-flex items-center gap-2 px-6 py-3 bg-blue-600 text-white rounded-xl font-semibold hover:bg-blue-700 transition-colors shadow-sm"
           >
+            <ArrowLeft size={18} />
             Back to Destinations
           </button>
         </div>
@@ -258,12 +271,14 @@ const AddRoom = () => {
   return (
     <div className="p-8 max-w-[1000px] mx-auto space-y-8">
       {/* Header */}
-      <div className="flex items-center gap-4">
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <button 
-          onClick={() => navigate(`/destinations/${property.id}`, { state: { property } })}
-          className="w-10 h-10 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 flex items-center justify-center text-slate-500 hover:text-blue-600 transition-all"
+          type="button"
+          onClick={goToDestinations}
+          className="inline-flex w-fit items-center gap-2 rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-semibold text-slate-700 transition-all hover:border-blue-200 hover:text-blue-600 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-200 dark:hover:border-blue-700 dark:hover:text-blue-400"
         >
           <ArrowLeft size={20} />
+          <span>Back to Destinations</span>
         </button>
         <div>
           <h3 className="text-2xl font-bold tracking-tight">{roomToEdit ? 'Edit Room' : 'Add New Room'}</h3>

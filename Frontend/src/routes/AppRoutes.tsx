@@ -22,6 +22,7 @@ import { Promotions } from '@/pages/customer/Promotions';
 import { BookTrip } from '@/pages/customer/BookTrip';
 import { CustomerBookings } from '@/pages/customer/CustomerBookings';
 import Payment from '@/pages/customer/Payment';
+import MapPage from '@/pages/MapPage';
 import OwnerDashboard from '@/pages/owner/Dashboard';
 import OwnerDestinations from '@/pages/owner/Destinations';
 import OwnerTransport from '@/pages/owner/Transport';
@@ -72,6 +73,8 @@ interface AppRoutesProps {
   onMarkAllAsRead: () => void;
   activeProfileTab: any;
   selectedHotel: any | null;
+  browseDestination?: any | null;
+  hotelBackView?: string;
   setSelectedHotel: (hotel: any | null) => void;
   selectedActivityIds: number[];
   setSelectedActivityIds: React.Dispatch<React.SetStateAction<number[]>>;
@@ -447,6 +450,8 @@ export const AppRoutes: React.FC<AppRoutesProps> = ({
   onMarkAllAsRead,
   activeProfileTab,
   selectedHotel,
+  browseDestination,
+  hotelBackView,
   setSelectedHotel,
   selectedActivityIds,
   setSelectedActivityIds,
@@ -513,6 +518,7 @@ export const AppRoutes: React.FC<AppRoutesProps> = ({
 
   const customerBookingRoute =
     location.pathname === '/customer/book' || location.pathname === '/customer/bookings';
+  const publicMapRoute = location.pathname === '/map';
 
   if (customerBookingRoute) {
     if (isGuest) {
@@ -530,6 +536,10 @@ export const AppRoutes: React.FC<AppRoutesProps> = ({
     }
 
     return location.pathname === '/customer/book' ? <BookTrip /> : <CustomerBookings />;
+  }
+
+  if (publicMapRoute) {
+    return <MapPage />;
   }
 
   if (user?.role === 'admin') {
@@ -557,6 +567,40 @@ export const AppRoutes: React.FC<AppRoutesProps> = ({
           onSuccess={(nextView) => setView(nextView)}
         />
       );
+    case 'customer-book':
+      if (isGuest) {
+        return (
+          <Login
+            onSwitchToRegister={() => setView('register')}
+            onBack={() => setView('landing')}
+            onSuccess={(nextView) => setView(nextView)}
+          />
+        );
+      }
+
+      if (user?.role !== 'customer') {
+        return <VisitorHome />;
+      }
+
+      return <BookTrip />;
+    case 'customer-bookings':
+      if (isGuest) {
+        return (
+          <Login
+            onSwitchToRegister={() => setView('register')}
+            onBack={() => setView('landing')}
+            onSuccess={(nextView) => setView(nextView)}
+          />
+        );
+      }
+
+      if (user?.role !== 'customer') {
+        return <VisitorHome />;
+      }
+
+      return <CustomerBookings />;
+    case 'map':
+      return <MapPage />;
     case 'profile':
       if (isGuest) {
         return (
@@ -614,7 +658,8 @@ export const AppRoutes: React.FC<AppRoutesProps> = ({
       return (
         <Hotels
           tripData={tripData}
-          onBack={() => setView('trip-planner')}
+          browseDestination={browseDestination}
+          onBack={() => setView(hotelBackView || 'landing')}
           onSelectHotel={handleSelectHotel}
         />
       );
@@ -795,6 +840,9 @@ export const AppRoutes: React.FC<AppRoutesProps> = ({
           onHotelsClick={onHotelsClick}
           onRentalsClick={onRentalsClick}
           onActivitiesClick={onActivitiesClick}
+          onOpenBookTrip={() => setView('customer-book')}
+          onOpenMyBookings={() => setView('customer-bookings')}
+          onRequireLogin={() => setView('login')}
         />
       );
     case 'landing':
@@ -808,6 +856,9 @@ export const AppRoutes: React.FC<AppRoutesProps> = ({
           onHotelsClick={onHotelsClick}
           onRentalsClick={onRentalsClick}
           onActivitiesClick={onActivitiesClick}
+          onOpenBookTrip={() => setView('customer-book')}
+          onOpenMyBookings={() => setView('customer-bookings')}
+          onRequireLogin={() => setView('login')}
         />
       );
   }

@@ -1,6 +1,9 @@
 import React, { createContext, useContext, useEffect, useMemo, useState } from 'react';
 
 type Theme = 'light' | 'dark';
+const THEME_STORAGE_KEY = 'theme';
+const DARK_MODE_STORAGE_KEY = 'darkMode';
+const THEME_CHANGE_EVENT = 'app-theme-change';
 
 interface ThemeContextValue {
   theme: Theme;
@@ -9,16 +12,7 @@ interface ThemeContextValue {
   toggleTheme: () => void;
 }
 
-const THEME_STORAGE_KEY = 'theme';
-
 const ThemeContext = createContext<ThemeContextValue | undefined>(undefined);
-
-const getSystemTheme = (): Theme => {
-  if (typeof window === 'undefined') {
-    return 'light';
-  }
-  return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
-};
 
 const getInitialTheme = (): Theme => {
   if (typeof window === 'undefined') {
@@ -26,11 +20,16 @@ const getInitialTheme = (): Theme => {
   }
 
   const savedTheme = localStorage.getItem(THEME_STORAGE_KEY);
-  if (savedTheme === 'dark' || savedTheme === 'light') {
+  if (savedTheme === 'light' || savedTheme === 'dark') {
     return savedTheme;
   }
 
-  return getSystemTheme();
+  const savedDarkMode = localStorage.getItem(DARK_MODE_STORAGE_KEY);
+  if (savedDarkMode !== null) {
+    return JSON.parse(savedDarkMode) ? 'dark' : 'light';
+  }
+
+  return 'light';
 };
 
 const applyThemeToDocument = (theme: Theme) => {
@@ -54,6 +53,26 @@ export const ThemeProvider: React.FC<React.PropsWithChildren> = ({ children }) =
   useEffect(() => {
     applyThemeToDocument(theme);
     localStorage.setItem(THEME_STORAGE_KEY, theme);
+    localStorage.setItem(DARK_MODE_STORAGE_KEY, JSON.stringify(theme === 'dark'));
+
+    window.dispatchEvent(
+      new CustomEvent(THEME_CHANGE_EVENT, {
+        detail: { theme },
+      }),
+    );
+  }, [theme]);
+
+  useEffect(() => {
+    const handleThemeChange = (event: Event) => {
+      const nextTheme = (event as CustomEvent<{ theme?: Theme }>).detail?.theme;
+
+      if ((nextTheme === 'light' || nextTheme === 'dark') && nextTheme !== theme) {
+        setTheme(nextTheme);
+      }
+    };
+
+    window.addEventListener(THEME_CHANGE_EVENT, handleThemeChange);
+    return () => window.removeEventListener(THEME_CHANGE_EVENT, handleThemeChange);
   }, [theme]);
 
   const value = useMemo<ThemeContextValue>(

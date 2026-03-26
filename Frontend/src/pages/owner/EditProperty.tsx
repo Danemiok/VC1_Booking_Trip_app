@@ -36,6 +36,7 @@ interface DestinationApiRecord {
 }
 
 const DEFAULT_IMAGE = 'https://picsum.photos/seed/updatedproperty/800/600';
+const REQUIRED_DESTINATION_IMAGES = 4;
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL ?? 'http://127.0.0.1:8000/api';
 const API_ORIGIN = /^https?:\/\//i.test(API_BASE_URL)
   ? API_BASE_URL.replace(/\/api\/?$/, '')
@@ -67,6 +68,7 @@ const resolveImageUrl = (value?: string | null) => {
   if (!ASSET_ORIGIN) return normalized;
 
   if (normalized.startsWith('/storage/')) return `${ASSET_ORIGIN}${normalized}`;
+  if (normalized.startsWith('/uploads/')) return `${ASSET_ORIGIN}/storage${normalized}`;
   if (normalized.startsWith('/images/')) return `${ASSET_ORIGIN}/storage${normalized}`;
   if (normalized.startsWith('/destinations/')) return `${ASSET_ORIGIN}/storage${normalized}`;
 
@@ -227,10 +229,26 @@ const EditProperty = () => {
 
     if (e.target.files && e.target.files.length > 0) {
       const files = Array.from(e.target.files) as File[];
+      const currentImageCount = formData.images.length + newImages.length;
+
+      if (currentImageCount + files.length > REQUIRED_DESTINATION_IMAGES) {
+        setErrors((prev) => ({
+          ...prev,
+          images: `Please keep exactly ${REQUIRED_DESTINATION_IMAGES} images.`,
+        }));
+        e.target.value = '';
+        return;
+      }
+
       setNewImages((prev) => [
         ...prev,
         ...files.filter((file) => file.type.startsWith('image/'))
       ]);
+      setErrors((prev) => {
+        const nextErrors = { ...prev };
+        delete nextErrors.images;
+        return nextErrors;
+      });
     }
   };
 
@@ -239,10 +257,20 @@ const EditProperty = () => {
       ...prev,
       images: prev.images.filter((_, i) => i !== index)
     }));
+    setErrors((prev) => {
+      const nextErrors = { ...prev };
+      delete nextErrors.images;
+      return nextErrors;
+    });
   };
 
   const removeNewImage = (index: number) => {
     setNewImages((prev) => prev.filter((_, i) => i !== index));
+    setErrors((prev) => {
+      const nextErrors = { ...prev };
+      delete nextErrors.images;
+      return nextErrors;
+    });
   };
 
   const handleUpdate = async () => {
@@ -250,6 +278,16 @@ const EditProperty = () => {
 
     if (!formData.id) {
       setSubmitError('Property not found.');
+      return;
+    }
+
+    const totalImages = formData.images.length + newImages.length;
+    if (totalImages !== REQUIRED_DESTINATION_IMAGES) {
+      setErrors((prev) => ({
+        ...prev,
+        images: `Please upload exactly ${REQUIRED_DESTINATION_IMAGES} images.`,
+      }));
+      setSubmitError(`Please upload exactly ${REQUIRED_DESTINATION_IMAGES} images and try again.`);
       return;
     }
 
@@ -267,17 +305,11 @@ const EditProperty = () => {
       payload.append('price', String(parseFloat(formData.price)));
       payload.append('rating', formData.rating ? String(parseFloat(formData.rating)) : '0');
       payload.append('status', formData.status);
+      payload.append('replace_gallery', '1');
 
-      const primaryExisting = formData.images[0];
-      const primaryNew = newImages[0];
-
-      if (primaryNew) {
-        payload.append('image', primaryNew);
-      } else if (primaryExisting) {
-        payload.append('image', primaryExisting);
-      }
-
-      formData.images.forEach((img) => payload.append('images[]', img));
+      formData.images
+        .filter((img) => typeof img === 'string' && img.trim().length > 0)
+        .forEach((img) => payload.append('existing_images[]', img));
       newImages.forEach((file) => payload.append('images[]', file));
 
       await apiRequest(`/destinations/${formData.id}`, {

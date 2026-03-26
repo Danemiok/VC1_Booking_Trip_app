@@ -26,6 +26,14 @@ const PropertyDetail = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const property = location.state?.property;
+  const defaultGallery = React.useMemo(
+    () => [
+      'https://picsum.photos/seed/property-detail-cover/1200/800',
+      'https://picsum.photos/seed/property-detail-2/800/600',
+      'https://picsum.photos/seed/property-detail-3/800/600',
+    ],
+    [],
+  );
 
   // Sample room data - in real app this would come from API or state
   const defaultRooms = [
@@ -200,6 +208,21 @@ const PropertyDetail = () => {
     return { city, country };
   })();
 
+  const propertyImages = React.useMemo(() => {
+    const gallery = Array.isArray(property?.images)
+      ? property.images.filter((image: unknown): image is string => typeof image === 'string' && image.trim().length > 0)
+      : [];
+    const coverImage = typeof property?.image === 'string' && property.image.trim().length > 0 ? [property.image] : [];
+    const merged = Array.from(new Set([...coverImage, ...gallery].filter(Boolean)));
+    const fallback = merged.length > 0 ? merged : defaultGallery;
+
+    while (fallback.length < 3) {
+      fallback.push(defaultGallery[fallback.length % defaultGallery.length]);
+    }
+
+    return fallback;
+  }, [defaultGallery, property?.image, property?.images]);
+
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
       {/* Header */}
@@ -227,22 +250,27 @@ const PropertyDetail = () => {
               <div className="grid grid-cols-2 gap-4">
                 <div className="col-span-2">
                   <img 
-                    src={property.image} 
+                    src={propertyImages[0]} 
                     alt={property.name}
                     className="w-full h-96 object-cover rounded-xl"
                   />
                 </div>
                 <img 
-                  src="https://picsum.photos/seed/prop1/400/300" 
-                  alt="Property view 2"
+                  src={propertyImages[1]}
+                  alt={`${property.name} view 2`}
                   className="w-full h-48 object-cover rounded-xl"
                 />
                 <img 
-                  src="https://picsum.photos/seed/prop2/400/300" 
-                  alt="Property view 3"
+                  src={propertyImages[2]}
+                  alt={`${property.name} view 3`}
                   className="w-full h-48 object-cover rounded-xl"
                 />
               </div>
+              {propertyImages.length > 3 && (
+                <p className="mt-3 text-sm font-medium text-gray-500 dark:text-gray-400">
+                  {propertyImages.length} photos available for this destination.
+                </p>
+              )}
             </div>
 
             {/* Property Info */}

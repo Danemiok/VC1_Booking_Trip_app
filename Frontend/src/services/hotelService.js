@@ -1,23 +1,17 @@
 import { apiRequest } from './api';
 
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://127.0.0.1:8000/api';
-
 export const hotelService = {
   // Get all active destinations/hotels from database (public - no authentication required)
   getAllHotels: async () => {
     try {
-      console.log('📍 Fetching destinations from:', `${API_BASE_URL}/hotels-public`);
-      const response = await fetch(`${API_BASE_URL}/hotels-public`);
-      if (!response.ok) {
-        throw new Error(`HTTP ${response.status}: Failed to fetch hotels from server`);
-      }
-      const data = await response.json();
-      console.log('✅ Hotels data received from API:', data);
-      return { data: Array.isArray(data) ? data : [] };
+      const response = await apiRequest('/hotels-public', {
+        method: 'GET',
+      });
+      const data = Array.isArray(response?.data) ? response.data : Array.isArray(response) ? response : [];
+      return { data };
     } catch (error) {
-      console.error('❌ Error fetching hotels from API:', error);
-      console.warn('⚠️ Using empty list as fallback - ensure destinations exist in database');
-      return { data: [] };
+      console.error('Error fetching hotels from API:', error);
+      throw error;
     }
   },
 
@@ -88,4 +82,3 @@ export const hotelService = {
     }
   }
 };
-

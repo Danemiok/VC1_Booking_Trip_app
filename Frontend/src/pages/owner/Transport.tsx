@@ -31,6 +31,48 @@ interface TransportService {
   is_free?: boolean;
 }
 
+const DEFAULT_TRANSPORT_IMAGE =
+  'https://upload.wikimedia.org/wikipedia/commons/a/a2/Traffic_in_Cambodia..JPG';
+
+const resolveTransportImageUrl = (value: unknown): string => {
+  const backendOrigin = (import.meta.env.VITE_BACKEND_ORIGIN || 'http://127.0.0.1:8000').replace(/\/+$/, '');
+  const rawValue = typeof value === 'string' ? value.trim() : '';
+
+  if (!rawValue) {
+    return DEFAULT_TRANSPORT_IMAGE;
+  }
+
+  let normalized = rawValue.replace(/\\/g, '/');
+
+  if (/^https?:\/[^/]/i.test(normalized)) {
+    normalized = normalized.replace(/^([a-z]+:)\/(?!\/)/i, '$1//');
+  }
+
+  if (/^https?:\/\//i.test(normalized)) {
+    return normalized;
+  }
+
+  const relative = normalized.replace(/^\/+/, '');
+
+  if (relative.startsWith('storage/')) {
+    return `${backendOrigin}/${relative}`;
+  }
+
+  if (relative.startsWith('api/files/')) {
+    return `${backendOrigin}/${relative}`;
+  }
+
+  if (relative.startsWith('public/')) {
+    return `${backendOrigin}/storage/${relative.slice('public/'.length)}`;
+  }
+
+  if (relative.startsWith('uploads/') || relative.startsWith('images/')) {
+    return `${backendOrigin}/storage/${relative}`;
+  }
+
+  return `${backendOrigin}/${relative}`;
+};
+
 const Transport = () => {
   const navigate = useNavigate();
   const [searchTerm, setSearchTerm] = React.useState('');
@@ -154,8 +196,6 @@ const Transport = () => {
           },
         }) as { data?: any[] };
 
-        const backendOrigin =
-          import.meta.env.VITE_BACKEND_ORIGIN || 'http://127.0.0.1:8000';
         const mapped = (response?.data ?? []).map((item: any) => {
           const rawType = String(item?.transport_type ?? 'Car Rental');
           const type = rawType === 'Shuttle' ? 'Train' : rawType === 'Other' ? 'Car Rental' : rawType;
@@ -166,12 +206,9 @@ const Transport = () => {
               : rawStatus === 'inactive'
                 ? 'Not working'
                 : rawStatus === 'maintenance'
-                  ? 'Fixing'
-                  : 'Waiting';
-          const rawImage = String(item?.vehicle_photo_url ?? '');
-          const image = rawImage
-            ? (rawImage.startsWith('http') ? rawImage : `${backendOrigin}/${rawImage.replace(/^\/+/, '')}`)
-            : 'https://upload.wikimedia.org/wikipedia/commons/a/a2/Traffic_in_Cambodia..JPG';
+                ? 'Fixing'
+                : 'Waiting';
+          const image = resolveTransportImageUrl(item?.vehicle_photo_url);
           return {
             id: String(item?.transport_id ?? item?.id ?? ''),
             name: String(item?.service_name ?? ''),
@@ -288,14 +325,9 @@ const Transport = () => {
             : rawStatus === 'inactive'
               ? 'Not working'
               : rawStatus === 'maintenance'
-                ? 'Fixing'
-                : 'Waiting';
-        const rawImage = String(item?.vehicle_photo_url ?? editForm.image ?? '');
-        const backendOrigin =
-          import.meta.env.VITE_BACKEND_ORIGIN || 'http://127.0.0.1:8000';
-        const image = rawImage
-          ? (rawImage.startsWith('http') ? rawImage : `${backendOrigin}/${rawImage.replace(/^\/+/, '')}`)
-          : editForm.image;
+              ? 'Fixing'
+              : 'Waiting';
+        const image = resolveTransportImageUrl(item?.vehicle_photo_url ?? editForm.image);
 
         const updatedService: TransportService = {
           ...editing,

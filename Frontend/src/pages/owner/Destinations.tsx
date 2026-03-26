@@ -48,11 +48,21 @@ interface DestinationFormData {
   location: string;
   address: string;
   price: string;
-  image: string;
-  imageFile: File | null;
+  images: string[];
+  imageFiles: File[];
   rating: string;
   status: DestinationStatus;
 }
+
+type DestinationFormField =
+  | 'name'
+  | 'type'
+  | 'description'
+  | 'location'
+  | 'address'
+  | 'price'
+  | 'rating'
+  | 'status';
 
 interface PropertyCardProps {
   property: DestinationItem;
@@ -67,13 +77,15 @@ interface DestinationModalProps {
   isSubmitting: boolean;
   title: string;
   formData: DestinationFormData;
-  imagePreview: string;
+  imagePreviews: string[];
   formErrors: Record<string, string>;
   submitError: string;
   onClose: () => void;
   onSubmit: () => void;
-  onFieldChange: (field: keyof DestinationFormData, value: string) => void;
+  onFieldChange: (field: DestinationFormField, value: string) => void;
   onImageChange: (event: React.ChangeEvent<HTMLInputElement>) => void;
+  onRemoveExistingImage: (index: number) => void;
+  onRemoveNewImage: (index: number) => void;
 }
 
 const DEFAULT_IMAGE = 'https://picsum.photos/seed/destination-default/800/600';
@@ -95,6 +107,11 @@ const PROPERTY_TYPES = [
   'Camp',
 ];
 
+const REQUIRED_DESTINATION_IMAGES = 4;
+const ALLOWED_IMAGE_MIME_TYPES = new Set(['image/jpeg', 'image/png', 'image/webp']);
+const ALLOWED_IMAGE_EXTENSIONS = ['.jpg', '.jpeg', '.png', '.webp'];
+const MAX_IMAGE_SIZE_BYTES = 10 * 1024 * 1024;
+
 const createEmptyFormData = (): DestinationFormData => ({
   name: '',
   type: 'Boutique Hotel',
@@ -102,8 +119,8 @@ const createEmptyFormData = (): DestinationFormData => ({
   location: '',
   address: '',
   price: '',
-  image: '',
-  imageFile: null,
+  images: [],
+  imageFiles: [],
   rating: '',
   status: 'active',
 });
@@ -119,6 +136,25 @@ const getErrorMessage = (error: any, fallback: string) => {
   return fallback;
 };
 
+const getValidationErrors = (error: any): Record<string, string> => {
+  const rawErrors = error?.errors ?? error?.data?.errors;
+  if (!rawErrors || typeof rawErrors !== 'object') return {};
+
+  return Object.entries(rawErrors).reduce<Record<string, string>>((accumulator, [field, messages]) => {
+    const normalizedField =
+      field.startsWith('images') || field.startsWith('image') || field.startsWith('existing_images')
+        ? 'images'
+        : field.split('.')[0];
+    const message = Array.isArray(messages) ? messages[0] : messages;
+
+    if (typeof message === 'string' && message.trim() && !accumulator[normalizedField]) {
+      accumulator[normalizedField] = message;
+    }
+
+    return accumulator;
+  }, {});
+};
+
 const resolveImageUrl = (value?: string | null) => {
   if (!value) return '';
   const cleaned = value.replace(/\\/g, '/');
@@ -130,6 +166,7 @@ const resolveImageUrl = (value?: string | null) => {
   if (!ASSET_ORIGIN) return normalized;
 
   if (normalized.startsWith('/storage/')) return `${ASSET_ORIGIN}${normalized}`;
+  if (normalized.startsWith('/uploads/')) return `${ASSET_ORIGIN}/storage${normalized}`;
   if (normalized.startsWith('/images/')) return `${ASSET_ORIGIN}/storage${normalized}`;
   if (normalized.startsWith('/destinations/')) return `${ASSET_ORIGIN}/storage${normalized}`;
 
@@ -139,13 +176,37 @@ const resolveImageUrl = (value?: string | null) => {
 
 const getStatusLabel = (status: DestinationStatus) => (status === 'active' ? 'ACTIVE' : 'UPCOMING');
 
-const normalizeDestination = (destination: DestinationApiRecord): DestinationItem => {
-  const imageList = Array.isArray(destination.images)
-    ? destination.images.filter((image): image is string => typeof image === 'string' && image.trim().length > 0)
+const buildImageGallery = (primaryImage?: string | null, images?: string[] | null) => {
+  const resolvedPrimary = resolveImageUrl(primaryImage);
+  const resolvedImages = Array.isArray(images)
+    ? images
+        .filter((image): image is string => typeof image === 'string' && image.trim().length > 0)
+        .map((image) => resolveImageUrl(image))
+        .filter(Boolean)
     : [];
-  const image =
-    resolveImageUrl((typeof destination.image === 'string' && destination.image.trim()) || imageList[0] || '') ||
-    DEFAULT_IMAGE;
+
+  const gallery = Array.from(new Set([resolvedPrimary, ...resolvedImages].filter(Boolean)));
+  return gallery.length > 0 ? gallery : [DEFAULT_IMAGE];
+};
+
+const revokePreviewUrls = (urls: string[]) => {
+  urls.forEach((url) => URL.revokeObjectURL(url));
+};
+
+const isAcceptedImageFile = (file: File) => {
+  const normalizedName = file.name.toLowerCase();
+  const hasAllowedExtension = ALLOWED_IMAGE_EXTENSIONS.some((extension) => normalizedName.endsWith(extension));
+  const hasAllowedMimeType = file.type ? ALLOWED_IMAGE_MIME_TYPES.has(file.type) : false;
+
+  return hasAllowedExtension || hasAllowedMimeType;
+};
+
+const normalizeDestination = (destination: DestinationApiRecord): DestinationItem => {
+  const images = buildImageGallery(
+    typeof destination.image === 'string' ? destination.image : '',
+    Array.isArray(destination.images) ? destination.images : [],
+  );
+  const image = images[0] || DEFAULT_IMAGE;
   const totalBookings = Math.max(0, toNumber(destination.total_bookings ?? destination.totalBookings, 0));
 
   return {
@@ -157,7 +218,7 @@ const normalizeDestination = (destination: DestinationApiRecord): DestinationIte
     address: destination.address?.trim() || destination.location?.trim() || '',
     price: toNumber(destination.price, 0),
     image,
-    images: imageList.length > 0 ? imageList.map(resolveImageUrl).filter(Boolean) : [image],
+    images,
     rating: toNumber(destination.rating, 0),
     totalBookings,
     total_bookings: totalBookings,
@@ -174,8 +235,8 @@ const toFormData = (property: DestinationItem): DestinationFormData => ({
   location: property.location,
   address: property.address,
   price: property.price ? String(property.price) : '',
-  image: property.image,
-  imageFile: null,
+  images: property.images,
+  imageFiles: [],
   rating: property.rating ? String(property.rating) : '',
   status: property.status,
 });
@@ -217,6 +278,11 @@ const PropertyCard = ({ property, onView, onEdit, onDelete, activePromotion }: P
         <div className={`absolute top-2 left-2 px-3 py-1 rounded-full text-xs font-semibold text-white ${property.status === 'active' ? 'bg-green-500' : 'bg-yellow-500'}`}>
           {getStatusLabel(property.status)}
         </div>
+        {property.images.length > 1 && (
+          <div className="absolute bottom-2 left-2 rounded-full bg-slate-900/75 px-3 py-1 text-xs font-semibold text-white">
+            {property.images.length} photos
+          </div>
+        )}
         <div className="absolute top-2 right-2 flex space-x-2">
           <button
             className="p-2 rounded-full bg-white/85 text-gray-700 hover:bg-white transition-colors"
@@ -304,15 +370,19 @@ const DestinationModal = ({
   isSubmitting,
   title,
   formData,
-  imagePreview,
+  imagePreviews,
   formErrors,
   submitError,
   onClose,
   onSubmit,
   onFieldChange,
   onImageChange,
+  onRemoveExistingImage,
+  onRemoveNewImage,
 }: DestinationModalProps) => {
   if (!isOpen) return null;
+
+  const totalImages = formData.images.length + imagePreviews.length;
 
   return (
     <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
@@ -363,6 +433,7 @@ const DestinationModal = ({
                   </option>
                 ))}
               </select>
+              {formErrors.type && <p className="mt-1 text-xs text-red-500">{formErrors.type}</p>}
             </div>
 
             <div>
@@ -384,6 +455,7 @@ const DestinationModal = ({
                 className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
                 placeholder="Street address"
               />
+              {formErrors.address && <p className="mt-1 text-xs text-red-500">{formErrors.address}</p>}
             </div>
 
             <div>
@@ -416,20 +488,83 @@ const DestinationModal = ({
             </div>
 
             <div className="md:col-span-2">
-              <label className="block text-sm font-medium text-slate-700 dark:text-slate-200 mb-2">Image Upload</label>
+              <label className="block text-sm font-medium text-slate-700 dark:text-slate-200 mb-2">Image Uploads</label>
               <input
                 type="file"
-                accept="image/*"
+                accept=".jpg,.jpeg,.png,.webp,image/jpeg,image/png,image/webp"
+                multiple
                 onChange={onImageChange}
                 className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
               />
-              {(imagePreview || formData.image) && (
-                <div className="mt-3">
-                  <img
-                    src={imagePreview || formData.image}
-                    alt="Preview"
-                    className="h-36 w-full rounded-xl object-cover border border-slate-200 dark:border-slate-700"
-                  />
+              <p className="mt-2 text-xs text-slate-500 dark:text-slate-400">
+                Upload exactly 4 JPG, PNG, or WebP images up to 10 MB each. The first photo in the gallery becomes the main customer-facing image.
+              </p>
+              {formErrors.images && <p className="mt-1 text-xs text-red-500">{formErrors.images}</p>}
+              {totalImages > 0 && (
+                <div className="mt-4 space-y-4">
+                  {formData.images.length > 0 && (
+                    <div>
+                      <p className="mb-2 text-xs font-semibold uppercase tracking-widest text-slate-400">
+                        Saved images ({formData.images.length})
+                      </p>
+                      <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
+                        {formData.images.map((image, index) => (
+                          <div key={`${image}-${index}`} className="relative overflow-hidden rounded-xl border border-slate-200 dark:border-slate-700">
+                            <img
+                              src={image}
+                              alt={`Saved destination ${index + 1}`}
+                              className="h-28 w-full object-cover"
+                            />
+                            {index === 0 && (
+                              <span className="absolute left-2 top-2 rounded-full bg-black/70 px-2 py-1 text-[10px] font-bold uppercase tracking-widest text-white">
+                                Cover
+                              </span>
+                            )}
+                            <button
+                              type="button"
+                              onClick={() => onRemoveExistingImage(index)}
+                              className="absolute right-2 top-2 flex h-8 w-8 items-center justify-center rounded-full bg-white/90 text-slate-700 shadow hover:bg-white"
+                              aria-label={`Remove saved image ${index + 1}`}
+                            >
+                              <X size={16} />
+                            </button>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  {imagePreviews.length > 0 && (
+                    <div>
+                      <p className="mb-2 text-xs font-semibold uppercase tracking-widest text-slate-400">
+                        New uploads ({imagePreviews.length})
+                      </p>
+                      <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
+                        {imagePreviews.map((image, index) => (
+                          <div key={`${image}-${index}`} className="relative overflow-hidden rounded-xl border border-slate-200 dark:border-slate-700">
+                            <img
+                              src={image}
+                              alt={`New destination ${index + 1}`}
+                              className="h-28 w-full object-cover"
+                            />
+                            {formData.images.length === 0 && index === 0 && (
+                              <span className="absolute left-2 top-2 rounded-full bg-black/70 px-2 py-1 text-[10px] font-bold uppercase tracking-widest text-white">
+                                Cover
+                              </span>
+                            )}
+                            <button
+                              type="button"
+                              onClick={() => onRemoveNewImage(index)}
+                              className="absolute right-2 top-2 flex h-8 w-8 items-center justify-center rounded-full bg-white/90 text-slate-700 shadow hover:bg-white"
+                              aria-label={`Remove new image ${index + 1}`}
+                            >
+                              <X size={16} />
+                            </button>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
                 </div>
               )}
             </div>
@@ -443,6 +578,7 @@ const DestinationModal = ({
                 className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none"
                 placeholder="Describe your destination..."
               />
+              {formErrors.description && <p className="mt-1 text-xs text-red-500">{formErrors.description}</p>}
             </div>
 
             <div>
@@ -455,6 +591,7 @@ const DestinationModal = ({
                 <option value="draft">Upcoming</option>
                 <option value="active">Active</option>
               </select>
+              {formErrors.status && <p className="mt-1 text-xs text-red-500">{formErrors.status}</p>}
             </div>
           </div>
         </div>
@@ -491,7 +628,8 @@ const Destinations = () => {
   const [showFormModal, setShowFormModal] = React.useState(false);
   const [editingProperty, setEditingProperty] = React.useState<DestinationItem | null>(null);
   const [formData, setFormData] = React.useState<DestinationFormData>(createEmptyFormData());
-  const [imagePreview, setImagePreview] = React.useState('');
+  const [imagePreviews, setImagePreviews] = React.useState<string[]>([]);
+  const imagePreviewRef = React.useRef<string[]>([]);
   const [formErrors, setFormErrors] = React.useState<Record<string, string>>({});
   const [submitError, setSubmitError] = React.useState('');
   const [isSubmitting, setIsSubmitting] = React.useState(false);
@@ -525,6 +663,16 @@ const Destinations = () => {
     return () => window.clearTimeout(timeoutId);
   }, [feedbackMessage]);
 
+  React.useEffect(() => {
+    imagePreviewRef.current = imagePreviews;
+  }, [imagePreviews]);
+
+  React.useEffect(() => {
+    return () => {
+      revokePreviewUrls(imagePreviewRef.current);
+    };
+  }, []);
+
   const activeHotelPromotion = React.useMemo(() => {
     try {
       const stored = JSON.parse(localStorage.getItem('ownerPromotions') || '[]');
@@ -556,13 +704,26 @@ const Destinations = () => {
     navigate(`/destinations/${property.id}`, { state: { property } });
   };
 
+  const clearImagePreviews = React.useCallback(() => {
+    setImagePreviews((previous) => {
+      revokePreviewUrls(previous);
+      return [];
+    });
+  }, []);
+
+  const resetFormModalState = React.useCallback(() => {
+    clearImagePreviews();
+    setShowFormModal(false);
+    setEditingProperty(null);
+    setFormData(createEmptyFormData());
+    setFormErrors({});
+    setSubmitError('');
+  }, [clearImagePreviews]);
+
   const handleOpenCreate = () => {
     setEditingProperty(null);
     setFormData(createEmptyFormData());
-    if (imagePreview) {
-      URL.revokeObjectURL(imagePreview);
-    }
-    setImagePreview('');
+    clearImagePreviews();
     setFormErrors({});
     setSubmitError('');
     setShowFormModal(true);
@@ -571,10 +732,7 @@ const Destinations = () => {
   const handleOpenEdit = (property: DestinationItem) => {
     setEditingProperty(property);
     setFormData(toFormData(property));
-    if (imagePreview) {
-      URL.revokeObjectURL(imagePreview);
-    }
-    setImagePreview('');
+    clearImagePreviews();
     setFormErrors({});
     setSubmitError('');
     setShowFormModal(true);
@@ -582,18 +740,10 @@ const Destinations = () => {
 
   const handleCloseForm = () => {
     if (isSubmitting) return;
-    if (imagePreview) {
-      URL.revokeObjectURL(imagePreview);
-    }
-    setImagePreview('');
-    setShowFormModal(false);
-    setEditingProperty(null);
-    setFormData(createEmptyFormData());
-    setFormErrors({});
-    setSubmitError('');
+    resetFormModalState();
   };
 
-  const handleFormFieldChange = (field: keyof DestinationFormData, value: string) => {
+  const handleFormFieldChange = (field: DestinationFormField, value: string) => {
     setFormData((previous) => ({
       ...previous,
       [field]: field === 'status' && value === 'active' ? 'active' : field === 'status' ? 'draft' : value,
@@ -608,27 +758,106 @@ const Destinations = () => {
   };
 
   const handleImageChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0] ?? null;
+    const selectedFiles = Array.from(event.target.files ?? []);
+    const currentImageCount = formData.images.length + formData.imageFiles.length;
+    const nextImageCount = currentImageCount + selectedFiles.length;
 
-    if (imagePreview) {
-      URL.revokeObjectURL(imagePreview);
-    }
-
-    if (!file) {
-      setFormData((previous) => ({ ...previous, imageFile: null }));
-      setImagePreview('');
+    if (nextImageCount > REQUIRED_DESTINATION_IMAGES) {
+      setFormErrors((previous) => ({
+        ...previous,
+        images: `Please keep exactly ${REQUIRED_DESTINATION_IMAGES} images.`,
+      }));
+      event.target.value = '';
       return;
     }
 
-    setFormData((previous) => ({ ...previous, imageFile: file }));
-    setImagePreview(URL.createObjectURL(file));
+    const invalidFormatFile = selectedFiles.find((file) => !isAcceptedImageFile(file));
+    if (invalidFormatFile) {
+      setFormErrors((previous) => ({
+        ...previous,
+        images: `Only JPG, PNG, and WebP images are allowed. "${invalidFormatFile.name}" is not supported.`,
+      }));
+      event.target.value = '';
+      return;
+    }
+
+    const oversizedFile = selectedFiles.find((file) => file.size > MAX_IMAGE_SIZE_BYTES);
+    if (oversizedFile) {
+      setFormErrors((previous) => ({
+        ...previous,
+        images: `"${oversizedFile.name}" is larger than 10 MB.`,
+      }));
+      event.target.value = '';
+      return;
+    }
+
+    const files = selectedFiles;
+
+    if (files.length === 0) {
+      event.target.value = '';
+      return;
+    }
+
+    const nextPreviews = files.map((file) => URL.createObjectURL(file));
+
+    setFormData((previous) => ({
+      ...previous,
+      imageFiles: [...previous.imageFiles, ...files],
+    }));
+    setImagePreviews((previous) => [...previous, ...nextPreviews]);
+    setFormErrors((previous) => {
+      if (!previous.images) return previous;
+      const nextErrors = { ...previous };
+      delete nextErrors.images;
+      return nextErrors;
+    });
+    event.target.value = '';
+  };
+
+  const handleRemoveExistingImage = (index: number) => {
+    setFormData((previous) => ({
+      ...previous,
+      images: previous.images.filter((_, imageIndex) => imageIndex !== index),
+    }));
+    setFormErrors((previous) => {
+      if (!previous.images) return previous;
+      const nextErrors = { ...previous };
+      delete nextErrors.images;
+      return nextErrors;
+    });
+  };
+
+  const handleRemoveNewImage = (index: number) => {
+    setFormData((previous) => ({
+      ...previous,
+      imageFiles: previous.imageFiles.filter((_, imageIndex) => imageIndex !== index),
+    }));
+
+    setImagePreviews((previous) => {
+      const nextPreviews = [...previous];
+      const [removedPreview] = nextPreviews.splice(index, 1);
+      if (removedPreview) {
+        URL.revokeObjectURL(removedPreview);
+      }
+      return nextPreviews;
+    });
+    setFormErrors((previous) => {
+      if (!previous.images) return previous;
+      const nextErrors = { ...previous };
+      delete nextErrors.images;
+      return nextErrors;
+    });
   };
 
   const validateForm = () => {
     const nextErrors: Record<string, string> = {};
+    const totalImages = formData.images.length + formData.imageFiles.length;
 
     if (!formData.name.trim()) nextErrors.name = 'Destination name is required.';
     if (!formData.location.trim()) nextErrors.location = 'Location is required.';
+    if (totalImages !== REQUIRED_DESTINATION_IMAGES) {
+      nextErrors.images = `Please upload exactly ${REQUIRED_DESTINATION_IMAGES} images.`;
+    }
 
     const price = parseFloat(formData.price);
     if (!formData.price.trim() || !Number.isFinite(price) || price < 0) {
@@ -661,14 +890,11 @@ const Destinations = () => {
     payload.append('price', String(parseFloat(formData.price)));
     payload.append('rating', formData.rating.trim() ? String(parseFloat(formData.rating)) : '0');
     payload.append('status', formData.status);
+    payload.append('replace_gallery', '1');
 
-    if (formData.imageFile) {
-      payload.append('image', formData.imageFile);
-      payload.append('images[]', formData.imageFile);
-    } else if (formData.image.trim()) {
-      payload.append('image', formData.image.trim());
-      payload.append('images[]', formData.image.trim());
-    }
+    const existingImages = formData.images.filter((image) => image.trim().length > 0);
+    existingImages.forEach((image) => payload.append('existing_images[]', image));
+    formData.imageFiles.forEach((file) => payload.append('images[]', file));
 
     if (editingProperty) {
       payload.append('_method', 'PUT');
@@ -680,7 +906,11 @@ const Destinations = () => {
         body: payload,
       });
 
-      const fallbackImage = imagePreview || formData.image.trim() || DEFAULT_IMAGE;
+      const fallbackImages = [
+        ...formData.images,
+        ...imagePreviews,
+      ].filter((image) => typeof image === 'string' && image.trim().length > 0);
+      const fallbackImage = fallbackImages[0] || DEFAULT_IMAGE;
       const fallbackData = {
         id: editingProperty?.id ?? Date.now(),
         name: formData.name.trim(),
@@ -690,7 +920,7 @@ const Destinations = () => {
         address: formData.address.trim(),
         price: parseFloat(formData.price),
         image: fallbackImage,
-        images: fallbackImage ? [fallbackImage] : [],
+        images: fallbackImages,
         rating: formData.rating.trim() ? parseFloat(formData.rating) : 0,
         status: formData.status,
       };
@@ -706,8 +936,18 @@ const Destinations = () => {
       });
 
       setFeedbackMessage(editingProperty ? 'Destination updated successfully.' : 'Destination created successfully.');
-      handleCloseForm();
+      resetFormModalState();
     } catch (error) {
+      const validationErrors = getValidationErrors(error);
+      if (Object.keys(validationErrors).length > 0) {
+        setFormErrors((previous) => ({
+          ...previous,
+          ...validationErrors,
+        }));
+        setSubmitError('Please fix the highlighted fields and try again.');
+        return;
+      }
+
       setSubmitError(
         getErrorMessage(
           error,
@@ -868,13 +1108,15 @@ const Destinations = () => {
           isSubmitting={isSubmitting}
           title={editingProperty ? 'Update Destination' : 'Create Destination'}
           formData={formData}
-          imagePreview={imagePreview}
+          imagePreviews={imagePreviews}
           formErrors={formErrors}
           submitError={submitError}
           onClose={handleCloseForm}
           onSubmit={() => void handleSubmitForm()}
           onFieldChange={handleFormFieldChange}
           onImageChange={handleImageChange}
+          onRemoveExistingImage={handleRemoveExistingImage}
+          onRemoveNewImage={handleRemoveNewImage}
         />
 
         {showDeleteModal && (
