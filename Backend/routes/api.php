@@ -232,6 +232,8 @@ if (app()->environment('local')) {
 
 Route::middleware(['auth:sanctum','role:owner'])->group(function () {
 
+    Route::get('/owner/customers/search', [MessageController::class,'findCustomerByEmail']);
+
     Route::get('/messages', [MessageController::class,'index']);
 
     Route::get('/messages/{customerId}', [MessageController::class,'conversation']);

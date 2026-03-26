@@ -14,11 +14,16 @@ class MessageController extends Controller
      */
     public function index()
     {
-        $messages = Message::where('sender_id', auth()->id())
-            ->orWhere('receiver_id', auth()->id())
-            ->with('sender', 'receiver')
+        $userId = auth()->id();
+        $messages = Message::where('sender_id', $userId)
+            ->orWhere('receiver_id', $userId)
+            ->with(['sender', 'receiver'])
             ->orderBy('created_at', 'desc')
-            ->get();
+            ->get()
+            ->map(function ($m) use ($userId) {
+                $m->is_unread = $m->receiver_id == $userId && !$m->read_at;
+                return $m;
+            });
 
         return response()->json([
             'success' => true,
@@ -26,22 +31,39 @@ class MessageController extends Controller
         ]);
     }
 
+    public function unreadCount()
+    {
+        $userId = auth()->id();
+        $count = Message::where('receiver_id', $userId)
+            ->whereNull('read_at')
+            ->count();
+
+        return response()->json(['unread_count' => $count]);
+    }
+
     /**
      * Show conversation with a specific owner.
      */
     public function conversation($ownerId)
     {
+        $userId = auth()->id();
         $owner = User::findOrFail($ownerId);
 
-        $conversation = Message::where(function ($q) use ($ownerId) {
-                $q->where('sender_id', auth()->id())
+        // Mark incoming messages as read
+        Message::where('sender_id', $ownerId)
+            ->where('receiver_id', $userId)
+            ->whereNull('read_at')
+            ->update(['read_at' => now()]);
+
+        $conversation = Message::where(function ($q) use ($ownerId, $userId) {
+                $q->where('sender_id', $userId)
                   ->where('receiver_id', $ownerId);
             })
-            ->orWhere(function ($q) use ($ownerId) {
+            ->orWhere(function ($q) use ($ownerId, $userId) {
                 $q->where('sender_id', $ownerId)
-                  ->where('receiver_id', auth()->id());
+                  ->where('receiver_id', $userId);
             })
-            ->orderBy('created_at', 'asc')
+            ->orderBy('created_at', 'asc') // Standard chat: Oldest at top, newest at bottom
             ->get();
 
         return response()->json([
@@ -57,13 +79,13 @@ class MessageController extends Controller
     {
         $request->validate([
             'receiver_id' => 'required|exists:users,id',
-            'content' => 'required|string|max:2000',
+            'message' => 'required|string|max:2000',
         ]);
 
         $message = Message::create([
             'sender_id' => auth()->id(),
             'receiver_id' => $request->receiver_id,
-            'content' => $request->content,
+            'message' => $request->message,
         ]);
 
         return response()->json([

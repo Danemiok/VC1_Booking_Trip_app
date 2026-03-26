@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { 
   Search, 
   Plus, 
-  Bell, 
+  Bell,
   Edit, 
   Trash2, 
   Clock,
@@ -30,6 +30,67 @@ interface TransportService {
   price_per_KM?: number;
   is_free?: boolean;
 }
+
+const buildTransportImageCandidates = (rawImage: string) => {
+  const trimmed = rawImage.trim();
+  if (!trimmed) return [];
+
+  const backendOrigin =
+    import.meta.env.VITE_BACKEND_ORIGIN ||
+    import.meta.env.VITE_API_URL ||
+    'http://127.0.0.1:8000';
+
+  const normalized = trimmed.replace(/^\/+/, '');
+  const candidates = new Set<string>();
+
+  if (/^(https?:|data:|blob:)/i.test(trimmed)) {
+    candidates.add(trimmed);
+  } else {
+    candidates.add(`${backendOrigin}/${normalized.replace(/^storage\//, '')}`);
+    candidates.add(`${backendOrigin}/${normalized}`);
+    candidates.add(`http://localhost:8000/${normalized}`);
+    candidates.add(`http://127.0.0.1:8000/${normalized}`);
+    candidates.add(`/${normalized}`);
+    if (normalized.startsWith('storage/')) {
+      candidates.add(`/${normalized.replace(/^storage\//, 'storage/')}`);
+      candidates.add(`/${normalized.replace(/^storage\//, '')}`);
+    }
+  }
+
+  return Array.from(candidates);
+};
+
+const TransportCardImage: React.FC<{ src: string; alt: string; className?: string }> = ({
+  src,
+  alt,
+  className = '',
+}) => {
+  const candidates = React.useMemo(() => buildTransportImageCandidates(src), [src]);
+  const [candidateIndex, setCandidateIndex] = React.useState(0);
+
+  React.useEffect(() => {
+    setCandidateIndex(0);
+  }, [src]);
+
+  if (candidates.length === 0 || candidateIndex >= candidates.length) {
+    return (
+      <div
+        className={`bg-gradient-to-br from-slate-100 via-white to-slate-200 dark:from-slate-800 dark:via-slate-900 dark:to-slate-800 flex items-center justify-center ${className}`}
+      >
+        <span className="text-[11px] font-bold uppercase tracking-widest text-slate-400">No image</span>
+      </div>
+    );
+  }
+
+  return (
+    <img
+      src={candidates[candidateIndex]}
+      alt={alt}
+      className={className}
+      onError={() => setCandidateIndex((prev) => prev + 1)}
+    />
+  );
+};
 
 const Transport = () => {
   const navigate = useNavigate();
@@ -154,8 +215,6 @@ const Transport = () => {
           },
         }) as { data?: any[] };
 
-        const backendOrigin =
-          import.meta.env.VITE_BACKEND_ORIGIN || 'http://127.0.0.1:8000';
         const mapped = (response?.data ?? []).map((item: any) => {
           const rawType = String(item?.transport_type ?? 'Car Rental');
           const type = rawType === 'Shuttle' ? 'Train' : rawType === 'Other' ? 'Car Rental' : rawType;
@@ -169,9 +228,7 @@ const Transport = () => {
                   ? 'Fixing'
                   : 'Waiting';
           const rawImage = String(item?.vehicle_photo_url ?? '');
-          const image = rawImage
-            ? (rawImage.startsWith('http') ? rawImage : `${backendOrigin}/${rawImage.replace(/^\/+/, '')}`)
-            : 'https://upload.wikimedia.org/wikipedia/commons/a/a2/Traffic_in_Cambodia..JPG';
+          const image = rawImage;
           return {
             id: String(item?.transport_id ?? item?.id ?? ''),
             name: String(item?.service_name ?? ''),
@@ -291,11 +348,7 @@ const Transport = () => {
                 ? 'Fixing'
                 : 'Waiting';
         const rawImage = String(item?.vehicle_photo_url ?? editForm.image ?? '');
-        const backendOrigin =
-          import.meta.env.VITE_BACKEND_ORIGIN || 'http://127.0.0.1:8000';
-        const image = rawImage
-          ? (rawImage.startsWith('http') ? rawImage : `${backendOrigin}/${rawImage.replace(/^\/+/, '')}`)
-          : editForm.image;
+        const image = rawImage || editForm.image;
 
         const updatedService: TransportService = {
           ...editing,
@@ -568,8 +621,8 @@ const Transport = () => {
             return (
               <div key={service.id} className="bg-white dark:bg-slate-900 rounded-lg border border-slate-200 dark:border-slate-800 shadow-sm hover:shadow-md transition-shadow">
                 <div className="relative">
-                  <img 
-                    src={service.image} 
+                  <TransportCardImage
+                    src={service.image}
                     alt={service.name}
                     className="w-full h-48 object-cover rounded-t-lg"
                   />
@@ -838,7 +891,11 @@ const Transport = () => {
             <div className="p-6 overflow-y-auto flex-1">
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                 <div className="w-full aspect-video rounded-xl overflow-hidden border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-800">
-                  <img alt={viewing.name} src={viewing.image} className="w-full h-full object-cover" />
+                  <TransportCardImage
+                    alt={viewing.name}
+                    src={viewing.image}
+                    className="w-full h-full object-cover"
+                  />
                 </div>
 
                 <div className="space-y-3">

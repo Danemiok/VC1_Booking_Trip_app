@@ -165,6 +165,11 @@ export async function logout() {
 
   clearAuthToken();
   clearAuthUser();
+  try {
+    sessionStorage.removeItem('pending_message_thread');
+  } catch {
+    // Ignore storage errors during logout cleanup.
+  }
 }
 
 export const authService = {

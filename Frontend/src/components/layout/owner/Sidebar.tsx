@@ -14,14 +14,42 @@ import {
   Grid
 } from 'lucide-react';
 import { cn } from '@/utils/utils';
+import { apiRequest } from '@/services/api';
+import { messageService } from '@/services/messageService';
 
 const Sidebar = () => {
+  const [destinationsCount, setDestinationsCount] = React.useState<number | null>(null);
+  const [unreadMessages, setUnreadMessages] = React.useState<number>(0);
+
+  React.useEffect(() => {
+    const fetchCounts = async () => {
+      try {
+        const [destRes, chatRes] = await Promise.all([
+          apiRequest('/destinations'),
+          messageService.getOwnerUnreadCount()
+        ]);
+        
+        if (destRes?.data) {
+          setDestinationsCount(Array.isArray(destRes.data) ? destRes.data.length : 0);
+        }
+        setUnreadMessages(Number(chatRes?.unread_count ?? 0));
+      } catch (err) {
+        console.error('Sidebar fetch error:', err);
+      }
+    };
+
+    fetchCounts();
+    // Refresh every 30 seconds to keep badges synced
+    const interval = setInterval(fetchCounts, 30000);
+    return () => clearInterval(interval);
+  }, []);
+
   const ownerNav = [
     { icon: LayoutDashboard, label: 'Overview', path: '/' },
-    { icon: MapPin, label: 'Destinations', path: '/destinations' },
+    { icon: MapPin, label: 'Destinations', path: '/destinations', count: destinationsCount },
     { icon: Bus, label: 'Transport', path: '/transport' },
     { icon: CalendarCheck, label: 'Bookings', path: '/bookings' },
-    { icon: MessageSquare, label: 'Messages', path: '/messages' },
+    { icon: MessageSquare, label: 'Messages', path: '/messages', count: unreadMessages > 0 ? unreadMessages : null },
     { icon: Tag, label: 'Promotions', path: '/promotions' },
   ];
 
@@ -59,8 +87,22 @@ const Sidebar = () => {
                 : "text-slate-600 dark:text-slate-400 hover:bg-blue-50 dark:hover:bg-blue-900/20 hover:text-blue-600 dark:hover:text-blue-400"
             )}
           >
-            <item.icon size={20} className={cn("transition-colors", "group-hover:text-blue-600 group-[.bg-blue-600]:text-white")} />
-            <span className="font-semibold text-sm">{item.label}</span>
+            {({ isActive }) => (
+              <>
+                <item.icon size={20} className={cn("transition-colors", "group-hover:text-blue-600 group-[.bg-blue-600]:text-white")} />
+                <span className="font-semibold text-sm flex-1">{item.label}</span>
+                {item.count !== undefined && item.count !== null && (
+                  <span className={cn(
+                    "px-2 py-0.5 rounded-full text-[10px] font-bold",
+                    isActive 
+                      ? "bg-white text-blue-600" 
+                      : "bg-blue-100 text-blue-600 dark:bg-blue-900/40 dark:text-blue-400 group-hover:bg-blue-600 group-hover:text-white"
+                  )}>
+                    {item.count}
+                  </span>
+                )}
+              </>
+            )}
           </NavLink>
         ))}
 

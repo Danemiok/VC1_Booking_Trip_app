@@ -7,8 +7,7 @@ import {
   Camera, 
   CheckCircle2, 
   ChevronRight,
-  ShieldCheck,
-  Plus
+  ShieldCheck
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { cn } from '@/utils/utils';
@@ -30,9 +29,15 @@ const RegisterVehicle = () => {
   });
 
   const fileInputRef = React.useRef<HTMLInputElement | null>(null);
-  const imagePreviewRef = React.useRef<string | null>(null);
   const [imageFile, setImageFile] = React.useState<File | null>(null);
   const [imagePreview, setImagePreview] = React.useState('');
+  const documentInputRef = React.useRef<HTMLInputElement | null>(null);
+  const [activeDocument, setActiveDocument] = React.useState<string | null>(null);
+  const [documents, setDocuments] = React.useState<Record<string, string>>({
+    'Registration Card': '',
+    'Insurance Policy': '',
+    'Technical Inspection': '',
+  });
 
   const [errors, setErrors] = React.useState<Record<string, string>>({});
   const [submitError, setSubmitError] = React.useState('');
@@ -45,6 +50,9 @@ const RegisterVehicle = () => {
     if (!formData.route.trim()) newErrors.route = 'Route is required';
     if (!formData.is_free && (!formData.price_per_KM || parseFloat(formData.price_per_KM) <= 0)) {
       newErrors.price_per_KM = 'Valid price per KM is required';
+    }
+    if (!imageFile && !formData.image.trim()) {
+      newErrors.image = 'Vehicle photo is required';
     }
 
     setErrors(newErrors);
@@ -98,23 +106,63 @@ const RegisterVehicle = () => {
     }
   };
 
-  const onPickPhoto = () => {
+  const onPhotoSelected = (file: File) => {
+
+    const looksLikeImage =
+      file.type.startsWith('image/') ||
+      /\.(png|jpe?g|gif|webp|bmp|svg|heic|heif)$/i.test(file.name);
+
+    if (!looksLikeImage) return;
+
+    const reader = new FileReader();
+    reader.onload = () => {
+      if (typeof reader.result === 'string') {
+        setImageFile(file);
+        setImagePreview(reader.result);
+        setFormData((prev) => ({ ...prev, image: '' }));
+        setErrors((prev) => {
+          const next = { ...prev };
+          delete next.image;
+          return next;
+        });
+      }
+    };
+    reader.readAsDataURL(file);
+  };
+
+  const openPhotoPicker = () => {
     fileInputRef.current?.click();
   };
 
-  const onPhotoSelected = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-    if (!file.type.startsWith('image/')) return;
-
-    if (imagePreviewRef.current) {
-      URL.revokeObjectURL(imagePreviewRef.current);
-    }
-    const nextPreview = URL.createObjectURL(file);
-    imagePreviewRef.current = nextPreview;
-    setImageFile(file);
-    setImagePreview(nextPreview);
+  const clearPhoto = () => {
+    setImageFile(null);
+    setImagePreview('');
     setFormData((prev) => ({ ...prev, image: '' }));
+    setErrors((prev) => {
+      const next = { ...prev };
+      delete next.image;
+      return next;
+    });
+    if (fileInputRef.current) {
+      fileInputRef.current.value = '';
+    }
+  };
+
+  const onPickDocument = (label: string) => {
+    setActiveDocument(label);
+    documentInputRef.current?.click();
+  };
+
+  const onDocumentSelected = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file || !activeDocument) return;
+
+    setDocuments((prev) => ({
+      ...prev,
+      [activeDocument]: file.name,
+    }));
+
+    e.target.value = '';
   };
 
   return (
@@ -266,24 +314,60 @@ const RegisterVehicle = () => {
               type="file"
               accept="image/*"
               className="hidden"
-              onChange={onPhotoSelected}
+              onChange={(e) => {
+                const file = e.target.files?.[0];
+                if (file) onPhotoSelected(file);
+              }}
             />
             <button
               type="button"
-              onClick={onPickPhoto}
-              className="w-full aspect-video bg-slate-50 dark:bg-slate-800 rounded-xl border-2 border-dashed border-slate-200 dark:border-slate-700 overflow-hidden flex flex-col items-center justify-center text-center p-4 hover:bg-blue-50 dark:hover:bg-blue-900/10 transition-all cursor-pointer group"
+              onClick={openPhotoPicker}
+              className={cn(
+                "relative w-full aspect-video rounded-xl border-2 border-dashed overflow-hidden bg-slate-50 dark:bg-slate-800 hover:bg-blue-50 dark:hover:bg-blue-900/10 transition-all",
+                errors.image
+                  ? 'border-red-400 dark:border-red-500'
+                  : 'border-slate-200 dark:border-slate-700'
+              )}
             >
-              {formData.image ? (
-                <img alt="Vehicle" src={formData.image} className="w-full h-full object-cover" />
-              ) : imagePreview ? (
-                <img alt="Vehicle" src={imagePreview} className="w-full h-full object-cover" />
+              {imagePreview ? (
+                <img
+                  alt="Vehicle preview"
+                  src={imagePreview}
+                  className="absolute inset-0 w-full h-full object-cover"
+                />
               ) : (
-                <>
-                  <Plus size={24} className="text-slate-400 group-hover:text-blue-600 mb-2" />
-                  <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Upload Photo</p>
-                </>
+                <div className="absolute inset-0 flex flex-col items-center justify-center text-center px-4">
+                  <Camera size={30} className="text-slate-400 mb-3" />
+                  <p className="text-sm font-semibold text-slate-600 dark:text-slate-300">Upload your own image</p>
+                  <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-2">Click to choose file</p>
+                </div>
+              )}
+              {imagePreview && (
+                <div className="absolute inset-0 bg-black/0 hover:bg-black/10 transition-colors" />
               )}
             </button>
+            <div className="mt-3 flex items-center justify-between gap-3">
+              <p className="text-xs text-slate-500 dark:text-slate-400 truncate">
+                {imageFile?.name || 'No image selected'}
+              </p>
+              <div className="flex items-center gap-2">
+                <button
+                  type="button"
+                  onClick={openPhotoPicker}
+                  className="px-3 py-1.5 rounded-lg bg-blue-600 text-white text-xs font-semibold hover:bg-blue-700"
+                >
+                  Choose Image
+                </button>
+                <button
+                  type="button"
+                  onClick={clearPhoto}
+                  className="px-3 py-1.5 rounded-lg border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 text-xs font-semibold hover:bg-slate-50 dark:hover:bg-slate-800"
+                >
+                  Remove
+                </button>
+              </div>
+            </div>
+            {errors.image && <p className="mt-3 text-xs text-red-500">{errors.image}</p>}
           </div>
 
           <div className="bg-white dark:bg-slate-900 p-6 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm">
@@ -291,6 +375,13 @@ const RegisterVehicle = () => {
               <FileText size={18} className="text-blue-600" />
               Required Documents
             </h4>
+            <input
+              ref={documentInputRef}
+              type="file"
+              accept=".pdf,image/*"
+              className="hidden"
+              onChange={onDocumentSelected}
+            />
             <div className="space-y-4">
               {[
                 { label: 'Registration Card', status: 'pending' },
@@ -298,8 +389,21 @@ const RegisterVehicle = () => {
                 { label: 'Technical Inspection', status: 'pending' },
               ].map((doc, i) => (
                 <div key={i} className="flex items-center justify-between p-3 bg-slate-50 dark:bg-slate-800/50 rounded-xl border border-slate-100 dark:border-slate-800">
-                  <span className="text-xs font-bold text-slate-600 dark:text-slate-400">{doc.label}</span>
-                  <button className="text-[10px] font-bold text-blue-600 uppercase tracking-widest hover:underline">Upload</button>
+                  <div className="min-w-0">
+                    <span className="text-xs font-bold text-slate-600 dark:text-slate-400 block">{doc.label}</span>
+                    {documents[doc.label] && (
+                      <span className="text-[10px] text-emerald-600 dark:text-emerald-400 truncate block mt-1">
+                        {documents[doc.label]}
+                      </span>
+                    )}
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => onPickDocument(doc.label)}
+                    className="text-[10px] font-bold text-blue-600 uppercase tracking-widest hover:underline"
+                  >
+                    Upload
+                  </button>
                 </div>
               ))}
             </div>
