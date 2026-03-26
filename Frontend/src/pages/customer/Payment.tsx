@@ -19,6 +19,7 @@ import { calculateTripPricing } from '@/utils/pricing';
 interface PaymentProps {
   tripData?: any;
   onBackToHome?: () => void;
+  onOpenMessages?: () => void;
   selectedActivityIds?: number[];
 }
 
@@ -52,10 +53,48 @@ const ProcessingStep: React.FC<{ label: string; delay: number }> = ({ label, del
   );
 };
 
-export const Payment: React.FC<PaymentProps> = ({ tripData, onBackToHome, selectedActivityIds = [] }) => {
+type ChatThread = {
+  ownerId?: number | string;
+  ownerEmail?: string;
+  ownerName?: string;
+};
+
+const getBookingOwner = (tripData?: any): ChatThread | null => {
+  const source = tripData?.hotel?.owner || tripData?.rental?.owner || tripData?.owner || tripData?.chatOwner;
+  if (!source) return null;
+
+  const ownerId = source.id ?? source.ownerId ?? source.owner_id ?? source.user_id;
+  if (!ownerId) return null;
+
+  return {
+    ownerId,
+    ownerEmail: source.email ?? source.ownerEmail ?? source.owner_email ?? '',
+    ownerName: source.name ?? source.full_name ?? source.ownerName ?? 'Owner',
+  };
+};
+
+const savePendingMessageThread = (thread: ChatThread) => {
+  sessionStorage.setItem(
+    'pending_message_thread',
+    JSON.stringify({
+      ownerId: thread.ownerId,
+      ownerEmail: thread.ownerEmail || '',
+      ownerName: thread.ownerName || 'Owner',
+    }),
+  );
+};
+
+export const Payment: React.FC<PaymentProps> = ({ tripData, onBackToHome, onOpenMessages, selectedActivityIds = [] }) => {
   const [selectedMethod, setSelectedMethod] = useState<'aba' | 'acleda' | 'wing' | 'amret'>('aba');
   const [paymentStatus, setPaymentStatus] = useState<'idle' | 'scanning' | 'processing' | 'success'>('idle');
   const [showReceipt, setShowReceipt] = useState(false);
+
+  const completePayment = () => {
+    if (chatOwner?.ownerId) {
+      savePendingMessageThread(chatOwner);
+    }
+    setPaymentStatus('success');
+  };
 
   const handlePayment = () => {
     if (selectedMethod === 'aba') {
@@ -63,7 +102,7 @@ export const Payment: React.FC<PaymentProps> = ({ tripData, onBackToHome, select
     } else {
       setPaymentStatus('processing');
       setTimeout(() => {
-        setPaymentStatus('success');
+        completePayment();
       }, 6000);
     }
   };
@@ -71,7 +110,7 @@ export const Payment: React.FC<PaymentProps> = ({ tripData, onBackToHome, select
   const handleScanSuccess = () => {
     setPaymentStatus('processing');
     setTimeout(() => {
-      setPaymentStatus('success');
+      completePayment();
     }, 6000);
   };
 
@@ -132,6 +171,7 @@ export const Payment: React.FC<PaymentProps> = ({ tripData, onBackToHome, select
 
   const selectedActivities = AVAILABLE_ACTIVITIES.filter(a => selectedActivityIds.includes(a.id));
   const pricing = calculateTripPricing({ tripData, selectedActivities });
+  const chatOwner = getBookingOwner(tripData);
 
   const bookingData = {
     title: tripData?.title || "Adventure in Siem Reap",
@@ -217,6 +257,17 @@ export const Payment: React.FC<PaymentProps> = ({ tripData, onBackToHome, select
                 >
                   View Receipt
                 </button>
+                {chatOwner && onOpenMessages && (
+                  <button
+                    onClick={() => {
+                      savePendingMessageThread(chatOwner);
+                      onOpenMessages();
+                    }}
+                    className="w-full sm:w-auto px-8 py-4 bg-blue-600 text-white rounded-2xl font-bold hover:bg-blue-700 transition-all shadow-lg shadow-blue-200 dark:shadow-none"
+                  >
+                    Chat with owner
+                  </button>
+                )}
                 <button 
                   onClick={onBackToHome}
                   className="w-full sm:w-auto px-8 py-4 bg-blue-600 text-white rounded-2xl font-bold hover:bg-blue-700 transition-all shadow-lg shadow-blue-200 dark:shadow-none"

@@ -127,6 +127,7 @@ const AppContent = () => {
   const [activeProfileTab, setActiveProfileTab] = useState<any>('profile');
   const { user, logout } = useAuth();
   const previousUserRef = useRef(user);
+  const showPublicChrome = user?.role !== 'owner';
 
   const handleProfileClick = (tab?: any) => {
     if (tab) setActiveProfileTab(tab);
@@ -348,24 +349,26 @@ const AppContent = () => {
   }, [notifications, user?.role, user?.id]);
 
   return (
-    <HelpCenterLayout>
+    <HelpCenterLayout showFloatingButton={user?.role !== 'owner'}>
       <div className="min-h-screen bg-white dark:bg-slate-900 transition-colors duration-300">
-        <Navbar 
-          onLoginClick={() => setView('login')}
-          user={user}
-          onLogout={handleLogout}
-          onProfileClick={handleProfileClick}
-          notifications={notifications}
-          onMarkAsRead={handleMarkAsRead}
-          onMarkAllAsRead={handleMarkAllAsRead}
-          onHotelsClick={() => setView('hotels')}
-          onRentalsClick={() => setView('rentals')}
-          onHomeClick={() => setView('landing')}
-          onBookingsClick={() => setView('bookings')}
-          onTripPlannerClick={handleTripPlannerClick}
-          onActivitiesClick={() => setView('activities')}
-          currentView={view}
-        />
+        {showPublicChrome && (
+          <Navbar 
+            onLoginClick={() => setView('login')}
+            user={user}
+            onLogout={handleLogout}
+            onProfileClick={handleProfileClick}
+            notifications={notifications}
+            onMarkAsRead={handleMarkAsRead}
+            onMarkAllAsRead={handleMarkAllAsRead}
+            onHotelsClick={() => setView('hotels')}
+            onRentalsClick={() => setView('rentals')}
+            onHomeClick={() => setView('landing')}
+            onBookingsClick={() => setView('bookings')}
+            onTripPlannerClick={handleTripPlannerClick}
+            onActivitiesClick={() => setView('activities')}
+            currentView={view}
+          />
+        )}
 
         <AppRoutes 
           view={view}
@@ -388,23 +391,25 @@ const AppContent = () => {
           setTripData={setTripData}
         />
 
-        <Footer
-          onLoginClick={() => setView('login')}
-          onHomeClick={() => {
-            setView('landing');
-          }}
-          onTripPlannerClick={() => {
-            setView('trip-planner');
-          }}
-          onBookingsClick={() => {
-            setView('bookings');
-          }}
-          onHotelsClick={() => setView('hotels')}
-          onRentalsClick={() => setView('rentals')}
-          onActivitiesClick={() => setView('activities')}
-          onTourGuidesClick={handleTourGuidesClick}
-          user={user}
-        />
+        {showPublicChrome && (
+          <Footer
+            onLoginClick={() => setView('login')}
+            onHomeClick={() => {
+              setView('landing');
+            }}
+            onTripPlannerClick={() => {
+              setView('trip-planner');
+            }}
+            onBookingsClick={() => {
+              setView('bookings');
+            }}
+            onHotelsClick={() => setView('hotels')}
+            onRentalsClick={() => setView('rentals')}
+            onActivitiesClick={() => setView('activities')}
+            onTourGuidesClick={handleTourGuidesClick}
+            user={user}
+          />
+        )}
 
         <AnimatePresence>
           {selectedRecommendation && (

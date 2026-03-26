@@ -108,6 +108,15 @@ export const Rentals: React.FC<RentalsProps> = ({ onBack, onSelectVehicle }) => 
             discounted_price: Number(item?.discounted_price ?? price),
             promotion: item?.promotion ?? null,
             original_price: Number(item?.original_price ?? price),
+            owner: item?.owner
+              ? {
+                  id: item.owner.id ?? item.owner.owner_id ?? item.owner.user_id,
+                  name: item.owner.name ?? item.owner.full_name ?? item.owner.ownerName,
+                  email: item.owner.email ?? item.owner.owner_email,
+                }
+              : item?.owner_id
+                ? { id: Number(item.owner_id) }
+                : null,
           };
         })
         .filter((item: any) => item.name);

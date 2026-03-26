@@ -27,13 +27,15 @@ interface ProfileProps {
   notifications: any[];
   onMarkAsRead: (id: number) => void;
   onMarkAllAsRead: () => void;
+  onNotificationClick?: (notification: any) => void;
 }
 
 export const Profile: React.FC<ProfileProps> = ({ 
   initialTab = 'profile',
   notifications,
   onMarkAsRead,
-  onMarkAllAsRead
+  onMarkAllAsRead,
+  onNotificationClick
 }) => {
   const { user, logout, updateUser } = useAuth();
   const { isDarkMode, toggleDarkMode } = useTheme();
@@ -280,7 +282,12 @@ export const Profile: React.FC<ProfileProps> = ({
           <div 
             key={n.id} 
             className={`p-6 flex gap-4 hover:bg-slate-50 dark:hover:bg-slate-700/50 transition-colors cursor-pointer ${!n.read ? 'bg-blue-50/30 dark:bg-blue-900/10' : ''}`}
-            onClick={() => onMarkAsRead(n.id)}
+            onClick={() => {
+              onMarkAsRead(n.id);
+              if (n.type === 'message' && onNotificationClick) {
+                onNotificationClick(n);
+              }
+            }}
           >
             <div className={`w-12 h-12 rounded-2xl flex items-center justify-center flex-shrink-0 ${n.type === 'booking' ? 'bg-emerald-100 text-emerald-600' : 'bg-blue-100 text-blue-600'}`}>
               <Bell className="w-6 h-6" />

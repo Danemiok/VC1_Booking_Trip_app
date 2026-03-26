@@ -21,6 +21,7 @@ import { Profile } from '@/pages/customer/Profile';
 import { Promotions } from '@/pages/customer/Promotions';
 import { BookTrip } from '@/pages/customer/BookTrip';
 import { CustomerBookings } from '@/pages/customer/CustomerBookings';
+import CustomerMessagesPage from '@/pages/customer/Messages';
 import Payment from '@/pages/customer/Payment';
 import OwnerDashboard from '@/pages/owner/Dashboard';
 import OwnerDestinations from '@/pages/owner/Destinations';
@@ -486,6 +487,7 @@ export const AppRoutes: React.FC<AppRoutesProps> = ({
         name: selectedHotel?.name ?? next.hotel?.name,
         location: selectedHotel?.location ?? next.hotel?.location,
         image: selectedHotel?.image ?? next.hotel?.image,
+        owner: selectedHotel?.owner ?? next.hotel?.owner,
         roomType: selection?.roomType ?? next.hotel?.roomType,
         guests: String(selection?.guests ?? next.hotel?.guests ?? prev?.guests ?? '2 Adults'),
         nights: selection?.nights ?? next.hotel?.nights,
@@ -530,6 +532,7 @@ export const AppRoutes: React.FC<AppRoutesProps> = ({
         name: vehicle?.name ?? next.rental?.name,
         features: vehicle?.type ?? next.rental?.features,
         image: vehicle?.image ?? next.rental?.image,
+        owner: vehicle?.owner ?? next.rental?.owner,
         dailyPrice: effectivePrice ?? next.rental?.dailyPrice,
         price: Number.isFinite(effectivePrice) ? effectivePrice : next.rental?.price,
         isBooked: true,
@@ -647,6 +650,19 @@ export const AppRoutes: React.FC<AppRoutesProps> = ({
           notifications={notifications}
           onMarkAsRead={onMarkAsRead}
           onMarkAllAsRead={onMarkAllAsRead}
+          onNotificationClick={(notification) => {
+            if (String(notification?.type) === 'message' && notification?.conversationId) {
+              sessionStorage.setItem(
+                'pending_message_thread',
+                JSON.stringify({
+                  ownerId: notification.conversationId,
+                  ownerEmail: notification.conversationEmail || '',
+                  ownerName: notification.title?.replace(/^New message from\s+/i, '') || 'Owner',
+                }),
+              );
+              setView('messages');
+            }
+          }}
         />
       );
     case 'hotels':
@@ -823,7 +839,16 @@ export const AppRoutes: React.FC<AppRoutesProps> = ({
       return <GroupInvite />;
     case 'payment':
       if (isGuest) return <VisitorHome />;
-      return <Payment tripData={tripData} selectedActivityIds={selectedActivityIds} onBackToHome={() => setView('landing')} />;
+      return (
+        <Payment
+          tripData={tripData}
+          selectedActivityIds={selectedActivityIds}
+          onBackToHome={() => setView('landing')}
+          onOpenMessages={() => setView('messages')}
+        />
+      );
+    case 'messages':
+      return <CustomerMessagesPage />;
     case 'customer-dashboard':
       return (
         <CustomerDashboard
