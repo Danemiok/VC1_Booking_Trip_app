@@ -523,6 +523,7 @@ export const AppRoutes: React.FC<AppRoutesProps> = ({
           : Number(vehicle?.discounted_price ?? basePrice);
       const hasPromotion = Boolean(vehicle?.has_promotion ?? vehicle?.hasPromotion);
       const effectivePrice = hasPromotion && Number.isFinite(discountedPrice) ? discountedPrice : basePrice;
+      const safeDiscountedPrice = hasPromotion && Number.isFinite(discountedPrice) ? discountedPrice : undefined;
       const transportId = vehicle?.transport_id ?? vehicle?.transportId ?? vehicle?.id ?? null;
       next.rental = {
         ...(next.rental || {}),
@@ -539,10 +540,10 @@ export const AppRoutes: React.FC<AppRoutesProps> = ({
         hasPromotion: hasPromotion ?? next.rental?.hasPromotion,
         promotion: vehicle?.promotion ?? next.rental?.promotion,
         originalPrice: vehicle?.original_price ?? basePrice ?? next.rental?.originalPrice,
-        discountedPrice: discountedPrice ?? next.rental?.discountedPrice,
+        discountedPrice: safeDiscountedPrice ?? next.rental?.discountedPrice,
         originalDailyPrice: vehicle?.original_price ?? basePrice ?? next.rental?.originalDailyPrice,
-        discountedDailyPrice: discountedPrice ?? next.rental?.discountedDailyPrice,
-        discountPercentage: vehicle?.discount_percentage ?? next.rental?.discountPercentage,
+        discountedDailyPrice: safeDiscountedPrice ?? next.rental?.discountedDailyPrice,
+        discountPercentage: hasPromotion ? (vehicle?.discount_percentage ?? next.rental?.discountPercentage) : 0,
       };
       return next;
     });

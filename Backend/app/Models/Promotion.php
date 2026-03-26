@@ -16,6 +16,8 @@ class Promotion extends Model
         'description',
         'discount',
         'type',
+        'start_date',
+        'end_date',
         'expiry',
         'is_active',
         'service_category'
@@ -55,14 +57,23 @@ class Promotion extends Model
         }
         
         $now = now();
-        
-        // Check if promotion has started (created_at is considered start date)
-        // and hasn't expired
-        if ($this->expiry) {
-            $expiryDate = \Carbon\Carbon::parse($this->expiry);
-            return $now->lessThanOrEqualTo($expiryDate);
+
+        $startDate = $this->start_date
+            ? \Carbon\Carbon::parse($this->start_date)->startOfDay()
+            : ($this->created_at ? $this->created_at->copy()->startOfDay() : null);
+
+        $endDate = $this->end_date
+            ? \Carbon\Carbon::parse($this->end_date)->endOfDay()
+            : ($this->expiry ? \Carbon\Carbon::parse($this->expiry)->endOfDay() : null);
+
+        if ($startDate && $now->lessThan($startDate)) {
+            return false;
         }
-        
+
+        if ($endDate && $now->greaterThan($endDate)) {
+            return false;
+        }
+
         return true;
     }
 
