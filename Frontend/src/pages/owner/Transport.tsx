@@ -139,22 +139,50 @@ const Transport = () => {
     });
   };
 
-  const activeTransportPromotion = React.useMemo(() => {
-    try {
-      const stored = JSON.parse(localStorage.getItem('ownerPromotions') || '[]');
-      const promos = Array.isArray(stored) ? stored : [];
-      const active = promos.filter(
-        (p: any) => p?.serviceCategory === 'transport' && (p?.status === 'active' || !p?.status),
-      );
-      return active.length > 0 ? active[0] : null;
-    } catch {
-      return null;
-    }
+  const [services, setServices] = React.useState<TransportService[]>([]);
+  const [promotions, setPromotions] = React.useState<any[]>([]);
+  const [loadError, setLoadError] = React.useState('');
+  const allServices = services;
+
+  const toDateStart = React.useCallback((value?: string | null) => {
+    if (!value) return null;
+    const raw = String(value);
+    const normalized = raw.includes('T') ? raw : `${raw}T00:00:00`;
+    const d = new Date(normalized);
+    return Number.isNaN(d.getTime()) ? null : d;
   }, []);
 
-  const computeDiscountedPrice = (basePrice?: number) => {
+  const toDateEnd = React.useCallback((value?: string | null) => {
+    if (!value) return null;
+    const raw = String(value);
+    const normalized = raw.includes('T') ? raw : `${raw}T23:59:59.999`;
+    const d = new Date(normalized);
+    return Number.isNaN(d.getTime()) ? null : d;
+  }, []);
+
+  const isPromotionActive = React.useCallback((promo: any) => {
+    if (!promo?.is_active) return false;
+    const now = new Date();
+    const startRaw = promo.start_date ?? promo.startDate ?? null;
+    const endRaw = promo.end_date ?? promo.endDate ?? promo.expiry ?? null;
+    const startDate = toDateStart(startRaw);
+    const endDate = toDateEnd(endRaw);
+    if (startDate && now < startDate) return false;
+    if (endDate && now > endDate) return false;
+    return true;
+  }, [toDateStart, toDateEnd]);
+
+  const getActivePromotionForTransport = React.useCallback((transportId: string) => {
+    return promotions.find((promo: any) => {
+      if (!isPromotionActive(promo)) return false;
+      const linkedTransports = promo.linked_transports || [];
+      return linkedTransports.includes(parseInt(transportId));
+    }) || null;
+  }, [promotions, isPromotionActive]);
+
+  const computeDiscountedPrice = (basePrice?: number, promotion?: any) => {
     if (typeof basePrice !== 'number') return { finalPrice: undefined as number | undefined, hasDiscount: false };
-    const discount = typeof activeTransportPromotion?.discount === 'string' ? activeTransportPromotion.discount : '';
+    const discount = typeof promotion?.discount === 'string' ? promotion.discount : '';
     if (!discount) return { finalPrice: basePrice, hasDiscount: false };
 
     const trimmed = discount.trim();
@@ -202,6 +230,7 @@ const Transport = () => {
     },
   ];
 
+<<<<<<< HEAD
   const [services, setServices] = React.useState<TransportService[]>([]);
   const [loadError, setLoadError] = React.useState('');
   const allServices = services;
@@ -223,6 +252,8 @@ const Transport = () => {
     }));
   };
 
+=======
+>>>>>>> promotion-feature/vanna
   React.useEffect(() => {
     const loadOwnerTransports = async () => {
       try {
@@ -232,13 +263,21 @@ const Transport = () => {
           return;
         }
 
-        const response = await apiRequest('/owner/transports', {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        }) as { data?: any[] };
+        const [transportsResponse, promotionsResponse] = await Promise.all([
+          apiRequest('/owner/transports', {
+            headers: { Authorization: `Bearer ${token}` },
+          }) as Promise<{ data?: any[] }>,
+          apiRequest('/promotions').catch(() => ({ data: [] })) as Promise<{ data?: any[] }>
+        ]);
 
+<<<<<<< HEAD
         const mapped = (response?.data ?? []).map((item: any) => {
+=======
+        setPromotions(Array.isArray(promotionsResponse?.data) ? promotionsResponse.data : []);
+
+        const backendOrigin = import.meta.env.VITE_BACKEND_ORIGIN || 'http://127.0.0.1:8000';
+        const mapped = (transportsResponse?.data ?? []).map((item: any) => {
+>>>>>>> promotion-feature/vanna
           const rawType = String(item?.transport_type ?? 'Car Rental');
           const type = rawType === 'Shuttle' ? 'Train' : rawType === 'Other' ? 'Car Rental' : rawType;
           const rawStatus = String(item?.status ?? 'pending');
@@ -640,7 +679,8 @@ const Transport = () => {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 mb-8">
           {paginatedServices.map((service) => {
             const TypeIcon = getTypeIcon(service.type);
-            const { finalPrice, hasDiscount } = computeDiscountedPrice(service.price_per_KM);
+            const activePromotion = getActivePromotionForTransport(service.id);
+            const { finalPrice, hasDiscount } = computeDiscountedPrice(service.price_per_KM, activePromotion);
             return (
               <div key={service.id} className="bg-white dark:bg-slate-900 rounded-lg border border-slate-200 dark:border-slate-800 shadow-sm hover:shadow-md transition-shadow">
                 <div className="relative">
@@ -652,9 +692,9 @@ const Transport = () => {
                   <div className={`absolute top-3 right-3 px-2 py-1 rounded-full text-xs font-medium ${getTypeColor(service.type)}`}>
                     {service.type}
                   </div>
-                  {activeTransportPromotion?.discount && (
+                  {activePromotion?.discount && (
                     <div className="absolute top-3 left-3 px-2 py-1 rounded-full text-[10px] font-bold bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-300">
-                      {activeTransportPromotion.discount}
+                      {activePromotion.discount}
                     </div>
                   )}
                 </div>

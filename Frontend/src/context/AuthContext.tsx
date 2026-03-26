@@ -1,14 +1,15 @@
 import React, { createContext, useContext, useMemo, useState, useEffect } from 'react';
 import {
-  getAuthUser,
+  clearAuthToken,
+  clearAuthUser,
   getAuthToken,
-  login,
-  logout,
-  register,
+  getAuthUser,
+  login as loginRequest,
+  logout as logoutRequest,
+  register as registerRequest,
   setAuthUser,
   setAuthToken,
-  authService,
-} from '../services/authService';
+} from '../services/authService.js';
 
 type UserRole = 'customer' | 'owner' | 'admin';
 
@@ -140,7 +141,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     console.log('📡 Login attempt for:', payload.email);
     
     try {
-      const data = await authService.login(payload);
+      const data = await loginRequest(payload);
       
       console.log('📡 Login response:', data);
       
@@ -182,8 +183,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       console.error('❌ Login error:', error);
       // If login fails, clear any stale local session to avoid confusing UX.
       try {
-        authService.clearAuthToken();
-        authService.clearAuthUser();
+        clearAuthToken();
+        clearAuthUser();
       } catch {
         // ignore
       }
@@ -197,7 +198,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     console.log('📡 Register attempt for:', payload.email);
     
     try {
-      const data = await authService.register(payload);
+      const data = await registerRequest(payload);
       
       console.log('📡 Register response:', data);
       
@@ -240,13 +241,13 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const logout = async () => {
     console.log('👋 Logging out');
     try {
-      await authService.logout();
+      await logoutRequest();
     } catch (error) {
       console.error('Logout error:', error);
     } finally {
       setUser(null);
       setToken(null);
-      // authService.logout already clears cached auth data
+      // logoutRequest already clears cached auth data
       console.log('✅ Logged out successfully');
     }
   };
@@ -258,7 +259,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       }
 
       const nextUser = { ...prev, ...updates };
-      authService.setAuthUser(nextUser);
+      setAuthUser(nextUser);
       console.log('📝 User updated:', nextUser);
       return nextUser;
     });
@@ -280,7 +281,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 };
 
-export const useAuth = () => {
+export const useAuth = (): AuthContextType => {
   const context = useContext(AuthContext);
   if (context === undefined) {
     throw new Error('useAuth must be used within an AuthProvider');

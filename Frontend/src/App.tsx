@@ -1,12 +1,18 @@
-import React, { useEffect, useState } from 'react';
-import { AnimatePresence, motion } from 'motion/react';
+import React, { useEffect, useRef, useState } from 'react';
+import { AnimatePresence } from 'motion/react';
 import { Navbar } from './components/layout/Navbar';
 import { Footer } from './components/layout/Footer';
 
+import { DestinationModal } from './components/common/DestinationModal';
+import { RecommendationModal } from './components/common/RecommendationModal';
+import { HelpCenterLayout } from './components/layout/HelpCenterLayout';
 import { AppRoutes } from './routes/AppRoutes';
+<<<<<<< HEAD
 import { Login } from './pages/auth/Login';
 import { Register } from './pages/auth/Register';
 import CustomerMessagesPage from './pages/customer/Messages';
+=======
+>>>>>>> promotion-feature/vanna
 import { useAuth } from './context/AuthContext';
 import { ThemeProvider } from './context/ThemeContext';
 
@@ -126,6 +132,7 @@ const AppContent = () => {
   const [view, setView] = useState('landing');
   const [activeProfileTab, setActiveProfileTab] = useState<any>('profile');
   const { user, logout } = useAuth();
+  const previousUserRef = useRef(user);
 
   const handleProfileClick = (tab?: any) => {
     if (tab) setActiveProfileTab(tab);
@@ -135,9 +142,7 @@ const AppContent = () => {
   const [selectedDestination, setSelectedDestination] = useState<any | null>(null);
   const [selectedHotel, setSelectedHotel] = useState<any | null>(null);
   const [selectedActivityIds, setSelectedActivityIds] = useState<number[]>([]);
-  const isAdminUser = user?.role === 'admin';
-  const isOwnerUser = user?.role === 'owner';
-  
+
   // Initialize real-time dates
   const today = new Date('2026-03-03T00:34:03-08:00');
   const startDate = new Date(today);
@@ -152,8 +157,16 @@ const AppContent = () => {
     title: "Adventure in Siem Reap",
     emoji: "🇰🇭",
     dates: dateRangeString,
+    startDate: startDate,
+    endDate: endDate,
     guests: "2 Adults",
     reference: "#TP-48291",
+    destination: {
+      name: "Siem Reap",
+      country: "Cambodia",
+      description: "Gateway to Angkor Wat and Khmer heritage.",
+      image: "https://images.unsplash.com/photo-1528127269322-539801943592?auto=format&fit=crop&q=80&w=800"
+    },
     hotel: {
       name: "Raffles Grand Hotel d'Angkor",
       location: "1 Vithei Charles de Gaulle, Siem Reap, Cambodia",
@@ -224,34 +237,40 @@ const AppContent = () => {
       setSelectedDestination(dest);
     }
   };
-  const isAuthModalOpen = view === 'login' || view === 'register';
-  const mainView = isAuthModalOpen ? 'landing' : view;
-  const shouldShowFooter = !isAdminUser && user === null;
-  const handleAuthSuccess = (nextView: string) => {
-    setView(nextView);
+
+  const handleTripPlannerClick = () => {
+    setView('trip-planner');
+  };
+
+  const handleTourGuidesClick = () => {
+    // Navigate to landing page and scroll to "Recommended for You" section
+    setView('landing');
+    
+    // Scroll to the recommended section after component mounts
+    setTimeout(() => {
+      const element = document.getElementById('recommended-for-you');
+      if (element) {
+        element.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }
+    }, 100);
+  };
+
+  const handleLogout = () => {
+    void logout();
+    setView('landing');
   };
 
   useEffect(() => {
-    const params = new URLSearchParams(window.location.search);
-    const authView = params.get('auth');
-    const nextView = params.get('next_view');
-
-    if (nextView) {
-      setView(nextView);
-
-      params.delete('next_view');
-      params.delete('auth');
-
-      const nextQuery = params.toString();
-      const nextUrl = `${window.location.pathname}${nextQuery ? `?${nextQuery}` : ''}${window.location.hash}`;
-      window.history.replaceState({}, '', nextUrl);
-      return;
+    // Redirect to home after logout, regardless of where logout was triggered.
+    if (previousUserRef.current && !user) {
+      setSelectedRecommendation(null);
+      setSelectedDestination(null);
+      setSelectedHotel(null);
+      setView('landing');
     }
 
-    if (authView === 'login' || authView === 'register') {
-      setView(authView);
-    }
-  }, []);
+    previousUserRef.current = user;
+  }, [user]);
 
   useEffect(() => {
     if (!user || user.role !== 'customer') return;
@@ -335,12 +354,12 @@ const AppContent = () => {
   }, [notifications, user?.role, user?.id]);
 
   return (
-    <div className="min-h-screen bg-white dark:bg-slate-900 transition-colors duration-300">
-      {!isAdminUser && !isOwnerUser && (
-        <Navbar
+    <HelpCenterLayout>
+      <div className="min-h-screen bg-white dark:bg-slate-900 transition-colors duration-300">
+        <Navbar 
           onLoginClick={() => setView('login')}
           user={user}
-          onLogout={logout}
+          onLogout={handleLogout}
           onProfileClick={handleProfileClick}
           notifications={notifications}
           onMarkAsRead={handleMarkAsRead}
@@ -349,15 +368,13 @@ const AppContent = () => {
           onRentalsClick={() => setView('rentals')}
           onHomeClick={() => setView('landing')}
           onBookingsClick={() => setView('bookings')}
-          onTripPlannerClick={() => setView('trip-planner')}
+          onTripPlannerClick={handleTripPlannerClick}
           onActivitiesClick={() => setView('activities')}
           currentView={view}
         />
-      )}
 
-      {isAdminUser ? (
-        <AppRoutes
-          view={mainView}
+        <AppRoutes 
+          view={view}
           setView={setView}
           onSelectRecommendation={handleSelectRecommendation}
           onSelectDestination={handleSelectDestination}
@@ -376,6 +393,7 @@ const AppContent = () => {
           tripData={tripData}
           setTripData={setTripData}
         />
+<<<<<<< HEAD
       ) : (
         mainView === 'messages' && user?.role === 'customer' ? (
           <CustomerMessagesPage />
@@ -454,6 +472,43 @@ const AppContent = () => {
       </AnimatePresence>
 
     </div>
+=======
+
+        <Footer
+          onLoginClick={() => setView('login')}
+          onHomeClick={() => {
+            setView('landing');
+          }}
+          onTripPlannerClick={() => {
+            setView('trip-planner');
+          }}
+          onBookingsClick={() => {
+            setView('bookings');
+          }}
+          onHotelsClick={() => setView('hotels')}
+          onRentalsClick={() => setView('rentals')}
+          onActivitiesClick={() => setView('activities')}
+          onTourGuidesClick={handleTourGuidesClick}
+          user={user}
+        />
+
+        <AnimatePresence>
+          {selectedRecommendation && (
+            <RecommendationModal 
+              item={selectedRecommendation} 
+              onClose={() => setSelectedRecommendation(null)} 
+            />
+          )}
+          {selectedDestination && (
+            <DestinationModal 
+              dest={selectedDestination} 
+              onClose={() => setSelectedDestination(null)} 
+            />
+          )}
+        </AnimatePresence>
+      </div>
+    </HelpCenterLayout>
+>>>>>>> promotion-feature/vanna
   );
 };
 

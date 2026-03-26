@@ -17,6 +17,7 @@ import {
   Heart,
   ArrowRight
 } from 'lucide-react';
+// @ts-ignore - JS module import
 import { apiRequest } from '../../services/api';
 
 interface RentalsProps {
@@ -57,8 +58,7 @@ export const Rentals: React.FC<RentalsProps> = ({ onBack, onSelectVehicle }) => 
 
     try {
       const response = await apiRequest('/transports') as { data?: any[] };
-      const backendOrigin =
-        import.meta.env.VITE_BACKEND_ORIGIN || 'http://127.0.0.1:8000';
+      const backendOrigin: string = (import.meta as any).env?.VITE_BACKEND_ORIGIN || 'http://127.0.0.1:8000';
 
       const mapped = (response?.data ?? [])
         .map((item: any) => {
@@ -102,6 +102,12 @@ export const Rentals: React.FC<RentalsProps> = ({ onBack, onSelectVehicle }) => 
             image,
             badge: String(type || '').toUpperCase(),
             instantBook: status !== 'inactive',
+            // Promotion data from API
+            has_promotion: Boolean(item?.has_promotion),
+            discount_percentage: Number(item?.discount_percentage ?? 0),
+            discounted_price: Number(item?.discounted_price ?? price),
+            promotion: item?.promotion ?? null,
+            original_price: Number(item?.original_price ?? price),
           };
         })
         .filter((item: any) => item.name);
@@ -569,6 +575,11 @@ export const Rentals: React.FC<RentalsProps> = ({ onBack, onSelectVehicle }) => 
                                   {car.badge}
                                 </span>
                               )}
+                              {(car as any).has_promotion && (
+                                <span className="bg-red-500/90 backdrop-blur-md text-white text-[9px] font-bold px-3 py-1.5 rounded-lg uppercase tracking-widest">
+                                  {(car as any).discount_percentage}% OFF
+                                </span>
+                              )}
                               {car.status && (
                                 <span className="bg-rose-500/90 backdrop-blur-md text-white text-[9px] font-bold px-3 py-1.5 rounded-lg uppercase tracking-widest">
                                   {car.status}
@@ -589,6 +600,14 @@ export const Rentals: React.FC<RentalsProps> = ({ onBack, onSelectVehicle }) => 
                                   <>
                                     <p className="text-xl font-bold text-emerald-600 leading-none">Free</p>
                                     <p className="text-[8px] font-bold text-slate-400 uppercase tracking-widest mt-1">no charge</p>
+                                  </>
+                                ) : (car as any).has_promotion ? (
+                                  <>
+                                    <div className="flex items-baseline gap-1">
+                                      <p className="text-xl font-bold text-blue-600 leading-none">${(car as any).discounted_price?.toFixed(2) || car.price}</p>
+                                      <p className="text-[8px] line-through text-slate-400">${car.price}</p>
+                                    </div>
+                                    <p className="text-[8px] font-bold text-red-600 uppercase tracking-widest mt-1">{(car as any).discount_percentage}% OFF</p>
                                   </>
                                 ) : (
                                   <>

@@ -39,6 +39,9 @@ class Booking extends Model
         'special_requests',
         'destination_id',
         'transport_id',
+        'promotion_id',
+        'original_amount',
+        'discounted_amount',
         // Legacy camelCase columns (kept for backwards compatibility with earlier migrations).
         'dateStart',
         'dateEnd',
@@ -54,10 +57,13 @@ class Booking extends Model
     protected $casts = [
         'amount' => 'decimal:2',
         'total_amount' => 'decimal:2',
+        'original_amount' => 'decimal:2',
+        'discounted_amount' => 'decimal:2',
         'pax' => 'integer',
         'nights' => 'integer',
         'destination_id' => 'integer',
         'transport_id' => 'integer',
+        'promotion_id' => 'integer',
         'rental' => 'array',
         'activities' => 'array',
         'created_at' => 'datetime',

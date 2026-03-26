@@ -17,6 +17,7 @@ export const BookTrip: React.FC = () => {
     id: number;
     name: string;
     location: string;
+    price: number;
   }>>([]);
   const [destinationError, setDestinationError] = React.useState<string | null>(null);
   const [loadingDestinations, setLoadingDestinations] = React.useState(false);
@@ -26,6 +27,7 @@ export const BookTrip: React.FC = () => {
     name: string;
     type: string;
     is_free: boolean;
+    price_per_km?: number;
   }>>([]);
   const [transportError, setTransportError] = React.useState<string | null>(null);
   const [loadingTransports, setLoadingTransports] = React.useState(false);
@@ -37,6 +39,35 @@ export const BookTrip: React.FC = () => {
   const [travelers, setTravelers] = React.useState<number>(2);
   const [submitting, setSubmitting] = React.useState(false);
   const [error, setError] = React.useState<string | null>(null);
+  const [promotions, setPromotions] = React.useState<any[]>([]);
+
+  const toDateStart = React.useCallback((value?: string | null) => {
+    if (!value) return null;
+    const raw = String(value);
+    const normalized = raw.includes('T') ? raw : `${raw}T00:00:00`;
+    const d = new Date(normalized);
+    return Number.isNaN(d.getTime()) ? null : d;
+  }, []);
+
+  const toDateEnd = React.useCallback((value?: string | null) => {
+    if (!value) return null;
+    const raw = String(value);
+    const normalized = raw.includes('T') ? raw : `${raw}T23:59:59.999`;
+    const d = new Date(normalized);
+    return Number.isNaN(d.getTime()) ? null : d;
+  }, []);
+
+  const isPromotionActive = React.useCallback((promo: any) => {
+    if (!promo?.is_active) return false;
+    const now = new Date();
+    const startRaw = promo.start_date ?? promo.startDate ?? null;
+    const endRaw = promo.end_date ?? promo.endDate ?? promo.expiry ?? null;
+    const startDate = toDateStart(startRaw);
+    const endDate = toDateEnd(endRaw);
+    if (startDate && now < startDate) return false;
+    if (endDate && now > endDate) return false;
+    return true;
+  }, [toDateStart, toDateEnd]);
 
   const loadTransports = React.useCallback(async () => {
     setLoadingTransports(true);
@@ -55,6 +86,7 @@ export const BookTrip: React.FC = () => {
             name: String(item?.service_name ?? '').trim(),
             type: String(type),
             is_free: Boolean(item?.is_free ?? item?.isFree ?? false),
+            price_per_km: item?.price_per_km ? Number(item.price_per_km) : undefined,
           };
         })
         .filter((item: any) => item.id && item.name);
@@ -65,6 +97,47 @@ export const BookTrip: React.FC = () => {
     } finally {
       setLoadingTransports(false);
     }
+  }, []);
+
+  // Get active promotion for destination
+  const getActivePromotionForDestination = React.useCallback((destinationId: number) => {
+    return promotions.find((promo: any) => {
+      if (!isPromotionActive(promo)) return false;
+      const linkedDestinations = promo.linked_destinations || [];
+      return linkedDestinations.includes(destinationId);
+    }) || null;
+  }, [promotions, isPromotionActive]);
+
+  // Get active promotion for transport
+  const getActivePromotionForTransport = React.useCallback((transportId: number) => {
+    return promotions.find((promo: any) => {
+      if (!isPromotionActive(promo)) return false;
+      const linkedTransports = promo.linked_transports || [];
+      return linkedTransports.includes(transportId);
+    }) || null;
+  }, [promotions, isPromotionActive]);
+
+  // Calculate discounted price
+  const calculateDiscountedPrice = React.useCallback((basePrice: number, promotion: any) => {
+    if (!promotion?.discount) return basePrice;
+    
+    const discount = promotion.discount.trim();
+    
+    if (discount.endsWith('%')) {
+      const percent = parseFloat(discount.replace('%', ''));
+      if (Number.isFinite(percent)) {
+        return Math.max(0, basePrice - (basePrice * percent / 100));
+      }
+    }
+    
+    if (discount.startsWith('$')) {
+      const amount = parseFloat(discount.replace('$', ''));
+      if (Number.isFinite(amount)) {
+        return Math.max(0, basePrice - amount);
+      }
+    }
+    
+    return basePrice;
   }, []);
 
   React.useEffect(() => {
@@ -78,6 +151,7 @@ export const BookTrip: React.FC = () => {
           id: item.id,
           name: item.name,
           location: item.location,
+          price: item.price || 0,
         }));
         setDestinations(mapped);
       } catch (err: any) {
@@ -87,8 +161,20 @@ export const BookTrip: React.FC = () => {
       }
     };
 
+    // Load promotions
+    const loadPromotions = async () => {
+      try {
+        const response = await apiRequest('/promotions') as { data?: any[] };
+        setPromotions(Array.isArray(response?.data) ? response.data : []);
+      } catch (err) {
+        // Silently fail if promotions can't be loaded
+        console.warn('Failed to load promotions:', err);
+      }
+    };
+
     loadDestinations();
     loadTransports();
+    loadPromotions();
   }, [loadTransports]);
 
   React.useEffect(() => {
@@ -166,13 +252,30 @@ export const BookTrip: React.FC = () => {
     try {
       setSubmitting(true);
 
+      // Calculate the amount based on destination and promotion
+      const destinationPromotion = getActivePromotionForDestination(selectedDestination?.id || 0);
+      const baseDestinationPrice = selectedDestination?.price || 0;
+      const destinationPrice = destinationPromotion 
+        ? calculateDiscountedPrice(baseDestinationPrice, destinationPromotion)
+        : baseDestinationPrice;
+
+      // Calculate transport cost if not free
+      const transportPromotion = getActivePromotionForTransport(selectedTransport?.id || 0);
+      const transportPrice = selectedTransport?.is_free ? 0 : 
+        (selectedTransport?.price_per_km ? selectedTransport.price_per_km * 50 : 0); // Assume 50km average
+      const finalTransportPrice = transportPromotion && transportPrice > 0
+        ? calculateDiscountedPrice(transportPrice, transportPromotion)
+        : transportPrice;
+
+      const totalAmount = destinationPrice + finalTransportPrice;
+
       const payload = {
         id: buildBookingId(),
         guest: user.name,
         service: selectedDestination?.name ?? 'Destination',
         route: selectedDestination?.location ?? '',
         pax: travelers,
-        amount: 0,
+        amount: totalAmount,
         status: 'pending',
         category: 'trip',
         customerEmail: user.email,
@@ -182,6 +285,8 @@ export const BookTrip: React.FC = () => {
         transport_id: selectedTransport?.id,
         travel_date: travelDate,
         vehicleType: selectedTransport?.name,
+        // Promotion tracking
+        promotion_id: destinationPromotion?.id || transportPromotion?.id || null,
       };
 
       await bookingService.createBooking(payload);
@@ -244,11 +349,18 @@ export const BookTrip: React.FC = () => {
             >
               {loadingDestinations && <option value="">Loading destinations...</option>}
               {!loadingDestinations && destinations.length === 0 && <option value="">No destinations available</option>}
-              {destinations.map((hotel) => (
-                <option key={hotel.id} value={hotel.id}>
-                  {hotel.name} — {hotel.location}
-                </option>
-              ))}
+              {destinations.map((hotel) => {
+                const promotion = getActivePromotionForDestination(hotel.id);
+                const discountedPrice = promotion ? calculateDiscountedPrice(hotel.price, promotion) : hotel.price;
+                const hasDiscount = promotion && discountedPrice < hotel.price;
+                
+                return (
+                  <option key={hotel.id} value={hotel.id}>
+                    {hotel.name} — {hotel.location} — ${hasDiscount ? discountedPrice.toFixed(2) : hotel.price.toFixed(2)}
+                    {hasDiscount && ` (was $${hotel.price.toFixed(2)})`}
+                  </option>
+                );
+              })}
             </select>
             {destinationError && (
               <p className="mt-2 text-xs text-red-600">{destinationError}</p>
@@ -265,11 +377,19 @@ export const BookTrip: React.FC = () => {
             >
               {loadingTransports && <option value="">Loading transports...</option>}
               {!loadingTransports && transports.length === 0 && <option value="">No transports available</option>}
-              {transports.map((v) => (
-                <option key={v.id} value={v.id}>
-                  {v.name} — {v.type}{v.is_free ? ' (Free)' : ''}
-                </option>
-              ))}
+              {transports.map((v) => {
+                const promotion = getActivePromotionForTransport(v.id);
+                const basePrice = v.price_per_km || 0;
+                const discountedPrice = promotion && basePrice ? calculateDiscountedPrice(basePrice, promotion) : basePrice;
+                const hasDiscount = promotion && discountedPrice < basePrice;
+                
+                return (
+                  <option key={v.id} value={v.id}>
+                    {v.name} — {v.type}
+                    {v.is_free ? ' (Free)' : basePrice ? ` — $${hasDiscount ? discountedPrice.toFixed(2) : basePrice.toFixed(2)}/km${hasDiscount ? ` (was $${basePrice.toFixed(2)})` : ''}` : ''}
+                  </option>
+                );
+              })}
             </select>
             {transportError && (
               <p className="mt-2 text-xs text-red-600">{transportError}</p>
@@ -297,6 +417,94 @@ export const BookTrip: React.FC = () => {
               />
             </div>
           </div>
+
+          {/* Price Summary */}
+          {(selectedDestination || selectedTransport) && (
+            <div className="bg-slate-50 dark:bg-slate-800/50 rounded-xl p-4 border border-slate-200 dark:border-slate-700">
+              <h3 className="font-bold text-slate-900 dark:text-white mb-3">Price Summary</h3>
+              
+              {selectedDestination && (
+                <div className="mb-3">
+                  <div className="flex justify-between items-center">
+                    <span className="text-sm text-slate-600 dark:text-slate-400">
+                      {selectedDestination.name} (per night)
+                    </span>
+                    <div className="text-right">
+                      {(() => {
+                        const promotion = getActivePromotionForDestination(selectedDestination.id);
+                        const discountedPrice = promotion ? calculateDiscountedPrice(selectedDestination.price, promotion) : selectedDestination.price;
+                        const hasDiscount = promotion && discountedPrice < selectedDestination.price;
+                        
+                        return (
+                          <>
+                            {hasDiscount && (
+                              <span className="text-xs text-slate-400 line-through block">
+                                ${selectedDestination.price.toFixed(2)}
+                              </span>
+                            )}
+                            <span className="font-bold text-slate-900 dark:text-white">
+                              ${discountedPrice.toFixed(2)}
+                            </span>
+                            {promotion && (
+                              <span className="text-xs text-emerald-600 ml-2">
+                                {promotion.discount} OFF
+                              </span>
+                            )}
+                          </>
+                        );
+                      })()}
+                    </div>
+                  </div>
+                </div>
+              )}
+              
+              {selectedTransport && !selectedTransport.is_free && selectedTransport.price_per_km && (
+                <div className="mb-3">
+                  <div className="flex justify-between items-center">
+                    <span className="text-sm text-slate-600 dark:text-slate-400">
+                      {selectedTransport.name} (per km)
+                    </span>
+                    <div className="text-right">
+                      {(() => {
+                        const promotion = getActivePromotionForTransport(selectedTransport.id);
+                        const discountedPrice = promotion ? calculateDiscountedPrice(selectedTransport.price_per_km, promotion) : selectedTransport.price_per_km;
+                        const hasDiscount = promotion && discountedPrice < selectedTransport.price_per_km;
+                        
+                        return (
+                          <>
+                            {hasDiscount && (
+                              <span className="text-xs text-slate-400 line-through block">
+                                ${selectedTransport.price_per_km.toFixed(2)}
+                              </span>
+                            )}
+                            <span className="font-bold text-slate-900 dark:text-white">
+                              ${discountedPrice.toFixed(2)}
+                            </span>
+                            {promotion && (
+                              <span className="text-xs text-emerald-600 ml-2">
+                                {promotion.discount} OFF
+                              </span>
+                            )}
+                          </>
+                        );
+                      })()}
+                    </div>
+                  </div>
+                </div>
+              )}
+              
+              {selectedTransport?.is_free && (
+                <div className="mb-3">
+                  <div className="flex justify-between items-center">
+                    <span className="text-sm text-slate-600 dark:text-slate-400">
+                      {selectedTransport.name}
+                    </span>
+                    <span className="font-bold text-emerald-600">FREE</span>
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
 
           <div className="flex items-center justify-end gap-3">
             <Link

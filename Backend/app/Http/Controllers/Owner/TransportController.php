@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Owner;
 
 use App\Http\Controllers\Controller;
 use App\Models\Transport;
+use App\Services\PromotionService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
@@ -29,7 +30,22 @@ class TransportController extends Controller
     {
         $transports = Transport::query()
             ->orderByDesc('transport_id')
-            ->get();
+            ->get()
+            ->map(function ($transport) {
+                // Get promotion info for this transport
+                $basePrice = floatval($transport->price_per_km ?? 0);
+                $promotionInfo = PromotionService::getBestPromotionForTransport($basePrice, $transport->transport_id);
+
+                return array_merge($transport->toArray(), [
+                    'price_per_km' => $basePrice,
+                    'original_price' => $promotionInfo['original_price'],
+                    'discounted_price' => $promotionInfo['discounted_price'],
+                    'discount_amount' => $promotionInfo['discount_amount'],
+                    'discount_percentage' => $promotionInfo['discount_percentage'],
+                    'has_promotion' => $promotionInfo['promotion'] !== null,
+                    'promotion' => $promotionInfo['promotion'],
+                ]);
+            });
 
         return response()->json([
             'message' => 'Transports fetched successfully',

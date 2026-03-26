@@ -22,18 +22,23 @@ type PromotionStatus = 'active' | 'scheduled' | 'expired';
 
 type Promotion = {
   id: string | number;
-  name: string;
+  name?: string;
+  title?: string;
   type: string;
-  discount_value: number;
-  discount_type: string;
+  discount_value?: number;
+  discount_type?: string;
   discount?: string;
   status: PromotionStatus;
-  reach: string;
-  conversions: string;
+  reach?: string;
+  start_date?: string;
   end: string;
   end_date?: string;
+  expiry?: string;
   service_category?: PromotionServiceCategory;
   created_at?: string;
+  is_active?: boolean;
+  linked_destinations?: number[];
+  linked_transports?: number[];
 };
 
 
@@ -59,7 +64,7 @@ const Promotions = () => {
           type: p.type,
           status: p.is_active ? 'active' : 'expired',
           reach: '-',
-          conversions: '-',
+          start_date: p.start_date || p.created_at || null,
           end: p.expiry || '-',
           end_date: p.expiry,
           code: p.code || '',
@@ -205,7 +210,7 @@ const Promotions = () => {
                 <th className="px-6 py-4">Discount/Offer</th>
                 <th className="px-6 py-4">Status</th>
                 <th className="px-6 py-4">Reach</th>
-                <th className="px-6 py-4">Conversions</th>
+                <th className="px-6 py-4">Start Date</th>
                 <th className="px-6 py-4">End Date</th>
                 <th className="px-6 py-4 text-right">Actions</th>
               </tr>
@@ -214,8 +219,15 @@ const Promotions = () => {
               {filteredPromotions.map((campaign) => (
                 <tr key={campaign.id} className="hover:bg-slate-50/30 dark:hover:bg-slate-800/30 transition-colors group">
                   <td className="px-6 py-4">
-                    <p className="text-sm font-bold">{campaign.name}</p>
+                    <p className="text-sm font-bold">{campaign.name || campaign.title}</p>
                     <p className="text-[10px] text-slate-400 font-bold uppercase tracking-wider">{campaign.id}</p>
+                    {(campaign.linked_destinations?.length || campaign.linked_transports?.length) ? (
+                      <p className="text-[10px] text-emerald-600 font-medium mt-1">
+                        {campaign.linked_destinations?.length ? `${campaign.linked_destinations.length} destinations` : ''}
+                        {campaign.linked_destinations?.length && campaign.linked_transports?.length ? ', ' : ''}
+                        {campaign.linked_transports?.length ? `${campaign.linked_transports.length} transports` : ''}
+                      </p>
+                    ) : null}
                   </td>
                   <td className="px-6 py-4">
                     <span className="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">
@@ -240,7 +252,9 @@ const Promotions = () => {
                     </span>
                   </td>
                   <td className="px-6 py-4 text-sm font-medium">{campaign.reach}</td>
-                  <td className="px-6 py-4 text-sm font-medium">{campaign.conversions}</td>
+                  <td className="px-6 py-4 text-sm font-medium">
+                    {campaign.start_date ? new Date(campaign.start_date).toISOString().slice(0, 10) : '-'}
+                  </td>
                   <td className="px-6 py-4 text-sm font-medium">{campaign.end}</td>
                   <td className="px-6 py-4 text-right">
                     <button className="p-2 text-slate-400 hover:text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded-lg transition-all">

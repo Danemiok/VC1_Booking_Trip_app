@@ -27,6 +27,7 @@ import {
 import { AVAILABLE_ACTIVITIES } from '../../data/activities';
 import { bookingService } from '@/services/bookingService'; // Add this import
 import { useAuth } from '../../context/AuthContext';
+import { calculateTripPricing } from '@/utils/pricing';
 
 interface BookingHistoryProps {
   onPaymentClick: () => void;
@@ -94,16 +95,7 @@ export const BookingHistory: React.FC<BookingHistoryProps> = ({
   const selectedActivities = availableActivities.filter(a => 
     selectedActivityIds?.includes(a.id) || false
   );
-  const activitiesTotal = selectedActivities.reduce((sum, a) => sum + (a.price * a.guests), 0);
-  
-  const financialSummary = {
-    hotel: tripData.hotel.price,
-    rental: tripData.rental.isBooked ? tripData.rental.price : 0,
-    activities: activitiesTotal,
-    taxes: (tripData.hotel.price + (tripData.rental.isBooked ? tripData.rental.price : 0) + activitiesTotal) * 0.05,
-    serviceFee: 5.00,
-    total: tripData.hotel.price + (tripData.rental.isBooked ? tripData.rental.price : 0) + activitiesTotal + ((tripData.hotel.price + (tripData.rental.isBooked ? tripData.rental.price : 0) + activitiesTotal) * 0.05) + 5.00
-  };
+  const pricing = calculateTripPricing({ tripData, selectedActivities });
 
   // Function to save booking to database
   const saveBookingToDatabase = async (opts?: { paymentMethod?: string; paymentDate?: string; paymentTime?: string; phone?: string }) => {
@@ -153,7 +145,7 @@ export const BookingHistory: React.FC<BookingHistoryProps> = ({
         date: opts?.paymentDate ?? null,
         time: opts?.paymentTime ?? null,
         pax: parseInt(tripData.guests) || 2,
-        amount: financialSummary.total,
+        amount: pricing.total,
         status: 'pending',
         category: 'hotel',
         roomType: tripData.hotel.roomType,
@@ -166,7 +158,7 @@ export const BookingHistory: React.FC<BookingHistoryProps> = ({
         // Additional info for reference
         rental: tripData.rental.isBooked ? {
           name: tripData.rental.name,
-          price: tripData.rental.price,
+          price: pricing.rentalTotal,
           pickup: tripData.rental.pickup,
           image: tripData.rental.image
         } : null,
@@ -178,7 +170,16 @@ export const BookingHistory: React.FC<BookingHistoryProps> = ({
           guests: a.guests
         })),
         reference: tripData.reference,
-        totalAmount: financialSummary.total,
+        totalAmount: pricing.total,
+        original_amount: pricing.originalTotal,
+        discounted_amount: pricing.discountTotal,
+        promotion_id: (() => {
+          const hotelPromoId = tripData?.hotel?.promotion?.id ?? null;
+          const rentalPromoId = tripData?.rental?.promotion?.id ?? null;
+          return hotelPromoId && rentalPromoId ? null : hotelPromoId || rentalPromoId || null;
+        })(),
+        destination_id: tripData?.hotel?.destination_id ?? tripData?.hotel?.destinationId ?? null,
+        transport_id: tripData?.rental?.transport_id ?? tripData?.rental?.transportId ?? null,
         nights: tripData.hotel.nights,
         guests: tripData.guests
       };
@@ -379,16 +380,15 @@ export const BookingHistory: React.FC<BookingHistoryProps> = ({
     doc.text("Financial Summary", margin, y);
     y += 8;
     doc.setFontSize(11);
-    const subtotal = tripData.hotel.price + (tripData.rental.isBooked ? tripData.rental.price : 0) + activitiesTotal;
-    doc.text(`Subtotal: $${subtotal.toFixed(2)}`, margin, y);
+    doc.text(`Subtotal: $${pricing.subtotal.toFixed(2)}`, margin, y);
     y += 6;
-    doc.text(`Taxes & Fees: $${financialSummary.taxes.toFixed(2)}`, margin, y);
+    doc.text(`Taxes & Fees: $${pricing.taxes.toFixed(2)}`, margin, y);
     y += 6;
-    doc.text(`Service Fee: $${financialSummary.serviceFee.toFixed(2)}`, margin, y);
+    doc.text(`Service Fee: $${pricing.serviceFee.toFixed(2)}`, margin, y);
     y += 8;
     doc.setFontSize(14);
     doc.setTextColor(37, 99, 235);
-    doc.text(`TOTAL: $${financialSummary.total.toFixed(2)}`, margin, y);
+    doc.text(`TOTAL: $${pricing.total.toFixed(2)}`, margin, y);
     y += 20;
 
     // Footer
@@ -407,7 +407,7 @@ Reference: ${tripData.reference}
 Hotel: ${tripData.hotel.name} - $${tripData.hotel.price.toFixed(2)}
 ${tripData.rental.isBooked ? `Rental: ${tripData.rental.name} - $${tripData.rental.price.toFixed(2)}` : 'Rental: Not Selected'}
 Activities: ${selectedActivities.map(a => `${a.name} ($${a.price.toFixed(2)})`).join(', ')}
-TOTAL: $${financialSummary.total.toFixed(2)}`;
+TOTAL: $${pricing.total.toFixed(2)}`;
       await navigator.clipboard.writeText(shareText);
       setIsCopied(true);
       setTimeout(() => setIsCopied(false), 3000);
@@ -437,6 +437,69 @@ Booked via Cambodia Travel`;
       console.error('Error sharing:', err);
     }
   };
+
+  const supportContent = {
+    help: {
+      title: 'Help Center',
+      subtitle: 'We are here to make your trip smooth and stress-free.',
+      intro:
+        'Welcome to our Help Center! You can contact us via email or live chat. Here you’ll find answers to the most common questions and tips to get the best experience.',
+      details: [
+        'Company: Cambodia Travel (local-first travel platform)',
+        'Email: support@cambodiatravel.com',
+        'Live chat: 24/7 in-app concierge',
+        'Typical response time: under 15 minutes'
+      ],
+      faqsTitle: 'Common FAQs',
+      faqs: [
+        'How do I change my hotel or transport booking?',
+        'Can I add or remove guests after booking?',
+        'Where can I download my receipt?',
+        'How do refunds work if plans change?'
+      ],
+      tipsTitle: 'Helpful tips',
+      tips: [
+        'Double-check dates and guest counts before paying.',
+        'Download your receipt for quick hotel check-in.',
+        'Share your itinerary with fellow travelers.'
+      ]
+    },
+    terms: {
+      title: 'Terms of Service',
+      subtitle: 'A quick summary of the rules that keep everyone safe.',
+      intro:
+        'By booking with us, you agree to use the service responsibly and provide accurate information. These terms protect both travelers and partners.',
+      highlights: [
+        'Provide accurate traveler details and payment information.',
+        'No resale or unauthorized commercial use of bookings.',
+        'Respect property rules and local regulations.',
+        'Changes and cancellations follow the stated policy for each booking.'
+      ]
+    },
+    privacy: {
+      title: 'Privacy Policy',
+      subtitle: 'Clear, simple information about how we handle your data.',
+      intro:
+        'We collect only the data needed to manage bookings, provide support, and improve your experience. We never sell your personal information.',
+      controlsTitle: 'Your controls',
+      controls: [
+        'Request a copy of your data.',
+        'Update communication preferences.',
+        'Ask for account deletion or anonymization.'
+      ]
+    },
+    refund: {
+      title: 'Refund Policy',
+      subtitle: 'Refund eligibility and timelines at a glance.',
+      intro:
+        'Refunds depend on the cancellation window and the provider policy. We will always show the refundable amount before you confirm a cancellation.',
+      details: [
+        'Eligibility: within the provider’s cancellation window.',
+        'Timeline: 5–10 business days after approval.',
+        'Process: submit a request and we handle the provider follow-up.'
+      ]
+    }
+  } as const;
 
   return (
     <div className="min-h-screen bg-slate-50 dark:bg-slate-950 pt-24 pb-20 px-4 sm:px-6 lg:px-8">
@@ -760,23 +823,23 @@ Booked via Cambodia Travel`;
               <div className="space-y-4 mb-8">
                 <div className="flex justify-between text-sm">
                   <span className="text-slate-400">Hotel</span>
-                  <span className="font-bold text-slate-900 dark:text-white">${financialSummary.hotel.toLocaleString(undefined, {minimumFractionDigits: 2})}</span>
+                  <span className="font-bold text-slate-900 dark:text-white">${pricing.hotelTotal.toLocaleString(undefined, {minimumFractionDigits: 2})}</span>
                 </div>
                 <div className="flex justify-between text-sm">
                   <span className="text-slate-400">Rental</span>
-                  <span className="font-bold text-slate-900 dark:text-white">${financialSummary.rental.toLocaleString(undefined, {minimumFractionDigits: 2})}</span>
+                  <span className="font-bold text-slate-900 dark:text-white">${pricing.rentalTotal.toLocaleString(undefined, {minimumFractionDigits: 2})}</span>
                 </div>
                 <div className="flex justify-between text-sm">
                   <span className="text-slate-400">Activities ({selectedActivityIds?.length ?? 0} selected)</span>
-                  <span className="font-bold text-slate-900 dark:text-white">${financialSummary.activities.toLocaleString(undefined, {minimumFractionDigits: 2})}</span>
+                  <span className="font-bold text-slate-900 dark:text-white">${pricing.activitiesTotal.toLocaleString(undefined, {minimumFractionDigits: 2})}</span>
                 </div>
                 <div className="flex justify-between text-sm">
                   <span className="text-slate-400">Taxes & Fees</span>
-                  <span className="font-bold text-slate-900 dark:text-white">${financialSummary.taxes.toLocaleString(undefined, {minimumFractionDigits: 2})}</span>
+                  <span className="font-bold text-slate-900 dark:text-white">${pricing.taxes.toLocaleString(undefined, {minimumFractionDigits: 2})}</span>
                 </div>
                 <div className="flex justify-between text-sm">
                   <span className="text-slate-400">Service Fee</span>
-                  <span className="font-bold text-slate-900 dark:text-white">${financialSummary.serviceFee.toLocaleString(undefined, {minimumFractionDigits: 2})}</span>
+                  <span className="font-bold text-slate-900 dark:text-white">${pricing.serviceFee.toLocaleString(undefined, {minimumFractionDigits: 2})}</span>
                 </div>
               </div>
 
@@ -786,7 +849,7 @@ Booked via Cambodia Travel`;
                   <Wallet className="w-4 h-4 text-blue-600" />
                 </div>
                 <p className="text-4xl font-bold text-slate-900 dark:text-white tracking-tight">
-                  ${financialSummary.total.toLocaleString(undefined, {minimumFractionDigits: 2})}
+                  ${pricing.total.toLocaleString(undefined, {minimumFractionDigits: 2})}
                 </p>
               </div>
 
