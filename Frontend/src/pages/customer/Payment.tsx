@@ -1,5 +1,7 @@
 import React, { useState, useRef } from 'react';
 import { motion } from 'motion/react';
+import jsPDF from 'jspdf';
+import html2canvas from 'html2canvas';
 import { 
   Shield, 
   Lock, 
@@ -11,6 +13,7 @@ import {
   ShieldCheck
 } from 'lucide-react';
 import { AVAILABLE_ACTIVITIES } from '../../data/activities';
+import { calculateTripPricing } from '@/utils/pricing';
 
 interface PaymentProps {
   tripData?: any;
@@ -126,13 +129,7 @@ export const Payment: React.FC<PaymentProps> = ({ tripData, onBackToHome, select
   });
 
   const selectedActivities = AVAILABLE_ACTIVITIES.filter(a => selectedActivityIds.includes(a.id));
-  const activitiesTotal = selectedActivities.reduce((sum, a) => sum + (a.price * a.guests), 0);
-  const hotelPrice = tripData?.hotel?.price || 0;
-  const rentalPrice = tripData?.rental?.isBooked ? (tripData?.rental?.price || 0) : 0;
-  const subtotal = hotelPrice + rentalPrice + activitiesTotal;
-  const taxes = subtotal * 0.05;
-  const serviceFee = 5.00;
-  const total = subtotal + taxes + serviceFee;
+  const pricing = calculateTripPricing({ tripData, selectedActivities });
 
   const bookingData = {
     title: tripData?.title || "Adventure in Siem Reap",
@@ -141,10 +138,10 @@ export const Payment: React.FC<PaymentProps> = ({ tripData, onBackToHome, select
     details: `${tripData?.guests || '2 Adults'} • ${tripData?.hotel?.roomType || 'Deluxe Room'}`,
     image: tripData?.hotel?.image || "https://images.unsplash.com/photo-1542314831-068cd1dbfeeb?auto=format&fit=crop&q=80&w=800",
     pricing: {
-      subtotal,
-      taxes,
-      serviceFee,
-      total
+      subtotal: pricing.subtotal,
+      taxes: pricing.taxes,
+      serviceFee: pricing.serviceFee,
+      total: pricing.total
     }
   };
 
@@ -409,7 +406,7 @@ export const Payment: React.FC<PaymentProps> = ({ tripData, onBackToHome, select
                         <span className="font-bold text-slate-900 dark:text-white">{tripData?.hotel?.name}</span>
                         <span className="text-slate-500">Accommodation</span>
                       </div>
-                      <span className="font-bold text-slate-900 dark:text-white">${(tripData?.hotel?.price || 0).toFixed(2)}</span>
+                      <span className="font-bold text-slate-900 dark:text-white">${pricing.hotelTotal.toFixed(2)}</span>
                     </div>
 
                     {tripData?.rental?.isBooked && (
@@ -418,7 +415,7 @@ export const Payment: React.FC<PaymentProps> = ({ tripData, onBackToHome, select
                           <span className="font-bold text-slate-900 dark:text-white">{tripData?.rental?.name}</span>
                           <span className="text-slate-500">Transport</span>
                         </div>
-                        <span className="font-bold text-slate-900 dark:text-white">${(tripData?.rental?.price || 0).toFixed(2)}</span>
+                        <span className="font-bold text-slate-900 dark:text-white">${pricing.rentalTotal.toFixed(2)}</span>
                       </div>
                     )}
 
@@ -565,7 +562,7 @@ export const Payment: React.FC<PaymentProps> = ({ tripData, onBackToHome, select
                           <p className="font-bold text-slate-900 dark:text-white">{tripData?.hotel?.name}</p>
                           <p className="text-slate-500">{tripData?.hotel?.roomType}</p>
                         </div>
-                        <span className="font-bold text-slate-900 dark:text-white">${(tripData?.hotel?.price || 0).toFixed(2)}</span>
+                        <span className="font-bold text-slate-900 dark:text-white">${pricing.hotelTotal.toFixed(2)}</span>
                       </div>
                     </div>
 
@@ -578,7 +575,7 @@ export const Payment: React.FC<PaymentProps> = ({ tripData, onBackToHome, select
                             <p className="font-bold text-slate-900 dark:text-white">{tripData?.rental?.name}</p>
                             <p className="text-slate-500">{tripData?.rental?.features}</p>
                           </div>
-                          <span className="font-bold text-slate-900 dark:text-white">${(tripData?.rental?.price || 0).toFixed(2)}</span>
+                          <span className="font-bold text-slate-900 dark:text-white">${pricing.rentalTotal.toFixed(2)}</span>
                         </div>
                       </div>
                     )}
@@ -650,7 +647,152 @@ export const Payment: React.FC<PaymentProps> = ({ tripData, onBackToHome, select
             </div>
           </div>
 
-          <LegacyPaymentMethods />
+          {/* Right Content: Payment Methods */}
+          <div className="lg:col-span-8">
+            <div className="bg-white dark:bg-slate-900 rounded-[40px] p-8 md:p-12 border border-slate-100 dark:border-slate-800 shadow-sm">
+              <header className="mb-12">
+                <h1 className="text-4xl font-bold text-slate-900 dark:text-white mb-4 tracking-tight">Complete your booking</h1>
+                <p className="text-slate-500 dark:text-slate-400">Select your preferred payment method from trusted Cambodian banks.</p>
+              </header>
+
+              <div className="mb-12">
+                <h3 className="text-[10px] font-bold text-slate-400 uppercase tracking-[0.2em] mb-6">Local Bank Options</h3>
+                
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  {/* ABA Bank */}
+                  <button 
+                    onClick={() => setSelectedMethod('aba')}
+                    className={`p-6 rounded-3xl border-2 transition-all text-left group ${
+                      selectedMethod === 'aba' 
+                        ? 'border-blue-600 bg-blue-50/30 dark:bg-blue-900/10' 
+                        : 'border-slate-100 dark:border-slate-800 hover:border-slate-200 dark:hover:border-slate-700'
+                    }`}
+                  >
+                    <div className="flex items-start justify-between mb-4">
+                      <div className="w-12 h-12 bg-[#005A8C] rounded-xl flex items-center justify-center text-white font-bold text-xs">
+                        ABA
+                      </div>
+                      {selectedMethod === 'aba' && <CheckCircle2 className="w-5 h-5 text-blue-600" />}
+                    </div>
+                    <h4 className="font-bold text-slate-900 dark:text-white mb-1">ABA Bank</h4>
+                    <p className="text-[10px] text-slate-400">Pay with KHQR or ABA PayWay</p>
+                  </button>
+
+                  {/* ACLEDA Bank */}
+                  <button 
+                    onClick={() => setSelectedMethod('acleda')}
+                    className={`p-6 rounded-3xl border-2 transition-all text-left group ${
+                      selectedMethod === 'acleda' 
+                        ? 'border-blue-600 bg-blue-50/30 dark:bg-blue-900/10' 
+                        : 'border-slate-100 dark:border-slate-800 hover:border-slate-200 dark:hover:border-slate-700'
+                    }`}
+                  >
+                    <div className="flex items-start justify-between mb-4">
+                      <div className="w-12 h-12 bg-[#FFD700] rounded-xl flex items-center justify-center overflow-hidden">
+                        <img src="https://www.acledabank.com.kh/kh/assets/layout/images/logo.png" alt="ACLEDA" className="w-8 h-8 object-contain" />
+                      </div>
+                      {selectedMethod === 'acleda' && <CheckCircle2 className="w-5 h-5 text-blue-600" />}
+                    </div>
+                    <h4 className="font-bold text-slate-900 dark:text-white mb-1">ACLEDA Bank</h4>
+                    <p className="text-[10px] text-slate-400">ACLEDA Mobile / ToanChet</p>
+                  </button>
+
+                  {/* Wing Bank */}
+                  <button 
+                    onClick={() => setSelectedMethod('wing')}
+                    className={`p-6 rounded-3xl border-2 transition-all text-left group ${
+                      selectedMethod === 'wing' 
+                        ? 'border-blue-600 bg-blue-50/30 dark:bg-blue-900/10' 
+                        : 'border-slate-100 dark:border-slate-800 hover:border-slate-200 dark:hover:border-slate-700'
+                    }`}
+                  >
+                    <div className="flex items-start justify-between mb-4">
+                      <div className="w-12 h-12 bg-[#92C83E] rounded-xl flex items-center justify-center text-white font-bold text-[10px]">
+                        WING
+                      </div>
+                      {selectedMethod === 'wing' && <CheckCircle2 className="w-5 h-5 text-blue-600" />}
+                    </div>
+                    <h4 className="font-bold text-slate-900 dark:text-white mb-1">Wing Bank</h4>
+                    <p className="text-[10px] text-slate-400">Wing Money & App Payments</p>
+                  </button>
+
+                  {/* Amret MFI */}
+                  <button 
+                    onClick={() => setSelectedMethod('amret')}
+                    className={`p-6 rounded-3xl border-2 transition-all text-left group ${
+                      selectedMethod === 'amret' 
+                        ? 'border-blue-600 bg-blue-50/30 dark:bg-blue-900/10' 
+                        : 'border-slate-100 dark:border-slate-800 hover:border-slate-200 dark:hover:border-slate-700'
+                    }`}
+                  >
+                    <div className="flex items-start justify-between mb-4">
+                      <div className="w-12 h-12 bg-white border border-slate-100 dark:border-slate-800 rounded-xl flex items-center justify-center overflow-hidden">
+                        <div className="w-8 h-8 bg-[#0072BC] rounded-full" />
+                      </div>
+                      {selectedMethod === 'amret' && <CheckCircle2 className="w-5 h-5 text-blue-600" />}
+                    </div>
+                    <h4 className="font-bold text-slate-900 dark:text-white mb-1">Amret MFI</h4>
+                    <p className="text-[10px] text-slate-400">Amret Mobile Banking</p>
+                  </button>
+                </div>
+              </div>
+
+              <div className="flex flex-col md:flex-row items-center justify-between gap-8 pt-8 border-t border-slate-50 dark:border-slate-800">
+                <div className="flex items-center gap-4">
+                  <div className="flex -space-x-2">
+                    <div className="w-10 h-6 bg-slate-100 dark:bg-slate-800 rounded border border-white dark:border-slate-900 flex items-center justify-center">
+                      <img src="https://upload.wikimedia.org/wikipedia/commons/5/5e/Visa_Inc._logo.svg" alt="Visa" className="h-2" />
+                    </div>
+                    <div className="w-10 h-6 bg-slate-100 dark:bg-slate-800 rounded border border-white dark:border-slate-900 flex items-center justify-center">
+                      <img src="https://upload.wikimedia.org/wikipedia/commons/2/2a/Mastercard-logo.svg" alt="Mastercard" className="h-4" />
+                    </div>
+                  </div>
+                  <p className="text-[10px] text-slate-400 max-w-[180px]">
+                    International cards also accepted via PayWay gateway.
+                  </p>
+                </div>
+
+                <div className="flex items-center gap-4">
+                  <div className="w-12 h-12 bg-[#0072BC] rounded-xl flex items-center justify-center">
+                    <img src="https://www.amret.com.kh/wp-content/uploads/2021/05/Amret-Logo-White.png" alt="Amret" className="w-8 object-contain" />
+                  </div>
+                  <button 
+                    onClick={handlePayment}
+                    disabled={paymentStatus === 'processing'}
+                    className="flex items-center gap-3 px-8 py-4 bg-blue-600 text-white rounded-2xl font-bold hover:bg-blue-700 transition-all shadow-lg shadow-blue-200 dark:shadow-none group disabled:opacity-70 disabled:cursor-not-allowed"
+                  >
+                    {paymentStatus === 'processing' ? (
+                      <>
+                        <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                        Processing...
+                      </>
+                    ) : (
+                      <>
+                        Pay Now ${bookingData.pricing.total.toFixed(2)}
+                        <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
+                      </>
+                    )}
+                  </button>
+                </div>
+              </div>
+
+              <div className="mt-8 flex items-center justify-center gap-6 text-slate-300 dark:text-slate-700">
+                <div className="flex items-center gap-1">
+                  <Lock className="w-3 h-3" />
+                  <span className="text-[8px] font-bold uppercase tracking-widest">Secure Payments Via</span>
+                </div>
+                <div className="flex items-center gap-4">
+                  <Shield className="w-4 h-4" />
+                  <Lock className="w-4 h-4" />
+                  <CheckCircle2 className="w-4 h-4" />
+                </div>
+              </div>
+            </div>
+
+            <p className="mt-8 text-center text-[10px] text-slate-400 leading-relaxed max-w-2xl mx-auto">
+              By clicking "Pay Now", you agree to Komrong's <span className="text-blue-600 cursor-pointer font-medium">Terms of Service</span> and <span className="text-blue-600 cursor-pointer font-medium">Cancellation Policy</span>.
+            </p>
+          </div>
         </div>
       </div>
     </div>

@@ -167,6 +167,8 @@ const CreatePromotion = () => {
       description: '',
       discount: formatDiscount(),
       type: promotionType,
+      start_date: startDate || null,
+      end_date: endDate || null,
       expiry: endDate || null,
       is_active: true,
       service_category: serviceCategory,

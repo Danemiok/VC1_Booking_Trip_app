@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Models\Destination;
+use App\Services\PromotionService;
 
 class HotelController extends Controller
 {
@@ -18,14 +19,27 @@ class HotelController extends Controller
             ->orderByDesc('created_at')
             ->get()
             ->map(function ($destination) {
+                // Get promotion info for this destination
+                $promotionInfo = PromotionService::getBestPromotionForDestination(
+                    floatval($destination->price),
+                    $destination->destination_id
+                );
+
                 return [
                     'id' => $destination->id,
+                    'destination_id' => $destination->destination_id,
                     'name' => $destination->name,
                     'hotel_name' => $destination->name,
                     'location' => $destination->location,
                     'city' => $destination->location,
                     'country' => 'Cambodia',
                     'price' => floatval($destination->price),
+                    'original_price' => $promotionInfo['original_price'],
+                    'discounted_price' => $promotionInfo['discounted_price'],
+                    'discount_amount' => $promotionInfo['discount_amount'],
+                    'discount_percentage' => $promotionInfo['discount_percentage'],
+                    'has_promotion' => $promotionInfo['promotion'] !== null,
+                    'promotion' => $promotionInfo['promotion'],
                     'rating' => floatval($destination->rating ?? 0),
                     'stars_rating' => floatval($destination->rating ?? 0),
                     'image' => $destination->image,
