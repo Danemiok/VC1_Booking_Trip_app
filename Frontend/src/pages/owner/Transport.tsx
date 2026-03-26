@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { 
   Search, 
   Plus, 
-  Bell, 
+  Bell,
   Edit, 
   Trash2, 
   Clock,
@@ -31,8 +31,75 @@ interface TransportService {
   is_free?: boolean;
 }
 
+const buildTransportImageCandidates = (rawImage: string) => {
+  const trimmed = rawImage.trim();
+  if (!trimmed) return [];
+
+  const backendOrigin =
+    import.meta.env.VITE_BACKEND_ORIGIN ||
+    import.meta.env.VITE_API_URL ||
+    'http://127.0.0.1:8000';
+
+  const normalized = trimmed.replace(/^\/+/, '');
+  const candidates = new Set<string>();
+
+  if (/^(https?:|data:|blob:)/i.test(trimmed)) {
+    candidates.add(trimmed);
+  } else {
+    candidates.add(`${backendOrigin}/${normalized.replace(/^storage\//, '')}`);
+    candidates.add(`${backendOrigin}/${normalized}`);
+    candidates.add(`http://localhost:8000/${normalized}`);
+    candidates.add(`http://127.0.0.1:8000/${normalized}`);
+    candidates.add(`/${normalized}`);
+    if (normalized.startsWith('storage/')) {
+      candidates.add(`/${normalized.replace(/^storage\//, 'storage/')}`);
+      candidates.add(`/${normalized.replace(/^storage\//, '')}`);
+    }
+  }
+
+  return Array.from(candidates);
+};
+
+const TransportCardImage: React.FC<{ src: string; alt: string; className?: string }> = ({
+  src,
+  alt,
+  className = '',
+}) => {
+  const candidates = React.useMemo(() => buildTransportImageCandidates(src), [src]);
+  const [candidateIndex, setCandidateIndex] = React.useState(0);
+
+  React.useEffect(() => {
+    setCandidateIndex(0);
+  }, [src]);
+
+  if (candidates.length === 0 || candidateIndex >= candidates.length) {
+    return (
+      <div
+        className={`bg-gradient-to-br from-slate-100 via-white to-slate-200 dark:from-slate-800 dark:via-slate-900 dark:to-slate-800 flex items-center justify-center ${className}`}
+      >
+        <span className="text-[11px] font-bold uppercase tracking-widest text-slate-400">No image</span>
+      </div>
+    );
+  }
+
+  return (
+    <img
+      src={candidates[candidateIndex]}
+      alt={alt}
+      className={className}
+      onError={() => setCandidateIndex((prev) => prev + 1)}
+    />
+  );
+};
+
 const Transport = () => {
   const navigate = useNavigate();
+  const priceOptions = [
+    { label: '$0.50', value: '0.50', isFree: false },
+    { label: '$1', value: '1.00', isFree: false },
+    { label: '$1.50', value: '1.50', isFree: false },
+    { label: 'Free only', value: '0', isFree: true },
+  ] as const;
   const [searchTerm, setSearchTerm] = React.useState('');
   const [activeTab, setActiveTab] = React.useState('all');
   const [currentPage, setCurrentPage] = React.useState(1);
@@ -163,6 +230,23 @@ const Transport = () => {
     },
   ];
 
+  const selectedEditPriceOption = React.useMemo(() => {
+    if (editForm.is_free) return '0';
+    const matched = priceOptions.find((option) => !option.isFree && Number(option.value) === Number(editForm.price_per_KM));
+    return matched?.value ?? '';
+  }, [editForm.is_free, editForm.price_per_KM]);
+
+  const applyEditPriceOption = (value: string) => {
+    const option = priceOptions.find((item) => item.value === value);
+    if (!option) return;
+
+    setEditForm((prev) => ({
+      ...prev,
+      is_free: option.isFree,
+      price_per_KM: option.isFree ? '0' : option.value,
+    }));
+  };
+
   React.useEffect(() => {
     const loadOwnerTransports = async () => {
       try {
@@ -195,9 +279,7 @@ const Transport = () => {
                   ? 'Fixing'
                   : 'Waiting';
           const rawImage = String(item?.vehicle_photo_url ?? '');
-          const image = rawImage
-            ? (rawImage.startsWith('http') ? rawImage : `${backendOrigin}/${rawImage.replace(/^\/+/, '')}`)
-            : 'https://upload.wikimedia.org/wikipedia/commons/a/a2/Traffic_in_Cambodia..JPG';
+          const image = rawImage;
           return {
             id: String(item?.transport_id ?? item?.id ?? ''),
             name: String(item?.service_name ?? ''),
@@ -317,11 +399,7 @@ const Transport = () => {
                 ? 'Fixing'
                 : 'Waiting';
         const rawImage = String(item?.vehicle_photo_url ?? editForm.image ?? '');
-        const backendOrigin =
-          import.meta.env.VITE_BACKEND_ORIGIN || 'http://127.0.0.1:8000';
-        const image = rawImage
-          ? (rawImage.startsWith('http') ? rawImage : `${backendOrigin}/${rawImage.replace(/^\/+/, '')}`)
-          : editForm.image;
+        const image = rawImage || editForm.image;
 
         const updatedService: TransportService = {
           ...editing,
@@ -595,8 +673,8 @@ const Transport = () => {
             return (
               <div key={service.id} className="bg-white dark:bg-slate-900 rounded-lg border border-slate-200 dark:border-slate-800 shadow-sm hover:shadow-md transition-shadow">
                 <div className="relative">
-                  <img 
-                    src={service.image} 
+                  <TransportCardImage
+                    src={service.image}
                     alt={service.name}
                     className="w-full h-48 object-cover rounded-t-lg"
                   />
@@ -798,39 +876,29 @@ const Transport = () => {
                     <option value="Waiting">Waiting</option>
                   </select>
                 </div>
-                <div className="space-y-1">
+                <div className="space-y-1 sm:col-span-2">
                   <label className="text-xs font-medium text-slate-700 dark:text-slate-300">Price per KM</label>
-                  <input
-                    type="number"
-                    step="0.01"
-                    min="0"
-                    value={editForm.price_per_KM}
-                    onChange={(e) => setEditForm({ ...editForm, price_per_KM: e.target.value })}
-                    disabled={editForm.is_free}
-                    className="w-full px-3 py-2 border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-60 disabled:cursor-not-allowed"
-                    placeholder="e.g. 1.50"
-                  />
-                </div>
-                <div className="space-y-1">
-                  <label className="text-xs font-medium text-slate-700 dark:text-slate-300">Free Transport</label>
-                  <button
-                    type="button"
-                    onClick={() =>
-                      setEditForm((prev) => ({
-                        ...prev,
-                        is_free: !prev.is_free,
-                        price_per_KM: !prev.is_free ? '0' : prev.price_per_KM,
-                      }))
-                    }
-                    className={cn(
-                      'w-full px-3 py-2 rounded-lg border text-sm font-semibold transition-colors',
-                      editForm.is_free
-                        ? 'bg-emerald-100 border-emerald-200 text-emerald-700'
-                        : 'bg-white dark:bg-slate-800 border-slate-300 dark:border-slate-700 text-slate-700 dark:text-slate-200'
-                    )}
-                  >
-                    {editForm.is_free ? 'Yes, this transport is free' : 'No, paid transport'}
-                  </button>
+                  <div className="grid grid-cols-2 gap-3">
+                    {priceOptions.map((option) => (
+                      <label
+                        key={option.value}
+                        className={cn(
+                          'flex items-center gap-3 cursor-pointer rounded-lg border px-3 py-2 text-sm font-semibold transition-colors',
+                          selectedEditPriceOption === option.value
+                            ? 'border-blue-500 bg-blue-50 text-blue-700 dark:bg-blue-900/20 dark:text-blue-300'
+                            : 'border-slate-300 bg-white text-slate-700 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200'
+                        )}
+                      >
+                        <input
+                          type="checkbox"
+                          checked={selectedEditPriceOption === option.value}
+                          onChange={() => applyEditPriceOption(option.value)}
+                          className="h-4 w-4 rounded border-slate-300 text-blue-600 focus:ring-blue-500"
+                        />
+                        <span>{option.label}</span>
+                      </label>
+                    ))}
+                  </div>
                 </div>
               </div>
             </div>
@@ -865,7 +933,11 @@ const Transport = () => {
             <div className="p-6 overflow-y-auto flex-1">
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                 <div className="w-full aspect-video rounded-xl overflow-hidden border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-800">
-                  <img alt={viewing.name} src={viewing.image} className="w-full h-full object-cover" />
+                  <TransportCardImage
+                    alt={viewing.name}
+                    src={viewing.image}
+                    className="w-full h-full object-cover"
+                  />
                 </div>
 
                 <div className="space-y-3">

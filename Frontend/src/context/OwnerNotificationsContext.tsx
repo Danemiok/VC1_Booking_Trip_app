@@ -1,5 +1,6 @@
 import React from 'react';
 import { bookingService } from '@/services/bookingService';
+import { messageService } from '@/services/messageService';
 import { useAuth } from '@/context/AuthContext';
 
 export type OwnerNotification = {
@@ -43,14 +44,20 @@ export const OwnerNotificationsProvider: React.FC<{ children: React.ReactNode }>
 
       try {
         if (!silent) setLoading(true);
-        const response = await bookingService.getOwnerNotifications({ limit: 25 });
-        const next = Array.isArray(response?.data) ? response.data : [];
-        const nextUnread = Number(
-          response?.unread_count ?? response?.unreadCount ?? next.filter((n: any) => !n?.readAt).length,
+        const [bookingRes, chatRes] = await Promise.all([
+          bookingService.getOwnerNotifications({ limit: 25 }),
+          messageService.getOwnerUnreadCount()
+        ]);
+
+        const next = Array.isArray(bookingRes?.data) ? bookingRes.data : [];
+        const bookingUnread = Number(
+          bookingRes?.unread_count ?? bookingRes?.unreadCount ?? next.filter((n: any) => !n?.readAt).length,
         );
+        const chatUnread = Number(chatRes?.unread_count ?? 0);
 
         setNotifications(next);
-        setUnreadCount(Number.isFinite(nextUnread) ? nextUnread : 0);
+        const totalUnread = (Number.isFinite(bookingUnread) ? bookingUnread : 0) + chatUnread;
+        setUnreadCount(totalUnread);
       } catch (error) {
         // best-effort: don't break the UI if notifications fail
         console.error('Failed to fetch owner notifications:', error);

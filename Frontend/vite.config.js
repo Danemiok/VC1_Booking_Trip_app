@@ -7,7 +7,9 @@ import {defineConfig, loadEnv} from 'vite';
 export default defineConfig(({ mode }) => {
   const env = loadEnv(mode, '.', '');
   const rootDir = path.dirname(fileURLToPath(import.meta.url));
-  const apiProxyTarget = env.VITE_BACKEND_ORIGIN || env.VITE_API_PROXY_TARGET || 'http://127.0.0.1:8000';
+  // Allow either VITE_API_PROXY_TARGET (preferred) or VITE_BACKEND_ORIGIN to drive the proxy
+  const apiProxyTarget =
+    env.VITE_API_PROXY_TARGET || env.VITE_BACKEND_ORIGIN || 'http://127.0.0.1:8000';
 
   return {
     plugins: [react(), tailwindcss()],

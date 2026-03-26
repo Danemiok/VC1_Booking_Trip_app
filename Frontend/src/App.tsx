@@ -42,8 +42,8 @@ const AppContent = () => {
   const [selectedHotel, setSelectedHotel] = useState<any | null>(null);
   const [selectedActivityIds, setSelectedActivityIds] = useState<number[]>([]);
 
-  // Initialize real-time dates
-  const today = new Date('2026-03-03T00:34:03-08:00');
+  // Initialize real-time dates (use the actual current time)
+  const today = new Date();
   const startDate = new Date(today);
   startDate.setDate(today.getDate() + 7);
   const endDate = new Date(startDate);
@@ -168,6 +168,12 @@ const AppContent = () => {
 
     previousUserRef.current = user;
   }, [user]);
+
+  // Ensure navigation from footer/menu moves the user to the top of the new view.
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }, [view]);
 
   return (
     <HelpCenterLayout>

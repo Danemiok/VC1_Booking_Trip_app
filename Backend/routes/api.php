@@ -10,6 +10,7 @@ use App\Http\Controllers\AuthController;
 use App\Http\Controllers\Owner\TransportController;
 use App\Http\Controllers\Owner\MessageController;
 use App\Http\Controllers\Customer\MessageController as CustomerMessageController;
+use App\Http\Controllers\GoogleAuthController;
 use Illuminate\Support\Facades\DB;
 use App\Http\Controllers\PublicFileController;
 use App\Http\Controllers\ImageUploadController;
@@ -80,6 +81,10 @@ Route::prefix('auth')->group(function () {
 
     Route::post('/register', [RegisterController::class, 'register']);
     Route::post('/login', [LoginController::class, 'login']);
+
+    // Google OAuth routes (public, no auth required)
+    Route::get('/google/redirect', [GoogleAuthController::class, 'redirect']);
+    Route::get('/google/callback', [GoogleAuthController::class, 'callbackGoogle']);
 
     Route::middleware('auth:sanctum')->group(function () {
 
@@ -237,6 +242,8 @@ if (app()->environment('local')) {
 
 
 Route::middleware(['auth:sanctum','role:owner'])->group(function () {
+
+    Route::get('/owner/customers/search', [MessageController::class,'findCustomerByEmail']);
 
     Route::get('/messages', [MessageController::class,'index']);
 

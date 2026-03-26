@@ -118,8 +118,8 @@ export const Payment: React.FC<PaymentProps> = ({ tripData, onBackToHome, select
   const receiptRef = useRef<HTMLDivElement>(null);
   const transactionId = useRef("KMR-" + Math.random().toString(36).substring(2, 10).toUpperCase()).current;
   
-  // Use provided real-time date
-  const now = new Date('2026-03-03T00:34:03-08:00');
+  // Use the actual current date/time
+  const now = new Date();
   const transactionDate = now.toLocaleDateString('en-US', { 
     year: 'numeric', 
     month: 'long', 

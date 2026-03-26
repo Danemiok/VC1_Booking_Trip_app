@@ -11,6 +11,21 @@ use Illuminate\Support\Str;
 
 class TransportController extends Controller
 {
+    private function toPublicTransportPhotoUrl(string $path): string
+    {
+        $normalized = ltrim($path, '/');
+
+        if (preg_match('#^https?://#i', $normalized)) {
+            return $normalized;
+        }
+
+        if (str_starts_with($normalized, 'storage/')) {
+            $normalized = substr($normalized, strlen('storage/'));
+        }
+
+        return rtrim(url('/'), '/') . '/storage/' . ltrim($normalized, '/');
+    }
+
     public function publicIndex()
     {
         $transports = Transport::query()
@@ -71,7 +86,7 @@ class TransportController extends Controller
         if ($request->hasFile('vehicle_photo')) {
             $file = $request->file('vehicle_photo');
             $storedPath = $file->storePublicly('uploads/transports', 'public');
-            $photoPath = Storage::url($storedPath);
+            $photoPath = $this->toPublicTransportPhotoUrl($storedPath);
         }
 
         $transport = Transport::create([
@@ -142,7 +157,7 @@ class TransportController extends Controller
         if ($request->hasFile('vehicle_photo')) {
             $file = $request->file('vehicle_photo');
             $storedPath = $file->storePublicly('uploads/transports', 'public');
-            $photoPath = Storage::url($storedPath);
+            $photoPath = $this->toPublicTransportPhotoUrl($storedPath);
 
             $oldPhoto = $transport->vehicle_photo_url;
             if ($oldPhoto && !str_starts_with($oldPhoto, 'http')) {

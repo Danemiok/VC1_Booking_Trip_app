@@ -80,8 +80,8 @@ export const HotelDetails: React.FC<HotelDetailsProps> = ({ tripData, hotel: ini
   const defaultGuestCount = parseGuestCount(tripData?.guests);
   const [guests, setGuests] = useState(defaultGuestCount);
   
-  // Default data if none provided (matching the screenshot)
-  const today = new Date('2026-03-03T00:34:03-08:00');
+  // Default data if none provided (use current date for freshness)
+  const today = new Date();
   
   const defaultHotel = {
     name: "Royal Riverside Sanctuary",
