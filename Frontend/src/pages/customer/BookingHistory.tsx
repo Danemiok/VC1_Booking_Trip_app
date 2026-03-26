@@ -25,7 +25,7 @@ import {
   Save
 } from 'lucide-react';
 import { AVAILABLE_ACTIVITIES } from '../../data/activities';
-import { bookingService } from '@/src/services/bookingService'; // Add this import
+import { bookingService } from '@/services/bookingService'; // Add this import
 import { useAuth } from '../../context/AuthContext';
 
 interface BookingHistoryProps {

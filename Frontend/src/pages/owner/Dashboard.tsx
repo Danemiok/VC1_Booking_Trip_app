@@ -24,10 +24,10 @@ import {
   AreaChart,
   Area
 } from 'recharts';
-import { cn } from '@/src/utils/utils';
-import { MOCK_REVENUE_DATA } from '@/src/routes/constants';
-import type { AdminNotification } from '@/src/components/common/NotificationDropdown';
-import { bookingService } from '@/src/services/bookingService';
+import { cn } from '@/utils/utils';
+import { MOCK_REVENUE_DATA } from '@/routes/constants';
+import type { AdminNotification } from '@/components/common/NotificationDropdown';
+import { bookingService } from '@/services/bookingService';
 
 const StatCard = ({ title, value, change, changeType, icon: Icon, subtitle }: any) => (
   <div className="bg-white dark:bg-slate-900 p-6 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm hover:shadow-lg transition-shadow">

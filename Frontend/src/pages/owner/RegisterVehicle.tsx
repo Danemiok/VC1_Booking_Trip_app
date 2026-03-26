@@ -11,7 +11,7 @@ import {
   Plus
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
-import { cn } from '@/src/utils/utils';
+import { cn } from '@/utils/utils';
 
 const RegisterVehicle = () => {
   const navigate = useNavigate();

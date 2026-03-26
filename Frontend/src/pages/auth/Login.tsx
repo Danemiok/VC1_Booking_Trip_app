@@ -29,7 +29,7 @@ export const Login: React.FC<LoginProps> = ({ onSwitchToRegister, onBack, onSucc
     } catch (error: any) {
       console.error('âŒ Login error:', error);
       setPassword('');
-      setErrorMessage(error?.data?.message ?? 'Login failed');
+      setErrorMessage(error?.data?.message ?? error?.message ?? 'Login failed');
     } finally {
       setIsSubmitting(false);
     }

@@ -1,6 +1,6 @@
 
 import { MapPin, Search, Star } from 'lucide-react';
-import { apiRequest } from '@/src/services/api';
+import { apiRequest } from '@/services/api';
 import React, { useEffect, useState } from 'react';
 import { motion } from 'motion/react';
 

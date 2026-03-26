@@ -12,7 +12,7 @@ import {
   Settings,
   Grid
 } from 'lucide-react';
-import { cn } from '@/src/utils/utils';
+import { cn } from '@/utils/utils';
 
 const Sidebar = () => {
   const ownerNav = [

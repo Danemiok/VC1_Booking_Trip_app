@@ -24,7 +24,7 @@ import {
   Check,
   X
 } from 'lucide-react';
-import { cn } from '@/src/utils/utils';
+import { cn } from '@/utils/utils';
 
 type OwnerInfo = {
   name: string;

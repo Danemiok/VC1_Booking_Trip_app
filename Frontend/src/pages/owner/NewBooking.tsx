@@ -12,7 +12,7 @@ import {
   Info
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
-import { cn } from '@/src/utils/utils';
+import { cn } from '@/utils/utils';
 
 const NewBooking = () => {
   const navigate = useNavigate();

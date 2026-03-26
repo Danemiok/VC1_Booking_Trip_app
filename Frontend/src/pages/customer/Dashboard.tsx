@@ -34,7 +34,7 @@ import {
 } from 'date-fns';
 import { ALL_HOTELS } from '../../data/hotels';
 import { useAuth } from '../../context/AuthContext';
-import { bookingService } from '@/src/services/bookingService';
+import { bookingService } from '@/services/bookingService';
 
 // --- Sub-components (could be further split) ---
 const normalizeSearchText = (value: string): string =>
