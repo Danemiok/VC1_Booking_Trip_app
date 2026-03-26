@@ -18,7 +18,7 @@ class DestinationSeeder extends Seeder
 
         $destinations = [
             [
-                'user_id' => $userId,
+                'owner_id' => $userId,
                 'name' => 'Mekong Riverside Villa',
                 'type' => 'Villa',
                 'description' => 'A beautiful riverside villa with stunning views of the Mekong River',
@@ -37,7 +37,7 @@ class DestinationSeeder extends Seeder
                 'updated_at' => now(),
             ],
             [
-                'user_id' => $userId,
+                'owner_id' => $userId,
                 'name' => 'Koh Rong Luxury Retreat',
                 'type' => 'Resort',
                 'description' => 'Luxury beachfront retreat on the beautiful island of Koh Rong',
@@ -56,7 +56,7 @@ class DestinationSeeder extends Seeder
                 'updated_at' => now(),
             ],
             [
-                'user_id' => $userId,
+                'owner_id' => $userId,
                 'name' => 'Siem Reap Boutique Stay',
                 'type' => 'Boutique Hotel',
                 'description' => 'Charming boutique hotel in the heart of Siem Reap',
@@ -75,7 +75,7 @@ class DestinationSeeder extends Seeder
                 'updated_at' => now(),
             ],
             [
-                'user_id' => $userId,
+                'owner_id' => $userId,
                 'name' => 'Kampot Pepper Farm Villa',
                 'type' => 'Villa',
                 'description' => 'Peaceful villa surrounded by pepper farms in rural Kampot',
@@ -94,7 +94,7 @@ class DestinationSeeder extends Seeder
                 'updated_at' => now(),
             ],
             [
-                'user_id' => $userId,
+                'owner_id' => $userId,
                 'name' => 'Mondulkiri Eco Lodge',
                 'type' => 'Eco Lodge',
                 'description' => 'Sustainable eco-lodge in the forests of Mondulkiri',
@@ -113,7 +113,7 @@ class DestinationSeeder extends Seeder
                 'updated_at' => now(),
             ],
             [
-                'user_id' => $userId,
+                'owner_id' => $userId,
                 'name' => 'Cardamom Tented Camp',
                 'type' => 'Camp',
                 'description' => 'Unique tented camp experience in the Koh Kong forest',
@@ -138,4 +138,3 @@ class DestinationSeeder extends Seeder
         }
     }
 }
-

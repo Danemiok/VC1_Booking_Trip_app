@@ -18,6 +18,8 @@ class Accommodation extends Model
         'city',
         'country',
         'address',
+        'latitude',
+        'longitude',
         'description',
         'stars_rating',
         'is_active',
@@ -25,6 +27,8 @@ class Accommodation extends Model
     ];
 
     protected $casts = [
+        'latitude' => 'decimal:8',
+        'longitude' => 'decimal:8',
         'stars_rating' => 'decimal:1',
         'is_active' => 'boolean',
     ];
@@ -39,4 +43,3 @@ class Accommodation extends Model
         return $query->where('is_active', true);
     }
 }
-
