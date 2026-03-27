@@ -77,20 +77,41 @@ const Transport = () => {
   const [loadError, setLoadError] = React.useState('');
   const allServices = services;
 
-  const getActivePromotionForTransport = React.useCallback((transportId: string) => {
+  const toDateStart = React.useCallback((value?: string | null) => {
+    if (!value) return null;
+    const raw = String(value);
+    const normalized = raw.includes('T') ? raw : `${raw}T00:00:00`;
+    const d = new Date(normalized);
+    return Number.isNaN(d.getTime()) ? null : d;
+  }, []);
+
+  const toDateEnd = React.useCallback((value?: string | null) => {
+    if (!value) return null;
+    const raw = String(value);
+    const normalized = raw.includes('T') ? raw : `${raw}T23:59:59.999`;
+    const d = new Date(normalized);
+    return Number.isNaN(d.getTime()) ? null : d;
+  }, []);
+
+  const isPromotionActive = React.useCallback((promo: any) => {
+    if (!promo?.is_active) return false;
     const now = new Date();
+    const startRaw = promo.start_date ?? promo.startDate ?? null;
+    const endRaw = promo.end_date ?? promo.endDate ?? promo.expiry ?? null;
+    const startDate = toDateStart(startRaw);
+    const endDate = toDateEnd(endRaw);
+    if (startDate && now < startDate) return false;
+    if (endDate && now > endDate) return false;
+    return true;
+  }, [toDateStart, toDateEnd]);
+
+  const getActivePromotionForTransport = React.useCallback((transportId: string) => {
     return promotions.find((promo: any) => {
-      if (!promo.is_active) return false;
-      
-      if (promo.expiry) {
-        const expiryDate = new Date(promo.expiry);
-        if (now > expiryDate) return false;
-      }
-      
+      if (!isPromotionActive(promo)) return false;
       const linkedTransports = promo.linked_transports || [];
       return linkedTransports.includes(parseInt(transportId));
     }) || null;
-  }, [promotions]);
+  }, [promotions, isPromotionActive]);
 
   const computeDiscountedPrice = (basePrice?: number, promotion?: any) => {
     if (typeof basePrice !== 'number') return { finalPrice: undefined as number | undefined, hasDiscount: false };

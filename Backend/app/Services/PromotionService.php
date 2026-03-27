@@ -16,7 +16,7 @@ class PromotionService
     {
         return Promotion::whereHas('promotionLinks', function ($query) use ($destinationId) {
             $query->where('link_type', 'destination')
-                  ->where('link_id', $destinationId);
+                ->where('link_id', $destinationId);
         })
         ->where('is_active', true)
         ->get()
@@ -27,6 +27,8 @@ class PromotionService
             'description' => $promo->description,
             'discount' => $promo->discount,
             'type' => $promo->type,
+            'start_date' => $promo->start_date,
+            'end_date' => $promo->end_date,
             'expiry' => $promo->expiry,
         ])
         ->values()
@@ -40,7 +42,7 @@ class PromotionService
     {
         return Promotion::whereHas('promotionLinks', function ($query) use ($transportId) {
             $query->where('link_type', 'transport')
-                  ->where('link_id', $transportId);
+                ->where('link_id', $transportId);
         })
         ->where('is_active', true)
         ->get()
@@ -51,6 +53,8 @@ class PromotionService
             'description' => $promo->description,
             'discount' => $promo->discount,
             'type' => $promo->type,
+            'start_date' => $promo->start_date,
+            'end_date' => $promo->end_date,
             'expiry' => $promo->expiry,
         ])
         ->values()
@@ -117,6 +121,8 @@ class PromotionService
                 'description' => $bestPromotion->description,
                 'discount' => $bestPromotion->discount,
                 'type' => $bestPromotion->type,
+                'start_date' => $bestPromotion->start_date,
+                'end_date' => $bestPromotion->end_date,
                 'expiry' => $bestPromotion->expiry,
             ],
         ];
@@ -182,6 +188,8 @@ class PromotionService
                 'description' => $bestPromotion->description,
                 'discount' => $bestPromotion->discount,
                 'type' => $bestPromotion->type,
+                'start_date' => $bestPromotion->start_date,
+                'end_date' => $bestPromotion->end_date,
                 'expiry' => $bestPromotion->expiry,
             ],
         ];

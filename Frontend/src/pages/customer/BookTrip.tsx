@@ -41,6 +41,34 @@ export const BookTrip: React.FC = () => {
   const [error, setError] = React.useState<string | null>(null);
   const [promotions, setPromotions] = React.useState<any[]>([]);
 
+  const toDateStart = React.useCallback((value?: string | null) => {
+    if (!value) return null;
+    const raw = String(value);
+    const normalized = raw.includes('T') ? raw : `${raw}T00:00:00`;
+    const d = new Date(normalized);
+    return Number.isNaN(d.getTime()) ? null : d;
+  }, []);
+
+  const toDateEnd = React.useCallback((value?: string | null) => {
+    if (!value) return null;
+    const raw = String(value);
+    const normalized = raw.includes('T') ? raw : `${raw}T23:59:59.999`;
+    const d = new Date(normalized);
+    return Number.isNaN(d.getTime()) ? null : d;
+  }, []);
+
+  const isPromotionActive = React.useCallback((promo: any) => {
+    if (!promo?.is_active) return false;
+    const now = new Date();
+    const startRaw = promo.start_date ?? promo.startDate ?? null;
+    const endRaw = promo.end_date ?? promo.endDate ?? promo.expiry ?? null;
+    const startDate = toDateStart(startRaw);
+    const endDate = toDateEnd(endRaw);
+    if (startDate && now < startDate) return false;
+    if (endDate && now > endDate) return false;
+    return true;
+  }, [toDateStart, toDateEnd]);
+
   const loadTransports = React.useCallback(async () => {
     setLoadingTransports(true);
     setTransportError(null);
@@ -73,35 +101,21 @@ export const BookTrip: React.FC = () => {
 
   // Get active promotion for destination
   const getActivePromotionForDestination = React.useCallback((destinationId: number) => {
-    const now = new Date();
     return promotions.find((promo: any) => {
-      if (!promo.is_active) return false;
-      
-      if (promo.expiry) {
-        const expiryDate = new Date(promo.expiry);
-        if (now > expiryDate) return false;
-      }
-      
+      if (!isPromotionActive(promo)) return false;
       const linkedDestinations = promo.linked_destinations || [];
       return linkedDestinations.includes(destinationId);
     }) || null;
-  }, [promotions]);
+  }, [promotions, isPromotionActive]);
 
   // Get active promotion for transport
   const getActivePromotionForTransport = React.useCallback((transportId: number) => {
-    const now = new Date();
     return promotions.find((promo: any) => {
-      if (!promo.is_active) return false;
-      
-      if (promo.expiry) {
-        const expiryDate = new Date(promo.expiry);
-        if (now > expiryDate) return false;
-      }
-      
+      if (!isPromotionActive(promo)) return false;
       const linkedTransports = promo.linked_transports || [];
       return linkedTransports.includes(transportId);
     }) || null;
-  }, [promotions]);
+  }, [promotions, isPromotionActive]);
 
   // Calculate discounted price
   const calculateDiscountedPrice = React.useCallback((basePrice: number, promotion: any) => {
