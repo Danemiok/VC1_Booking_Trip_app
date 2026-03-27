@@ -124,7 +124,7 @@ class PromotionController extends Controller
                 'is_active' => 'nullable|boolean',
                 'service_category' => 'nullable|string|in:hotel,transport',
                 'linked_destinations' => 'nullable|array',
-                'linked_destinations.*' => 'integer|exists:destinations,destination_id',
+                'linked_destinations.*' => 'integer|exists:destinations,id',
                 'linked_transports' => 'nullable|array',
                 'linked_transports.*' => 'integer|exists:transports,transport_id',
             ]);
@@ -253,7 +253,7 @@ class PromotionController extends Controller
             'is_active' => 'nullable|boolean',
             'service_category' => 'nullable|string|in:hotel,transport',
             'linked_destinations' => 'nullable|array',
-            'linked_destinations.*' => 'integer|exists:destinations,destination_id',
+            'linked_destinations.*' => 'integer|exists:destinations,id',
             'linked_transports' => 'nullable|array',
             'linked_transports.*' => 'integer|exists:transports,transport_id',
         ]);

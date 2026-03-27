@@ -88,7 +88,7 @@ class HotelController extends Controller
                 // Get promotion info for this destination
                 $promotionInfo = PromotionService::getBestPromotionForDestination(
                     floatval($destination->price),
-                    $destination->destination_id
+                    $destination->id
                 );
                 $images = is_array($destination->images) ? $destination->images : [];
                 $isActive = strtolower((string) ($destination->status ?? '')) === 'active';
@@ -96,7 +96,7 @@ class HotelController extends Controller
 
                 return [
                     'id' => $destination->id,
-                    'destination_id' => $destination->destination_id,
+                    'destination_id' => $destination->id,
                     'name' => $destination->name,
                     'hotel_name' => $destination->name,
                     'location' => $destination->location,
