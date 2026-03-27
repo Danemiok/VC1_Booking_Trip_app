@@ -58,6 +58,7 @@ export const Navbar: React.FC<NavbarProps> = ({
   const [isPlanTripOpen, setIsPlanTripOpen] = useState(false);
   const [isLogoutConfirmOpen, setIsLogoutConfirmOpen] = useState(false);
   const { isDarkMode, toggleDarkMode } = useTheme();
+  const showBookings = user?.role !== 'owner';
   const planMenuItemVariants = {
     hidden: { opacity: 0, y: 8 },
     visible: (index: number) => ({
@@ -209,12 +210,14 @@ export const Navbar: React.FC<NavbarProps> = ({
             </AnimatePresence>
           </div>
 
-          <button 
-            onClick={onBookingsClick}
-            className={`text-sm font-medium transition-colors ${currentView === 'bookings' ? 'text-blue-600' : 'text-slate-600 dark:text-slate-400 hover:text-blue-600'}`}
-          >
-            My booking
-          </button>
+          {showBookings && (
+            <button 
+              onClick={onBookingsClick}
+              className={`text-sm font-medium transition-colors ${currentView === 'bookings' ? 'text-blue-600' : 'text-slate-600 dark:text-slate-400 hover:text-blue-600'}`}
+            >
+              My booking
+            </button>
+          )}
         </div>
 
         <div className="flex items-center gap-3 sm:gap-4">
@@ -449,15 +452,17 @@ export const Navbar: React.FC<NavbarProps> = ({
                 </button>
               </div>
 
-              <button 
-                onClick={() => {
-                  onBookingsClick();
-                  setIsMobileMenuOpen(false);
-                }}
-                className="block w-full text-left px-4 py-3 text-base font-bold text-slate-900 dark:text-white hover:bg-slate-50 dark:hover:bg-slate-800 rounded-2xl"
-              >
-                My booking
-              </button>
+              {showBookings && (
+                <button 
+                  onClick={() => {
+                    onBookingsClick();
+                    setIsMobileMenuOpen(false);
+                  }}
+                  className="block w-full text-left px-4 py-3 text-base font-bold text-slate-900 dark:text-white hover:bg-slate-50 dark:hover:bg-slate-800 rounded-2xl"
+                >
+                  My booking
+                </button>
+              )}
               
               {user ? (
                 <div className="pt-6 border-t border-slate-100 dark:border-slate-800">

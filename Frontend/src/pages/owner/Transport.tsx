@@ -138,68 +138,8 @@ const Transport = () => {
   };
 
   const [services, setServices] = React.useState<TransportService[]>([]);
-  const [promotions, setPromotions] = React.useState<any[]>([]);
   const [loadError, setLoadError] = React.useState('');
   const allServices = services;
-
-  const toDateStart = React.useCallback((value?: string | null) => {
-    if (!value) return null;
-    const raw = String(value);
-    const normalized = raw.includes('T') ? raw : `${raw}T00:00:00`;
-    const d = new Date(normalized);
-    return Number.isNaN(d.getTime()) ? null : d;
-  }, []);
-
-  const toDateEnd = React.useCallback((value?: string | null) => {
-    if (!value) return null;
-    const raw = String(value);
-    const normalized = raw.includes('T') ? raw : `${raw}T23:59:59.999`;
-    const d = new Date(normalized);
-    return Number.isNaN(d.getTime()) ? null : d;
-  }, []);
-
-  const isPromotionActive = React.useCallback((promo: any) => {
-    if (!promo?.is_active) return false;
-    const now = new Date();
-    const startRaw = promo.start_date ?? promo.startDate ?? null;
-    const endRaw = promo.end_date ?? promo.endDate ?? promo.expiry ?? null;
-    const startDate = toDateStart(startRaw);
-    const endDate = toDateEnd(endRaw);
-    if (startDate && now < startDate) return false;
-    if (endDate && now > endDate) return false;
-    return true;
-  }, [toDateStart, toDateEnd]);
-
-  const getActivePromotionForTransport = React.useCallback((transportId: string) => {
-    return promotions.find((promo: any) => {
-      if (!isPromotionActive(promo)) return false;
-      const linkedTransports = promo.linked_transports || [];
-      return linkedTransports.includes(parseInt(transportId));
-    }) || null;
-  }, [promotions, isPromotionActive]);
-
-  const computeDiscountedPrice = (basePrice?: number, promotion?: any) => {
-    if (typeof basePrice !== 'number') return { finalPrice: undefined as number | undefined, hasDiscount: false };
-    const discount = typeof promotion?.discount === 'string' ? promotion.discount : '';
-    if (!discount) return { finalPrice: basePrice, hasDiscount: false };
-
-    const trimmed = discount.trim();
-    if (trimmed.endsWith('%')) {
-      const pct = parseFloat(trimmed.replace('%', ''));
-      if (!Number.isFinite(pct)) return { finalPrice: basePrice, hasDiscount: false };
-      const finalPrice = Math.max(0, basePrice - basePrice * (pct / 100));
-      return { finalPrice, hasDiscount: true };
-    }
-
-    if (trimmed.startsWith('$')) {
-      const amt = parseFloat(trimmed.replace('$', ''));
-      if (!Number.isFinite(amt)) return { finalPrice: basePrice, hasDiscount: false };
-      const finalPrice = Math.max(0, basePrice - amt);
-      return { finalPrice, hasDiscount: true };
-    }
-
-    return { finalPrice: basePrice, hasDiscount: false };
-  };
 
   const transportNotifications: AdminNotification[] = [
     {
@@ -254,6 +194,7 @@ const Transport = () => {
           return;
         }
 
+<<<<<<< HEAD
         const [transportsResponse, promotionsResponse] = await Promise.all([
           apiRequest('/owner/transports', {
             headers: { Authorization: `Bearer ${token}` },
@@ -263,6 +204,12 @@ const Transport = () => {
 
         const media = transportsResponse?.data ?? [];
         const mapped = media.map((item: any) => {
+=======
+        const transportsResponse = await apiRequest('/owner/transports', {
+          headers: { Authorization: `Bearer ${token}` },
+        }) as { data?: any[] };
+        const mapped = (transportsResponse?.data ?? []).map((item: any) => {
+>>>>>>> leak/owner-message
           const rawType = String(item?.transport_type ?? 'Car Rental');
           const type = rawType === 'Shuttle' ? 'Train' : rawType === 'Other' ? 'Car Rental' : rawType;
           const rawStatus = String(item?.status ?? 'pending');
@@ -663,8 +610,6 @@ const Transport = () => {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 mb-8">
           {paginatedServices.map((service) => {
             const TypeIcon = getTypeIcon(service.type);
-            const activePromotion = getActivePromotionForTransport(service.id);
-            const { finalPrice, hasDiscount } = computeDiscountedPrice(service.price_per_KM, activePromotion);
             return (
               <div key={service.id} className="bg-white dark:bg-slate-900 rounded-lg border border-slate-200 dark:border-slate-800 shadow-sm hover:shadow-md transition-shadow">
                 <div className="relative">
@@ -676,11 +621,6 @@ const Transport = () => {
                   <div className={`absolute top-3 right-3 px-2 py-1 rounded-full text-xs font-medium ${getTypeColor(service.type)}`}>
                     {service.type}
                   </div>
-                  {activePromotion?.discount && (
-                    <div className="absolute top-3 left-3 px-2 py-1 rounded-full text-[10px] font-bold bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-300">
-                      {activePromotion.discount}
-                    </div>
-                  )}
                 </div>
                 <div className="p-4">
                   <h3 className="font-semibold text-slate-900 dark:text-slate-100 mb-2">{service.name}</h3>
@@ -697,10 +637,7 @@ const Transport = () => {
                     <div className="text-sm font-semibold text-emerald-600 dark:text-emerald-400 mb-2">Free</div>
                   ) : typeof service.price_per_KM === 'number' && (
                     <div className="text-sm font-semibold text-slate-900 dark:text-slate-100 mb-2">
-                      {hasDiscount && (
-                        <span className="text-xs text-slate-400 line-through mr-2">${service.price_per_KM.toFixed(2)}</span>
-                      )}
-                      ${(finalPrice ?? service.price_per_KM).toFixed(2)} / km
+                      ${service.price_per_KM.toFixed(2)} / km
                     </div>
                   )}
                   <p className="text-sm text-slate-600 dark:text-slate-300 mb-4">{service.details}</p>

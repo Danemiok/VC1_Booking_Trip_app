@@ -27,6 +27,7 @@ const AppContent = () => {
   const [activeProfileTab, setActiveProfileTab] = useState<any>('profile');
   const { user, logout } = useAuth();
   const previousUserRef = useRef(user);
+  const showPublicChrome = user?.role !== 'owner';
 
   const [selectedRecommendation, setSelectedRecommendation] = useState<any | null>(null);
   const [selectedDestination, setSelectedDestination] = useState<any | null>(null);
@@ -200,12 +201,10 @@ const AppContent = () => {
     window.scrollTo({ top: 0, behavior: 'smooth' });
   }, [view]);
 
-  const showCustomerChrome = !isAdminUser && !isOwnerUser;
-
   return (
-    <HelpCenterLayout>
+    <HelpCenterLayout showFloatingButton={user?.role !== 'owner'}>
       <div className="min-h-screen bg-white dark:bg-slate-900 transition-colors duration-300">
-        {showCustomerChrome && (
+        {showPublicChrome && (
           <Navbar
             onLoginClick={() => setView('login')}
             user={user}
@@ -247,13 +246,13 @@ const AppContent = () => {
           setTripData={setTripData}
         />
 
-        {showCustomerChrome && (
+        {showPublicChrome && (
           <Footer
             onLoginClick={() => setView('login')}
             onHomeClick={() => setView('landing')}
             onTripPlannerClick={handleTripPlannerClick}
             onBookingsClick={() => setView('bookings')}
-            onHotelsClick={() => setView('hotels')}
+            onHotelsClick={() => openHotels(view)}
             onRentalsClick={() => setView('rentals')}
             onActivitiesClick={() => setView('activities')}
             onTourGuidesClick={handleTourGuidesClick}
