@@ -110,6 +110,7 @@ Route::prefix('auth')->group(function () {
 });
 
 Route::get('/transports', [TransportController::class, 'publicIndex']);
+Route::get('/destinations/public', [DestinationController::class, 'getAllPublic']);
 Route::get('/destinations/public/all', [DestinationController::class, 'getAllPublic']);
 
 Route::middleware(['auth:sanctum', 'role:admin'])->get('/admin/access', function () {

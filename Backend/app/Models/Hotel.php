@@ -18,12 +18,17 @@ class Hotel extends Model
         'city',
         'country',
         'address',
+        'latitude',
+        'longitude',
         'description',
+        'image',
         'stars_rating',
         'is_active',
     ];
 
     protected $casts = [
+        'latitude' => 'decimal:8',
+        'longitude' => 'decimal:8',
         'stars_rating' => 'decimal:1',
         'is_active' => 'boolean',
     ];

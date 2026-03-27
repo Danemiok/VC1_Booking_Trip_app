@@ -21,17 +21,14 @@ export default defineConfig(({ mode }) => {
         '@': path.resolve(__dirname, 'src'),
       },
     },
-    server: {
-      // HMR is disabled in AI Studio via DISABLE_HMR env var.
-      // Do not modify; file watching is disabled to prevent flickering during agent edits.
-      hmr: env.DISABLE_HMR !== 'true',
-      proxy: {
-        '/api': {
-          target: apiProxyTarget,
-          changeOrigin: true,
-          secure: false,
-        },
-      },
+server: {
+  proxy: {
+    '/api': {
+      target: apiProxyTarget,
+      changeOrigin: true,
+      secure: false,
     },
+  },
+}
   };
 });

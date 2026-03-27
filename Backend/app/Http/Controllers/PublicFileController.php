@@ -2,14 +2,14 @@
 
 namespace App\Http\Controllers;
 
-use Illuminate\Http\Response;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
+use Symfony\Component\HttpFoundation\BinaryFileResponse;
 
 class PublicFileController extends Controller
 
 {
-    public function show(string $path): Response
+    public function show(string $path): BinaryFileResponse
     {
         $normalized = str_replace('\\', '/', trim($path));
         $normalized = ltrim($normalized, '/');
@@ -33,4 +33,3 @@ class PublicFileController extends Controller
         ]);
     }
 }
-

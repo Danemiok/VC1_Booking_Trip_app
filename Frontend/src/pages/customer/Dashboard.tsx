@@ -1,13 +1,12 @@
 import React, { useEffect, useState } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { format } from 'date-fns';
-import { Link } from 'react-router-dom';
+import { GoogleMap, LoadScript, Marker } from '@react-google-maps/api';
 import { 
   Search, 
   Calendar, 
   Users, 
   Hotel, 
-  Ship, 
   Car,
   Waves, 
   Star, 
@@ -43,6 +42,16 @@ const normalizeSearchText = (value: string): string =>
     .normalize('NFD')
     .replace(/[\u0300-\u036f]/g, '')
     .toLowerCase();
+
+const parseCoordinate = (value: unknown): number | null => {
+  if (value === null || value === undefined || value === '') return null;
+  const parsed = typeof value === 'number' ? value : parseFloat(String(value));
+  return Number.isFinite(parsed) ? parsed : null;
+};
+
+const DASHBOARD_DEFAULT_MAP_CENTER = { lat: 11.5564, lng: 104.9282 };
+const DASHBOARD_MAP_CONTAINER_STYLE = { width: '100%', height: '240px' };
+const DASHBOARD_LOCATION_DATALIST_ID = 'dashboard-location-options';
 
 const parseDateValue = (value: unknown): Date | null => {
   if (!value) return null;
@@ -87,11 +96,13 @@ const Hero = ({
   onSearch, 
   location, 
   setLocation,
+  locationOptions,
   tripData
 }: { 
   onSearch: (query: string, dates: { start: Date | null, end: Date | null }, guests: { adults: number, children: number }) => void;
   location: string;
   setLocation: (val: string) => void;
+  locationOptions: string[];
   tripData?: any;
 }) => {
   const [showDatePicker, setShowDatePicker] = useState(false);
@@ -298,9 +309,17 @@ const Hero = ({
                   value={location}
                   onChange={(e) => setLocation(e.target.value)}
                   onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
+                  list={DASHBOARD_LOCATION_DATALIST_ID}
                   placeholder="Where to next?" 
-                  className="bg-transparent border-none focus:ring-0 text-white placeholder:text-white/40 w-full text-base p-0 font-medium"
+                  className="w-full appearance-none border-0 bg-transparent p-0 text-base font-medium text-white outline-none ring-0 shadow-none placeholder:text-white/40 focus:border-0 focus:outline-none focus:ring-0 focus:shadow-none focus-visible:outline-none focus-visible:ring-0"
                 />
+                {locationOptions.length > 0 && (
+                  <datalist id={DASHBOARD_LOCATION_DATALIST_ID}>
+                    {locationOptions.map((option) => (
+                      <option key={option} value={option} />
+                    ))}
+                  </datalist>
+                )}
               </div>
               
               <div className="relative px-8 py-4 border-b md:border-b-0 md:border-r border-white/10 w-full md:w-auto">
@@ -486,7 +505,7 @@ const Categories = ({
   ];
 
   return (
-    <section className="py-12 px-4 sm:px-6 lg:px-8">
+  <section className="py-12 px-4 sm:px-6 lg:px-8">
       <div className="max-w-7xl mx-auto grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
         {categories.map((cat, i) => (
           <motion.div 
@@ -508,7 +527,7 @@ const Categories = ({
           </motion.div>
         ))}
       </div>
-    </section>
+  </section>
   );
 };
 
@@ -919,7 +938,7 @@ const SplitBillFeature = ({ onStartGroupBooking }: { onStartGroupBooking?: () =>
       </div>
     </section>
   );
-};
+}; 2
 
 const Newsletter = () => {
   const [email, setEmail] = useState('');
@@ -1005,8 +1024,11 @@ interface DashboardProps {
   onHotelsClick: () => void;
   onRentalsClick: () => void;
   onActivitiesClick: () => void;
+  onOpenBookTrip: () => void;
+  onOpenMyBookings: () => void;
   onSearch?: (query: string, dates: { start: Date | null, end: Date | null }, guests: { adults: number, children: number }) => void;
   onStartGroupBooking?: () => void;
+  onRequireLogin: () => void;
 }
 
 export const Dashboard: React.FC<DashboardProps> = ({ 
@@ -1017,14 +1039,18 @@ export const Dashboard: React.FC<DashboardProps> = ({
   onHotelsClick,
   onRentalsClick,
   onActivitiesClick,
+  onOpenBookTrip,
+  onOpenMyBookings,
   onSearch,
   onStartGroupBooking,
+  onRequireLogin,
 }) => {
   const [location, setLocation] = useState(() => '');
   const [searchQuery, setSearchQuery] = useState('');
   const [searchResults, setSearchResults] = useState<any[]>([]);
   const [hasSearched, setHasSearched] = useState(false);
   const [destinations, setDestinations] = useState<any[]>([]);
+  const googleMapsApiKey = import.meta.env.VITE_GOOGLE_MAPS_API_KEY || '';
   const { user, isAuthenticated } = useAuth();
   const [myBookings, setMyBookings] = useState<any[]>([]);
   const [myBookingsLoading, setMyBookingsLoading] = useState(false);
@@ -1068,6 +1094,84 @@ export const Dashboard: React.FC<DashboardProps> = ({
     load();
   }, []);
 
+  const destinationCoordinates = React.useMemo(() => {
+    const coordinateMap = new Map<string, { lat: number; lng: number; label: string }>();
+
+    const register = (labelValue: unknown, latValue: unknown, lngValue: unknown) => {
+      const label = String(labelValue || '').trim();
+      const lat = parseCoordinate(latValue);
+      const lng = parseCoordinate(lngValue);
+      if (!label || lat === null || lng === null) return;
+
+      const normalizedLabel = normalizeSearchText(label);
+      if (!coordinateMap.has(normalizedLabel)) {
+        coordinateMap.set(normalizedLabel, { lat, lng, label });
+      }
+
+      const area = label.split(',')[0]?.trim();
+      if (area) {
+        const normalizedArea = normalizeSearchText(area);
+        if (!coordinateMap.has(normalizedArea)) {
+          coordinateMap.set(normalizedArea, { lat, lng, label });
+        }
+      }
+    };
+
+    destinations.forEach((destination) => {
+      register(destination.location, destination.latitude ?? destination.lat, destination.longitude ?? destination.lng);
+      register(destination.name, destination.latitude ?? destination.lat, destination.longitude ?? destination.lng);
+    });
+
+    return coordinateMap;
+  }, [destinations]);
+
+  const locationOptions = React.useMemo(
+    () =>
+      Array.from(
+        new Set(
+          destinations
+            .map((destination) => String(destination.location || '').trim())
+            .filter(Boolean),
+        ),
+      ).sort((left, right) => left.localeCompare(right)),
+    [destinations],
+  );
+
+  const selectedLocationCoordinate = React.useMemo(() => {
+    const query = String(location || '').trim();
+    const values = Array.from(destinationCoordinates.values());
+    if (values.length === 0) return null;
+    if (!query) return values[0];
+
+    const normalizedQuery = normalizeSearchText(query);
+    const exact = destinationCoordinates.get(normalizedQuery);
+    if (exact) return exact;
+
+    for (const [key, value] of destinationCoordinates.entries()) {
+      if (key.includes(normalizedQuery) || normalizedQuery.includes(key)) {
+        return value;
+      }
+    }
+
+    return null;
+  }, [destinationCoordinates, location]);
+
+  const selectedLocationMapData = React.useMemo(() => {
+    if (selectedLocationCoordinate) return selectedLocationCoordinate;
+
+    const fallbackLabel = String(location || 'Cambodia').trim() || 'Cambodia';
+    return {
+      lat: DASHBOARD_DEFAULT_MAP_CENTER.lat,
+      lng: DASHBOARD_DEFAULT_MAP_CENTER.lng,
+      label: fallbackLabel,
+    };
+  }, [location, selectedLocationCoordinate]);
+
+  const dashboardMapCenter = {
+    lat: selectedLocationMapData.lat,
+    lng: selectedLocationMapData.lng,
+  };
+
   const handleSearchInternal = (query: string, dates: { start: Date | null, end: Date | null }, guests: { adults: number, children: number }) => {
     const trimmedQuery = query.trim();
     setSearchQuery(trimmedQuery);
@@ -1106,6 +1210,7 @@ export const Dashboard: React.FC<DashboardProps> = ({
         onSearch={handleSearchInternal} 
         location={location}
         setLocation={setLocation}
+        locationOptions={locationOptions}
         tripData={tripData}
       />
 
@@ -1121,26 +1226,39 @@ export const Dashboard: React.FC<DashboardProps> = ({
             </p>
             <div className="mt-6 flex gap-3">
               {isAuthenticated && user?.role === 'customer' ? (
-                <Link
-                  to="/customer/book"
+                <button
+                  type="button"
+                  onClick={onOpenBookTrip}
                   className="h-11 px-5 rounded-xl bg-blue-600 text-white font-bold hover:bg-blue-700 transition-colors inline-flex items-center justify-center"
                 >
                   Create booking
-                </Link>
+                </button>
               ) : (
-                <Link
-                  to="/login"
+                <button
+                  type="button"
+                  onClick={onRequireLogin}
                   className="h-11 px-5 rounded-xl bg-blue-600 text-white font-bold hover:bg-blue-700 transition-colors inline-flex items-center justify-center"
                 >
                   Login to book
-                </Link>
+                </button>
               )}
-              <Link
-                to="/customer/bookings"
-                className="h-11 px-5 rounded-xl border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-200 font-bold hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors inline-flex items-center justify-center"
-              >
-                My bookings
-              </Link>
+              {isAuthenticated && user?.role === 'customer' ? (
+                <button
+                  type="button"
+                  onClick={onOpenMyBookings}
+                  className="h-11 px-5 rounded-xl border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-200 font-bold hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors inline-flex items-center justify-center"
+                >
+                  My bookings
+                </button>
+              ) : (
+                <button
+                  type="button"
+                  onClick={onRequireLogin}
+                  className="h-11 px-5 rounded-xl border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-200 font-bold hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors inline-flex items-center justify-center"
+                >
+                  My bookings
+                </button>
+              )}
             </div>
           </div>
 
@@ -1154,15 +1272,40 @@ export const Dashboard: React.FC<DashboardProps> = ({
                   Your latest reservations appear here.
                 </p>
               </div>
-              <Link to="/customer/bookings" className="text-sm font-bold text-blue-600 hover:text-blue-700">
-                View all
-              </Link>
+              {isAuthenticated && user?.role === 'customer' ? (
+                <button
+                  type="button"
+                  onClick={onOpenMyBookings}
+                  className="text-sm font-bold text-blue-600 hover:text-blue-700"
+                >
+                  View all
+                </button>
+              ) : (
+                <button
+                  type="button"
+                  onClick={onRequireLogin}
+                  className="text-sm font-bold text-blue-600 hover:text-blue-700"
+                >
+                  View all
+                </button>
+              )}
             </div>
 
             <div className="mt-6">
               {!isAuthenticated || user?.role !== 'customer' ? (
-                <div className="py-10 text-center text-slate-600 dark:text-slate-300 font-semibold">
-                  Login as a customer to see your bookings.
+                <div className="py-10 text-center">
+                  <p className="font-semibold text-slate-600 dark:text-slate-300">
+                    Login as a customer to see your bookings.
+                  </p>
+                  <div className="mt-4 flex justify-center gap-3">
+                    <button
+                      type="button"
+                      onClick={onRequireLogin}
+                      className="h-11 px-5 rounded-xl bg-blue-600 text-white font-bold hover:bg-blue-700 transition-colors inline-flex items-center justify-center"
+                    >
+                      Login / Register
+                    </button>
+                  </div>
                 </div>
               ) : myBookingsLoading ? (
                 <div className="flex justify-center items-center py-10">
@@ -1194,6 +1337,47 @@ export const Dashboard: React.FC<DashboardProps> = ({
               )}
             </div>
           </div>
+        </div>
+
+        <div className="mt-6 card p-6">
+          <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
+            <div>
+              <h3 className="text-sm font-extrabold tracking-widest uppercase text-slate-500 dark:text-slate-300">
+                Location Map
+              </h3>
+              <p className="mt-2 text-sm text-slate-600 dark:text-slate-300">
+                Coordinates loaded from backend destination data.
+              </p>
+            </div>
+            <div className="text-left sm:text-right">
+              <p className="text-xs font-semibold uppercase tracking-wider text-slate-400">Selected location</p>
+              <p className="mt-1 text-sm font-bold text-slate-900 dark:text-white">
+                {selectedLocationMapData.label}
+              </p>
+            </div>
+          </div>
+
+          <div className="mt-5 overflow-hidden rounded-2xl border border-slate-200 dark:border-slate-800">
+            {googleMapsApiKey ? (
+              <LoadScript googleMapsApiKey={googleMapsApiKey}>
+                <GoogleMap
+                  mapContainerStyle={DASHBOARD_MAP_CONTAINER_STYLE}
+                  center={dashboardMapCenter}
+                  zoom={selectedLocationCoordinate ? 11 : 6}
+                >
+                  <Marker position={dashboardMapCenter} />
+                </GoogleMap>
+              </LoadScript>
+            ) : (
+              <div className="flex h-[240px] items-center justify-center px-4 text-center text-sm text-slate-500 dark:text-slate-400">
+                Add `VITE_GOOGLE_MAPS_API_KEY` in Frontend/.env to show Google Map.
+              </div>
+            )}
+          </div>
+
+          <p className="mt-3 text-sm text-slate-600 dark:text-slate-300">
+            {`Lat ${dashboardMapCenter.lat.toFixed(6)}, Lng ${dashboardMapCenter.lng.toFixed(6)}`}
+          </p>
         </div>
       </section>
       

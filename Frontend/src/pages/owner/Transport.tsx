@@ -31,65 +31,46 @@ interface TransportService {
   is_free?: boolean;
 }
 
-const buildTransportImageCandidates = (rawImage: string) => {
-  const trimmed = rawImage.trim();
-  if (!trimmed) return [];
+const DEFAULT_TRANSPORT_IMAGE =
+  'https://upload.wikimedia.org/wikipedia/commons/a/a2/Traffic_in_Cambodia..JPG';
 
-  const backendOrigin =
-    import.meta.env.VITE_BACKEND_ORIGIN ||
-    import.meta.env.VITE_API_URL ||
-    'http://127.0.0.1:8000';
+const resolveTransportImageUrl = (value: unknown): string => {
+  const backendOrigin = (import.meta.env.VITE_BACKEND_ORIGIN || 'http://127.0.0.1:8000').replace(/\/+$/, '');
+  const rawValue = typeof value === 'string' ? value.trim() : '';
 
-  const normalized = trimmed.replace(/^\/+/, '');
-  const candidates = new Set<string>();
-
-  if (/^(https?:|data:|blob:)/i.test(trimmed)) {
-    candidates.add(trimmed);
-  } else {
-    candidates.add(`${backendOrigin}/${normalized.replace(/^storage\//, '')}`);
-    candidates.add(`${backendOrigin}/${normalized}`);
-    candidates.add(`http://localhost:8000/${normalized}`);
-    candidates.add(`http://127.0.0.1:8000/${normalized}`);
-    candidates.add(`/${normalized}`);
-    if (normalized.startsWith('storage/')) {
-      candidates.add(`/${normalized.replace(/^storage\//, 'storage/')}`);
-      candidates.add(`/${normalized.replace(/^storage\//, '')}`);
-    }
+  if (!rawValue) {
+    return DEFAULT_TRANSPORT_IMAGE;
   }
 
-  return Array.from(candidates);
-};
+  let normalized = rawValue.replace(/\\/g, '/');
 
-const TransportCardImage: React.FC<{ src: string; alt: string; className?: string }> = ({
-  src,
-  alt,
-  className = '',
-}) => {
-  const candidates = React.useMemo(() => buildTransportImageCandidates(src), [src]);
-  const [candidateIndex, setCandidateIndex] = React.useState(0);
-
-  React.useEffect(() => {
-    setCandidateIndex(0);
-  }, [src]);
-
-  if (candidates.length === 0 || candidateIndex >= candidates.length) {
-    return (
-      <div
-        className={`bg-gradient-to-br from-slate-100 via-white to-slate-200 dark:from-slate-800 dark:via-slate-900 dark:to-slate-800 flex items-center justify-center ${className}`}
-      >
-        <span className="text-[11px] font-bold uppercase tracking-widest text-slate-400">No image</span>
-      </div>
-    );
+  if (/^https?:\/[^/]/i.test(normalized)) {
+    normalized = normalized.replace(/^([a-z]+:)\/(?!\/)/i, '$1//');
   }
 
-  return (
-    <img
-      src={candidates[candidateIndex]}
-      alt={alt}
-      className={className}
-      onError={() => setCandidateIndex((prev) => prev + 1)}
-    />
-  );
+  if (/^https?:\/\//i.test(normalized)) {
+    return normalized;
+  }
+
+  const relative = normalized.replace(/^\/+/, '');
+
+  if (relative.startsWith('storage/')) {
+    return `${backendOrigin}/${relative}`;
+  }
+
+  if (relative.startsWith('api/files/')) {
+    return `${backendOrigin}/${relative}`;
+  }
+
+  if (relative.startsWith('public/')) {
+    return `${backendOrigin}/storage/${relative.slice('public/'.length)}`;
+  }
+
+  if (relative.startsWith('uploads/') || relative.startsWith('images/')) {
+    return `${backendOrigin}/storage/${relative}`;
+  }
+
+  return `${backendOrigin}/${relative}`;
 };
 
 const Transport = () => {
@@ -263,10 +244,7 @@ const Transport = () => {
           apiRequest('/promotions').catch(() => ({ data: [] })) as Promise<{ data?: any[] }>
         ]);
 
-        setPromotions(Array.isArray(promotionsResponse?.data) ? promotionsResponse.data : []);
-
-        const backendOrigin = import.meta.env.VITE_BACKEND_ORIGIN || 'http://127.0.0.1:8000';
-        const mapped = (transportsResponse?.data ?? []).map((item: any) => {
+        const mapped = (response?.data ?? []).map((item: any) => {
           const rawType = String(item?.transport_type ?? 'Car Rental');
           const type = rawType === 'Shuttle' ? 'Train' : rawType === 'Other' ? 'Car Rental' : rawType;
           const rawStatus = String(item?.status ?? 'pending');
@@ -276,10 +254,9 @@ const Transport = () => {
               : rawStatus === 'inactive'
                 ? 'Not working'
                 : rawStatus === 'maintenance'
-                  ? 'Fixing'
-                  : 'Waiting';
-          const rawImage = String(item?.vehicle_photo_url ?? '');
-          const image = rawImage;
+                ? 'Fixing'
+                : 'Waiting';
+          const image = resolveTransportImageUrl(item?.vehicle_photo_url);
           return {
             id: String(item?.transport_id ?? item?.id ?? ''),
             name: String(item?.service_name ?? ''),
@@ -396,10 +373,9 @@ const Transport = () => {
             : rawStatus === 'inactive'
               ? 'Not working'
               : rawStatus === 'maintenance'
-                ? 'Fixing'
-                : 'Waiting';
-        const rawImage = String(item?.vehicle_photo_url ?? editForm.image ?? '');
-        const image = rawImage || editForm.image;
+              ? 'Fixing'
+              : 'Waiting';
+        const image = resolveTransportImageUrl(item?.vehicle_photo_url ?? editForm.image);
 
         const updatedService: TransportService = {
           ...editing,

@@ -17,7 +17,19 @@ export const API_BASE_URL = normalizeApiBaseUrl(RAW_API_BASE_URL);
 
 let authToken = null;
 
+function readStoredToken() {
+  if (typeof window === 'undefined') return null;
+  try {
+    return window.localStorage.getItem('auth_token');
+  } catch {
+    return null;
+  }
+}
+
 export function getApiAuthToken() {
+  if (!authToken) {
+    authToken = readStoredToken();
+  }
   return authToken;
 }
 
@@ -38,12 +50,15 @@ export async function apiRequest(path, options = {}) {
   const isFormData =
     typeof FormData !== 'undefined' && options?.body instanceof FormData;
 
+  // Build headers once and reuse so we do not overwrite FormData boundaries
   const headers = {
     Accept: 'application/json',
     ...(token && !hasAuthHeader ? { Authorization: `Bearer ${token}` } : {}),
     ...(options.headers ?? {}),
   };
 
+  // Only set JSON content-type when we're not sending FormData. For FormData
+  // the browser must set the multipart boundary automatically.
   if (!isFormData) {
     headers['Content-Type'] = 'application/json';
   }
@@ -51,12 +66,7 @@ export async function apiRequest(path, options = {}) {
   let response;
   try {
     response = await fetch(`${API_BASE_URL}${path}`, {
-      headers: {
-        Accept: 'application/json',
-        'Content-Type': 'application/json',
-        ...(token && !hasAuthHeader ? { Authorization: `Bearer ${token}` } : {}),
-        ...(options.headers ?? {}),
-      },
+      headers,
       ...options,
     });
   } catch (cause) {

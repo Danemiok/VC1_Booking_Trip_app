@@ -11,19 +11,72 @@ use Illuminate\Support\Str;
 
 class TransportController extends Controller
 {
-    private function toPublicTransportPhotoUrl(string $path): string
+    private function buildPublicImageUrl(?string $value): ?string
     {
-        $normalized = ltrim($path, '/');
+        if (!$value) {
+            return null;
+        }
+
+        $normalized = str_replace('\\', '/', trim($value));
+
+        if ($normalized === '') {
+            return null;
+        }
+
+        if (preg_match('#^https?:/[^/]#i', $normalized)) {
+            $normalized = preg_replace('#^([a-z]+:)/#i', '$1//', $normalized);
+        }
 
         if (preg_match('#^https?://#i', $normalized)) {
-            return $normalized;
+            $path = parse_url($normalized, PHP_URL_PATH) ?? '';
+            if ($path && str_contains($path, '/storage/')) {
+                $normalized = substr($path, strpos($path, '/storage/') + strlen('/storage/'));
+            } elseif ($path && str_contains($path, '/api/files/')) {
+                $normalized = substr($path, strpos($path, '/api/files/') + strlen('/api/files/'));
+            } else {
+                return $normalized;
+            }
         }
 
-        if (str_starts_with($normalized, 'storage/')) {
-            $normalized = substr($normalized, strlen('storage/'));
+        $relative = ltrim($normalized, '/');
+
+        if (str_starts_with($relative, 'storage/')) {
+            $relative = substr($relative, strlen('storage/'));
         }
 
-        return rtrim(url('/'), '/') . '/storage/' . ltrim($normalized, '/');
+        if (str_starts_with($relative, 'public/')) {
+            $relative = substr($relative, strlen('public/'));
+        }
+
+        if (Str::contains($relative, ['..', './', '.\\'])) {
+            return null;
+        }
+
+        $storagePath = public_path('storage');
+        if (is_dir($storagePath) || is_link($storagePath)) {
+            return url('/storage/' . $relative);
+        }
+
+        return url('/api/files/' . $relative);
+    }
+
+    private function formatTransport(Transport $transport): array
+    {
+        return [
+            'transport_id' => $transport->transport_id,
+            'id' => $transport->transport_id,
+            'owner_id' => $transport->owner_id,
+            'service_name' => $transport->service_name,
+            'transport_type' => $transport->transport_type,
+            'price_per_km' => $transport->price_per_km,
+            'is_free' => (bool) $transport->is_free,
+            'route_description' => $transport->route_description,
+            'service_details' => $transport->service_details,
+            'vehicle_photo_url' => $this->buildPublicImageUrl($transport->vehicle_photo_url),
+            'status' => $transport->status,
+            'created_at' => $transport->created_at,
+            'updated_at' => $transport->updated_at,
+        ];
     }
 
     public function publicIndex()
@@ -31,25 +84,27 @@ class TransportController extends Controller
         $transports = Transport::query()
             ->orderByDesc('transport_id')
             ->get()
-            ->map(function ($transport) {
+            ->map(function (Transport $transport) {
                 // Get promotion info for this transport
                 $basePrice = floatval($transport->price_per_km ?? 0);
                 $promotionInfo = PromotionService::getBestPromotionForTransport($basePrice, $transport->transport_id);
 
-                return array_merge($transport->toArray(), [
-                    'price_per_km' => $basePrice,
-                    'original_price' => $promotionInfo['original_price'],
-                    'discounted_price' => $promotionInfo['discounted_price'],
-                    'discount_amount' => $promotionInfo['discount_amount'],
-                    'discount_percentage' => $promotionInfo['discount_percentage'],
-                    'has_promotion' => $promotionInfo['promotion'] !== null,
-                    'promotion' => $promotionInfo['promotion'],
-                ]);
+                return array_merge(
+                    $this->formatTransport($transport),
+                    [
+                        'original_price' => $promotionInfo['original_price'],
+                        'discounted_price' => $promotionInfo['discounted_price'],
+                        'discount_amount' => $promotionInfo['discount_amount'],
+                        'discount_percentage' => $promotionInfo['discount_percentage'],
+                        'has_promotion' => $promotionInfo['promotion'] !== null,
+                        'promotion' => $promotionInfo['promotion'],
+                    ]
+                );
             });
 
         return response()->json([
             'message' => 'Transports fetched successfully',
-            'data' => $transports,
+            'data' => $transports->values(),
         ]);
     }
 
@@ -62,7 +117,7 @@ class TransportController extends Controller
 
         return response()->json([
             'message' => 'Transports fetched successfully',
-            'data' => $transports,
+            'data' => $transports->map(fn (Transport $transport) => $this->formatTransport($transport))->values(),
         ]);
     }
 
@@ -103,7 +158,7 @@ class TransportController extends Controller
 
         return response()->json([
             'message' => 'Transport created successfully',
-            'data' => $transport,
+            'data' => $this->formatTransport($transport->fresh()),
         ], 201);
     }
 
@@ -182,7 +237,7 @@ class TransportController extends Controller
 
         return response()->json([
             'message' => 'Transport updated successfully',
-            'data' => $transport,
+            'data' => $this->formatTransport($transport->fresh()),
         ]);
     }
 }

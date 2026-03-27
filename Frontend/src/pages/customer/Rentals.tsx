@@ -31,6 +31,48 @@ const normalizeSearchText = (value: string): string =>
     .replace(/[\u0300-\u036f]/g, '')
     .toLowerCase();
 
+const DEFAULT_RENTAL_IMAGE =
+  'https://images.unsplash.com/photo-1503376780353-7e6692767b70?auto=format&fit=crop&q=80&w=800';
+
+const resolveTransportImageUrl = (value: unknown): string => {
+  const backendOrigin = (import.meta.env.VITE_BACKEND_ORIGIN || 'http://127.0.0.1:8000').replace(/\/+$/, '');
+  const rawValue = typeof value === 'string' ? value.trim() : '';
+
+  if (!rawValue) {
+    return DEFAULT_RENTAL_IMAGE;
+  }
+
+  let normalized = rawValue.replace(/\\/g, '/');
+
+  if (/^https?:\/[^/]/i.test(normalized)) {
+    normalized = normalized.replace(/^([a-z]+:)\/(?!\/)/i, '$1//');
+  }
+
+  if (/^https?:\/\//i.test(normalized)) {
+    return normalized;
+  }
+
+  const relative = normalized.replace(/^\/+/, '');
+
+  if (relative.startsWith('storage/')) {
+    return `${backendOrigin}/${relative}`;
+  }
+
+  if (relative.startsWith('api/files/')) {
+    return `${backendOrigin}/${relative}`;
+  }
+
+  if (relative.startsWith('public/')) {
+    return `${backendOrigin}/storage/${relative.slice('public/'.length)}`;
+  }
+
+  if (relative.startsWith('uploads/') || relative.startsWith('images/')) {
+    return `${backendOrigin}/storage/${relative}`;
+  }
+
+  return `${backendOrigin}/${relative}`;
+};
+
 export const Rentals: React.FC<RentalsProps> = ({ onBack, onSelectVehicle }) => {
   const ITEMS_PER_PAGE = 6;
   const priceFilterOptions = [
@@ -66,10 +108,7 @@ export const Rentals: React.FC<RentalsProps> = ({ onBack, onSelectVehicle }) => 
           const type = rawType === 'Shuttle' ? 'Train' : rawType === 'Other' ? 'Car Rental' : rawType;
           const rawId = item?.transport_id ?? item?.id;
           const id = typeof rawId === 'number' ? rawId : parseInt(String(rawId), 10);
-          const rawImage = String(item?.vehicle_photo_url ?? '');
-          const image = rawImage
-            ? (rawImage.startsWith('http') ? rawImage : `${backendOrigin}/${rawImage.replace(/^\/+/, '')}`)
-            : 'https://images.unsplash.com/photo-1503376780353-7e6692767b70?auto=format&fit=crop&q=80&w=800';
+          const image = resolveTransportImageUrl(item?.vehicle_photo_url);
           const isFree = Boolean(item?.is_free ?? item?.isFree ?? false);
           const price = isFree
             ? 0

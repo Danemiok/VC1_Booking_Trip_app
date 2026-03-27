@@ -18,6 +18,8 @@ return new class extends Migration
             $table->string('city');
             $table->string('country');
             $table->string('address');
+            $table->decimal('latitude', 10, 8)->nullable();
+            $table->decimal('longitude', 11, 8)->nullable();
             $table->string('description')->nullable();
             $table->decimal('stars_rating', 2, 1)->nullable();
             $table->boolean('is_active')->default(true);

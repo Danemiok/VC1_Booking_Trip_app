@@ -1,5 +1,6 @@
 import React from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
+import { apiRequest } from '@/services/api';
 import { 
   ArrowLeft, 
   Star, 
@@ -25,7 +26,58 @@ import {
 const PropertyDetail = () => {
   const navigate = useNavigate();
   const location = useLocation();
-  const property = location.state?.property;
+
+  const initialProperty = location.state?.property ?? null;
+  const [property, setProperty] = React.useState<any | null>(initialProperty);
+  const [loading, setLoading] = React.useState(!initialProperty);
+  const [loadError, setLoadError] = React.useState('');
+
+  // Fetch property if navigated directly (no state) or on refresh
+  React.useEffect(() => {
+    if (property) return;
+
+    const parts = location.pathname.split('/').filter(Boolean);
+    const maybeId = parts[parts.length - 1];
+    if (!maybeId) {
+      setLoadError('Property not found');
+      setLoading(false);
+      return;
+    }
+
+    const fetchProperty = async () => {
+      setLoading(true);
+      setLoadError('');
+      try {
+        const res = await apiRequest(`/destinations/${encodeURIComponent(maybeId)}`, { method: 'GET' });
+        const data: any = (res as any)?.data ?? res;
+        if (!data) {
+          setLoadError('Property not found');
+          return;
+        }
+        setProperty(data);
+      } catch (error: any) {
+        const message =
+          typeof error?.data?.message === 'string'
+            ? error.data.message
+            : typeof error?.message === 'string'
+              ? error.message
+              : 'Failed to load property';
+        setLoadError(message);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    void fetchProperty();
+  }, [location.pathname, property]);
+  const defaultGallery = React.useMemo(
+    () => [
+      'https://picsum.photos/seed/property-detail-cover/1200/800',
+      'https://picsum.photos/seed/property-detail-2/800/600',
+      'https://picsum.photos/seed/property-detail-3/800/600',
+    ],
+    [],
+  );
 
   // Sample room data - in real app this would come from API or state
   const defaultRooms = [
@@ -160,11 +212,21 @@ const PropertyDetail = () => {
     setShowRoomModal(true);
   };
 
-  if (!property) {
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex items-center justify-center">
+        <p className="text-gray-600 dark:text-gray-300 text-lg">Loading property...</p>
+      </div>
+    );
+  }
+
+  if (loadError || !property) {
     return (
       <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex items-center justify-center">
         <div className="text-center">
-          <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-4">Property not found</h2>
+          <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-4">
+            {loadError || 'Property not found'}
+          </h2>
           <button
             onClick={() => navigate('/destinations')}
             className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
@@ -200,6 +262,21 @@ const PropertyDetail = () => {
     return { city, country };
   })();
 
+  const propertyImages = React.useMemo(() => {
+    const gallery = Array.isArray(property?.images)
+      ? property.images.filter((image: unknown): image is string => typeof image === 'string' && image.trim().length > 0)
+      : [];
+    const coverImage = typeof property?.image === 'string' && property.image.trim().length > 0 ? [property.image] : [];
+    const merged = Array.from(new Set([...coverImage, ...gallery].filter(Boolean)));
+    const fallback = merged.length > 0 ? merged : defaultGallery;
+
+    while (fallback.length < 3) {
+      fallback.push(defaultGallery[fallback.length % defaultGallery.length]);
+    }
+
+    return fallback;
+  }, [defaultGallery, property?.image, property?.images]);
+
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
       {/* Header */}
@@ -227,22 +304,27 @@ const PropertyDetail = () => {
               <div className="grid grid-cols-2 gap-4">
                 <div className="col-span-2">
                   <img 
-                    src={property.image} 
+                    src={propertyImages[0]} 
                     alt={property.name}
                     className="w-full h-96 object-cover rounded-xl"
                   />
                 </div>
                 <img 
-                  src="https://picsum.photos/seed/prop1/400/300" 
-                  alt="Property view 2"
+                  src={propertyImages[1]}
+                  alt={`${property.name} view 2`}
                   className="w-full h-48 object-cover rounded-xl"
                 />
                 <img 
-                  src="https://picsum.photos/seed/prop2/400/300" 
-                  alt="Property view 3"
+                  src={propertyImages[2]}
+                  alt={`${property.name} view 3`}
                   className="w-full h-48 object-cover rounded-xl"
                 />
               </div>
+              {propertyImages.length > 3 && (
+                <p className="mt-3 text-sm font-medium text-gray-500 dark:text-gray-400">
+                  {propertyImages.length} photos available for this destination.
+                </p>
+              )}
             </div>
 
             {/* Property Info */}
