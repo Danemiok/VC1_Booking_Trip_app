@@ -131,6 +131,10 @@ export default function OwnerMessagesPage() {
   const [error, setError] = useState<string | null>(null);
   const [showProfile, setShowProfile] = useState(false);
   const bottomRef = useRef<HTMLDivElement | null>(null);
+  const [lookupResult, setLookupResult] = useState<AppUser | null>(null);
+  const [lookupLoading, setLookupLoading] = useState(false);
+  const [lookupError, setLookupError] = useState<string | null>(null);
+  const lookupRef = useRef('');
 
   const customers = useMemo(() => {
     return users.filter((user) => (user.role || '').toLowerCase() === 'customer');
@@ -161,12 +165,19 @@ export default function OwnerMessagesPage() {
   const searchResults = useMemo(() => {
     const q = search.trim().toLowerCase();
     if (!q) return recentCustomers.length > 0 ? recentCustomers : customers;
-    return customers.filter((user) => {
+    const matches = customers.filter((user) => {
       const name = displayName(user).toLowerCase();
       const email = user.email.toLowerCase();
       return name.includes(q) || email.includes(q);
     });
-  }, [search, customers, recentCustomers]);
+    if (matches.length > 0) {
+      return matches;
+    }
+    if (lookupResult && String(lookupResult.id) !== String(selectedCustomer?.id ?? '')) {
+      return [lookupResult];
+    }
+    return [];
+  }, [search, customers, recentCustomers, lookupResult, selectedCustomer]);
 
   const activeConversationId = selectedCustomer ? String(selectedCustomer.id) : null;
 
@@ -203,6 +214,35 @@ export default function OwnerMessagesPage() {
       setLoading(false);
     }
   }
+
+  const lookupCustomerByEmail = async (email: string) => {
+    if (!email || !email.includes('@')) {
+      setLookupResult(null);
+      setLookupError(null);
+      setLookupLoading(false);
+      lookupRef.current = '';
+      return;
+    }
+
+    if (lookupRef.current === email) {
+      return;
+    }
+
+    lookupRef.current = email;
+    setLookupLoading(true);
+    setLookupError(null);
+
+    try {
+      const payload = await apiRequest<{ customer?: AppUser }>('/owner/customers/search?email=' + encodeURIComponent(email));
+      const customer = payload?.customer ?? null;
+      setLookupResult(customer);
+    } catch (err) {
+      setLookupResult(null);
+      setLookupError(err instanceof Error ? err.message : 'Customer not found');
+    } finally {
+      setLookupLoading(false);
+    }
+  };
 
   async function openConversation(customer: AppUser) {
     setSelectedCustomer(customer);
@@ -266,6 +306,25 @@ export default function OwnerMessagesPage() {
   useEffect(() => {
     refreshAll();
   }, []);
+
+  useEffect(() => {
+    const trimmed = search.trim();
+    if (!trimmed) {
+      setLookupResult(null);
+      setLookupError(null);
+      setLookupLoading(false);
+      lookupRef.current = '';
+      return;
+    }
+
+    const timer = window.setTimeout(() => {
+      void lookupCustomerByEmail(trimmed);
+    }, 400);
+
+    return () => {
+      window.clearTimeout(timer);
+    };
+  }, [search]);
 
   useEffect(() => {
     const timer = window.setInterval(() => {
@@ -346,7 +405,17 @@ export default function OwnerMessagesPage() {
                 <div className="p-6 text-sm text-slate-500">Loading conversations...</div>
               )}
 
-              {!loading && searchResults.length === 0 && (
+              {!loading && lookupLoading && (
+                <div className="p-6 text-sm text-slate-500">Looking up customer by email...</div>
+              )}
+
+              {!loading && !lookupLoading && lookupError && (
+                <div className="p-6 text-sm text-slate-500 text-rose-500">
+                  {lookupError}
+                </div>
+              )}
+
+              {!loading && !lookupLoading && !lookupError && searchResults.length === 0 && (
                 <div className="p-6 text-sm text-slate-500">
                   No customer found for this email. Check that the account exists and is signed in once.
                 </div>

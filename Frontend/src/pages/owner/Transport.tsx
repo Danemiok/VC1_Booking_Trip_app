@@ -194,22 +194,10 @@ const Transport = () => {
           return;
         }
 
-<<<<<<< HEAD
-        const [transportsResponse, promotionsResponse] = await Promise.all([
-          apiRequest('/owner/transports', {
-            headers: { Authorization: `Bearer ${token}` },
-          }) as Promise<{ data?: any[] }>,
-          apiRequest('/promotions').catch(() => ({ data: [] })) as Promise<{ data?: any[] }>
-        ]);
-
-        const media = transportsResponse?.data ?? [];
-        const mapped = media.map((item: any) => {
-=======
         const transportsResponse = await apiRequest('/owner/transports', {
           headers: { Authorization: `Bearer ${token}` },
         }) as { data?: any[] };
         const mapped = (transportsResponse?.data ?? []).map((item: any) => {
->>>>>>> leak/owner-message
           const rawType = String(item?.transport_type ?? 'Car Rental');
           const type = rawType === 'Shuttle' ? 'Train' : rawType === 'Other' ? 'Car Rental' : rawType;
           const rawStatus = String(item?.status ?? 'pending');
