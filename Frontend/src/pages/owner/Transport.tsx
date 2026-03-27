@@ -73,6 +73,23 @@ const resolveTransportImageUrl = (value: unknown): string => {
   return `${backendOrigin}/${relative}`;
 };
 
+const TransportCardImage = ({
+  src,
+  alt,
+  className,
+}: {
+  src?: string;
+  alt?: string;
+  className?: string;
+}) => (
+  <img
+    src={src || DEFAULT_TRANSPORT_IMAGE}
+    alt={alt ?? 'Transport Image'}
+    className={cn('w-full h-full object-cover', className)}
+    loading="lazy"
+  />
+);
+
 const Transport = () => {
   const navigate = useNavigate();
   const priceOptions = [
@@ -244,7 +261,8 @@ const Transport = () => {
           apiRequest('/promotions').catch(() => ({ data: [] })) as Promise<{ data?: any[] }>
         ]);
 
-        const mapped = (response?.data ?? []).map((item: any) => {
+        const media = transportsResponse?.data ?? [];
+        const mapped = media.map((item: any) => {
           const rawType = String(item?.transport_type ?? 'Car Rental');
           const type = rawType === 'Shuttle' ? 'Train' : rawType === 'Other' ? 'Car Rental' : rawType;
           const rawStatus = String(item?.status ?? 'pending');
@@ -273,6 +291,7 @@ const Transport = () => {
         });
 
         setServices(mapped);
+        setPromotions(promotionsResponse?.data ?? []);
         setLoadError('');
       } catch (error: any) {
         const message = error?.data?.message ?? error?.message ?? 'Failed to load transports.';

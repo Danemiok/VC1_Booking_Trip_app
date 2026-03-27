@@ -60,6 +60,34 @@ class TransportController extends Controller
         return url('/api/files/' . $relative);
     }
 
+    private function toPublicTransportPhotoUrl(?string $value): ?string
+    {
+        if (!$value) {
+            return null;
+        }
+
+        $normalized = str_replace('\\', '/', trim($value));
+        if ($normalized === '') {
+            return null;
+        }
+
+        if (preg_match('#^https?://#i', $normalized)) {
+            return $normalized;
+        }
+
+        $relative = ltrim($normalized, '/');
+
+        if (Str::startsWith($relative, 'storage/')) {
+            return $relative;
+        }
+
+        if (Str::startsWith($relative, 'api/files/')) {
+            return $relative;
+        }
+
+        return 'storage/' . $relative;
+    }
+
     private function formatTransport(Transport $transport): array
     {
         return [
