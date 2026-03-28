@@ -24,6 +24,8 @@ return new class extends Migration
             $table->string('type')->default('Boutique Hotel');
             $table->text('description')->nullable();
             $table->string('location');
+            $table->decimal('latitude', 10, 8)->nullable();
+            $table->decimal('longitude', 11, 8)->nullable();
             $table->text('address')->nullable();
             $table->decimal('price', 10, 2);
             $table->string('image')->nullable();

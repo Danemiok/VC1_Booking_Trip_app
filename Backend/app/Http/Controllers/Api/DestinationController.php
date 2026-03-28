@@ -56,6 +56,7 @@ class DestinationController extends Controller
                     'rating' => floatval($destination->rating ?? 0),
                     'stars_rating' => floatval($destination->rating ?? 0),
                     'image' => $destination->image,
+                    'images' => is_array($destination->images) ? array_values(array_filter($destination->images, fn ($image) => is_string($image) && trim($image) !== '')) : [],
                     'description' => $destination->description,
                     'address' => $destination->address ?? $destination->location,
                     'type' => $destination->type,

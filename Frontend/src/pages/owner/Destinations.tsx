@@ -99,12 +99,12 @@ const ASSET_ORIGIN =
   (typeof window !== 'undefined' ? window.location.origin : '');
 
 const PROPERTY_TYPES = [
-  'Boutique Hotel',
-  'Luxury Villa',
-  'Eco Lodge',
-  'Resort',
-  'Villa',
-  'Camp',
+  { value: 'Boutique Hotel', label: 'Hotel' },
+  { value: 'Luxury Villa', label: 'Villa' },
+  { value: 'Eco Lodge', label: 'Eco Stay' },
+  { value: 'Resort', label: 'Resort' },
+  { value: 'Villa', label: 'Villa House' },
+  { value: 'Camp', label: 'Camp' },
 ];
 
 const REQUIRED_DESTINATION_IMAGES = 4;
@@ -401,7 +401,7 @@ const DestinationModal = ({
         <div className="flex items-center justify-between p-6 border-b border-slate-200 dark:border-slate-800">
           <div>
             <h3 className="text-xl font-bold text-slate-900 dark:text-slate-100">{title}</h3>
-            <p className="text-sm text-slate-500 mt-1">Create or update your destination with backend data.</p>
+            <p className="text-sm text-slate-500 mt-1">Create or update your hotel with backend data.</p>
           </div>
           <button
             onClick={onClose}
@@ -439,8 +439,8 @@ const DestinationModal = ({
                 className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
               >
                 {PROPERTY_TYPES.map((type) => (
-                  <option key={type} value={type}>
-                    {type}
+                  <option key={type.value} value={type.value}>
+                    {type.label}
                   </option>
                 ))}
               </select>
@@ -1038,6 +1038,10 @@ const Destinations = () => {
       // Refresh from backend to ensure we show the canonical record (ids, timestamps, images)
       await loadDestinations({ silent: true });
 
+      if (!editingProperty) {
+        setSearchTerm('');
+        setFilterStatus('all');
+      }
       setFeedbackMessage(editingProperty ? 'Destination updated successfully.' : 'Destination created successfully.');
       resetFormModalState();
     } catch (error) {
@@ -1118,12 +1122,12 @@ const Destinations = () => {
                 </div>
                 <div>
                   <h1 className="text-4xl font-bold bg-gradient-to-r from-slate-900 via-blue-800 to-indigo-900 dark:from-white dark:via-blue-200 dark:to-indigo-200 bg-clip-text text-transparent">
-                    Destinations
+                    Hotels
                   </h1>
                 </div>
               </div>
               <p className="text-slate-600 dark:text-slate-400 text-lg ml-16">
-                Manage your property listings with <span className="font-semibold text-blue-600 dark:text-blue-400">live backend data</span>
+                Manage your hotel listings with <span className="font-semibold text-blue-600 dark:text-blue-400">live backend data</span>
               </p>
             </div>
 
@@ -1140,7 +1144,7 @@ const Destinations = () => {
                 className="group flex items-center px-6 py-3 bg-gradient-to-r from-blue-600 to-indigo-600 text-white font-semibold rounded-xl hover:from-blue-700 hover:to-indigo-700 transition-all duration-300 shadow-lg shadow-blue-500/25 hover:shadow-xl hover:shadow-blue-500/30 hover:-translate-y-0.5"
               >
                 <Plus size={20} className="mr-2 group-hover:scale-110 transition-transform" />
-                Add New Destination
+                Add New Hotel
               </button>
             </div>
           </div>
@@ -1285,7 +1289,7 @@ const Destinations = () => {
         <DestinationModal
           isOpen={showFormModal}
           isSubmitting={isSubmitting}
-          title={editingProperty ? 'Update Destination' : 'Create Destination'}
+          title={editingProperty ? 'Update Hotel' : 'Create Hotel'}
           formData={formData}
           imagePreviews={imagePreviews}
           formErrors={formErrors}

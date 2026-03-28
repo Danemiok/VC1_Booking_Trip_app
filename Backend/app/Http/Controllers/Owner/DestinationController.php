@@ -8,6 +8,7 @@ use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
@@ -212,6 +213,17 @@ class DestinationController extends Controller
 
         return is_numeric($value) ? (float) $value : null;
     }
+
+    private function filterDestinationAttributes(array $attributes): array
+    {
+        foreach (['latitude', 'longitude'] as $column) {
+            if (!Schema::hasColumn('destinations', $column)) {
+                unset($attributes[$column]);
+            }
+        }
+
+        return $attributes;
+    }
     /**
      * Get all destinations for the authenticated owner
      */
@@ -339,6 +351,7 @@ class DestinationController extends Controller
                 }
             }
 
+            $validated = $this->filterDestinationAttributes($validated);
             $destination = Destination::create($validated);
 
             return response()->json([
@@ -558,6 +571,7 @@ class DestinationController extends Controller
                 unset($validated['images']);
             }
 
+            $validated = $this->filterDestinationAttributes($validated);
             $destinationModel->update($validated);
 
             return response()->json([

@@ -465,10 +465,12 @@ const EditProperty = () => {
                     onChange={(e) => setFormData({...formData, type: e.target.value})}
                     className="w-full px-4 py-3 bg-slate-50 dark:bg-slate-800 border-transparent rounded-xl text-sm focus:bg-white dark:focus:bg-slate-900 focus:ring-2 focus:ring-blue-600/10 transition-all font-medium appearance-none"
                   >
-                    <option>Boutique Hotel</option>
-                    <option>Luxury Villa</option>
-                    <option>Eco Lodge</option>
-                    <option>Resort</option>
+                    <option value="Boutique Hotel">Hotel</option>
+                    <option value="Luxury Villa">Villa</option>
+                    <option value="Eco Lodge">Eco Stay</option>
+                    <option value="Resort">Resort</option>
+                    <option value="Villa">Villa House</option>
+                    <option value="Camp">Camp</option>
                   </select>
                 </div>
                 <div className="space-y-2">

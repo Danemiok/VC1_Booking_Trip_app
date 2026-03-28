@@ -32,11 +32,10 @@ export default function Destinations() {
   const [isLoading, setIsLoading] = React.useState(true);
   const [loadError, setLoadError] = React.useState('');
   const [groupMode, setGroupMode] = React.useState(true);
-  const [selectedStars, setSelectedStars] = React.useState<number | null>(4);
+  const [selectedStars, setSelectedStars] = React.useState<number | null>(null);
   const [selectedAreas, setSelectedAreas] = React.useState<string[]>([]);
   const [selectedAmenities, setSelectedAmenities] = React.useState<string[]>([]);
-  const [sortBy, setSortBy] = React.useState<'recommended' | 'price-low' | 'price-high' | 'rating'>('recommended');
-  const [currentPage, setCurrentPage] = React.useState(1);
+  const [sortBy, setSortBy] = React.useState<'newest' | 'recommended' | 'price-low' | 'price-high' | 'rating'>('newest');
   const [priceRange, setPriceRange] = React.useState(500);
   const DEST_CACHE_KEY = 'customer_destinations_cache';
 
@@ -164,6 +163,7 @@ export default function Destinations() {
     const items = [...filteredDestinations];
 
     items.sort((left, right) => {
+      if (sortBy === 'newest') return parseCreatedAt(right.created_at) - parseCreatedAt(left.created_at);
       if (sortBy === 'price-low') return left.price - right.price;
       if (sortBy === 'price-high') return right.price - left.price;
       if (sortBy === 'rating') return right.rating - left.rating;
@@ -186,32 +186,7 @@ export default function Destinations() {
     setSelectedAmenities((previous) => (previous.includes(amenity) ? previous.filter((item) => item !== amenity) : [...previous, amenity]));
   };
 
-  React.useEffect(() => {
-    setCurrentPage(1);
-  }, [priceRange, searchTerm, selectedAmenities, selectedAreas, selectedStars, sortBy]);
-
-  const ITEMS_PER_PAGE = 3;
-  const totalPages = Math.max(1, Math.ceil(sortedDestinations.length / ITEMS_PER_PAGE));
-  const visibleDestinations = sortedDestinations.slice((currentPage - 1) * ITEMS_PER_PAGE, currentPage * ITEMS_PER_PAGE);
-
-  React.useEffect(() => {
-    if (currentPage > totalPages) {
-      setCurrentPage(totalPages);
-    }
-  }, [currentPage, totalPages]);
-
-  const visiblePages = (() => {
-    if (totalPages <= 5) return Array.from({ length: totalPages }, (_, index) => index + 1);
-
-    const pages: Array<number | string> = [1];
-    if (currentPage > 3) pages.push('...');
-    for (let page = Math.max(2, currentPage - 1); page <= Math.min(totalPages - 1, currentPage + 1); page += 1) {
-      pages.push(page);
-    }
-    if (currentPage < totalPages - 2) pages.push('...');
-    pages.push(totalPages);
-    return pages;
-  })();
+  const visibleDestinations = sortedDestinations;
 
   return (
     <section className="mx-auto w-full max-w-7xl px-4 py-6 sm:px-6 lg:px-8">
@@ -234,9 +209,10 @@ export default function Destinations() {
               <span className="text-[11px] font-semibold uppercase tracking-[0.16em] text-slate-400">Sort By:</span>
               <select
                 value={sortBy}
-                onChange={(event) => setSortBy(event.target.value as 'recommended' | 'price-low' | 'price-high' | 'rating')}
+                onChange={(event) => setSortBy(event.target.value as 'newest' | 'recommended' | 'price-low' | 'price-high' | 'rating')}
                 className="border-none bg-transparent pr-5 text-sm font-semibold text-slate-900 outline-none focus:ring-0 dark:text-slate-100"
               >
+                <option value="newest">Newest First</option>
                 <option value="recommended">Recommended</option>
                 <option value="rating">Top Rated</option>
                 <option value="price-low">Price Low to High</option>
@@ -264,7 +240,7 @@ export default function Destinations() {
           ) : visibleDestinations.length > 0 ? (
             <div id="destination-results" className="space-y-4">
               {visibleDestinations.map((destination, index) => {
-                const itemIndex = (currentPage - 1) * ITEMS_PER_PAGE + index;
+                const itemIndex = index;
                 const badge = itemIndex % 3 === 0 ? 'Special Deal' : itemIndex % 3 === 2 ? 'Limited Offer' : 'Featured Stay';
                 const interestCount = groupMode ? 3 + (itemIndex % 4) : 1 + (itemIndex % 2);
                 const formerPrice = Math.round(destination.price * 1.3);
@@ -291,7 +267,47 @@ export default function Destinations() {
                   >
                     <div className="flex flex-col lg:flex-row">
                       <div className="relative lg:w-[43%]">
-                        <img src={destination.image} alt={destination.name} className="h-60 w-full object-cover lg:h-full" referrerPolicy="no-referrer" />
+                        {(() => {
+                          const galleryImages = Array.isArray(destination.images)
+                            ? destination.images
+                                .map((image: string) => String(image || '').trim())
+                                .filter(Boolean)
+                                .slice(0, 4)
+                            : [];
+                          const displayImages = [
+                            destination.image,
+                            ...galleryImages,
+                          ]
+                            .map((image) => String(image || '').trim())
+                            .filter(Boolean)
+                            .filter((image, index, items) => items.indexOf(image) === index)
+                            .slice(0, 4);
+
+                          if (displayImages.length > 1) {
+                            return (
+                              <div className="grid h-60 grid-cols-2 grid-rows-2 gap-1 overflow-hidden lg:h-full">
+                                {displayImages.map((image, index) => (
+                                  <img
+                                    key={`${destination.id}-${index}-${image}`}
+                                    src={image}
+                                    alt={`${destination.name} photo ${index + 1}`}
+                                    className={`h-full w-full object-cover ${index === 0 ? 'row-span-2' : ''}`}
+                                    referrerPolicy="no-referrer"
+                                  />
+                                ))}
+                              </div>
+                            );
+                          }
+
+                          return (
+                            <img
+                              src={displayImages[0] || destination.image}
+                              alt={destination.name}
+                              className="h-60 w-full object-cover lg:h-full"
+                              referrerPolicy="no-referrer"
+                            />
+                          );
+                        })()}
                         <div className={`absolute left-4 top-4 rounded-full px-3 py-1 text-[10px] font-bold uppercase tracking-[0.18em] text-white ${itemIndex % 3 === 2 ? 'bg-blue-600' : 'bg-red-500'}`}>{badge}</div>
                         <button className="absolute right-4 top-4 rounded-full bg-white/95 p-2 text-slate-400 shadow-md transition-colors hover:text-red-500">
                           <Heart className="h-4 w-4" />
@@ -367,43 +383,6 @@ export default function Destinations() {
             </div>
           )}
 
-          {sortedDestinations.length > 0 && (
-            <div className="mt-10 flex items-center justify-center gap-2">
-              <button
-                onClick={() => setCurrentPage((previous) => Math.max(1, previous - 1))}
-                disabled={currentPage === 1}
-                className="rounded-xl border border-slate-200 bg-white p-2 text-slate-400 transition-colors hover:text-slate-900 disabled:cursor-not-allowed disabled:opacity-40 dark:border-slate-800 dark:bg-slate-900 dark:hover:text-slate-100"
-              >
-                <ChevronLeft className="h-4 w-4" />
-              </button>
-
-              {visiblePages.map((page, index) =>
-                page === '...' ? (
-                  <span key={`ellipsis-${index}`} className="px-2 text-sm text-slate-400">...</span>
-                ) : (
-                  <button
-                    key={page}
-                    onClick={() => setCurrentPage(page)}
-                    className={`h-10 min-w-[40px] rounded-xl px-3 text-sm font-semibold transition-colors ${
-                      page === currentPage
-                        ? 'bg-blue-600 text-white'
-                        : 'border border-slate-200 bg-white text-slate-500 hover:border-slate-300 hover:text-slate-900 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-300 dark:hover:text-slate-100'
-                    }`}
-                  >
-                    {page}
-                  </button>
-                ),
-              )}
-
-              <button
-                onClick={() => setCurrentPage((previous) => Math.min(totalPages, previous + 1))}
-                disabled={currentPage === totalPages}
-                className="rounded-xl border border-slate-200 bg-white p-2 text-slate-400 transition-colors hover:text-slate-900 disabled:cursor-not-allowed disabled:opacity-40 dark:border-slate-800 dark:bg-slate-900 dark:hover:text-slate-100"
-              >
-                <ChevronRight className="h-4 w-4" />
-              </button>
-            </div>
-          )}
         </div>
       </div>
 
@@ -431,7 +410,47 @@ export default function Destinations() {
               className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm transition hover:-translate-y-1 hover:shadow-lg dark:border-slate-800 dark:bg-slate-900"
             >
               <div className="relative">
-                <img src={destination.image} alt={destination.name} className="h-56 w-full object-cover" />
+                {(() => {
+                  const galleryImages = Array.isArray(destination.images)
+                    ? destination.images
+                        .map((image) => String(image || '').trim())
+                        .filter(Boolean)
+                        .slice(0, 4)
+                    : [];
+                  const displayImages = [
+                    destination.image,
+                    ...galleryImages,
+                  ]
+                    .map((image) => String(image || '').trim())
+                    .filter(Boolean)
+                    .filter((image, index, items) => items.indexOf(image) === index)
+                    .slice(0, 4);
+
+                  if (displayImages.length > 1) {
+                    return (
+                      <div className="grid h-56 grid-cols-2 grid-rows-2 gap-1 overflow-hidden">
+                        {displayImages.map((image, index) => (
+                          <img
+                            key={`${destination.id}-${index}-${image}`}
+                            src={image}
+                            alt={`${destination.name} photo ${index + 1}`}
+                            className={`h-full w-full object-cover ${index === 0 ? 'row-span-2' : ''}`}
+                            referrerPolicy="no-referrer"
+                          />
+                        ))}
+                      </div>
+                    );
+                  }
+
+                  return (
+                    <img
+                      src={displayImages[0] || destination.image}
+                      alt={destination.name}
+                      className="h-56 w-full object-cover"
+                      referrerPolicy="no-referrer"
+                    />
+                  );
+                })()}
                 <div
                   className={`absolute left-4 top-4 rounded-full px-3 py-1 text-xs font-semibold text-white ${
                     destination.status === 'active' ? 'bg-emerald-500' : 'bg-amber-500'
@@ -539,6 +558,7 @@ type CustomerHotel = Hotel & {
   longitude?: number | null;
   images?: string[];
   destination_id?: number;
+  created_at?: string | null;
 };
 
 const mapDestinationToHotel = (destination: any): CustomerHotel => {
@@ -576,6 +596,7 @@ const mapDestinationToHotel = (destination: any): CustomerHotel => {
     latitude: Number.isFinite(Number(destination?.latitude)) ? Number(destination.latitude) : null,
     longitude: Number.isFinite(Number(destination?.longitude)) ? Number(destination.longitude) : null,
     images: Array.isArray(destination?.images) ? destination.images : [],
+    created_at: destination?.created_at ?? null,
   };
 };
 
@@ -707,8 +728,21 @@ const getAmenityMeta = (amenity: string) => {
 const DEFAULT_HOTEL_BANNER_IMAGE =
   'https://images.unsplash.com/photo-1566073771259-6a8506099945?auto=format&fit=crop&q=80&w=2000';
 
+const parseCreatedAt = (value?: string | null): number => {
+  if (!value) return 0;
+  const parsed = new Date(value);
+  const time = parsed.getTime();
+  return Number.isFinite(time) ? time : 0;
+};
+
+const parseHotelCreatedAt = (value?: string | null): number => {
+  if (!value) return 0;
+  const parsed = new Date(value);
+  const time = parsed.getTime();
+  return Number.isFinite(time) ? time : 0;
+};
+
 export const Hotels: React.FC<HotelsPageProps> = ({ tripData, browseDestination, onBack, onSelectHotel }) => {
-  const ITEMS_PER_PAGE = 3;
   const [groupMode, setGroupMode] = useState(true);
   const [priceRange, setPriceRange] = useState(2000);
   const [searchQuery, setSearchQuery] = useState(() => String(browseDestination?.location || browseDestination?.name || '').trim());
@@ -717,12 +751,12 @@ export const Hotels: React.FC<HotelsPageProps> = ({ tripData, browseDestination,
   );
   const [showMap, setShowMap] = useState(false);
   const [selectedHotelForMap, setSelectedHotelForMap] = useState<any | null>(null);
-  const [selectedStars, setSelectedStars] = useState<number | null>(4);
+  const [selectedStars, setSelectedStars] = useState<number | null>(null);
   const [selectedAreas, setSelectedAreas] = useState<string[]>([]);
   const [selectedAmenities, setSelectedAmenities] = useState<string[]>([]);
-  const [sortBy, setSortBy] = useState<'recommended' | 'price-low' | 'price-high' | 'rating'>('recommended');
+  const [sortBy, setSortBy] = useState<'newest' | 'recommended' | 'price-low' | 'price-high' | 'rating'>('newest');
   const [savedHotelIds, setSavedHotelIds] = useState<Record<string, boolean>>({});
-  const [currentPage, setCurrentPage] = useState(1);
+  const [expandedHotelGalleryIds, setExpandedHotelGalleryIds] = useState<Record<string, boolean>>({});
   const [hotels, setHotels] = useState<CustomerHotel[]>(getHotels());
   const [hotelsLoading, setHotelsLoading] = useState(true);
   const [hotelsError, setHotelsError] = useState('');
@@ -928,6 +962,7 @@ export const Hotels: React.FC<HotelsPageProps> = ({ tripData, browseDestination,
     const items = [...filteredHotels];
 
     items.sort((left, right) => {
+      if (sortBy === 'newest') return parseHotelCreatedAt(right.created_at) - parseHotelCreatedAt(left.created_at);
       if (sortBy === 'price-low') return parsePrice(left.price) - parsePrice(right.price);
       if (sortBy === 'price-high') return parsePrice(right.price) - parsePrice(left.price);
       if (sortBy === 'rating') return right.rating - left.rating;
@@ -936,26 +971,6 @@ export const Hotels: React.FC<HotelsPageProps> = ({ tripData, browseDestination,
 
     return items;
   }, [filteredHotels, sortBy]);
-
-  const totalPages = Math.max(1, Math.ceil(sortedHotels.length / ITEMS_PER_PAGE));
-  const paginatedHotels = sortedHotels.slice(
-    (currentPage - 1) * ITEMS_PER_PAGE,
-    currentPage * ITEMS_PER_PAGE
-  );
-  const visiblePages = React.useMemo(() => {
-    if (totalPages <= 5) return Array.from({ length: totalPages }, (_, index) => index + 1);
-
-    const pages: Array<number | string> = [1];
-    if (currentPage > 3) pages.push('...');
-
-    for (let page = Math.max(2, currentPage - 1); page <= Math.min(totalPages - 1, currentPage + 1); page += 1) {
-      pages.push(page);
-    }
-
-    if (currentPage < totalPages - 2) pages.push('...');
-    pages.push(totalPages);
-    return pages;
-  }, [currentPage, totalPages]);
   const regionLabel = React.useMemo(
     () =>
       String(
@@ -1162,22 +1177,6 @@ export const Hotels: React.FC<HotelsPageProps> = ({ tripData, browseDestination,
     if (!query) return;
     openMapForQuery(query);
   };
-
-  const handlePageChange = (nextPage: number) => {
-    const safePage = Math.min(Math.max(nextPage, 1), totalPages);
-    setCurrentPage(safePage);
-    document.getElementById('hotel-results')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
-  };
-
-  useEffect(() => {
-    setCurrentPage(1);
-  }, [searchQuery, priceRange, selectedAreas, selectedAmenities, selectedStars, sortBy]);
-
-  useEffect(() => {
-    if (currentPage > totalPages) {
-      setCurrentPage(totalPages);
-    }
-  }, [currentPage, totalPages]);
 
   useEffect(() => {
     const frameId = window.requestAnimationFrame(() => {
@@ -1567,9 +1566,10 @@ export const Hotels: React.FC<HotelsPageProps> = ({ tripData, browseDestination,
                   <span className="text-[10px] font-semibold uppercase tracking-[0.18em] text-slate-400">{t('sort_by')}</span>
                   <select
                     value={sortBy}
-                    onChange={(event) => setSortBy(event.target.value as 'recommended' | 'price-low' | 'price-high' | 'rating')}
+                    onChange={(event) => setSortBy(event.target.value as 'newest' | 'recommended' | 'price-low' | 'price-high' | 'rating')}
                     className="bg-transparent font-semibold text-slate-900 outline-none dark:text-white"
                   >
+                    <option value="newest">Newest First</option>
                     <option value="recommended">{t('recommended')}</option>
                     <option value="price-low">Price: Low to High</option>
                     <option value="price-high">Price: High to Low</option>
@@ -1592,8 +1592,8 @@ export const Hotels: React.FC<HotelsPageProps> = ({ tripData, browseDestination,
                 )}
 
                 {!hotelsLoading && !hotelsError && sortedHotels.length > 0 && (
-                  <div className="space-y-4">
-                    {paginatedHotels.map((hotel, index) => {
+                  <div className="grid gap-4 md:grid-cols-2">
+                    {sortedHotels.map((hotel, index) => {
                       const hotelKey = String(hotel.id);
                       const hotelImage = hotel.image || hotel.images?.[0] || '';
                       const effectiveNightlyPrice = parsePrice(hotel.discounted_price ?? hotel.price);
@@ -1602,23 +1602,91 @@ export const Hotels: React.FC<HotelsPageProps> = ({ tripData, browseDestination,
                       const nightlyPrice = effectiveNightlyPrice;
                       const quickTotal = nightlyPrice * tripNights;
                       const ratingValue = typeof hotel.rating === 'number' ? hotel.rating : parseFloat(String(hotel.rating)) || 0;
-                      const visualIndex = (currentPage - 1) * ITEMS_PER_PAGE + index;
+                      const visualIndex = index;
                       const topAmenities = (hotel.amenities ?? []).slice(0, 3);
                       const saved = Boolean(savedHotelIds[hotelKey]);
+                      const isGalleryExpanded = Boolean(expandedHotelGalleryIds[hotelKey]);
+                      const galleryImages = Array.isArray(hotel.images)
+                        ? hotel.images
+                            .map((image) => String(image || '').trim())
+                            .filter(Boolean)
+                            .slice(0, 4)
+                        : [];
+                      const displayImages = [
+                        hotelImage,
+                        ...galleryImages,
+                      ]
+                        .map((image) => String(image || '').trim())
+                        .filter(Boolean)
+                        .filter((image, imageIndex, items) => items.indexOf(image) === imageIndex)
+                        .slice(0, 4);
+                      const extraImages = displayImages.slice(1, 4);
 
                       return (
                         <article
                           key={hotel.id}
-                          className="mx-auto w-full max-w-5xl rounded-[1.35rem] border border-slate-200 bg-white p-2.5 shadow-[0_16px_38px_-30px_rgba(15,23,42,0.32)] dark:border-slate-800 dark:bg-slate-950 sm:p-3"
+                          className="flex h-full w-full flex-col rounded-[1.35rem] border border-slate-200 bg-white p-2.5 shadow-[0_16px_38px_-30px_rgba(15,23,42,0.32)] dark:border-slate-800 dark:bg-slate-950 sm:p-3"
                         >
                           <div className="flex flex-col gap-3">
                             <div className="relative overflow-hidden rounded-[1rem]">
-                              <img
-                                src={hotelImage}
-                                alt={hotel.name}
-                                className="h-48 w-full object-cover sm:h-56"
-                                referrerPolicy="no-referrer"
-                              />
+                              <button
+                                type="button"
+                                onClick={() =>
+                                  setExpandedHotelGalleryIds((previous) => ({
+                                    ...previous,
+                                    [hotelKey]: !previous[hotelKey],
+                                  }))
+                                }
+                                className="block w-full text-left"
+                                aria-label={isGalleryExpanded ? `Collapse ${hotel.name} photos` : `Expand ${hotel.name} photos`}
+                              >
+                                <img
+                                  src={displayImages[0] || hotelImage}
+                                  alt={hotel.name}
+                                  className="h-40 w-full object-cover sm:h-48"
+                                  referrerPolicy="no-referrer"
+                                />
+                              </button>
+                              {displayImages.length > 1 && (
+                                <button
+                                  type="button"
+                                  onClick={() =>
+                                    setExpandedHotelGalleryIds((previous) => ({
+                                      ...previous,
+                                      [hotelKey]: !previous[hotelKey],
+                                    }))
+                                  }
+                                  className="absolute left-3 bottom-3 inline-flex items-center gap-1.5 rounded-full bg-slate-900/80 px-3 py-1.5 text-[11px] font-semibold text-white backdrop-blur-sm transition-colors hover:bg-slate-900"
+                                >
+                                  {isGalleryExpanded ? 'Show less' : `${extraImages.length} more photos`}
+                                  <ChevronDown className={`h-3.5 w-3.5 transition-transform ${isGalleryExpanded ? 'rotate-180' : ''}`} />
+                                </button>
+                              )}
+                              {isGalleryExpanded && extraImages.length > 0 && (
+                                <div className="grid grid-cols-3 gap-1 border-t border-white/10 bg-white p-1 sm:p-1.5 dark:bg-slate-950">
+                                  {extraImages.map((image, imageIndex) => (
+                                    <button
+                                      key={`${hotel.id}-extra-${imageIndex}-${image}`}
+                                      type="button"
+                                      onClick={() =>
+                                        setExpandedHotelGalleryIds((previous) => ({
+                                          ...previous,
+                                          [hotelKey]: false,
+                                        }))
+                                      }
+                                      className="overflow-hidden rounded-lg"
+                                      aria-label={`Collapse gallery for ${hotel.name}`}
+                                    >
+                                      <img
+                                        src={image}
+                                        alt={`${hotel.name} photo ${imageIndex + 2}`}
+                                        className="h-20 w-full object-cover sm:h-24"
+                                        referrerPolicy="no-referrer"
+                                      />
+                                    </button>
+                                  ))}
+                                </div>
+                              )}
                               <button
                                 type="button"
                                 aria-label={saved ? `Remove ${hotel.name} from saved stays` : `Save ${hotel.name}`}
@@ -1775,51 +1843,6 @@ export const Hotels: React.FC<HotelsPageProps> = ({ tripData, browseDestination,
                   </div>
                 )}
               </div>
-
-              {!hotelsLoading && !hotelsError && totalPages > 1 && (
-                <div className="flex items-center justify-center gap-2 pt-2">
-                  <button
-                    type="button"
-                    onClick={() => handlePageChange(currentPage - 1)}
-                    disabled={currentPage === 1}
-                    className="rounded-xl border border-slate-200 bg-white p-2 text-slate-400 transition-colors hover:text-slate-900 disabled:cursor-not-allowed disabled:opacity-40 dark:border-slate-800 dark:bg-slate-950 dark:hover:text-white"
-                  >
-                    <ChevronLeft className="h-4 w-4" />
-                  </button>
-
-                  <div className="flex items-center gap-2">
-                    {visiblePages.map((page, index) =>
-                      page === '...' ? (
-                        <span key={`ellipsis-${index}`} className="px-2 text-sm text-slate-400">
-                          ...
-                        </span>
-                      ) : (
-                        <button
-                          key={page}
-                          type="button"
-                          onClick={() => handlePageChange(Number(page))}
-                          className={`h-9 min-w-9 rounded-xl px-3 text-sm font-semibold transition-colors ${
-                            Number(page) === currentPage
-                              ? 'bg-blue-600 text-white'
-                              : 'border border-slate-200 bg-white text-slate-500 hover:text-slate-900 dark:border-slate-800 dark:bg-slate-950 dark:text-slate-300 dark:hover:text-white'
-                          }`}
-                        >
-                          {page}
-                        </button>
-                      ),
-                    )}
-                  </div>
-
-                  <button
-                    type="button"
-                    onClick={() => handlePageChange(currentPage + 1)}
-                    disabled={currentPage === totalPages}
-                    className="rounded-xl border border-slate-200 bg-white p-2 text-slate-400 transition-colors hover:text-slate-900 disabled:cursor-not-allowed disabled:opacity-40 dark:border-slate-800 dark:bg-slate-950 dark:hover:text-white"
-                  >
-                    <ChevronRight className="h-4 w-4" />
-                  </button>
-                </div>
-              )}
             </div>
           </div>
         </div>
