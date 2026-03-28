@@ -525,6 +525,60 @@ const parsePrice = (price: string | number): number => {
   return parseFloat(String(price).replace(/[^0-9.]/g, '')) || 0;
 };
 
+const DEFAULT_HOTEL_IMAGE = 'https://images.unsplash.com/photo-1542314831-068cd1dbfeeb?auto=format&fit=crop&q=80&w=1600';
+
+type CustomerHotel = Hotel & {
+  has_promotion?: boolean;
+  promotion?: any;
+  discount_percentage?: number;
+  discounted_price?: number;
+  original_price?: number;
+  status?: string;
+  owner?: { id?: number; name?: string; email?: string };
+  latitude?: number | null;
+  longitude?: number | null;
+  images?: string[];
+  destination_id?: number;
+};
+
+const mapDestinationToHotel = (destination: any): CustomerHotel => {
+  const priceFromPayload = destination?.price ?? destination?.original_price ?? destination?.discounted_price ?? 0;
+  const normalizedBasePrice = parsePrice(priceFromPayload);
+  const discountedPrice = parsePrice(destination?.discounted_price ?? destination?.price ?? normalizedBasePrice);
+  const originalPrice = parsePrice(destination?.original_price ?? destination?.price ?? normalizedBasePrice);
+  const normalizedId = Number(destination?.destination_id ?? destination?.id ?? Date.now());
+  const resolvedId = Number.isFinite(normalizedId) ? normalizedId : Date.now();
+
+  const galleryImage =
+    (Array.isArray(destination?.images) && destination.images.find((img: string) => String(img || '').trim())) ?? '';
+  const resolvedImage =
+    String(destination?.image || galleryImage || '')
+      .trim() || DEFAULT_HOTEL_IMAGE;
+
+  return {
+    id: resolvedId,
+    destination_id: normalizedId,
+    name: destination?.name ?? 'Luxury stay',
+    location: destination?.location ?? 'Cambodia',
+    price: discountedPrice,
+    rating: Number(destination?.rating ?? 4.5),
+    image: resolvedImage,
+    description: destination?.description ?? destination?.type ?? '',
+    amenities: Array.isArray(destination?.amenities) ? destination.amenities : [],
+    type: destination?.type ?? 'Hotel',
+    status: destination?.status ?? 'active',
+    has_promotion: Boolean(destination?.has_promotion),
+    promotion: destination?.promotion ?? null,
+    discount_percentage: Number(destination?.discount_percentage ?? 0),
+    discounted_price: discountedPrice,
+    original_price: originalPrice,
+    owner: destination?.owner ?? null,
+    latitude: Number.isFinite(Number(destination?.latitude)) ? Number(destination.latitude) : null,
+    longitude: Number.isFinite(Number(destination?.longitude)) ? Number(destination.longitude) : null,
+    images: Array.isArray(destination?.images) ? destination.images : [],
+  };
+};
+
 const formatHotelDate = (value?: string): string => {
   if (!value) return 'Unknown date';
   const parsed = new Date(value);
@@ -669,7 +723,7 @@ export const Hotels: React.FC<HotelsPageProps> = ({ tripData, browseDestination,
   const [sortBy, setSortBy] = useState<'recommended' | 'price-low' | 'price-high' | 'rating'>('recommended');
   const [savedHotelIds, setSavedHotelIds] = useState<Record<string, boolean>>({});
   const [currentPage, setCurrentPage] = useState(1);
-  const [hotels, setHotels] = useState<Hotel[]>([]);
+  const [hotels, setHotels] = useState<CustomerHotel[]>(getHotels());
   const [hotelsLoading, setHotelsLoading] = useState(true);
   const [hotelsError, setHotelsError] = useState('');
   const [searchDestinations, setSearchDestinations] = useState<any[]>([]);
@@ -719,36 +773,26 @@ export const Hotels: React.FC<HotelsPageProps> = ({ tripData, browseDestination,
     setHotelsLoading(true);
     setHotelsError('');
 
-    getHotels()
-      .then((data) => {
-        if (!cancelled) setHotels(data);
-      })
-      .catch(() => {
-        if (!cancelled) setHotelsError('Failed to load hotels.');
-      })
-      .finally(() => {
-        if (!cancelled) setHotelsLoading(false);
-      });
-
-    return () => {
-      cancelled = true;
-    };
-  }, []);
-
-  useEffect(() => {
-    let cancelled = false;
-
-    getPublicDestinations()
-      .then((data) => {
+    (async () => {
+      try {
+        const data = await getPublicDestinations();
+        if (cancelled) return;
+        const normalized = (Array.isArray(data) ? data : []).map(mapDestinationToHotel);
         if (!cancelled) {
+          setHotels(normalized.length > 0 ? normalized : getHotels());
           setSearchDestinations(Array.isArray(data) ? data : []);
         }
-      })
-      .catch(() => {
+      } catch (error) {
         if (!cancelled) {
-          setSearchDestinations([]);
+          setHotelsError('Failed to load hotels. Showing curated collections.');
+          setHotels(getHotels());
         }
-      });
+      } finally {
+        if (!cancelled) {
+          setHotelsLoading(false);
+        }
+      }
+    })();
 
     return () => {
       cancelled = true;
@@ -1146,11 +1190,18 @@ export const Hotels: React.FC<HotelsPageProps> = ({ tripData, browseDestination,
   }, []);
 
   const openHotelWithSelection = (hotel: any) => {
+    const effectivePrice = parsePrice(hotel?.discounted_price ?? hotel?.price ?? 0);
+    const originalPrice = parsePrice(hotel?.original_price ?? hotel?.price ?? effectivePrice);
     setSelectedHotelForMap(hotel);
     setShowMap(true);
     onSelectHotel({
       ...hotel,
-      price: parsePrice(hotel?.price),
+      price: effectivePrice,
+      discounted_price: effectivePrice,
+      original_price: originalPrice,
+      discount_percentage: hotel?.discount_percentage,
+      has_promotion: hotel?.has_promotion,
+      promotion: hotel?.promotion,
     });
   };
 
@@ -1545,7 +1596,10 @@ export const Hotels: React.FC<HotelsPageProps> = ({ tripData, browseDestination,
                     {paginatedHotels.map((hotel, index) => {
                       const hotelKey = String(hotel.id);
                       const hotelImage = hotel.image || hotel.images?.[0] || '';
-                      const nightlyPrice = parsePrice(hotel.price);
+                      const effectiveNightlyPrice = parsePrice(hotel.discounted_price ?? hotel.price);
+                      const originalNightlyPrice = parsePrice(hotel.original_price ?? hotel.price);
+                      const hasDiscount = Boolean(hotel.has_promotion && originalNightlyPrice > effectiveNightlyPrice);
+                      const nightlyPrice = effectiveNightlyPrice;
                       const quickTotal = nightlyPrice * tripNights;
                       const ratingValue = typeof hotel.rating === 'number' ? hotel.rating : parseFloat(String(hotel.rating)) || 0;
                       const visualIndex = (currentPage - 1) * ITEMS_PER_PAGE + index;
@@ -1609,6 +1663,12 @@ export const Hotels: React.FC<HotelsPageProps> = ({ tripData, browseDestination,
                                     <span>{hotel.location}</span>
                                   </button>
 
+                                  {hasDiscount && hotel.discount_percentage ? (
+                                    <div className="inline-flex items-center gap-1.5 rounded-full border border-emerald-200 bg-emerald-50 px-3 py-1 text-[11px] font-semibold text-emerald-600 dark:border-emerald-500/30 dark:bg-emerald-500/10">
+                                      <Sparkles className="h-3.5 w-3.5" />
+                                      Save {hotel.discount_percentage}% today
+                                    </div>
+                                  ) : null}
                                   <div className="flex flex-wrap gap-2">
                                     {topAmenities.map((amenity) => {
                                       const { Icon, label } = getAmenityMeta(amenity);
@@ -1633,6 +1693,11 @@ export const Hotels: React.FC<HotelsPageProps> = ({ tripData, browseDestination,
                                   <p className="mt-1 text-[2rem] font-extrabold leading-none text-slate-900 dark:text-white">
                                     ${nightlyPrice}
                                   </p>
+                                  {hasDiscount && originalNightlyPrice > nightlyPrice && (
+                                    <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-slate-400 line-through">
+                                      ${originalNightlyPrice}
+                                    </p>
+                                  )}
                                   <p className="mt-2 text-xs text-slate-500 dark:text-slate-400">
                                     {tripNights} {tripNights === 1 ? t('night') : t('nights')}
                                   </p>

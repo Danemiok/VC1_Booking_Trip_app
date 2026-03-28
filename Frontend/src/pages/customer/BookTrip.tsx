@@ -201,7 +201,7 @@ export const BookTrip: React.FC = () => {
     // Load promotions
     const loadPromotions = async () => {
       try {
-        const response = await apiRequest('/promotions') as { data?: any[] };
+      const response = await apiRequest('/promotions/public') as { data?: any[] };
         setPromotions(Array.isArray(response?.data) ? response.data : []);
       } catch (err) {
         // Silently fail if promotions can't be loaded

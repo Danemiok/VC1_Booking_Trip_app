@@ -55,23 +55,38 @@ const Promotions = () => {
       try {
         const data = await getPromotions();
         // Transform database data to match frontend format
-        const transformedPromotions = data.map((p: any) => ({
-          ...p,
-          id: p.id,
-          name: p.title,
-          title: p.title,
-          discount: p.discount,
-          type: p.type,
-          status: p.is_active ? 'active' : 'expired',
-          reach: '-',
-          start_date: p.start_date || p.created_at || null,
-          end: p.expiry || '-',
-          end_date: p.expiry,
-          code: p.code || '',
-          color: p.color || '#3B82F6',
-          service_category: 'hotel',
-          created_at: p.created_at,
-        }));
+        const transformedPromotions = data.map((p: any) => {
+          const linkedDestinations = Array.isArray(p?.linked_destinations) ? p.linked_destinations : [];
+          const linkedTransports = Array.isArray(p?.linked_transports) ? p.linked_transports : [];
+          const normalizedCategory =
+            typeof p?.service_category === 'string' && ['hotel', 'transport', 'all'].includes(p.service_category)
+              ? p.service_category
+              : linkedDestinations.length && linkedTransports.length
+                ? 'all'
+                : linkedTransports.length
+                  ? 'transport'
+                  : 'hotel';
+
+          return {
+            ...p,
+            id: p.id,
+            name: p.title,
+            title: p.title,
+            discount: p.discount,
+            type: p.type,
+            status: p.is_active ? 'active' : 'expired',
+            reach: '-',
+            start_date: p.start_date || p.created_at || null,
+            end: p.expiry || '-',
+            end_date: p.expiry,
+            code: p.code || '',
+            color: p.color || '#3B82F6',
+            service_category: normalizedCategory,
+            linked_destinations: linkedDestinations,
+            linked_transports: linkedTransports,
+            created_at: p.created_at,
+          };
+        });
         setPromotions(transformedPromotions);
       } catch (error) {
         console.error('Failed to fetch promotions:', error);

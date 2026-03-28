@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { 
   Tag, 
@@ -10,6 +10,7 @@ import {
   CheckCircle2,
   Percent
 } from 'lucide-react';
+import { apiRequest } from '@/services/api';
 
 interface Promotion {
   id: number;
@@ -23,88 +24,58 @@ interface Promotion {
   color: string;
   originalPrice: string;
   promoPrice: string;
+  status?: 'active' | 'expired';
+  reach?: string;
 }
 
-const promotions: Promotion[] = [
-  {
-    id: 1,
-    title: "Summer Escape at Raffles",
-    description: "Enjoy a luxurious stay with 25% off on all suites including breakfast for two.",
-    discount: "25% OFF",
-    type: 'hotel',
-    image: "https://images.unsplash.com/photo-1542314831-068cd1dbfeeb?auto=format&fit=crop&q=80&w=800",
-    expiry: "Ends in 12 days",
-    code: "RAFFLES25",
-    color: "bg-blue-600",
-    originalPrice: "$320/night",
-    promoPrice: "$240/night"
-  },
-  {
-    id: 2,
-    title: "Island Hopper Special",
-    description: "Book your round-trip ferry to Koh Rong and get a free upgrade to VIP seating.",
-    discount: "FREE UPGRADE",
-    type: 'transport',
-    image: "https://images.unsplash.com/photo-1544551763-46a013bb70d5?auto=format&fit=crop&q=80&w=800",
-    expiry: "Ends in 5 days",
-    code: "ISLANDVIP",
-    color: "bg-emerald-600",
-    originalPrice: "$28/seat",
-    promoPrice: "$28/seat + VIP"
-  },
-  {
-    id: 3,
-    title: "Angkor Wat Sunrise Tour",
-    description: "Early bird promotion! Book 30 days in advance and save 15% on private tours.",
-    discount: "15% OFF",
-    type: 'all',
-    image: "https://images.unsplash.com/photo-1500048993953-d23a436266cf?auto=format&fit=crop&q=80&w=800",
-    expiry: "Limited time",
-    code: "SUNRISE15",
-    color: "bg-orange-600",
-    originalPrice: "$120",
-    promoPrice: "$102"
-  },
-  {
-    id: 4,
-    title: "Mondulkiri Eco-Stay",
-    description: "Stay 3 nights and pay for 2 at our partner eco-lodges in the jungle.",
-    discount: "STAY 3 PAY 2",
-    type: 'hotel',
-    image: "https://images.unsplash.com/photo-1581852017103-68ac65514cf7?auto=format&fit=crop&q=80&w=800",
-    expiry: "Ends in 20 days",
-    code: "ECOSTAY",
-    color: "bg-cyan-600",
-    originalPrice: "$180/night",
-    promoPrice: "$120/night (avg)"
-  },
-  {
-    id: 5,
-    title: "Private Car Transfer",
-    description: "10% discount on all private car transfers between Phnom Penh and Siem Reap.",
-    discount: "10% OFF",
-    type: 'transport',
-    image: "https://images.unsplash.com/photo-1596394516093-501ba68a0ba6?auto=format&fit=crop&q=80&w=800",
-    expiry: "Ongoing",
-    code: "TRANSFER10",
-    color: "bg-indigo-600",
-    originalPrice: "$55",
-    promoPrice: "$49.50"
-  },
-  {
-    id: 6,
-    title: "Kep Crab Market Feast",
-    description: "Exclusive voucher for a free seafood platter with any hotel booking in Kep.",
-    discount: "FREE PLATTER",
-    type: 'hotel',
-    image: "https://images.unsplash.com/photo-1596394516093-501ba68a0ba6?auto=format&fit=crop&q=80&w=800",
-    expiry: "Ends in 8 days",
-    code: "KEPFEAST",
-    color: "bg-red-600",
-    originalPrice: "$140/night",
-    promoPrice: "$140/night + platter"
+const DEFAULT_PROMOTION_IMAGES: Record<'hotel' | 'transport' | 'all', string> = {
+  hotel: 'https://images.unsplash.com/photo-1542314831-068cd1dbfeeb?auto=format&fit=crop&q=80&w=1600',
+  transport: 'https://images.unsplash.com/photo-1544551763-46a013bb70d5?auto=format&fit=crop&q=80&w=1600',
+  all: 'https://images.unsplash.com/photo-1491553895911-0055eca6402d?auto=format&fit=crop&q=80&w=1600',
+};
+
+const mapPromotion = (raw: any): Promotion => {
+  const linkedDestinations = Array.isArray(raw?.linked_destinations) ? raw.linked_destinations : [];
+  const linkedTransports = Array.isArray(raw?.linked_transports) ? raw.linked_transports : [];
+
+  let inferredType: Promotion['type'] = 'hotel';
+  if (
+    raw?.service_category === 'transport' ||
+    (!raw?.service_category && !linkedDestinations.length && linkedTransports.length)
+  ) {
+    inferredType = 'transport';
+  } else if (
+    raw?.service_category === 'all' ||
+    (linkedDestinations.length && linkedTransports.length)
+  ) {
+    inferredType = 'all';
   }
-];
+
+  const badgeColor = inferredType === 'transport'
+    ? 'bg-emerald-600'
+    : inferredType === 'all'
+      ? 'bg-orange-600'
+      : 'bg-blue-600';
+
+  const image = DEFAULT_PROMOTION_IMAGES[inferredType] ?? DEFAULT_PROMOTION_IMAGES.hotel;
+  const expiry = raw?.end_date || raw?.expiry || 'Limited time';
+
+  return {
+    id: Number(raw?.id ?? 0),
+    title: raw?.title ?? 'Limited offer',
+    description: raw?.description ?? 'Exclusive savings from our partners.',
+    discount: raw?.discount ?? 'Special offer',
+    type: inferredType,
+    image,
+    expiry,
+    code: raw?.code ? String(raw.code) : `PROMO-${raw?.id ?? '000'}`,
+    color: raw?.color ?? badgeColor,
+    originalPrice: raw?.original_price ? `$${raw.original_price}` : 'Ask for price',
+    promoPrice: raw?.discount ?? 'Special rate',
+    status: raw?.is_active ? 'active' : 'expired',
+    reach: raw?.reach ?? '0',
+  };
+};
 
 interface PromotionsProps {
   onBack: () => void;
@@ -117,6 +88,36 @@ export const Promotions: React.FC<PromotionsProps> = ({ onBack, onClaim }) => {
   const [email, setEmail] = useState('');
   const [isSubscribed, setIsSubscribed] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [promotions, setPromotions] = useState<Promotion[]>([]);
+  const [loadingPromotions, setLoadingPromotions] = useState(true);
+
+  useEffect(() => {
+    let didCancel = false;
+    const loadPromotions = async () => {
+      setLoadingPromotions(true);
+      try {
+        const response = await apiRequest('/promotions/public');
+        const payload = Array.isArray(response?.data) ? response.data : [];
+        if (!didCancel) {
+          setPromotions(payload.map(mapPromotion));
+        }
+      } catch (error) {
+        console.error('Failed to load promotions:', error);
+        if (!didCancel) {
+          setPromotions([]);
+        }
+      } finally {
+        if (!didCancel) {
+          setLoadingPromotions(false);
+        }
+      }
+    };
+
+    loadPromotions();
+    return () => {
+      didCancel = true;
+    };
+  }, []);
 
   const filteredPromotions = promotions.filter(p => 
     activeFilter === 'all' ? true : p.type === activeFilter
@@ -251,86 +252,92 @@ export const Promotions: React.FC<PromotionsProps> = ({ onBack, onClaim }) => {
 
         {/* Promotions Grid */}
         <div id="promo-results" className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-          <AnimatePresence mode="popLayout">
-            {filteredPromotions.map((promo) => (
-              <motion.div
-                key={promo.id}
-                layout
-                initial={{ opacity: 0, scale: 0.9 }}
-                animate={{ opacity: 1, scale: 1 }}
-                exit={{ opacity: 0, scale: 0.9 }}
-                className="bg-white dark:bg-slate-800 rounded-[2.5rem] overflow-hidden shadow-sm border border-slate-100 dark:border-slate-700 flex flex-col group hover:shadow-xl transition-all duration-500"
-              >
-                <div className="relative h-56 overflow-hidden">
-                  <img 
-                    src={promo.image} 
-                    alt={promo.title} 
-                    className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
-                    referrerPolicy="no-referrer"
-                  />
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
-                  <div className="absolute top-6 left-6">
-                    <span className={`${promo.color} text-white text-[10px] font-bold px-3 py-1.5 rounded-full shadow-lg flex items-center gap-1.5`}>
-                      <Percent className="w-3 h-3" /> {promo.discount}
-                    </span>
-                  </div>
-                  <div className="absolute bottom-6 left-6 right-6">
-                    <div className="flex items-center gap-2 text-white/80 text-[10px] font-bold uppercase tracking-widest mb-1">
-                      {promo.type === 'hotel' ? <Hotel className="w-3 h-3" /> : <Ship className="w-3 h-3" />}
-                      {promo.type} PROMOTION
+          {loadingPromotions ? (
+            <div className="col-span-full text-center text-sm text-slate-500 py-16">Loading promotions...</div>
+          ) : filteredPromotions.length === 0 ? (
+            <div className="col-span-full text-center text-sm text-slate-500 py-16">No promotions available right now.</div>
+          ) : (
+            <AnimatePresence mode="popLayout">
+              {filteredPromotions.map((promo) => (
+                <motion.div
+                  key={promo.id}
+                  layout
+                  initial={{ opacity: 0, scale: 0.9 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  exit={{ opacity: 0, scale: 0.9 }}
+                  className="bg-white dark:bg-slate-800 rounded-[2.5rem] overflow-hidden shadow-sm border border-slate-100 dark:border-slate-700 flex flex-col group hover:shadow-xl transition-all duration-500"
+                >
+                  <div className="relative h-56 overflow-hidden">
+                    <img 
+                      src={promo.image} 
+                      alt={promo.title} 
+                      className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
+                      referrerPolicy="no-referrer"
+                    />
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
+                    <div className="absolute top-6 left-6">
+                      <span className={`${promo.color} text-white text-[10px] font-bold px-3 py-1.5 rounded-full shadow-lg flex items-center gap-1.5`}>
+                        <Percent className="w-3 h-3" /> {promo.discount}
+                      </span>
                     </div>
-                    <h3 className="text-xl font-bold text-white line-clamp-1">{promo.title}</h3>
+                    <div className="absolute bottom-6 left-6 right-6">
+                      <div className="flex items-center gap-2 text-white/80 text-[10px] font-bold uppercase tracking-widest mb-1">
+                        {promo.type === 'hotel' ? <Hotel className="w-3 h-3" /> : <Ship className="w-3 h-3" />}
+                        {promo.type} PROMOTION
+                      </div>
+                      <h3 className="text-xl font-bold text-white line-clamp-1">{promo.title}</h3>
+                    </div>
                   </div>
-                </div>
 
-                <div className="p-8 flex-1 flex flex-col">
-                  <p className="text-slate-500 dark:text-slate-400 text-sm leading-relaxed mb-6 flex-1">
-                    {promo.description}
-                  </p>
+                  <div className="p-8 flex-1 flex flex-col">
+                    <p className="text-slate-500 dark:text-slate-400 text-sm leading-relaxed mb-6 flex-1">
+                      {promo.description}
+                    </p>
 
-                  <div className="flex items-center justify-between mb-6">
-                    <div>
-                      <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Price</p>
-                      <div className="flex items-baseline gap-2 mt-1">
-                        <span className="text-xs font-bold text-slate-400 line-through">{promo.originalPrice}</span>
-                        <span className="text-sm font-extrabold text-slate-900 dark:text-white">{promo.promoPrice}</span>
+                    <div className="flex items-center justify-between mb-6">
+                      <div>
+                        <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Price</p>
+                        <div className="flex items-baseline gap-2 mt-1">
+                          <span className="text-xs font-bold text-slate-400 line-through">{promo.originalPrice}</span>
+                          <span className="text-sm font-extrabold text-slate-900 dark:text-white">{promo.promoPrice}</span>
+                        </div>
+                      </div>
+                      <div className="text-right">
+                        <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">You Save</p>
+                        <p className="text-sm font-extrabold text-blue-600 dark:text-blue-400 mt-1">{promo.discount}</p>
                       </div>
                     </div>
-                    <div className="text-right">
-                      <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">You Save</p>
-                      <p className="text-sm font-extrabold text-blue-600 dark:text-blue-400 mt-1">{promo.discount}</p>
+                    
+                    <div className="flex items-center gap-2 text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-6">
+                      <Clock className="w-3.5 h-3.5" />
+                      {promo.expiry}
                     </div>
-                  </div>
-                  
-                  <div className="flex items-center gap-2 text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-6">
-                    <Clock className="w-3.5 h-3.5" />
-                    {promo.expiry}
-                  </div>
 
-                  <div className="flex flex-col gap-3">
-                    <div className="flex items-center gap-2">
-                      <div className="flex-1 bg-slate-50 dark:bg-slate-900 border border-dashed border-slate-200 dark:border-slate-700 rounded-xl px-4 py-3 flex items-center justify-between">
-                        <span className="text-xs font-mono font-bold text-slate-900 dark:text-white">{promo.code}</span>
-                        <button 
-                          onClick={() => handleCopyCode(promo.code)}
-                          className="text-[10px] font-bold text-blue-600 hover:underline"
-                        >
-                          {copiedCode === promo.code ? 'Copied!' : 'Copy'}
-                        </button>
+                    <div className="flex flex-col gap-3">
+                      <div className="flex items-center gap-2">
+                        <div className="flex-1 bg-slate-50 dark:bg-slate-900 border border-dashed border-slate-200 dark:border-slate-700 rounded-xl px-4 py-3 flex items-center justify-between">
+                          <span className="text-xs font-mono font-bold text-slate-900 dark:text-white">{promo.code}</span>
+                          <button 
+                            onClick={() => handleCopyCode(promo.code)}
+                            className="text-[10px] font-bold text-blue-600 hover:underline"
+                          >
+                            {copiedCode === promo.code ? 'Copied!' : 'Copy'}
+                          </button>
+                        </div>
                       </div>
+                      <button 
+                        onClick={() => onClaim(promo)}
+                        className="w-full bg-slate-900 dark:bg-blue-600 hover:bg-slate-800 dark:hover:bg-blue-700 text-white py-4 rounded-2xl font-bold text-sm transition-all flex items-center justify-center gap-2 group/btn"
+                      >
+                        Claim Now
+                        <ArrowRight className="w-4 h-4 group-hover/btn:translate-x-1 transition-transform" />
+                      </button>
                     </div>
-                    <button 
-                      onClick={() => onClaim(promo)}
-                      className="w-full bg-slate-900 dark:bg-blue-600 hover:bg-slate-800 dark:hover:bg-blue-700 text-white py-4 rounded-2xl font-bold text-sm transition-all flex items-center justify-center gap-2 group/btn"
-                    >
-                      Claim Now
-                      <ArrowRight className="w-4 h-4 group-hover/btn:translate-x-1 transition-transform" />
-                    </button>
                   </div>
-                </div>
-              </motion.div>
-            ))}
-          </AnimatePresence>
+                </motion.div>
+              ))}
+            </AnimatePresence>
+          )}
         </div>
 
         {/* Newsletter / More Info */}

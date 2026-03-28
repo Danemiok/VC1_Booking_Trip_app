@@ -16,6 +16,7 @@ import {
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { cn } from '@/utils/utils';
+import { apiRequest } from '@/services/api';
 import { createPromotion } from '@/services/promotionService';
 
 type PromotionServiceCategory = 'hotel' | 'transport';
@@ -58,6 +59,7 @@ const CreatePromotion = () => {
   const [searchTransport, setSearchTransport] = React.useState('');
   const [isLoadingDestinations, setIsLoadingDestinations] = React.useState(false);
   const [isLoadingTransports, setIsLoadingTransports] = React.useState(false);
+  const [showAdditionalLinkedItems, setShowAdditionalLinkedItems] = React.useState(false);
 
   const steps = [
     { id: 1, label: 'Promotion Type', icon: Target },
@@ -67,6 +69,9 @@ const CreatePromotion = () => {
     { id: 5, label: 'Preview', icon: CheckCircle2 },
   ];
 
+  const showDestinationsSection = serviceCategory === 'hotel' || showAdditionalLinkedItems;
+  const showTransportsSection = serviceCategory === 'transport' || showAdditionalLinkedItems;
+
   // Load destinations and transports when entering step 3
   React.useEffect(() => {
     if (step === 3) {
@@ -74,6 +79,10 @@ const CreatePromotion = () => {
       loadTransports();
     }
   }, [step]);
+
+  React.useEffect(() => {
+    setShowAdditionalLinkedItems(false);
+  }, [serviceCategory]);
 
   const loadDestinations = async () => {
     setIsLoadingDestinations(true);
@@ -378,16 +387,33 @@ const CreatePromotion = () => {
             <p className="text-sm text-slate-500 mb-4">
               Choose which destinations and transports this promotion applies to. Only selected items will receive the discount.
             </p>
+            <div className="flex flex-wrap items-center gap-2">
+              <span className="text-xs text-slate-500">
+                {serviceCategory === 'hotel'
+                  ? 'Focusing on hotel destinations for this campaign.'
+                  : 'Focusing on transport services for this campaign.'}
+              </span>
+              <button
+                type="button"
+                onClick={() => setShowAdditionalLinkedItems((prev) => !prev)}
+                className="text-xs font-bold text-blue-600 border border-blue-200 rounded-full px-3 py-1 hover:bg-blue-50 transition"
+              >
+                {showAdditionalLinkedItems
+                  ? 'Hide the other category'
+                  : `Link ${serviceCategory === 'hotel' ? 'transports' : 'destinations'} too`}
+              </button>
+            </div>
             
             {/* Linked Destinations */}
-            <div className="space-y-3">
-              <div className="flex items-center gap-2">
-                <MapPin className="text-emerald-500" size={18} />
-                <h5 className="font-semibold text-sm">Linked Destinations</h5>
-                <span className="ml-auto text-xs font-medium px-2 py-1 bg-emerald-100 text-emerald-700 rounded-full">
-                  {linkedDestinations.length} selected
-                </span>
-              </div>
+            {showDestinationsSection && (
+              <div className="space-y-3">
+                <div className="flex items-center gap-2">
+                  <MapPin className="text-emerald-500" size={18} />
+                  <h5 className="font-semibold text-sm">Linked Destinations</h5>
+                  <span className="ml-auto text-xs font-medium px-2 py-1 bg-emerald-100 text-emerald-700 rounded-full">
+                    {linkedDestinations.length} selected
+                  </span>
+                </div>
               <div className="relative">
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={16} />
                 <input
@@ -432,17 +458,19 @@ const CreatePromotion = () => {
                   ))
                 )}
               </div>
-            </div>
+              </div>
+            )}
 
             {/* Linked Transports */}
-            <div className="space-y-3">
-              <div className="flex items-center gap-2">
-                <Car className="text-blue-500" size={18} />
-                <h5 className="font-semibold text-sm">Linked Transports</h5>
-                <span className="ml-auto text-xs font-medium px-2 py-1 bg-blue-100 text-blue-700 rounded-full">
-                  {linkedTransports.length} selected
-                </span>
-              </div>
+            {showTransportsSection && (
+              <div className="space-y-3">
+                <div className="flex items-center gap-2">
+                  <Car className="text-blue-500" size={18} />
+                  <h5 className="font-semibold text-sm">Linked Transports</h5>
+                  <span className="ml-auto text-xs font-medium px-2 py-1 bg-blue-100 text-blue-700 rounded-full">
+                    {linkedTransports.length} selected
+                  </span>
+                </div>
               <div className="relative">
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={16} />
                 <input
@@ -487,7 +515,8 @@ const CreatePromotion = () => {
                   ))
                 )}
               </div>
-            </div>
+              </div>
+            )}
           </div>
         )}
 

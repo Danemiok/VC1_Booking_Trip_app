@@ -226,7 +226,6 @@ const Transport = () => {
         });
 
         setServices(mapped);
-        setPromotions(promotionsResponse?.data ?? []);
         setLoadError('');
       } catch (error: any) {
         const message = error?.data?.message ?? error?.message ?? 'Failed to load transports.';

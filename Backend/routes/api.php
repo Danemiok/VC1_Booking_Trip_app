@@ -27,6 +27,7 @@ use App\Http\Controllers\Owner\OwnerProfileController;
 // use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Api\BookingController; // ADD THIS
 use App\Http\Controllers\Api\OwnerNotificationController;
+use App\Http\Controllers\Api\PromotionController as ApiPromotionController;
 use App\Http\Controllers\Api\TripGroupController;
 
 // Simple health check (useful for confirming API + DB connectivity from the frontend).
@@ -110,6 +111,7 @@ Route::prefix('auth')->group(function () {
 });
 
 Route::get('/transports', [TransportController::class, 'publicIndex']);
+Route::get('/promotions/public', [ApiPromotionController::class, 'index']);
 Route::get('/destinations/public', [DestinationController::class, 'getAllPublic']);
 Route::get('/destinations/public/all', [DestinationController::class, 'getAllPublic']);
 

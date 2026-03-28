@@ -46,13 +46,22 @@ const RegisterVehicle = () => {
     if (!formData.is_free && (!formData.price_per_KM || parseFloat(formData.price_per_KM) <= 0)) {
       newErrors.price_per_KM = 'Valid price per KM is required';
     }
+    if (!imageFile && !formData.image) {
+      newErrors.vehicle_photo = 'Vehicle photo is required';
+    }
 
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
 
   const handleSubmit = async () => {
-    if (!validate()) return;
+    const valid = validate();
+    if (!valid) {
+      if (!imageFile && !formData.image) {
+        setSubmitError('Please upload a vehicle photo before adding the transport.');
+      }
+      return;
+    }
     setSubmitError('');
 
     const token = getAuthToken();
@@ -115,7 +124,14 @@ const RegisterVehicle = () => {
     setImageFile(file);
     setImagePreview(nextPreview);
     setFormData((prev) => ({ ...prev, image: '' }));
+    setErrors((prev) => {
+      const { vehicle_photo, ...rest } = prev;
+      return rest;
+    });
+    setSubmitError('');
   };
+
+  const canUploadPhoto = Boolean(imageFile || formData.image);
 
   return (
     <div className="p-8 max-w-[1000px] mx-auto space-y-8">
@@ -247,7 +263,7 @@ const RegisterVehicle = () => {
             </button>
             <button 
               onClick={handleSubmit}
-              disabled={isSubmitting}
+              disabled={isSubmitting || !canUploadPhoto}
               className="px-8 py-2.5 bg-blue-600 text-white rounded-xl font-bold text-sm hover:bg-blue-700 transition-all shadow-lg shadow-blue-500/20 active:scale-95 disabled:opacity-70 disabled:cursor-not-allowed"
             >
               {isSubmitting ? 'Saving...' : 'Add Transport'}
@@ -268,23 +284,35 @@ const RegisterVehicle = () => {
               className="hidden"
               onChange={onPhotoSelected}
             />
-            <button
-              type="button"
-              onClick={onPickPhoto}
-              className="w-full aspect-video bg-slate-50 dark:bg-slate-800 rounded-xl border-2 border-dashed border-slate-200 dark:border-slate-700 overflow-hidden flex flex-col items-center justify-center text-center p-4 hover:bg-blue-50 dark:hover:bg-blue-900/10 transition-all cursor-pointer group"
+          <button
+            type="button"
+            onClick={onPickPhoto}
+            className="w-full aspect-video bg-slate-50 dark:bg-slate-800 rounded-xl border-2 border-dashed border-slate-200 dark:border-slate-700 overflow-hidden flex flex-col items-center justify-center text-center p-4 hover:bg-blue-50 dark:hover:bg-blue-900/10 transition-all cursor-pointer group"
+          >
+            {formData.image ? (
+              <img alt="Vehicle" src={formData.image} className="w-full h-full object-cover" />
+            ) : imagePreview ? (
+              <img alt="Vehicle" src={imagePreview} className="w-full h-full object-cover" />
+            ) : (
+              <>
+                <Plus size={24} className="text-slate-400 group-hover:text-blue-600 mb-2" />
+                <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Upload Photo</p>
+              </>
+            )}
+          </button>
+          {errors.vehicle_photo && (
+            <p className="text-xs text-red-500 mt-2">{errors.vehicle_photo}</p>
+          )}
+          {!errors.vehicle_photo && !canUploadPhoto && (
+            <div
+              role="alert"
+              aria-live="polite"
+              className="mt-2 text-xs font-semibold text-amber-800 bg-amber-50 border border-amber-200 rounded-xl px-3 py-2"
             >
-              {formData.image ? (
-                <img alt="Vehicle" src={formData.image} className="w-full h-full object-cover" />
-              ) : imagePreview ? (
-                <img alt="Vehicle" src={imagePreview} className="w-full h-full object-cover" />
-              ) : (
-                <>
-                  <Plus size={24} className="text-slate-400 group-hover:text-blue-600 mb-2" />
-                  <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Upload Photo</p>
-                </>
-              )}
-            </button>
-          </div>
+              Please upload a vehicle photo before publishing this service.
+            </div>
+          )}
+        </div>
 
           <div className="bg-white dark:bg-slate-900 p-6 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm">
             <h4 className="font-bold flex items-center gap-2 mb-6">

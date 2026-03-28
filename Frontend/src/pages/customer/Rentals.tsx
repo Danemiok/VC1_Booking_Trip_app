@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { motion } from 'motion/react';
+import { apiRequest } from '@/services/api';
 import { 
   Search, 
   MapPin, 
@@ -7,6 +8,7 @@ import {
   Car, 
   Home, 
   Filter, 
+  Sparkles,
   Star, 
   Users, 
   Fuel, 
@@ -29,6 +31,235 @@ const normalizeSearchText = (value: string): string =>
     .replace(/[\u0300-\u036f]/g, '')
     .toLowerCase();
 
+const DEFAULT_VEHICLE_IMAGE = 'https://images.unsplash.com/photo-1525609004556-c46c7d6cf023?auto=format&fit=crop&q=80&w=1200';
+
+const toNumericValue = (value: unknown, fallback = 0): number => {
+  const parsed = typeof value === 'number' ? value : parseFloat(String(value ?? ''));
+  return Number.isFinite(parsed) ? parsed : fallback;
+};
+
+type CustomerVehicle = {
+  id: number;
+  name: string;
+  type: string;
+  price: number;
+  rating: number;
+  seats: number;
+  transmission?: string;
+  mileage?: string;
+  drive?: string;
+  engine?: string;
+  style?: string;
+  bags?: number;
+  image: string;
+  badge?: string;
+  instantBook?: boolean;
+  route_description?: string;
+  service_details?: string;
+  hasPromotion?: boolean;
+  discountPercentage?: number;
+  originalPrice?: number;
+  discountedPrice?: number;
+  promotion?: any;
+  isAvailable?: boolean;
+};
+
+const FALLBACK_VEHICLES: CustomerVehicle[] = [
+  {
+    id: 1,
+    name: "Tesla Model Y",
+    type: "Electric",
+    price: 18,
+    rating: 4.9,
+    seats: 5,
+    transmission: "Auto",
+    mileage: "Unlim.",
+    image: "https://images.unsplash.com/photo-1619767886558-efdc259cde1a?auto=format&fit=crop&q=80&w=800",
+    badge: "ELECTRIC",
+    instantBook: true,
+  },
+  {
+    id: 2,
+    name: "Toyota RAV4",
+    type: "SUV",
+    price: 15,
+    rating: 4.7,
+    seats: 5,
+    bags: 3,
+    ac: "A/C",
+    image: "https://images.unsplash.com/photo-1568844293986-8d0400bd4745?auto=format&fit=crop&q=80&w=800",
+    instantBook: false,
+  },
+  {
+    id: 3,
+    name: "BMW 4 Series",
+    type: "Luxury",
+    price: 20,
+    rating: 5.0,
+    seats: 4,
+    performance: "Performance",
+    transmission: "Sport Auto",
+    image: "https://images.unsplash.com/photo-1555215695-3004980ad54e?auto=format&fit=crop&q=80&w=800",
+    badge: "LUXURY",
+    instantBook: true,
+  },
+  {
+    id: 4,
+    name: "Hyundai Accent",
+    type: "Economy",
+    price: 12,
+    rating: 4.5,
+    seats: 5,
+    engine: "Hybrid",
+    bags: 2,
+    image: "https://images.unsplash.com/photo-1619767886558-efdc259cde1a?auto=format&fit=crop&q=80&w=800",
+    instantBook: true,
+  },
+  {
+    id: 5,
+    name: "Jeep Wrangler",
+    type: "SUV",
+    price: 16,
+    rating: 4.8,
+    drive: "4x4",
+    style: "Convertible",
+    seats: 4,
+    image: "https://images.unsplash.com/photo-1533473359331-0135ef1b58bf?auto=format&fit=crop&q=80&w=800",
+    instantBook: false,
+  },
+  {
+    id: 6,
+    name: "Polestar 2",
+    type: "Electric",
+    price: 19,
+    rating: 4.9,
+    engine: "Electric",
+    insurance: "Insurance Incl.",
+    seats: 5,
+    image: "https://images.unsplash.com/photo-1621135802920-133df287f89c?auto=format&fit=crop&q=80&w=800",
+    badge: "NEW",
+    instantBook: true,
+  },
+  {
+    id: 7,
+    name: "Ford Mustang",
+    type: "Sport",
+    price: 17,
+    rating: 4.8,
+    seats: 4,
+    transmission: "Auto",
+    style: "Coupe",
+    image: "https://images.unsplash.com/photo-1494976388531-d1058494cdd8?auto=format&fit=crop&q=80&w=800",
+    badge: "POPULAR",
+    instantBook: true,
+  },
+  {
+    id: 8,
+    name: "Mercedes GLC",
+    type: "Luxury SUV",
+    price: 20,
+    rating: 4.9,
+    seats: 5,
+    transmission: "Auto",
+    bags: 4,
+    image: "https://images.unsplash.com/photo-1549924231-f129b911e442?auto=format&fit=crop&q=80&w=800",
+    instantBook: true,
+  },
+  {
+    id: 9,
+    name: "Nissan Leaf",
+    type: "Electric",
+    price: 14,
+    rating: 4.6,
+    seats: 5,
+    transmission: "Auto",
+    mileage: "Unlim.",
+    image: "https://images.unsplash.com/photo-1553440569-bcc63803a83d?auto=format&fit=crop&q=80&w=800",
+    instantBook: false,
+  },
+];
+
+const FALLBACK_STAYS = [
+  {
+    id: 1,
+    name: "Oceanfront Modern Villa",
+    location: "Malibu, California",
+    price: 20,
+    rating: 4.9,
+    guests: 8,
+    image: "https://images.unsplash.com/photo-1512917774080-9991f1c4c750?auto=format&fit=crop&q=80&w=800",
+    instantBook: true,
+  },
+  {
+    id: 2,
+    name: "Highland Forest Cabin",
+    location: "Lake Tahoe, Nevada",
+    price: 14,
+    rating: 4.7,
+    guests: 4,
+    image: "https://images.unsplash.com/photo-1449156001437-3a1621acda2e?auto=format&fit=crop&q=80&w=800",
+    instantBook: false,
+  },
+  {
+    id: 3,
+    name: "Sunset Mediterranean Villa",
+    location: "Santorini, Greece",
+    price: 18,
+    rating: 4.8,
+    guests: 6,
+    image: "https://images.unsplash.com/photo-1518780664697-55e3ad937233?auto=format&fit=crop&q=80&w=800",
+    instantBook: true,
+  },
+  {
+    id: 4,
+    name: "Downtown Minimalist Loft",
+    location: "Berlin, Germany",
+    price: 12,
+    rating: 4.6,
+    guests: 3,
+    image: "https://images.unsplash.com/photo-1502672260266-1c1ef2d93688?auto=format&fit=crop&q=80&w=800",
+    instantBook: false,
+  },
+];
+
+const mapTransportToVehicle = (transport: any): CustomerVehicle => {
+  const rawId = Number(transport?.transport_id ?? transport?.id ?? transport?.transportId ?? Date.now());
+  const id = Number.isFinite(rawId) ? rawId : Date.now();
+  const pricePerKm = toNumericValue(transport?.discounted_price ?? transport?.price_per_km ?? transport?.price);
+  const originalPrice = toNumericValue(
+    transport?.original_price ?? transport?.price_per_km ?? transport?.price ?? pricePerKm,
+  );
+  const discountPercentage = toNumericValue(transport?.discount_percentage ?? 0);
+  const hasPromotion = Boolean(transport?.has_promotion && discountPercentage > 0);
+  const resolvedImage = String(transport?.vehicle_photo_url ?? transport?.image ?? DEFAULT_VEHICLE_IMAGE).trim() || DEFAULT_VEHICLE_IMAGE;
+
+  return {
+    id,
+    name: transport?.service_name ?? transport?.name ?? 'Transport Service',
+    type: transport?.transport_type ?? 'Car Rental',
+    price: pricePerKm,
+    rating: toNumericValue(transport?.rating ?? 4.7),
+    seats: Number(transport?.seats ?? 4),
+    transmission: String(transport?.transmission ?? transport?.vehicle_type ?? 'Automatic'),
+    mileage: transport?.mileage ?? transport?.route_description,
+    drive: transport?.drive,
+    engine: transport?.engine,
+    style: transport?.style,
+    bags: Number(transport?.bags ?? transport?.capacity ?? 0) || undefined,
+    image: resolvedImage,
+    badge: hasPromotion ? `${discountPercentage}% OFF` : undefined,
+    instantBook: transport?.status === 'active',
+    route_description: transport?.route_description,
+    service_details: transport?.service_details,
+    hasPromotion,
+    discountPercentage,
+    originalPrice,
+    discountedPrice: pricePerKm,
+    promotion: transport?.promotion,
+    isAvailable: transport?.status === 'active',
+  };
+};
+
 export const Rentals: React.FC<RentalsProps> = ({ onBack, onSelectVehicle }) => {
   const ITEMS_PER_PAGE = 6;
   const vehicleClasses = ['Economy', 'SUV', 'Luxury', 'Electric', 'Sport'];
@@ -40,163 +271,40 @@ export const Rentals: React.FC<RentalsProps> = ({ onBack, onSelectVehicle }) => 
   const [sortBy, setSortBy] = useState<'recommended' | 'price-low' | 'price-high' | 'rating'>('recommended');
   const [currentPage, setCurrentPage] = useState(1);
 
-  const vehicles = [
-    {
-      id: 1,
-      name: "Tesla Model Y",
-      type: "Electric",
-      price: 18,
-      rating: 4.9,
-      seats: 5,
-      transmission: "Auto",
-      mileage: "Unlim.",
-      image: "https://images.unsplash.com/photo-1619767886558-efdc259cde1a?auto=format&fit=crop&q=80&w=800",
-      badge: "ELECTRIC",
-      instantBook: true
-    },
-    {
-      id: 2,
-      name: "Toyota RAV4",
-      type: "SUV",
-      price: 15,
-      rating: 4.7,
-      seats: 5,
-      bags: 3,
-      ac: "A/C",
-      image: "https://images.unsplash.com/photo-1568844293986-8d0400bd4745?auto=format&fit=crop&q=80&w=800",
-      instantBook: false
-    },
-    {
-      id: 3,
-      name: "BMW 4 Series",
-      type: "Luxury",
-      price: 20,
-      rating: 5.0,
-      seats: 4,
-      performance: "Performance",
-      transmission: "Sport Auto",
-      image: "https://images.unsplash.com/photo-1555215695-3004980ad54e?auto=format&fit=crop&q=80&w=800",
-      badge: "LUXURY",
-      instantBook: true
-    },
-    {
-      id: 4,
-      name: "Hyundai Accent",
-      type: "Economy",
-      price: 12,
-      rating: 4.5,
-      seats: 5,
-      engine: "Hybrid",
-      bags: 2,
-      image: "https://images.unsplash.com/photo-1619767886558-efdc259cde1a?auto=format&fit=crop&q=80&w=800",
-      instantBook: true
-    },
-    {
-      id: 5,
-      name: "Jeep Wrangler",
-      type: "SUV",
-      price: 16,
-      rating: 4.8,
-      drive: "4x4",
-      style: "Convertible",
-      seats: 4,
-      image: "https://images.unsplash.com/photo-1533473359331-0135ef1b58bf?auto=format&fit=crop&q=80&w=800",
-      instantBook: false
-    },
-    {
-      id: 6,
-      name: "Polestar 2",
-      type: "Electric",
-      price: 19,
-      rating: 4.9,
-      engine: "Electric",
-      insurance: "Insurance Incl.",
-      seats: 5,
-      image: "https://images.unsplash.com/photo-1621135802920-133df287f89c?auto=format&fit=crop&q=80&w=800",
-      badge: "NEW",
-      instantBook: true
-    },
-    {
-      id: 7,
-      name: "Ford Mustang",
-      type: "Sport",
-      price: 17,
-      rating: 4.8,
-      seats: 4,
-      transmission: "Auto",
-      style: "Coupe",
-      image: "https://images.unsplash.com/photo-1494976388531-d1058494cdd8?auto=format&fit=crop&q=80&w=800",
-      badge: "POPULAR",
-      instantBook: true
-    },
-    {
-      id: 8,
-      name: "Mercedes GLC",
-      type: "Luxury SUV",
-      price: 20,
-      rating: 4.9,
-      seats: 5,
-      transmission: "Auto",
-      bags: 4,
-      image: "https://images.unsplash.com/photo-1549924231-f129b911e442?auto=format&fit=crop&q=80&w=800",
-      instantBook: true
-    },
-    {
-      id: 9,
-      name: "Nissan Leaf",
-      type: "Electric",
-      price: 14,
-      rating: 4.6,
-      seats: 5,
-      transmission: "Auto",
-      mileage: "Unlim.",
-      image: "https://images.unsplash.com/photo-1553440569-bcc63803a83d?auto=format&fit=crop&q=80&w=800",
-      instantBook: false
-    }
-  ];
+  const [vehicles, setVehicles] = useState<CustomerVehicle[]>(FALLBACK_VEHICLES);
+  const [transportLoading, setTransportLoading] = useState(true);
+  const [transportError, setTransportError] = useState('');
+  const stays = FALLBACK_STAYS;
 
-  const stays = [
-    {
-      id: 1,
-      name: "Oceanfront Modern Villa",
-      location: "Malibu, California",
-      price: 20,
-      rating: 4.9,
-      guests: 8,
-      image: "https://images.unsplash.com/photo-1512917774080-9991f1c4c750?auto=format&fit=crop&q=80&w=800",
-      instantBook: true
-    },
-    {
-      id: 2,
-      name: "Highland Forest Cabin",
-      location: "Lake Tahoe, Nevada",
-      price: 14,
-      rating: 4.7,
-      guests: 4,
-      image: "https://images.unsplash.com/photo-1449156001437-3a1621acda2e?auto=format&fit=crop&q=80&w=800",
-      instantBook: false
-    },
-    {
-      id: 3,
-      name: "Sunset Mediterranean Villa",
-      location: "Santorini, Greece",
-      price: 18,
-      rating: 4.8,
-      guests: 6,
-      image: "https://images.unsplash.com/photo-1518780664697-55e3ad937233?auto=format&fit=crop&q=80&w=800",
-      instantBook: true
-    },
-    {
-      id: 4,
-      name: "Downtown Minimalist Loft",
-      location: "Berlin, Germany",
-      price: 12,
-      rating: 4.6,
-      guests: 3,
-      image: "https://images.unsplash.com/photo-1502672260266-1c1ef2d93688?auto=format&fit=crop&q=80&w=800",
-      instantBook: false
-    }
-  ];
+  useEffect(() => {
+    let cancelled = false;
+    setTransportLoading(true);
+    setTransportError('');
+
+    (async () => {
+      try {
+        const response = await apiRequest('/transports');
+        const records = Array.isArray(response?.data) ? response.data : [];
+        const normalized = records.map(mapTransportToVehicle).filter((item) => Number.isFinite(item.id));
+        if (!cancelled) {
+          setVehicles(normalized.length > 0 ? normalized : FALLBACK_VEHICLES);
+        }
+      } catch (error) {
+        if (!cancelled) {
+          setTransportError('Failed to load transports. Showing curated selection.');
+          setVehicles(FALLBACK_VEHICLES);
+        }
+      } finally {
+        if (!cancelled) {
+          setTransportLoading(false);
+        }
+      }
+    })();
+
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   const toggleVehicleClass = (vehicleClass: string) => {
     setSelectedVehicleClasses((prev) =>
@@ -493,6 +601,16 @@ export const Rentals: React.FC<RentalsProps> = ({ onBack, onSelectVehicle }) => 
                 </label>
               </div>
             </div>
+            {transportLoading && (
+              <div className="mb-4 rounded-3xl border border-slate-200 bg-white px-6 py-4 text-sm text-slate-500 shadow-sm dark:border-slate-800 dark:bg-slate-900 dark:text-slate-400">
+                Loading transport services...
+              </div>
+            )}
+            {!transportLoading && transportError && (
+              <div className="mb-4 rounded-3xl border border-red-200 bg-red-50 px-6 py-4 text-sm text-red-700 shadow-sm dark:border-red-800 dark:bg-red-900/20 dark:text-red-300">
+                {transportError}
+              </div>
+            )}
 
             {paginatedItems.length === 0 ? (
               <div className="bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800 rounded-3xl p-10 text-center">
@@ -504,7 +622,15 @@ export const Rentals: React.FC<RentalsProps> = ({ onBack, onSelectVehicle }) => 
                 {activeTab === 'vehicles' ? (
                   <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                     {paginatedItems.map((car: any) => {
-                      const carInfo = car.mileage || car.drive || (car.bags ? `${car.bags} Bags` : car.ac || 'Unlim.');
+                      const displayPrice = toNumericValue(car.discountedPrice ?? car.price);
+                      const originalPrice = toNumericValue(car.originalPrice ?? car.price);
+                      const hasCarDiscount = Boolean(car.hasPromotion && originalPrice > displayPrice);
+                      const badgeLabel = car.badge || (hasCarDiscount ? `${car.discountPercentage ?? 0}% OFF` : undefined);
+                      const carInfo =
+                        car.mileage ||
+                        car.route_description ||
+                        car.drive ||
+                        (car.bags ? `${car.bags} Bags` : car.ac || 'Unlim.');
                       return (
                         <motion.div
                           key={car.id}
@@ -535,13 +661,26 @@ export const Rentals: React.FC<RentalsProps> = ({ onBack, onSelectVehicle }) => 
                             </div>
                           </div>
                           <div className="p-6">
-                            <div className="flex items-center justify-between mb-4">
-                              <h3 className="text-lg font-bold text-slate-900 dark:text-white">{car.name}</h3>
-                              <div className="text-right">
-                                <p className="text-xl font-bold text-blue-600 leading-none">${car.price}</p>
-                                <p className="text-[8px] font-bold text-slate-400 uppercase tracking-widest mt-1">per day</p>
+                              <div className="flex items-center justify-between mb-4">
+                                <h3 className="text-lg font-bold text-slate-900 dark:text-white">{car.name}</h3>
+                                <div className="text-right">
+                                  <p className="text-xl font-bold text-blue-600 leading-none">${displayPrice}</p>
+                                  {hasCarDiscount && (
+                                    <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-slate-400 line-through">
+                                      ${originalPrice}
+                                    </p>
+                                  )}
+                                  <p className="text-[8px] font-bold text-slate-400 uppercase tracking-widest mt-1">per km</p>
+                                </div>
                               </div>
-                            </div>
+                            {badgeLabel && (
+                              <div className="flex items-center gap-2 text-[11px] font-semibold uppercase tracking-[0.2em] text-emerald-600">
+                                <Sparkles className="h-4 w-4 text-emerald-500" />
+                                <span className="rounded-full bg-emerald-50 px-2 py-0.5 text-[10px] font-semibold text-emerald-700">
+                                  {badgeLabel}
+                                </span>
+                              </div>
+                            )}
                             <div className="grid grid-cols-3 gap-2 mb-6">
                               <div className="flex items-center gap-1.5 text-slate-500">
                                 <Users className="w-3.5 h-3.5" />
