@@ -4,10 +4,9 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Models\Booking;
-use App\Models\AppNotification;
+use App\Models\BookingDbNotification;
 use App\Models\OwnerNotification;
 use App\Models\User;
-use App\Services\PromotionService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Validator;
@@ -221,9 +220,6 @@ class BookingController extends Controller
             'user_id' => $booking->user_id,
             'destination_id' => $booking->destination_id,
             'transport_id' => $booking->transport_id,
-            'promotion_id' => $booking->promotion_id,
-            'original_amount' => $booking->original_amount,
-            'discounted_amount' => $booking->discounted_amount,
             'user' => $booking->relationLoaded('user') ? $booking->user : null,
         ];
     }
@@ -499,16 +495,19 @@ class BookingController extends Controller
             $createdAt = $createdAtRaw ? \Illuminate\Support\Carbon::parse($createdAtRaw) : now();
             $createdAtIso = $createdAt->toIso8601String();
 
-            // Handle promotion fields
-            $promotionId = $payload['promotion_id'] ?? null;
-            $originalAmount = $payload['original_amount'] ?? null;
-            $discountedAmount = $payload['discounted_amount'] ?? null;
+            $normalizeDate = function ($value): ?string {
+                if ($value === null) return null;
+                if (is_string($value) && trim($value) === '') return null;
 
-            // Calculate discount if original and current amounts are available
-            if ($originalAmount === null && is_numeric($amount) && is_numeric($payload['original_amount'] ?? null)) {
-                $originalAmount = (float) $payload['original_amount'];
-                $discountedAmount = max(0, $originalAmount - (float) $amount);
-            }
+                try {
+                    return \Illuminate\Support\Carbon::parse($value)->toDateString();
+                } catch (\Throwable $e) {
+                    return is_string($value) ? trim($value) : null;
+                }
+            };
+
+            $dateStartNormalized = $normalizeDate($payload['dateStart'] ?? null);
+            $dateEndNormalized = $normalizeDate($payload['dateEnd'] ?? null);
 
             // Store into snake_case columns (matches the provided SQL schema),
             // while still accepting the frontend's camelCase payload.
@@ -518,11 +517,13 @@ class BookingController extends Controller
                 'guest' => $guestName,
                 'customer_email' => $payload['customerEmail'] ?? null,
                 'customer_phone' => $payload['customerPhone'] ?? null,
+                'customerEmail' => $payload['customerEmail'] ?? null,
+                'customerPhone' => $payload['customerPhone'] ?? null,
                 'service' => $payload['service'],
                 'route' => $payload['route'],
                 'category' => $payload['category'],
-                'date_start' => $payload['dateStart'] ?? null,
-                'date_end' => $payload['dateEnd'] ?? null,
+                'date_start' => $dateStartNormalized,
+                'date_end' => $dateEndNormalized,
                 'date' => $payload['date'] ?? ($payload['travel_date'] ?? null),
                 'time' => $payload['time'] ?? null,
                 'pax' => (int) ($payload['pax'] ?? 1),
@@ -540,13 +541,18 @@ class BookingController extends Controller
                 'special_requests' => $payload['specialRequests'] ?? null,
                 'destination_id' => $payload['destination_id'] ?? null,
                 'transport_id' => $payload['transport_id'] ?? null,
-                'promotion_id' => $promotionId,
-                'original_amount' => $originalAmount,
-                'discounted_amount' => $discountedAmount,
                 'created_at' => $createdAt,
                 'updated_at' => now(),
                 // Keep legacy createdAt for older consumers (harmless if column exists)
                 'createdAt' => $createdAtIso,
+                // Also write legacy/camelCase date columns when present (some deployments use this schema).
+                'dateStart' => $dateStartNormalized,
+                'dateEnd' => $dateEndNormalized,
+                'roomType' => $payload['roomType'] ?? null,
+                'vehicleType' => $payload['vehicleType'] ?? null,
+                'totalAmount' => $payload['totalAmount'] ?? null,
+                'paymentMethod' => $payload['paymentMethod'] ?? null,
+                'specialRequests' => $payload['specialRequests'] ?? null,
             ];
 
             // Not all deployments have the same `bookings` table columns (some use a pure MySQL schema).
@@ -669,34 +675,7 @@ class BookingController extends Controller
                     ->where('role', 'owner')
                     ->get(['id']);
 
-                $useNotificationsTable = Schema::hasTable('notifications');
-                $notificationsColumns = $useNotificationsTable ? Schema::getColumnListing('notifications') : [];
-                $supportsTypeColumn = $useNotificationsTable && in_array('type', $notificationsColumns, true);
-
                 foreach ($owners as $owner) {
-                    $payload = [
-                        'user_id' => $owner->id,
-                        'booking_id' => (string) $booking->id,
-                        'title' => $title,
-                        'message' => $message,
-                        'data' => $snapshot,
-                        'read_at' => null,
-                    ];
-
-                    if ($useNotificationsTable) {
-                        $row = $payload;
-                        if ($supportsTypeColumn) {
-                            $row['type'] = 'booking_created';
-                        }
-                        try {
-                            AppNotification::create($row);
-                        } catch (\Throwable $inner) {
-                            // If the `notifications` table exists but has a mismatched schema, fall back.
-                            OwnerNotification::create($payload);
-                        }
-                    } else {
-                        OwnerNotification::create($payload);
-                    }
                     OwnerNotification::firstOrCreate(
                         [
                             'user_id' => $owner->id,

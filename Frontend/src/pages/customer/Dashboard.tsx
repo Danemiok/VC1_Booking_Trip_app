@@ -1,13 +1,13 @@
 import React, { useEffect, useState } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { format } from 'date-fns';
-import { GoogleMap, LoadScript, Marker } from '@react-google-maps/api';
+import { format, addDays } from 'date-fns';
+import { Link } from 'react-router-dom';
 import { 
   Search, 
   Calendar, 
   Users, 
   Hotel, 
-  Car,
+  Ship, 
   Waves, 
   Star, 
   CheckCircle2, 
@@ -32,9 +32,9 @@ import {
   isBefore,
   isAfter
 } from 'date-fns';
+import { ALL_HOTELS } from '../../data/hotels';
 import { useAuth } from '../../context/AuthContext';
 import { bookingService } from '@/services/bookingService';
-import { getPublicDestinations } from '../../services/destinationService';
 
 // --- Sub-components (could be further split) ---
 const normalizeSearchText = (value: string): string =>
@@ -42,16 +42,6 @@ const normalizeSearchText = (value: string): string =>
     .normalize('NFD')
     .replace(/[\u0300-\u036f]/g, '')
     .toLowerCase();
-
-const parseCoordinate = (value: unknown): number | null => {
-  if (value === null || value === undefined || value === '') return null;
-  const parsed = typeof value === 'number' ? value : parseFloat(String(value));
-  return Number.isFinite(parsed) ? parsed : null;
-};
-
-const DASHBOARD_DEFAULT_MAP_CENTER = { lat: 11.5564, lng: 104.9282 };
-const DASHBOARD_MAP_CONTAINER_STYLE = { width: '100%', height: '240px' };
-const DASHBOARD_LOCATION_DATALIST_ID = 'dashboard-location-options';
 
 const parseDateValue = (value: unknown): Date | null => {
   if (!value) return null;
@@ -89,28 +79,28 @@ const getDatesFromTripData = (tripData?: any): { start: Date | null; end: Date |
     return { start, end };
   }
 
-  return { start: null, end: null };
+  const today = new Date();
+  return {
+    start: addDays(today, 7),
+    end: addDays(today, 14)
+  };
 };
 
 const Hero = ({ 
   onSearch, 
   location, 
   setLocation,
-  locationOptions,
   tripData
 }: { 
   onSearch: (query: string, dates: { start: Date | null, end: Date | null }, guests: { adults: number, children: number }) => void;
   location: string;
   setLocation: (val: string) => void;
-  locationOptions: string[];
   tripData?: any;
 }) => {
   const [showDatePicker, setShowDatePicker] = useState(false);
   const [showGuestPicker, setShowGuestPicker] = useState(false);
   const initialDates = getDatesFromTripData(tripData);
-  const [guests, setGuests] = useState(() => (
-    tripData?.guests ? parseGuestsFromLabel(tripData?.guests) : { adults: 0, children: 0 }
-  ));
+  const [guests, setGuests] = useState(() => parseGuestsFromLabel(tripData?.guests));
   
   const today = new Date();
   const [dates, setDates] = useState<{ start: Date | null, end: Date | null }>(initialDates);
@@ -124,7 +114,7 @@ const Hero = ({
     if (nextDates.start) {
       setCurrentMonth(nextDates.start);
     }
-    setGuests(tripData?.guests ? parseGuestsFromLabel(tripData?.guests) : { adults: 0, children: 0 });
+    setGuests(parseGuestsFromLabel(tripData?.guests));
   }, [tripData?.startDate, tripData?.endDate, tripData?.dates, tripData?.guests]);
 
   const handleSearch = () => {
@@ -309,17 +299,9 @@ const Hero = ({
                   value={location}
                   onChange={(e) => setLocation(e.target.value)}
                   onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
-                  list={DASHBOARD_LOCATION_DATALIST_ID}
                   placeholder="Where to next?" 
-                  className="w-full appearance-none border-0 bg-transparent p-0 text-base font-medium text-white outline-none ring-0 shadow-none placeholder:text-white/40 focus:border-0 focus:outline-none focus:ring-0 focus:shadow-none focus-visible:outline-none focus-visible:ring-0"
+                  className="bg-transparent border-none focus:ring-0 text-white placeholder:text-white/40 w-full text-base p-0 font-medium"
                 />
-                {locationOptions.length > 0 && (
-                  <datalist id={DASHBOARD_LOCATION_DATALIST_ID}>
-                    {locationOptions.map((option) => (
-                      <option key={option} value={option} />
-                    ))}
-                  </datalist>
-                )}
               </div>
               
               <div className="relative px-8 py-4 border-b md:border-b-0 md:border-r border-white/10 w-full md:w-auto">
@@ -398,7 +380,7 @@ const Hero = ({
                   className="text-sm font-bold text-white whitespace-nowrap flex items-center gap-3"
                 >
                   <Users className="w-4 h-4 text-white/60" />
-                  {guests.adults + guests.children > 0 ? `${guests.adults + guests.children} Guests` : 'Guests'}
+                  {guests.adults + guests.children} Guests
                 </button>
 
                 <AnimatePresence>
@@ -500,12 +482,12 @@ const Categories = ({
 }) => {
   const categories = [
     { icon: Hotel, title: "Hotel", desc: "Villas & Resorts", color: "bg-blue-500/10 text-blue-500", onClick: onHotelsClick },
-    { icon: Car, title: "Transport", desc: "Cars, Buses & Trains", color: "bg-emerald-500/10 text-emerald-500", onClick: onRentalsClick },
+    { icon: Ship, title: "Rental", desc: "Ferries & Boats", color: "bg-emerald-500/10 text-emerald-500", onClick: onRentalsClick },
     { icon: Waves, title: "Activities", desc: "Tours & Diving", color: "bg-amber-500/10 text-amber-500", onClick: onActivitiesClick },
   ];
 
   return (
-  <section className="py-12 px-4 sm:px-6 lg:px-8">
+    <section className="py-12 px-4 sm:px-6 lg:px-8">
       <div className="max-w-7xl mx-auto grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
         {categories.map((cat, i) => (
           <motion.div 
@@ -527,7 +509,7 @@ const Categories = ({
           </motion.div>
         ))}
       </div>
-  </section>
+    </section>
   );
 };
 
@@ -938,7 +920,7 @@ const SplitBillFeature = ({ onStartGroupBooking }: { onStartGroupBooking?: () =>
       </div>
     </section>
   );
-}; 2
+};
 
 const Newsletter = () => {
   const [email, setEmail] = useState('');
@@ -1024,11 +1006,8 @@ interface DashboardProps {
   onHotelsClick: () => void;
   onRentalsClick: () => void;
   onActivitiesClick: () => void;
-  onOpenBookTrip: () => void;
-  onOpenMyBookings: () => void;
   onSearch?: (query: string, dates: { start: Date | null, end: Date | null }, guests: { adults: number, children: number }) => void;
   onStartGroupBooking?: () => void;
-  onRequireLogin: () => void;
 }
 
 export const Dashboard: React.FC<DashboardProps> = ({ 
@@ -1039,18 +1018,13 @@ export const Dashboard: React.FC<DashboardProps> = ({
   onHotelsClick,
   onRentalsClick,
   onActivitiesClick,
-  onOpenBookTrip,
-  onOpenMyBookings,
   onSearch,
   onStartGroupBooking,
-  onRequireLogin,
 }) => {
-  const [location, setLocation] = useState(() => '');
+  const [location, setLocation] = useState(() => String(tripData?.destination?.name || ''));
   const [searchQuery, setSearchQuery] = useState('');
   const [searchResults, setSearchResults] = useState<any[]>([]);
   const [hasSearched, setHasSearched] = useState(false);
-  const [destinations, setDestinations] = useState<any[]>([]);
-  const googleMapsApiKey = import.meta.env.VITE_GOOGLE_MAPS_API_KEY || '';
   const { user, isAuthenticated } = useAuth();
   const [myBookings, setMyBookings] = useState<any[]>([]);
   const [myBookingsLoading, setMyBookingsLoading] = useState(false);
@@ -1081,97 +1055,6 @@ export const Dashboard: React.FC<DashboardProps> = ({
     setLocation(String(tripData?.destination?.name || ''));
   }, [tripData?.destination?.name]);
 
-  useEffect(() => {
-    const load = async () => {
-      try {
-        const data = await getPublicDestinations();
-        setDestinations(data);
-      } catch {
-        setDestinations([]);
-      }
-    };
-
-    load();
-  }, []);
-
-  const destinationCoordinates = React.useMemo(() => {
-    const coordinateMap = new Map<string, { lat: number; lng: number; label: string }>();
-
-    const register = (labelValue: unknown, latValue: unknown, lngValue: unknown) => {
-      const label = String(labelValue || '').trim();
-      const lat = parseCoordinate(latValue);
-      const lng = parseCoordinate(lngValue);
-      if (!label || lat === null || lng === null) return;
-
-      const normalizedLabel = normalizeSearchText(label);
-      if (!coordinateMap.has(normalizedLabel)) {
-        coordinateMap.set(normalizedLabel, { lat, lng, label });
-      }
-
-      const area = label.split(',')[0]?.trim();
-      if (area) {
-        const normalizedArea = normalizeSearchText(area);
-        if (!coordinateMap.has(normalizedArea)) {
-          coordinateMap.set(normalizedArea, { lat, lng, label });
-        }
-      }
-    };
-
-    destinations.forEach((destination) => {
-      register(destination.location, destination.latitude ?? destination.lat, destination.longitude ?? destination.lng);
-      register(destination.name, destination.latitude ?? destination.lat, destination.longitude ?? destination.lng);
-    });
-
-    return coordinateMap;
-  }, [destinations]);
-
-  const locationOptions = React.useMemo(
-    () =>
-      Array.from(
-        new Set(
-          destinations
-            .map((destination) => String(destination.location || '').trim())
-            .filter(Boolean),
-        ),
-      ).sort((left, right) => left.localeCompare(right)),
-    [destinations],
-  );
-
-  const selectedLocationCoordinate = React.useMemo(() => {
-    const query = String(location || '').trim();
-    const values = Array.from(destinationCoordinates.values());
-    if (values.length === 0) return null;
-    if (!query) return values[0];
-
-    const normalizedQuery = normalizeSearchText(query);
-    const exact = destinationCoordinates.get(normalizedQuery);
-    if (exact) return exact;
-
-    for (const [key, value] of destinationCoordinates.entries()) {
-      if (key.includes(normalizedQuery) || normalizedQuery.includes(key)) {
-        return value;
-      }
-    }
-
-    return null;
-  }, [destinationCoordinates, location]);
-
-  const selectedLocationMapData = React.useMemo(() => {
-    if (selectedLocationCoordinate) return selectedLocationCoordinate;
-
-    const fallbackLabel = String(location || 'Cambodia').trim() || 'Cambodia';
-    return {
-      lat: DASHBOARD_DEFAULT_MAP_CENTER.lat,
-      lng: DASHBOARD_DEFAULT_MAP_CENTER.lng,
-      label: fallbackLabel,
-    };
-  }, [location, selectedLocationCoordinate]);
-
-  const dashboardMapCenter = {
-    lat: selectedLocationMapData.lat,
-    lng: selectedLocationMapData.lng,
-  };
-
   const handleSearchInternal = (query: string, dates: { start: Date | null, end: Date | null }, guests: { adults: number, children: number }) => {
     const trimmedQuery = query.trim();
     setSearchQuery(trimmedQuery);
@@ -1189,7 +1072,7 @@ export const Dashboard: React.FC<DashboardProps> = ({
     }
 
     const queryTokens = normalizeSearchText(trimmedQuery).split(/\s+/).filter(Boolean);
-    const results = destinations.filter((hotel) => {
+    const results = ALL_HOTELS.filter((hotel) => {
       const searchableText = normalizeSearchText(
         [
           hotel.name,
@@ -1210,174 +1093,80 @@ export const Dashboard: React.FC<DashboardProps> = ({
         onSearch={handleSearchInternal} 
         location={location}
         setLocation={setLocation}
-        locationOptions={locationOptions}
         tripData={tripData}
       />
 
       <section className="py-10 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto">
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          <div className="lg:col-span-1 card p-6">
-            <h3 className="text-sm font-extrabold tracking-widest uppercase text-slate-500 dark:text-slate-300">
-              Booking
-            </h3>
-            <p className="mt-3 text-xl font-extrabold text-slate-900 dark:text-white">Book a trip</p>
-            <p className="mt-2 text-sm text-slate-600 dark:text-slate-300">
-              Choose a destination, transport, date, and travelers.
-            </p>
-            <div className="mt-6 flex gap-3">
+        <div className="card p-6">
+          <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
+            <div>
+              <h3 className="text-sm font-extrabold tracking-widest uppercase text-slate-500 dark:text-slate-300">
+                Recent bookings
+              </h3>
+              <p className="mt-2 text-sm text-slate-600 dark:text-slate-300">
+                Your latest reservations appear here.
+              </p>
+            </div>
+
+            <div className="flex flex-wrap items-center gap-3">
               {isAuthenticated && user?.role === 'customer' ? (
-                <button
-                  type="button"
-                  onClick={onOpenBookTrip}
+                <Link
+                  to="/customer/book"
                   className="h-11 px-5 rounded-xl bg-blue-600 text-white font-bold hover:bg-blue-700 transition-colors inline-flex items-center justify-center"
                 >
                   Create booking
-                </button>
+                </Link>
               ) : (
-                <button
-                  type="button"
-                  onClick={onRequireLogin}
+                <Link
+                  to="/login"
                   className="h-11 px-5 rounded-xl bg-blue-600 text-white font-bold hover:bg-blue-700 transition-colors inline-flex items-center justify-center"
                 >
                   Login to book
-                </button>
+                </Link>
               )}
-              {isAuthenticated && user?.role === 'customer' ? (
-                <button
-                  type="button"
-                  onClick={onOpenMyBookings}
-                  className="h-11 px-5 rounded-xl border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-200 font-bold hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors inline-flex items-center justify-center"
-                >
-                  My bookings
-                </button>
-              ) : (
-                <button
-                  type="button"
-                  onClick={onRequireLogin}
-                  className="h-11 px-5 rounded-xl border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-200 font-bold hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors inline-flex items-center justify-center"
-                >
-                  My bookings
-                </button>
-              )}
+              <Link
+                to="/customer/bookings"
+                className="h-11 px-5 rounded-xl border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-200 font-bold hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors inline-flex items-center justify-center"
+              >
+                View all
+              </Link>
             </div>
           </div>
 
-          <div className="lg:col-span-2 card p-6">
-            <div className="flex items-start justify-between gap-4">
-              <div>
-                <h3 className="text-sm font-extrabold tracking-widest uppercase text-slate-500 dark:text-slate-300">
-                  Recent bookings
-                </h3>
-                <p className="mt-2 text-sm text-slate-600 dark:text-slate-300">
-                  Your latest reservations appear here.
-                </p>
+          <div className="mt-6">
+            {!isAuthenticated || user?.role !== 'customer' ? (
+              <div className="py-10 text-center text-slate-600 dark:text-slate-300 font-semibold">
+                Login as a customer to see your bookings.
               </div>
-              {isAuthenticated && user?.role === 'customer' ? (
-                <button
-                  type="button"
-                  onClick={onOpenMyBookings}
-                  className="text-sm font-bold text-blue-600 hover:text-blue-700"
-                >
-                  View all
-                </button>
-              ) : (
-                <button
-                  type="button"
-                  onClick={onRequireLogin}
-                  className="text-sm font-bold text-blue-600 hover:text-blue-700"
-                >
-                  View all
-                </button>
-              )}
-            </div>
-
-            <div className="mt-6">
-              {!isAuthenticated || user?.role !== 'customer' ? (
-                <div className="py-10 text-center">
-                  <p className="font-semibold text-slate-600 dark:text-slate-300">
-                    Login as a customer to see your bookings.
-                  </p>
-                  <div className="mt-4 flex justify-center gap-3">
-                    <button
-                      type="button"
-                      onClick={onRequireLogin}
-                      className="h-11 px-5 rounded-xl bg-blue-600 text-white font-bold hover:bg-blue-700 transition-colors inline-flex items-center justify-center"
-                    >
-                      Login / Register
-                    </button>
-                  </div>
-                </div>
-              ) : myBookingsLoading ? (
-                <div className="flex justify-center items-center py-10">
-                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
-                </div>
-              ) : myBookings.length === 0 ? (
-                <div className="py-10 text-center text-slate-600 dark:text-slate-300 font-semibold">
-                  No bookings yet.
-                </div>
-              ) : (
-                <div className="divide-y divide-slate-100 dark:divide-slate-800 rounded-xl overflow-hidden border border-slate-200/60 dark:border-slate-800/60">
-                  {myBookings.map((b) => (
-                    <div key={b.id} className="px-5 py-4 bg-white/70 dark:bg-slate-900/40">
-                      <div className="flex items-center justify-between gap-4">
-                        <div className="min-w-0">
-                          <p className="font-extrabold text-slate-900 dark:text-white truncate">{b.service}</p>
-                          <p className="text-xs text-slate-500 dark:text-slate-400 truncate">{b.route}</p>
-                        </div>
-                        <div className="text-right">
-                          <p className="text-xs font-bold text-slate-500 dark:text-slate-400">{b.id}</p>
-                          <p className="text-xs font-bold text-slate-700 dark:text-slate-200 capitalize">
-                            {String(b.status ?? '').toLowerCase()}
-                          </p>
-                        </div>
+            ) : myBookingsLoading ? (
+              <div className="flex justify-center items-center py-10">
+                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+              </div>
+            ) : myBookings.length === 0 ? (
+              <div className="py-10 text-center text-slate-600 dark:text-slate-300 font-semibold">
+                No bookings yet.
+              </div>
+            ) : (
+              <div className="divide-y divide-slate-100 dark:divide-slate-800 rounded-xl overflow-hidden border border-slate-200/60 dark:border-slate-800/60">
+                {myBookings.map((b) => (
+                  <div key={b.id} className="px-5 py-4 bg-white/70 dark:bg-slate-900/40">
+                    <div className="flex items-center justify-between gap-4">
+                      <div className="min-w-0">
+                        <p className="font-extrabold text-slate-900 dark:text-white truncate">{b.service}</p>
+                        <p className="text-xs text-slate-500 dark:text-slate-400 truncate">{b.route}</p>
+                      </div>
+                      <div className="text-right">
+                        <p className="text-xs font-bold text-slate-500 dark:text-slate-400">{b.id}</p>
+                        <p className="text-xs font-bold text-slate-700 dark:text-slate-200 capitalize">
+                          {String(b.status ?? '').toLowerCase()}
+                        </p>
                       </div>
                     </div>
-                  ))}
-                </div>
-              )}
-            </div>
-          </div>
-        </div>
-
-        <div className="mt-6 card p-6">
-          <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
-            <div>
-              <h3 className="text-sm font-extrabold tracking-widest uppercase text-slate-500 dark:text-slate-300">
-                Location Map
-              </h3>
-              <p className="mt-2 text-sm text-slate-600 dark:text-slate-300">
-                Coordinates loaded from backend destination data.
-              </p>
-            </div>
-            <div className="text-left sm:text-right">
-              <p className="text-xs font-semibold uppercase tracking-wider text-slate-400">Selected location</p>
-              <p className="mt-1 text-sm font-bold text-slate-900 dark:text-white">
-                {selectedLocationMapData.label}
-              </p>
-            </div>
-          </div>
-
-          <div className="mt-5 overflow-hidden rounded-2xl border border-slate-200 dark:border-slate-800">
-            {googleMapsApiKey ? (
-              <LoadScript googleMapsApiKey={googleMapsApiKey}>
-                <GoogleMap
-                  mapContainerStyle={DASHBOARD_MAP_CONTAINER_STYLE}
-                  center={dashboardMapCenter}
-                  zoom={selectedLocationCoordinate ? 11 : 6}
-                >
-                  <Marker position={dashboardMapCenter} />
-                </GoogleMap>
-              </LoadScript>
-            ) : (
-              <div className="flex h-[240px] items-center justify-center px-4 text-center text-sm text-slate-500 dark:text-slate-400">
-                Add `VITE_GOOGLE_MAPS_API_KEY` in Frontend/.env to show Google Map.
+                  </div>
+                ))}
               </div>
             )}
           </div>
-
-          <p className="mt-3 text-sm text-slate-600 dark:text-slate-300">
-            {`Lat ${dashboardMapCenter.lat.toFixed(6)}, Lng ${dashboardMapCenter.lng.toFixed(6)}`}
-          </p>
         </div>
       </section>
       

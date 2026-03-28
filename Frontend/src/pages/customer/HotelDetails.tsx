@@ -1,8 +1,7 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { format, subMonths, addDays, differenceInDays } from 'date-fns';
-import { GoogleMap, LoadScript, Marker } from '@react-google-maps/api';
-import {
+import { 
   Star, 
   MapPin, 
   Wifi, 
@@ -19,7 +18,6 @@ import {
   Users,
   LayoutGrid
 } from 'lucide-react';
-import { getAuthUser } from '../../services/authService';
 
 interface RoomOption {
   id: string;
@@ -43,11 +41,6 @@ export interface HotelReservationSelection {
   cleaningFee: number;
   serviceFee: number;
   totalPrice: number;
-  hasPromotion?: boolean;
-  promotion?: any;
-  originalPrice?: number;
-  discountedPrice?: number;
-  discountPercentage?: number;
 }
 
 interface HotelDetailsProps {
@@ -55,11 +48,6 @@ interface HotelDetailsProps {
   hotel?: any;
   onBack: () => void;
   onReserve?: (selection: HotelReservationSelection) => void;
-}
-
-interface AmenityItem {
-  icon: React.ReactNode;
-  label: string;
 }
 
 const parseGuestCount = (guestLabel: unknown): number => {
@@ -78,116 +66,22 @@ const resolveDateValue = (value: unknown): Date | null => {
   return Number.isNaN(parsed.getTime()) ? null : parsed;
 };
 
-const parsePrice = (value: unknown): number => {
-  if (typeof value === 'number') return value;
-  if (typeof value === 'string') {
-    return parseFloat(value.replace(/[^0-9.]/g, '')) || 0;
-  }
-  return 0;
-};
-
-const parseCoordinate = (value: unknown): number | null => {
-  if (typeof value === 'number' && Number.isFinite(value)) {
-    return value;
-  }
-
-  if (typeof value === 'string') {
-    const parsed = parseFloat(value);
-    return Number.isFinite(parsed) ? parsed : null;
-  }
-
-  return null;
-};
-
-const getAmenityIcon = (label: string): React.ReactNode => {
-  const normalizedLabel = label.toLowerCase();
-
-  if (normalizedLabel.includes('wifi') || normalizedLabel.includes('wi-fi')) {
-    return <Wifi className="w-5 h-5" />;
-  }
-  if (normalizedLabel.includes('pool')) {
-    return <Waves className="w-5 h-5" />;
-  }
-  if (normalizedLabel.includes('spa')) {
-    return <Spa className="w-5 h-5" />;
-  }
-  if (normalizedLabel.includes('gym') || normalizedLabel.includes('fitness')) {
-    return <Dumbbell className="w-5 h-5" />;
-  }
-  if (normalizedLabel.includes('restaurant') || normalizedLabel.includes('dining') || normalizedLabel.includes('breakfast')) {
-    return <Utensils className="w-5 h-5" />;
-  }
-  if (normalizedLabel.includes('parking') || normalizedLabel.includes('transfer')) {
-    return <Car className="w-5 h-5" />;
-  }
-
-  return <CheckCircle2 className="w-5 h-5" />;
-};
-
-const normalizeAmenities = (value: unknown, fallback: AmenityItem[]): AmenityItem[] => {
-  if (!Array.isArray(value) || value.length === 0) return fallback;
-
-  return value.map((amenity): AmenityItem => {
-    if (typeof amenity === 'string') {
-      return {
-        icon: getAmenityIcon(amenity),
-        label: amenity
-      };
-    }
-
-    if (amenity && typeof amenity === 'object') {
-      const amenityRecord = amenity as { icon?: React.ReactNode; label?: string };
-      const label = typeof amenityRecord.label === 'string' && amenityRecord.label.trim() ? amenityRecord.label : 'Amenity';
-      return {
-        icon: amenityRecord.icon ?? getAmenityIcon(label),
-        label
-      };
-    }
-
-    return {
-      icon: <CheckCircle2 className="w-5 h-5" />,
-      label: 'Amenity'
-    };
-  });
-};
-
-const buildGalleryImages = (value: unknown, primaryImage: unknown, fallback: string[]): string[] => {
-  const sourceImages = Array.isArray(value)
-    ? value.filter((item): item is string => typeof item === 'string' && item.trim().length > 0)
-    : [];
-  const leadImage = typeof primaryImage === 'string' && primaryImage.trim().length > 0 ? [primaryImage] : [];
-  const gallery = Array.from(new Set([...leadImage, ...sourceImages].filter(Boolean)));
-  const nextGallery = gallery.length > 0 ? [...gallery] : [...fallback];
-  let fallbackIndex = 0;
-
-  while (nextGallery.length < 4) {
-    nextGallery.push(fallback[fallbackIndex % fallback.length] || nextGallery[0]);
-    fallbackIndex += 1;
-  }
-
-  return nextGallery.slice(0, 4);
-};
-
 export const HotelDetails: React.FC<HotelDetailsProps> = ({ tripData, hotel: initialHotel, onBack, onReserve }) => {
   const [isGroupMode, setIsGroupMode] = useState(false);
   const [selectedRoomId, setSelectedRoomId] = useState('');
-  const [isBooking, setIsBooking] = useState(false);
-  const [bookingMessage, setBookingMessage] = useState('');
   const defaultGuestCount = parseGuestCount(tripData?.guests);
   const [guests, setGuests] = useState(defaultGuestCount);
   
-  // Default data if none provided (use current date for freshness)
-  const today = new Date();
+  // Default data if none provided (matching the screenshot)
+  const today = new Date('2026-03-03T00:34:03-08:00');
   
   const defaultHotel = {
     name: "Royal Riverside Sanctuary",
     location: "Riverside District, Komrong",
-    latitude: 11.5564,
-    longitude: 104.9282,
     rating: 5.0,
     category: "Star Resort",
     reviewsCount: 420,
-    price: 185,
+    price: 20,
     description: "Nestled along the serene banks of the Komrong River, the Royal Riverside Sanctuary offers a transcendental escape from the bustle of modern life. This architectural masterpiece blends traditional Khmer motifs with contemporary luxury. Experience the ultimate \"Sanctuary Vibe\" as you wake up to the gentle mist on the water and spend your days unwinding in our world-class infinity pool or award-winning riverside spa.",
     images: [
       "https://images.unsplash.com/photo-1544013587-41428e7177e9?auto=format&fit=crop&q=80&w=1200",
@@ -225,32 +119,33 @@ export const HotelDetails: React.FC<HotelDetailsProps> = ({ tripData, hotel: ini
   const hotel = initialHotel ? {
     ...defaultHotel,
     ...initialHotel,
-    category: initialHotel.category || initialHotel.type || defaultHotel.category,
-    images: buildGalleryImages(initialHotel.images, initialHotel.image, defaultHotel.images),
-    amenities: normalizeAmenities(initialHotel.amenities, defaultHotel.amenities),
-    rating: parsePrice(initialHotel.rating ?? initialHotel.stars_rating ?? initialHotel.score) || defaultHotel.rating,
-    reviewsCount:
-      parsePrice(initialHotel.reviewsCount ?? initialHotel.total_bookings ?? initialHotel.reviews) ||
-      defaultHotel.reviewsCount,
-    reviews: Array.isArray(initialHotel.reviews) && initialHotel.reviews.length > 0 ? initialHotel.reviews : defaultHotel.reviews
+    // Handle images vs image
+    images: initialHotel.images || (initialHotel.image ? [initialHotel.image, ...defaultHotel.images.slice(1)] : defaultHotel.images),
+    // Handle amenities as strings or objects
+    amenities: Array.isArray(initialHotel.amenities) 
+      ? initialHotel.amenities.map((a: any) => typeof a === 'string' ? { icon: <CheckCircle2 className="w-5 h-5" />, label: a } : a)
+      : defaultHotel.amenities,
+    // Handle rating as number or score string
+    rating: initialHotel.rating || parseFloat(initialHotel.score) || defaultHotel.rating,
+    // Handle reviews count
+    reviewsCount: initialHotel.reviewsCount || (typeof initialHotel.reviews === 'string' ? parseInt(initialHotel.reviews) : defaultHotel.reviewsCount),
+    // Ensure reviews is an array
+    reviews: Array.isArray(initialHotel.reviews) ? initialHotel.reviews : defaultHotel.reviews
   } : defaultHotel;
 
-  const googleMapsApiKey = import.meta.env.VITE_GOOGLE_MAPS_API_KEY || '';
-  const hotelLatitude = parseCoordinate(hotel.latitude);
-  const hotelLongitude = parseCoordinate(hotel.longitude);
-  const hasHotelCoordinates = hotelLatitude !== null && hotelLongitude !== null;
-  const mapCenter = hasHotelCoordinates
-    ? { lat: hotelLatitude, lng: hotelLongitude }
-    : { lat: defaultHotel.latitude, lng: defaultHotel.longitude };
-  const mapSearchQuery = encodeURIComponent(String(hotel.address || hotel.location || hotel.name || 'Cambodia'));
-  const googleMapsUrl = `https://www.google.com/maps/search/?api=1&query=${mapSearchQuery}`;
+  // Helper to parse price
+  const parsePrice = (p: any) => {
+    if (typeof p === 'number') return p;
+    if (typeof p === 'string') {
+      return parseFloat(p.replace(/[^0-9.]/g, ''));
+    }
+    return 0;
+  };
 
   const hotelPrice = parsePrice(hotel.price);
-  const discountedPrice = parsePrice(hotel.discounted_price ?? hotel.price);
-  const hasPromotion = (hotel as any).has_promotion === true && (hotel as any).promotion;
 
   const roomOptions = useMemo<RoomOption[]>(() => {
-    const basePrice = hotelPrice || 120;
+    const basePrice = hotelPrice || 20;
     const fallbackRooms: RoomOption[] = [
       {
         id: 'deluxe-king-suite',
@@ -266,7 +161,7 @@ export const HotelDetails: React.FC<HotelDetailsProps> = ({ tripData, hotel: ini
         id: 'executive-river-view',
         name: 'Executive River View',
         category: 'Executive Room',
-        basePrice: basePrice + 65,
+        basePrice: Math.min(20, basePrice + 2),
         maxOccupancy: 4,
         sizeSqm: 68,
         description: 'Panoramic river view with lounge corner and premium bathroom.',
@@ -276,7 +171,7 @@ export const HotelDetails: React.FC<HotelDetailsProps> = ({ tripData, hotel: ini
         id: 'family-connecting-suite',
         name: 'Family Connecting Suite',
         category: 'Family Suite',
-        basePrice: basePrice + 110,
+        basePrice: Math.min(20, basePrice + 4),
         maxOccupancy: 5,
         sizeSqm: 85,
         description: 'Two connected rooms, ideal for families and small groups.',
@@ -343,55 +238,28 @@ export const HotelDetails: React.FC<HotelDetailsProps> = ({ tripData, hotel: ini
       ? requestedCheckOutDate
       : addDays(plannedCheckInDate, 1);
   const nights = Math.max(differenceInDays(plannedCheckOutDate, plannedCheckInDate), 1);
-  const baseNightlyPrice = selectedRoom?.basePrice || hotelPrice;
-  // Use discounted price for calculations if promotion is available
-  const nightlyPrice = (hasPromotion && selectedRoom?.id === roomOptions[0]?.id) ? discountedPrice : baseNightlyPrice;
-  const cleaningFee = Math.max(25, Math.round(nightlyPrice * 0.12));
-  const serviceFee = Math.max(20, Math.round(nightlyPrice * nights * 0.08));
+  const nightlyPrice = selectedRoom?.basePrice || hotelPrice;
+  const cleaningFee = Math.max(3, Math.round(nightlyPrice * 0.05));
+  const serviceFee = Math.max(2, Math.round(nightlyPrice * nights * 0.02));
   const roomSubtotal = nightlyPrice * nights;
   const total = roomSubtotal + cleaningFee + serviceFee;
   const perPerson = total / guests;
 
-  const handleReserveClick = async () => {
+  const handleReserveClick = () => {
     if (!selectedRoom) return;
 
-    setIsBooking(true);
-    setBookingMessage('');
-
-    try {
-      const user = getAuthUser();
-      if (!user) {
-        setBookingMessage('Please login to make a booking');
-        return;
-      }
-      
-      // Call the original onReserve callback if provided
-      onReserve?.({
-        roomType: selectedRoom.name,
-        roomCategory: selectedRoom.category,
-        guests,
-        maxOccupancy: selectedRoom.maxOccupancy,
-        nightlyPrice,
-        nights,
-        roomSubtotal,
-        cleaningFee,
-        serviceFee,
-        totalPrice: total,
-        // Promotion data
-        hasPromotion,
-        promotion: (hotel as any).promotion,
-        originalPrice: hotelPrice,
-        discountedPrice: discountedPrice !== hotelPrice ? discountedPrice : undefined,
-        discountPercentage: hasPromotion && hotelPrice > 0 ? 
-          Math.round(((hotelPrice - discountedPrice) / hotelPrice) * 100) : 0
-      });
-
-    } catch (error: any) {
-      console.error('Booking error:', error);
-      setBookingMessage(error?.data?.message || 'Booking failed. Please try again.');
-    } finally {
-      setIsBooking(false);
-    }
+    onReserve?.({
+      roomType: selectedRoom.name,
+      roomCategory: selectedRoom.category,
+      guests,
+      maxOccupancy: selectedRoom.maxOccupancy,
+      nightlyPrice,
+      nights,
+      roomSubtotal,
+      cleaningFee,
+      serviceFee,
+      totalPrice: total
+    });
   };
 
   return (
@@ -545,52 +413,23 @@ export const HotelDetails: React.FC<HotelDetailsProps> = ({ tripData, hotel: ini
             {/* Location */}
             <div className="space-y-8">
               <h2 className="text-xl font-serif italic text-slate-900 dark:text-white">Location</h2>
-              {!googleMapsApiKey ? (
-                <div className="rounded-[2rem] border border-amber-200 bg-amber-50 px-6 py-5 text-amber-800">
-                  Add `VITE_GOOGLE_MAPS_API_KEY` to your frontend env file to show the Google Map here.
-                </div>
-              ) : (
-                <div className="relative overflow-hidden rounded-[2rem] border border-slate-100 bg-white shadow-xl dark:border-slate-800 dark:bg-slate-900">
-                  <LoadScript googleMapsApiKey={googleMapsApiKey}>
-                    <GoogleMap
-                      mapContainerStyle={{ width: '100%', height: '400px' }}
-                      zoom={hasHotelCoordinates ? 15 : 11}
-                      center={mapCenter}
-                    >
-                      {hasHotelCoordinates && (
-                        <Marker position={{ lat: hotelLatitude, lng: hotelLongitude }} />
-                      )}
-                    </GoogleMap>
-                  </LoadScript>
-
-                  <div className="pointer-events-none absolute inset-x-0 bottom-0 p-6">
-                    <div className="pointer-events-auto inline-flex max-w-full flex-col gap-2 rounded-2xl bg-white/95 px-6 py-4 shadow-2xl backdrop-blur-md dark:bg-slate-950/90">
-                      <div className="flex items-center gap-3">
-                        <div className="flex h-10 w-10 items-center justify-center rounded-full bg-red-500 text-white shadow-lg">
-                          <MapPin className="w-5 h-5" />
-                        </div>
-                        <div>
-                          <p className="text-xs font-bold uppercase tracking-widest text-slate-900 dark:text-white">{hotel.name}</p>
-                          <p className="text-sm text-slate-600 dark:text-slate-300">{hotel.address || hotel.location}</p>
-                        </div>
-                      </div>
-                      {!hasHotelCoordinates ? (
-                        <p className="text-xs text-amber-600 dark:text-amber-400">
-                          Exact hotel coordinates are not available yet, so the map is centered on Cambodia.
-                        </p>
-                      ) : null}
-                      <a
-                        href={googleMapsUrl}
-                        target="_blank"
-                        rel="noreferrer"
-                        className="inline-flex items-center justify-center rounded-xl bg-slate-900 px-4 py-2 text-xs font-bold uppercase tracking-widest text-white transition-colors hover:bg-blue-600 dark:bg-white dark:text-slate-900 dark:hover:bg-blue-50"
-                      >
-                        Open in Google Maps
-                      </a>
+              <div className="relative h-[400px] rounded-[2rem] overflow-hidden group cursor-pointer">
+                <img 
+                  src="https://images.unsplash.com/photo-1524661135-423995f22d0b?auto=format&fit=crop&q=80&w=1200" 
+                  alt="Map" 
+                  className="w-full h-full object-cover grayscale group-hover:grayscale-0 transition-all duration-700"
+                  referrerPolicy="no-referrer"
+                />
+                <div className="absolute inset-0 bg-slate-900/10 group-hover:bg-transparent transition-colors" />
+                <div className="absolute inset-0 flex items-center justify-center">
+                  <div className="bg-white/90 backdrop-blur-md px-8 py-4 rounded-2xl shadow-2xl flex flex-col items-center gap-2">
+                    <div className="w-10 h-10 bg-red-500 rounded-full flex items-center justify-center text-white shadow-lg animate-bounce">
+                      <MapPin className="w-6 h-6" />
                     </div>
+                    <span className="text-xs font-bold text-slate-900 uppercase tracking-widest">{hotel.name}</span>
                   </div>
                 </div>
-              )}
+              </div>
             </div>
           </div>
 
@@ -601,25 +440,12 @@ export const HotelDetails: React.FC<HotelDetailsProps> = ({ tripData, hotel: ini
                 {/* Price Header */}
                 <div className="flex items-center justify-between">
                   <div className="flex items-baseline gap-2">
-                    <span className="text-4xl font-serif italic text-slate-900 dark:text-white">
-                      ${hasPromotion ? discountedPrice.toFixed(0) : nightlyPrice.toFixed(0)}
-                    </span>
+                    <span className="text-4xl font-serif italic text-slate-900 dark:text-white">${nightlyPrice}</span>
                     <span className="text-sm font-bold text-slate-400 uppercase tracking-widest">/ night</span>
-                    {hasPromotion && (
-                      <span className="ml-2 line-through text-sm text-slate-400 dark:text-slate-500">
-                        ${nightlyPrice.toFixed(0)}
-                      </span>
-                    )}
                   </div>
-                  {hasPromotion ? (
-                    <div className="text-[10px] font-bold text-red-600 bg-red-50 dark:bg-red-900/20 px-3 py-1 rounded-full uppercase tracking-widest">
-                      {(hotel as any).discount_percentage}% OFF
-                    </div>
-                  ) : (
-                    <div className="text-[10px] font-bold text-emerald-600 bg-emerald-50 dark:bg-emerald-900/20 px-3 py-1 rounded-full uppercase tracking-widest">
-                      Best Price Guarantee
-                    </div>
-                  )}
+                  <div className="text-[10px] font-bold text-emerald-600 bg-emerald-50 dark:bg-emerald-900/20 px-3 py-1 rounded-full uppercase tracking-widest">
+                    Best Price Guarantee
+                  </div>
                 </div>
 
                 {/* Date/Guest Picker */}
@@ -748,35 +574,12 @@ export const HotelDetails: React.FC<HotelDetailsProps> = ({ tripData, hotel: ini
                   </AnimatePresence>
                 </div>
 
-                {/* Booking Message */}
-                {bookingMessage && (
-                  <div className={`p-4 rounded-2xl text-sm font-medium text-center ${
-                    bookingMessage.includes('successful') 
-                      ? 'bg-emerald-50 dark:bg-emerald-900/20 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800'
-                      : 'bg-red-50 dark:bg-red-900/20 text-red-700 dark:text-red-300 border border-red-200 dark:border-red-800'
-                  }`}>
-                    {bookingMessage}
-                  </div>
-                )}
-
                 {/* Reserve Button */}
                 <button 
                   onClick={handleReserveClick}
-                  disabled={isBooking}
-                  className={`w-full py-5 rounded-2xl text-sm font-bold shadow-xl transition-all active:scale-[0.98] ${
-                    isBooking 
-                      ? 'bg-slate-400 text-slate-200 cursor-not-allowed'
-                      : 'bg-blue-600 hover:bg-blue-700 text-white shadow-blue-600/20'
-                  }`}
+                  className="w-full bg-blue-600 hover:bg-blue-700 text-white py-5 rounded-2xl text-sm font-bold shadow-xl shadow-blue-600/20 transition-all active:scale-[0.98]"
                 >
-                  {isBooking ? (
-                    <div className="flex items-center justify-center gap-2">
-                      <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                      Processing Booking...
-                    </div>
-                  ) : (
-                    'Reserve Now'
-                  )}
+                  Reserve Now
                 </button>
                 <p className="text-[10px] text-center text-slate-400 font-medium uppercase tracking-widest">You won't be charged yet</p>
 

@@ -1,154 +1,75 @@
-import { getPublicDestinations } from '../services/destinationService';
-
 export interface Hotel {
-  id: number | string;
+  id: number;
   name: string;
   location: string;
   price: number;
   rating: number;
   image: string;
-  images?: string[];
   description?: string;
   amenities?: string[];
-  rooms?: number | Array<Record<string, unknown>>;
+  rooms?: number;
   available?: boolean;
-  hotel_name?: string;
-  city?: string;
-  country?: string;
-  address?: string;
-  stars_rating?: number;
-  is_active?: boolean;
-  type?: string;
-  status?: string;
-  owner?: {
-    id?: number;
-    name?: string;
-    email?: string;
-  } | null;
-  created_at?: string;
-  updated_at?: string;
-  total_bookings?: number;
-  latitude?: number | null;
-  longitude?: number | null;
 }
 
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL ?? 'http://127.0.0.1:8000/api';
-const API_ORIGIN = /^https?:\/\//i.test(API_BASE_URL)
-  ? API_BASE_URL.replace(/\/api\/?$/, '')
-  : '';
-const ASSET_ORIGIN =
-  import.meta.env.VITE_BACKEND_ORIGIN ||
-  API_ORIGIN ||
-  (typeof window !== 'undefined' ? window.location.origin : '');
-
-const toNumber = (value: unknown, fallback = 0): number => {
-  const parsed = typeof value === 'number' ? value : parseFloat(String(value ?? ''));
-  return Number.isFinite(parsed) ? parsed : fallback;
-};
-
-const resolveHotelImageUrl = (value?: string | null): string => {
-  if (!value) return '';
-
-  const cleaned = value.replace(/\\/g, '/').trim();
-  if (!cleaned) return '';
-
-  const normalizedScheme = cleaned.replace(/^https?:\/(?!\/)/i, (match) => `${match}/`);
-  if (normalizedScheme.startsWith('data:')) return normalizedScheme;
-  if (/^https?:\/\//i.test(normalizedScheme)) return normalizedScheme;
-
-  const normalized = normalizedScheme.startsWith('/') ? normalizedScheme : `/${normalizedScheme}`;
-  if (!ASSET_ORIGIN) return normalized;
-
-  if (normalized.startsWith('/storage/')) return `${ASSET_ORIGIN}${normalized}`;
-  if (normalized.startsWith('/uploads/')) return `${ASSET_ORIGIN}/storage${normalized}`;
-  if (normalized.startsWith('/images/')) return `${ASSET_ORIGIN}/storage${normalized}`;
-  if (normalized.startsWith('/destinations/')) return `${ASSET_ORIGIN}/storage${normalized}`;
-
-  return `${ASSET_ORIGIN}${normalized}`;
-};
-
-const normalizeGalleryImages = (images: unknown, image?: string | null): string[] => {
-  const gallery = Array.isArray(images)
-    ? images
-        .filter((item): item is string => typeof item === 'string' && item.trim().length > 0)
-        .map((item) => resolveHotelImageUrl(item))
-        .filter(Boolean)
-    : [];
-
-  const primaryImage = resolveHotelImageUrl(image);
-  const merged = primaryImage ? [primaryImage, ...gallery] : gallery;
-
-  return Array.from(new Set(merged)).filter(Boolean);
-};
-
-// Lightweight fallback data so the UI still works when the backend is offline.
-const SAMPLE_HOTELS: Hotel[] = [
+export const ALL_HOTELS: Hotel[] = [
   {
-    id: 'sample-1',
-    name: 'Riverside Boutique',
-    location: 'Phnom Penh, Cambodia',
-    price: 120,
+    id: 1,
+    name: 'Sokha Beach Resort',
+    location: 'Sihanoukville',
+    price: 18,
     rating: 4.5,
-    image: 'https://images.unsplash.com/photo-1566073771259-6a8506099945?auto=format&fit=crop&w=900&q=80',
-    amenities: ['Free WiFi', 'Pool', 'Breakfast'],
-    description: 'Charming stay along the Tonle Sap with city views and a rooftop pool.',
+    image: 'https://images.unsplash.com/photo-1566073771259-6a8506099945?auto=format&fit=crop&q=80&w=800',
+    description: 'Luxury beachfront resort with private beach access.',
+    amenities: ['WiFi', 'Pool', 'Spa', 'Restaurant'],
+    rooms: 150,
+    available: true,
   },
   {
-    id: 'sample-2',
-    name: 'Angkor Heritage Resort',
-    location: 'Siem Reap, Cambodia',
-    price: 180,
+    id: 2,
+    name: 'Raffles Hotel Le Royal',
+    location: 'Phnom Penh',
+    price: 20,
     rating: 4.7,
-    image: 'https://images.unsplash.com/photo-1501117716987-c8e1ecb210af?auto=format&fit=crop&w=900&q=80',
-    amenities: ['Spa', 'Airport Shuttle', 'Breakfast'],
-    description: 'Resort-style comfort minutes from Angkor Wat, with lush gardens and spa.',
+    image: 'https://images.unsplash.com/photo-1582719478250-c89cae4dc85b?auto=format&fit=crop&q=80&w=800',
+    description: 'Historic colonial-era luxury hotel in the heart of the city.',
+    amenities: ['WiFi', 'Pool', 'Gym', 'Bar', 'Business Center'],
+    rooms: 200,
+    available: true,
   },
   {
-    id: 'sample-3',
-    name: 'Coastal Breeze Villas',
-    location: 'Sihanoukville, Cambodia',
-    price: 140,
+    id: 3,
+    name: 'Templation Hotel',
+    location: 'Siem Reap',
+    price: 15,
     rating: 4.3,
-    image: 'https://images.unsplash.com/photo-1501117716987-c8e1ecb210af?auto=format&fit=crop&w=900&q=80',
-    amenities: ['Beachfront', 'Free WiFi', 'Bar'],
-    description: 'Beachfront villas with sunset decks, ideal for weekend escapes.',
+    image: 'https://images.unsplash.com/photo-1584132967334-10e028bd69c5?auto=format&fit=crop&q=80&w=800',
+    description: 'Boutique hotel near Angkor Wat with tropical gardens.',
+    amenities: ['WiFi', 'Pool', 'Spa', 'Restaurant'],
+    rooms: 80,
+    available: true,
+  },
+  {
+    id: 4,
+    name: 'Koh Rong Sandy Beach Resort',
+    location: 'Koh Rong',
+    price: 12,
+    rating: 4.2,
+    image: 'https://images.unsplash.com/photo-1500375592092-40eb2168fd21?auto=format&fit=crop&q=80&w=800',
+    description: 'Eco-friendly beach bungalows on a pristine island.',
+    amenities: ['WiFi', 'Restaurant', 'Diving Center'],
+    rooms: 45,
+    available: true,
+  },
+  {
+    id: 5,
+    name: 'Amanjaya Pancam Suites Hotel',
+    location: 'Kampot',
+    price: 10,
+    rating: 4.4,
+    image: 'https://images.unsplash.com/photo-1523413651479-597eb2da0ad6?auto=format&fit=crop&q=80&w=800',
+    description: 'Riverside boutique hotel with mountain views.',
+    amenities: ['WiFi', 'Pool', 'Restaurant', 'Tour Desk'],
+    rooms: 60,
+    available: true,
   },
 ];
-
-export const getHotels = async (): Promise<Hotel[]> => {
-  try {
-    const records = await getPublicDestinations();
-
-    return records.map((destination: any) => {
-      const images = normalizeGalleryImages(destination.images, destination.image);
-      const primaryImage = images[0] || '';
-
-      return {
-        id: destination.id ?? destination.destination_id ?? '',
-        name: String(destination.name || destination.hotel_name || '').trim(),
-        location: String(destination.location || '').trim(),
-        rating: toNumber(destination.rating, 0),
-        available: String(destination.status || '').toLowerCase() === 'active',
-        price: toNumber(destination.price, 0),
-        image: primaryImage,
-        images,
-        amenities: Array.isArray(destination.amenities) ? destination.amenities : [],
-        rooms: destination.rooms,
-        description: String(destination.description || '').trim(),
-        type: String(destination.type || '').trim(),
-        status: String(destination.status || '').trim(),
-        address: String(destination.address || '').trim(),
-        created_at: destination.created_at,
-        updated_at: destination.updated_at,
-        total_bookings: toNumber(destination.total_bookings, 0),
-        latitude: destination.latitude ?? null,
-        longitude: destination.longitude ?? null,
-      };
-    }).filter((item) => Boolean(item.id) && Boolean(item.name) && Boolean(item.location));
-  } catch (error) {
-    console.error('Error fetching hotels from database, falling back to samples:', error);
-    return SAMPLE_HOTELS;
-  }
-};
-
-export const ALL_HOTELS: Hotel[] = [];

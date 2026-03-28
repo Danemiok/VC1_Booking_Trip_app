@@ -17,8 +17,6 @@ import {
   Heart,
   ArrowRight
 } from 'lucide-react';
-// @ts-ignore - JS module import
-import { apiRequest } from '../../services/api';
 
 interface RentalsProps {
   onBack: () => void;
@@ -31,176 +29,138 @@ const normalizeSearchText = (value: string): string =>
     .replace(/[\u0300-\u036f]/g, '')
     .toLowerCase();
 
-const DEFAULT_RENTAL_IMAGE =
-  'https://images.unsplash.com/photo-1503376780353-7e6692767b70?auto=format&fit=crop&q=80&w=800';
-
-const resolveTransportImageUrl = (value: unknown): string => {
-  const backendOrigin = (import.meta.env.VITE_BACKEND_ORIGIN || 'http://127.0.0.1:8000').replace(/\/+$/, '');
-  const rawValue = typeof value === 'string' ? value.trim() : '';
-
-  if (!rawValue) {
-    return DEFAULT_RENTAL_IMAGE;
-  }
-
-  let normalized = rawValue.replace(/\\/g, '/');
-
-  if (/^https?:\/[^/]/i.test(normalized)) {
-    normalized = normalized.replace(/^([a-z]+:)\/(?!\/)/i, '$1//');
-  }
-
-  if (/^https?:\/\//i.test(normalized)) {
-    return normalized;
-  }
-
-  const relative = normalized.replace(/^\/+/, '');
-
-  if (relative.startsWith('storage/')) {
-    return `${backendOrigin}/${relative}`;
-  }
-
-  if (relative.startsWith('api/files/')) {
-    return `${backendOrigin}/${relative}`;
-  }
-
-  if (relative.startsWith('public/')) {
-    return `${backendOrigin}/storage/${relative.slice('public/'.length)}`;
-  }
-
-  if (relative.startsWith('uploads/') || relative.startsWith('images/')) {
-    return `${backendOrigin}/storage/${relative}`;
-  }
-
-  return `${backendOrigin}/${relative}`;
-};
-
 export const Rentals: React.FC<RentalsProps> = ({ onBack, onSelectVehicle }) => {
   const ITEMS_PER_PAGE = 6;
-  const priceFilterOptions = [
-    { label: '$0.50', value: '0.50' },
-    { label: '$1', value: '1.00' },
-    { label: '$1.50', value: '1.50' },
-    { label: 'Free only', value: 'free' },
-  ] as const;
-  const [vehicles, setVehicles] = useState<any[]>([]);
-  const [vehiclesError, setVehiclesError] = useState<string | null>(null);
-  const [isLoadingVehicles, setIsLoadingVehicles] = useState(false);
+  const vehicleClasses = ['Economy', 'SUV', 'Luxury', 'Electric', 'Sport'];
   const [activeTab, setActiveTab] = useState<'vehicles' | 'homes'>('vehicles');
-  const [selectedPriceFilters, setSelectedPriceFilters] = useState<Array<(typeof priceFilterOptions)[number]['value']>>([]);
+  const [priceRange, setPriceRange] = useState(20);
   const [showInstantOnly, setShowInstantOnly] = useState(false);
   const [selectedVehicleClasses, setSelectedVehicleClasses] = useState<string[]>([]);
   const [searchQuery, setSearchQuery] = useState('');
-  const [locationQuery, setLocationQuery] = useState('');
-  const [checkInQuery, setCheckInQuery] = useState('');
   const [sortBy, setSortBy] = useState<'recommended' | 'price-low' | 'price-high' | 'rating'>('recommended');
   const [currentPage, setCurrentPage] = useState(1);
 
-  const loadVehicles = React.useCallback(async () => {
-    setIsLoadingVehicles(true);
-    setVehiclesError(null);
-
-    try {
-      const response = await apiRequest('/transports') as { data?: any[] };
-      const backendOrigin: string = (import.meta as any).env?.VITE_BACKEND_ORIGIN || 'http://127.0.0.1:8000';
-
-      const mapped = (response?.data ?? [])
-        .map((item: any) => {
-          const rawType = String(item?.transport_type ?? 'Car Rental');
-          const type = rawType === 'Shuttle' ? 'Train' : rawType === 'Other' ? 'Car Rental' : rawType;
-          const rawId = item?.transport_id ?? item?.id;
-          const id = typeof rawId === 'number' ? rawId : parseInt(String(rawId), 10);
-          const image = resolveTransportImageUrl(item?.vehicle_photo_url);
-          const isFree = Boolean(item?.is_free ?? item?.isFree ?? false);
-          const price = isFree
-            ? 0
-            : (
-                typeof item?.price_per_km === 'number'
-                  ? item.price_per_km
-                  : (item?.price_per_km ? parseFloat(item.price_per_km) : 0)
-              );
-          const status = String(item?.status ?? 'active');
-          const statusLabel =
-            status === 'active'
-              ? 'Active'
-              : status === 'inactive'
-                ? 'Not working'
-                : status === 'maintenance'
-                  ? 'Fixing'
-                  : 'Waiting';
-
-          return {
-            id: Number.isFinite(id) ? id : Math.random(),
-            name: String(item?.service_name ?? 'Transport').trim(),
-            type,
-            price,
-            is_free: isFree,
-            status: statusLabel,
-            rating: 4.7,
-            seats: 4,
-            transmission: 'Auto',
-            mileage: item?.route_description ? String(item.route_description) : 'Route details',
-            image,
-            badge: String(type || '').toUpperCase(),
-            instantBook: status !== 'inactive',
-            // Promotion data from API
-            has_promotion: Boolean(item?.has_promotion),
-            discount_percentage: Number(item?.discount_percentage ?? 0),
-            discounted_price: Number(item?.discounted_price ?? price),
-            promotion: item?.promotion ?? null,
-            original_price: Number(item?.original_price ?? price),
-            owner: item?.owner
-              ? {
-                  id: item.owner.id ?? item.owner.owner_id ?? item.owner.user_id,
-                  name: item.owner.name ?? item.owner.full_name ?? item.owner.ownerName,
-                  email: item.owner.email ?? item.owner.owner_email,
-                }
-              : item?.owner_id
-                ? { id: Number(item.owner_id) }
-                : null,
-          };
-        })
-        .filter((item: any) => item.name);
-
-      setVehicles(mapped);
-    } catch (err: any) {
-      setVehiclesError(err?.data?.message ?? err?.message ?? 'Failed to load transports.');
-      setVehicles([]);
-    } finally {
-      setIsLoadingVehicles(false);
+  const vehicles = [
+    {
+      id: 1,
+      name: "Tesla Model Y",
+      type: "Electric",
+      price: 18,
+      rating: 4.9,
+      seats: 5,
+      transmission: "Auto",
+      mileage: "Unlim.",
+      image: "https://images.unsplash.com/photo-1619767886558-efdc259cde1a?auto=format&fit=crop&q=80&w=800",
+      badge: "ELECTRIC",
+      instantBook: true
+    },
+    {
+      id: 2,
+      name: "Toyota RAV4",
+      type: "SUV",
+      price: 15,
+      rating: 4.7,
+      seats: 5,
+      bags: 3,
+      ac: "A/C",
+      image: "https://images.unsplash.com/photo-1568844293986-8d0400bd4745?auto=format&fit=crop&q=80&w=800",
+      instantBook: false
+    },
+    {
+      id: 3,
+      name: "BMW 4 Series",
+      type: "Luxury",
+      price: 20,
+      rating: 5.0,
+      seats: 4,
+      performance: "Performance",
+      transmission: "Sport Auto",
+      image: "https://images.unsplash.com/photo-1555215695-3004980ad54e?auto=format&fit=crop&q=80&w=800",
+      badge: "LUXURY",
+      instantBook: true
+    },
+    {
+      id: 4,
+      name: "Hyundai Accent",
+      type: "Economy",
+      price: 12,
+      rating: 4.5,
+      seats: 5,
+      engine: "Hybrid",
+      bags: 2,
+      image: "https://images.unsplash.com/photo-1619767886558-efdc259cde1a?auto=format&fit=crop&q=80&w=800",
+      instantBook: true
+    },
+    {
+      id: 5,
+      name: "Jeep Wrangler",
+      type: "SUV",
+      price: 16,
+      rating: 4.8,
+      drive: "4x4",
+      style: "Convertible",
+      seats: 4,
+      image: "https://images.unsplash.com/photo-1533473359331-0135ef1b58bf?auto=format&fit=crop&q=80&w=800",
+      instantBook: false
+    },
+    {
+      id: 6,
+      name: "Polestar 2",
+      type: "Electric",
+      price: 19,
+      rating: 4.9,
+      engine: "Electric",
+      insurance: "Insurance Incl.",
+      seats: 5,
+      image: "https://images.unsplash.com/photo-1621135802920-133df287f89c?auto=format&fit=crop&q=80&w=800",
+      badge: "NEW",
+      instantBook: true
+    },
+    {
+      id: 7,
+      name: "Ford Mustang",
+      type: "Sport",
+      price: 17,
+      rating: 4.8,
+      seats: 4,
+      transmission: "Auto",
+      style: "Coupe",
+      image: "https://images.unsplash.com/photo-1494976388531-d1058494cdd8?auto=format&fit=crop&q=80&w=800",
+      badge: "POPULAR",
+      instantBook: true
+    },
+    {
+      id: 8,
+      name: "Mercedes GLC",
+      type: "Luxury SUV",
+      price: 20,
+      rating: 4.9,
+      seats: 5,
+      transmission: "Auto",
+      bags: 4,
+      image: "https://images.unsplash.com/photo-1549924231-f129b911e442?auto=format&fit=crop&q=80&w=800",
+      instantBook: true
+    },
+    {
+      id: 9,
+      name: "Nissan Leaf",
+      type: "Electric",
+      price: 14,
+      rating: 4.6,
+      seats: 5,
+      transmission: "Auto",
+      mileage: "Unlim.",
+      image: "https://images.unsplash.com/photo-1553440569-bcc63803a83d?auto=format&fit=crop&q=80&w=800",
+      instantBook: false
     }
-  }, []);
-
-  const vehicleClasses = React.useMemo(() => {
-    const unique = new Set<string>();
-    vehicles.forEach((vehicle) => {
-      if (vehicle?.type) unique.add(String(vehicle.type));
-    });
-    return unique.size > 0 ? Array.from(unique) : ['Car Rental', 'Bus', 'Train', 'Other'];
-  }, [vehicles]);
-
-  useEffect(() => {
-    loadVehicles();
-  }, [loadVehicles]);
-
-  useEffect(() => {
-    const handleFocus = () => loadVehicles();
-    const handleVisibility = () => {
-      if (document.visibilityState === 'visible') loadVehicles();
-    };
-    window.addEventListener('focus', handleFocus);
-    document.addEventListener('visibilitychange', handleVisibility);
-
-    return () => {
-      window.removeEventListener('focus', handleFocus);
-      document.removeEventListener('visibilitychange', handleVisibility);
-    };
-  }, [loadVehicles]);
+  ];
 
   const stays = [
     {
       id: 1,
       name: "Oceanfront Modern Villa",
       location: "Malibu, California",
-      price: 450,
+      price: 20,
       rating: 4.9,
       guests: 8,
       image: "https://images.unsplash.com/photo-1512917774080-9991f1c4c750?auto=format&fit=crop&q=80&w=800",
@@ -210,7 +170,7 @@ export const Rentals: React.FC<RentalsProps> = ({ onBack, onSelectVehicle }) => 
       id: 2,
       name: "Highland Forest Cabin",
       location: "Lake Tahoe, Nevada",
-      price: 220,
+      price: 14,
       rating: 4.7,
       guests: 4,
       image: "https://images.unsplash.com/photo-1449156001437-3a1621acda2e?auto=format&fit=crop&q=80&w=800",
@@ -220,7 +180,7 @@ export const Rentals: React.FC<RentalsProps> = ({ onBack, onSelectVehicle }) => 
       id: 3,
       name: "Sunset Mediterranean Villa",
       location: "Santorini, Greece",
-      price: 680,
+      price: 18,
       rating: 4.8,
       guests: 6,
       image: "https://images.unsplash.com/photo-1518780664697-55e3ad937233?auto=format&fit=crop&q=80&w=800",
@@ -230,7 +190,7 @@ export const Rentals: React.FC<RentalsProps> = ({ onBack, onSelectVehicle }) => 
       id: 4,
       name: "Downtown Minimalist Loft",
       location: "Berlin, Germany",
-      price: 185,
+      price: 12,
       rating: 4.6,
       guests: 3,
       image: "https://images.unsplash.com/photo-1502672260266-1c1ef2d93688?auto=format&fit=crop&q=80&w=800",
@@ -246,30 +206,10 @@ export const Rentals: React.FC<RentalsProps> = ({ onBack, onSelectVehicle }) => 
     );
   };
 
-  const togglePriceFilter = (value: (typeof priceFilterOptions)[number]['value']) => {
-    setSelectedPriceFilters((prev) =>
-      prev.includes(value)
-        ? prev.filter((selectedValue) => selectedValue !== value)
-        : [...prev, value]
-    );
-  };
-
-  const matchesSelectedPriceFilters = (price: number, isFree: boolean) => {
-    if (selectedPriceFilters.length === 0) return true;
-
-    return selectedPriceFilters.some((filter) => {
-      if (filter === 'free') return isFree || price === 0;
-      return !isFree && Math.abs(price - Number(filter)) < 0.01;
-    });
-  };
-
-  const queryTokens = normalizeSearchText([searchQuery, locationQuery, checkInQuery].join(' '))
-    .trim()
-    .split(/\s+/)
-    .filter(Boolean);
+  const queryTokens = normalizeSearchText(searchQuery).trim().split(/\s+/).filter(Boolean);
 
   const filteredVehicles = vehicles.filter((vehicle: any) => {
-    if (!matchesSelectedPriceFilters(Number(vehicle.price ?? 0), Boolean(vehicle.is_free))) return false;
+    if (vehicle.price > priceRange) return false;
     if (showInstantOnly && !vehicle.instantBook) return false;
     if (selectedVehicleClasses.length > 0) {
       const vehicleType = normalizeSearchText(vehicle.type || '');
@@ -281,13 +221,13 @@ export const Rentals: React.FC<RentalsProps> = ({ onBack, onSelectVehicle }) => 
     if (queryTokens.length === 0) return true;
 
     const searchableText = normalizeSearchText(
-      [vehicle.name, vehicle.type, vehicle.transmission || '', vehicle.engine || '', vehicle.style || '', vehicle.mileage || ''].join(' ')
+      [vehicle.name, vehicle.type, vehicle.transmission || '', vehicle.engine || '', vehicle.style || ''].join(' ')
     );
     return queryTokens.every((token) => searchableText.includes(token));
   });
 
   const filteredStays = stays.filter((stay: any) => {
-    if (!matchesSelectedPriceFilters(Number(stay.price ?? 0), Boolean(stay.is_free))) return false;
+    if (stay.price > priceRange) return false;
     if (showInstantOnly && !stay.instantBook) return false;
     if (queryTokens.length === 0) return true;
 
@@ -334,7 +274,7 @@ export const Rentals: React.FC<RentalsProps> = ({ onBack, onSelectVehicle }) => 
 
   useEffect(() => {
     setCurrentPage(1);
-  }, [activeTab, selectedPriceFilters, selectedVehicleClasses, showInstantOnly, searchQuery, sortBy]);
+  }, [activeTab, priceRange, selectedVehicleClasses, showInstantOnly, searchQuery, sortBy]);
 
   return (
     <div className="min-h-screen bg-[#FDFDFD] dark:bg-slate-950 pt-20 pb-20">
@@ -420,26 +360,14 @@ export const Rentals: React.FC<RentalsProps> = ({ onBack, onSelectVehicle }) => 
               <MapPin className="w-5 h-5 text-blue-500 group-hover:scale-110 transition-transform" />
               <div className="flex-1">
                 <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-0.5">Location</p>
-                <input
-                  type="text"
-                  value={locationQuery}
-                  onChange={(e) => setLocationQuery(e.target.value)}
-                  placeholder="Enter a location"
-                  className="bg-transparent border-none p-0 text-sm font-bold text-slate-900 dark:text-white placeholder:text-slate-300 focus:ring-0 w-full"
-                />
+                <p className="text-sm font-bold text-slate-900 dark:text-white">Paris, France</p>
               </div>
             </div>
             <div className="flex items-center gap-3 px-6 py-4 hover:bg-slate-50 dark:hover:bg-slate-800/50 rounded-2xl transition-colors cursor-pointer group border-l border-slate-100 dark:border-slate-800">
               <Calendar className="w-5 h-5 text-blue-500 group-hover:scale-110 transition-transform" />
               <div className="flex-1">
                 <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-0.5">Check in - out</p>
-                <input
-                  type="text"
-                  value={checkInQuery}
-                  onChange={(e) => setCheckInQuery(e.target.value)}
-                  placeholder="Select check-in and check-out"
-                  className="bg-transparent border-none p-0 text-sm font-bold text-slate-900 dark:text-white placeholder:text-slate-300 focus:ring-0 w-full"
-                />
+                <p className="text-sm font-bold text-slate-900 dark:text-white">12 Oct - 15 Oct 2026</p>
               </div>
             </div>
           </div>
@@ -462,35 +390,25 @@ export const Rentals: React.FC<RentalsProps> = ({ onBack, onSelectVehicle }) => 
               </div>
 
               <div className="space-y-8">
-                {/* Price Filter */}
+                {/* Price Range */}
                 <div className="space-y-4">
                   <div className="flex justify-between items-end">
                     <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">
-                      Price Filter ({activeTab === 'vehicles' ? 'per km' : 'per night'})
+                      Price Range ({activeTab === 'vehicles' ? 'per day' : 'per night'})
                     </label>
                   </div>
-                  <div className="space-y-3">
-                    {priceFilterOptions.map((option) => (
-                      <label key={option.value} className="flex items-center gap-3 cursor-pointer group">
-                        <input
-                          type="checkbox"
-                          checked={selectedPriceFilters.includes(option.value)}
-                          onChange={() => togglePriceFilter(option.value)}
-                          className="w-4 h-4 rounded border-slate-200 text-blue-600 focus:ring-blue-500"
-                        />
-                        <span className="text-xs font-medium text-slate-600 dark:text-slate-400 group-hover:text-slate-900 dark:group-hover:text-white transition-colors">
-                          {option.label}
-                        </span>
-                      </label>
-                    ))}
+                  <div className="flex justify-between text-[10px] font-bold text-slate-400">
+                    <span>$0</span>
+                    <span>${priceRange}+</span>
                   </div>
-                  <p className="text-[10px] text-slate-400 font-medium">
-                    {selectedPriceFilters.length === 0
-                      ? 'Showing all price levels'
-                      : selectedPriceFilters.length === 1 && selectedPriceFilters[0] === 'free'
-                        ? 'Showing only free options'
-                        : 'Showing selected price levels'}
-                  </p>
+                  <input 
+                    type="range" 
+                    min="0" 
+                    max="1000" 
+                    value={priceRange}
+                    onChange={(e) => setPriceRange(parseInt(e.target.value))}
+                    className="w-full h-1 bg-slate-100 dark:bg-slate-800 rounded-lg appearance-none cursor-pointer accent-blue-600"
+                  />
                 </div>
 
                 {/* Vehicle Class */}
@@ -576,21 +494,6 @@ export const Rentals: React.FC<RentalsProps> = ({ onBack, onSelectVehicle }) => 
               </div>
             </div>
 
-            {activeTab === 'vehicles' && (
-              <>
-                {isLoadingVehicles && (
-                  <div className="mb-6 text-sm text-slate-500 dark:text-slate-400">
-                    Loading transports...
-                  </div>
-                )}
-                {vehiclesError && (
-                  <div className="mb-6 text-sm text-red-600">
-                    {vehiclesError}
-                  </div>
-                )}
-              </>
-            )}
-
             {paginatedItems.length === 0 ? (
               <div className="bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800 rounded-3xl p-10 text-center">
                 <p className="text-base font-bold text-slate-900 dark:text-white mb-2">No matching results</p>
@@ -617,52 +520,26 @@ export const Rentals: React.FC<RentalsProps> = ({ onBack, onSelectVehicle }) => 
                               className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
                               referrerPolicy="no-referrer"
                             />
-                            <div className="absolute top-4 left-4 flex flex-wrap gap-2">
-                              {car.badge && (
+                            {car.badge && (
+                              <div className="absolute top-4 left-4">
                                 <span className="bg-slate-900/90 backdrop-blur-md text-white text-[9px] font-bold px-3 py-1.5 rounded-lg uppercase tracking-widest">
                                   {car.badge}
                                 </span>
-                              )}
-                              {(car as any).has_promotion && (
-                                <span className="bg-red-500/90 backdrop-blur-md text-white text-[9px] font-bold px-3 py-1.5 rounded-lg uppercase tracking-widest">
-                                  {(car as any).discount_percentage}% OFF
-                                </span>
-                              )}
-                              {car.status && (
-                                <span className="bg-rose-500/90 backdrop-blur-md text-white text-[9px] font-bold px-3 py-1.5 rounded-lg uppercase tracking-widest">
-                                  {car.status}
-                                </span>
-                              )}
-                              {car.is_free && (
-                                <span className="bg-emerald-500/90 backdrop-blur-md text-white text-[9px] font-bold px-3 py-1.5 rounded-lg uppercase tracking-widest">
-                                  Free
-                                </span>
-                              )}
+                              </div>
+                            )}
+                            <div className="absolute top-4 right-4">
+                              <div className="bg-white/90 backdrop-blur-md text-slate-900 text-[10px] font-bold px-2 py-1 rounded-lg flex items-center gap-1 shadow-lg">
+                                <Star className="w-3 h-3 fill-amber-400 text-amber-400" />
+                                {car.rating}
+                              </div>
                             </div>
                           </div>
                           <div className="p-6">
                             <div className="flex items-center justify-between mb-4">
                               <h3 className="text-lg font-bold text-slate-900 dark:text-white">{car.name}</h3>
                               <div className="text-right">
-                                {car.is_free ? (
-                                  <>
-                                    <p className="text-xl font-bold text-emerald-600 leading-none">Free</p>
-                                    <p className="text-[8px] font-bold text-slate-400 uppercase tracking-widest mt-1">no charge</p>
-                                  </>
-                                ) : (car as any).has_promotion ? (
-                                  <>
-                                    <div className="flex items-baseline gap-1">
-                                      <p className="text-xl font-bold text-blue-600 leading-none">${(car as any).discounted_price?.toFixed(2) || car.price}</p>
-                                      <p className="text-[8px] line-through text-slate-400">${car.price}</p>
-                                    </div>
-                                    <p className="text-[8px] font-bold text-red-600 uppercase tracking-widest mt-1">{(car as any).discount_percentage}% OFF</p>
-                                  </>
-                                ) : (
-                                  <>
-                                    <p className="text-xl font-bold text-blue-600 leading-none">${car.price}</p>
-                                    <p className="text-[8px] font-bold text-slate-400 uppercase tracking-widest mt-1">per km</p>
-                                  </>
-                                )}
+                                <p className="text-xl font-bold text-blue-600 leading-none">${car.price}</p>
+                                <p className="text-[8px] font-bold text-slate-400 uppercase tracking-widest mt-1">per day</p>
                               </div>
                             </div>
                             <div className="grid grid-cols-3 gap-2 mb-6">
