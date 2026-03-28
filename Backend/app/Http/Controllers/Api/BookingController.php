@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Booking;
 use App\Models\BookingDbNotification;
 use App\Models\OwnerNotification;
+use App\Models\RecentActivity;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -675,19 +676,102 @@ class BookingController extends Controller
                     ->where('role', 'owner')
                     ->get(['id']);
 
+                $useNotificationsTable = Schema::hasTable('notifications');
+                $notificationsColumns = $useNotificationsTable ? Schema::getColumnListing('notifications') : [];
+                $activitiesTableExists = Schema::hasTable('recent_activities');
+                $activitiesColumns = $activitiesTableExists ? Schema::getColumnListing('recent_activities') : [];
+
                 foreach ($owners as $owner) {
-                    OwnerNotification::firstOrCreate(
-                        [
-                            'user_id' => $owner->id,
-                            'booking_id' => (string) $booking->id,
-                            'title' => $title,
-                        ],
-                        [
-                            'message' => $message,
-                            'data' => $snapshot,
-                            'read_at' => null,
-                        ],
-                    );
+                    $payload = [
+                        'user_id' => $owner->id,
+                        'booking_id' => (string) $booking->id,
+                        'title' => $title,
+                        'message' => $message,
+                        'data' => $snapshot,
+                        'read_at' => null,
+                    ];
+
+                    if ($useNotificationsTable) {
+                        try {
+                            // Support multiple `notifications` schemas (some created manually in phpMyAdmin).
+                            $row = [];
+                            if (in_array('user_id', $notificationsColumns, true)) $row['user_id'] = $owner->id;
+                            if (in_array('booking_id', $notificationsColumns, true)) $row['booking_id'] = (string) $booking->id;
+                            if (in_array('recipient_type', $notificationsColumns, true)) $row['recipient_type'] = 'owner';
+                            if (in_array('notification_type', $notificationsColumns, true)) $row['notification_type'] = 'new_booking';
+                            if (in_array('type', $notificationsColumns, true)) $row['type'] = 'booking_created';
+                            if (in_array('title', $notificationsColumns, true)) $row['title'] = $title;
+                            if (in_array('message', $notificationsColumns, true)) $row['message'] = $message;
+                            if (in_array('data', $notificationsColumns, true)) $row['data'] = json_encode($snapshot);
+                            if (in_array('notification_data', $notificationsColumns, true)) $row['notification_data'] = json_encode($snapshot);
+                            if (in_array('read_at', $notificationsColumns, true)) $row['read_at'] = null;
+                            if (in_array('is_read', $notificationsColumns, true)) $row['is_read'] = 0;
+                            if (in_array('email_sent', $notificationsColumns, true)) $row['email_sent'] = 0;
+                            if (in_array('created_at', $notificationsColumns, true)) $row['created_at'] = now();
+                            if (in_array('updated_at', $notificationsColumns, true)) $row['updated_at'] = now();
+
+                            $notificationId = DB::table('notifications')->insertGetId($row);
+
+                            if ($activitiesTableExists) {
+                                $activity = [];
+                                if (in_array('booking_id', $activitiesColumns, true)) $activity['booking_id'] = (string) $booking->id;
+                                if (in_array('user_id', $activitiesColumns, true)) $activity['user_id'] = $owner->id;
+                                if (in_array('notification_id', $activitiesColumns, true)) $activity['notification_id'] = $notificationId;
+                                if (in_array('activity_type', $activitiesColumns, true)) $activity['activity_type'] = 'new_booking';
+                                if (in_array('title', $activitiesColumns, true)) $activity['title'] = $title;
+                                if (in_array('description', $activitiesColumns, true)) $activity['description'] = $message;
+                                if (in_array('activity_data', $activitiesColumns, true)) $activity['activity_data'] = json_encode($snapshot);
+                                if (in_array('ip_address', $activitiesColumns, true)) $activity['ip_address'] = $request->ip();
+                                if (in_array('user_agent', $activitiesColumns, true)) $activity['user_agent'] = $request->userAgent();
+                                if (in_array('created_at', $activitiesColumns, true)) $activity['created_at'] = now();
+
+                                DB::table('recent_activities')->insert($activity);
+                            }
+                        } catch (\Throwable $inner) {
+                            // If the `notifications` table exists but has a mismatched schema, fall back.
+                            OwnerNotification::create($payload);
+                            if ($activitiesTableExists) {
+                                try {
+                                    $activity = [];
+                                    if (in_array('booking_id', $activitiesColumns, true)) $activity['booking_id'] = (string) $booking->id;
+                                    if (in_array('user_id', $activitiesColumns, true)) $activity['user_id'] = $owner->id;
+                                    if (in_array('notification_id', $activitiesColumns, true)) $activity['notification_id'] = null;
+                                    if (in_array('activity_type', $activitiesColumns, true)) $activity['activity_type'] = 'new_booking';
+                                    if (in_array('title', $activitiesColumns, true)) $activity['title'] = $title;
+                                    if (in_array('description', $activitiesColumns, true)) $activity['description'] = $message;
+                                    if (in_array('activity_data', $activitiesColumns, true)) $activity['activity_data'] = json_encode($snapshot);
+                                    if (in_array('ip_address', $activitiesColumns, true)) $activity['ip_address'] = $request->ip();
+                                    if (in_array('user_agent', $activitiesColumns, true)) $activity['user_agent'] = $request->userAgent();
+                                    if (in_array('created_at', $activitiesColumns, true)) $activity['created_at'] = now();
+
+                                    DB::table('recent_activities')->insert($activity);
+                                } catch (\Throwable $e) {
+                                    // ignore activity insert failures
+                                }
+                            }
+                        }
+                    } else {
+                        OwnerNotification::create($payload);
+                        if ($activitiesTableExists) {
+                            try {
+                                $activity = [];
+                                if (in_array('booking_id', $activitiesColumns, true)) $activity['booking_id'] = (string) $booking->id;
+                                if (in_array('user_id', $activitiesColumns, true)) $activity['user_id'] = $owner->id;
+                                if (in_array('notification_id', $activitiesColumns, true)) $activity['notification_id'] = null;
+                                if (in_array('activity_type', $activitiesColumns, true)) $activity['activity_type'] = 'new_booking';
+                                if (in_array('title', $activitiesColumns, true)) $activity['title'] = $title;
+                                if (in_array('description', $activitiesColumns, true)) $activity['description'] = $message;
+                                if (in_array('activity_data', $activitiesColumns, true)) $activity['activity_data'] = json_encode($snapshot);
+                                if (in_array('ip_address', $activitiesColumns, true)) $activity['ip_address'] = $request->ip();
+                                if (in_array('user_agent', $activitiesColumns, true)) $activity['user_agent'] = $request->userAgent();
+                                if (in_array('created_at', $activitiesColumns, true)) $activity['created_at'] = now();
+
+                                DB::table('recent_activities')->insert($activity);
+                            } catch (\Throwable $e) {
+                                // ignore activity insert failures
+                            }
+                        }
+                    }
                 }
             } catch (\Throwable $e) {
                 Log::error('Failed to create owner notification: ' . $e->getMessage());

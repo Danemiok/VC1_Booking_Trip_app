@@ -64,6 +64,7 @@ interface NotificationDropdownProps {
   onNotificationClick?: (notification: AdminNotification) => void;
   onMarkAsRead?: (id: string) => void;
   onMarkAllAsRead?: () => void;
+  onViewAll?: () => void;
 }
 
 export const NotificationDropdown: React.FC<NotificationDropdownProps> = ({
@@ -73,6 +74,7 @@ export const NotificationDropdown: React.FC<NotificationDropdownProps> = ({
   onNotificationClick,
   onMarkAsRead,
   onMarkAllAsRead,
+  onViewAll,
 }) => {
   if (!isOpen) return null;
 
@@ -105,6 +107,9 @@ export const NotificationDropdown: React.FC<NotificationDropdownProps> = ({
     }
     onNotificationClick?.(notif);
   };
+
+  const hasUnread = items.some((n) => !n.read);
+  const isClickable = Boolean(onNotificationClick);
 
   return (
     <>
