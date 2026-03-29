@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Owner;
 
 use App\Http\Controllers\Controller;
 use App\Models\Accommodation;
+use App\Models\Destination;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
@@ -54,6 +55,29 @@ class AccommodationController extends Controller
         $validated['owner_id'] = Auth::id();
 
         $hotel = Accommodation::create($validated);
+
+        $locationParts = array_filter([
+            $validated['address'] ?? null,
+            $validated['city'] ?? null,
+            $validated['country'] ?? null,
+        ]);
+
+        Destination::create([
+            'owner_id' => Auth::id(),
+            'name' => $hotel->hotel_name,
+            'type' => 'hotel',
+            'description' => $hotel->description,
+            'location' => $locationParts ? implode(', ', $locationParts) : null,
+            'address' => $hotel->address,
+            'latitude' => $hotel->latitude,
+            'longitude' => $hotel->longitude,
+            'price' => 0,
+            'image' => $hotel->image,
+            'images' => $hotel->image ? [$hotel->image] : [],
+            'rating' => 0,
+            'total_bookings' => 0,
+            'status' => $hotel->is_active ? 'active' : 'pending',
+        ]);
 
         return response()->json($hotel, 201);
     }
