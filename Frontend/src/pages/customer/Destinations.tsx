@@ -26,7 +26,7 @@ import { motion } from 'motion/react';
 import { getHotels, type Hotel } from '@/data/hotels';
 import { getPublicDestinations } from '@/services/destinationService';
 
-export default function Destinations() {
+export default function Destinations({ onOpenMessages }: { onOpenMessages?: () => void }) {
   const [searchTerm, setSearchTerm] = React.useState('');
   const [destinations, setDestinations] = React.useState<any[]>([]);
   const [isLoading, setIsLoading] = React.useState(true);
@@ -177,6 +177,26 @@ export default function Destinations() {
     const firstLocation = selectedAreas[0] || sortedDestinations[0]?.location || destinations[0]?.location || 'Cambodia';
     return firstLocation.split(',')[0]?.trim() || 'Cambodia';
   }, [destinations, selectedAreas, sortedDestinations]);
+
+  const openChatWithOwner = (owner: any) => {
+    if (!owner?.id) {
+      return;
+    }
+
+    const threadData = {
+      ownerId: owner.id,
+      ownerName: owner.name || owner.email || 'Owner',
+      ownerEmail: owner.email || '',
+      ownerAvatar: owner.avatar || '',
+    };
+    sessionStorage.setItem('pending_message_thread', JSON.stringify(threadData));
+
+    if (onOpenMessages) {
+      onOpenMessages();
+    } else {
+      console.warn('onOpenMessages callback not provided; please use the Messages view manually.');
+    }
+  };
 
   const toggleArea = (area: string) => {
     setSelectedAreas((previous) => (previous.includes(area) ? previous.filter((item) => item !== area) : [...previous, area]));
@@ -329,6 +349,11 @@ export default function Destinations() {
                                 <MapPin className="h-4 w-4" />
                                 {destination.location}
                               </p>
+                              {destination.owner ? (
+                                <p className="mt-2 text-xs font-semibold text-slate-600 dark:text-slate-300">
+                                  Owner: {destination.owner.name || destination.owner.email || 'Unknown'}
+                                </p>
+                              ) : null}
                             </div>
 
                             <div className="text-left md:text-right">
@@ -356,7 +381,7 @@ export default function Destinations() {
                           ) : null}
                         </div>
 
-                        <div className="mt-5 flex flex-col gap-4 border-t border-slate-100 pt-4 dark:border-slate-800 sm:flex-row sm:items-center sm:justify-between">
+                        <div className="mt-5 flex flex-col gap-3 border-t border-slate-100 pt-4 dark:border-slate-800 sm:flex-row sm:items-center sm:justify-between">
                           <div className="flex items-center gap-3">
                             <div className="flex -space-x-2">
                               {[0, 1, 2].map((avatar) => (
@@ -366,9 +391,18 @@ export default function Destinations() {
                             <p className="text-xs font-medium text-blue-600 dark:text-blue-400">{interestCount} friends interested</p>
                           </div>
 
-                          <button className={`rounded-xl px-6 py-3 text-sm font-semibold text-white transition-colors ${buttonClass}`}>
-                            View Selection
-                          </button>
+                          <div className="flex items-center gap-2">
+                            <button
+                              type="button"
+                              onClick={() => openChatWithOwner(destination.owner)}
+                              className="rounded-xl px-6 py-3 text-sm font-semibold bg-emerald-600 text-white transition-colors hover:bg-emerald-700"
+                            >
+                              Chat with Owner
+                            </button>
+                            <button className={`rounded-xl px-6 py-3 text-sm font-semibold text-white transition-colors ${buttonClass}`}>
+                              View Selection
+                            </button>
+                          </div>
                         </div>
                       </div>
                     </div>

@@ -264,7 +264,7 @@ export const Rentals: React.FC<RentalsProps> = ({ onBack, onSelectVehicle }) => 
   const ITEMS_PER_PAGE = 6;
   const vehicleClasses = ['Economy', 'SUV', 'Luxury', 'Electric', 'Sport'];
   const [activeTab, setActiveTab] = useState<'vehicles' | 'homes'>('vehicles');
-  const [priceRange, setPriceRange] = useState(20);
+  const [priceRange, setPriceRange] = useState(100);
   const [showInstantOnly, setShowInstantOnly] = useState(false);
   const [selectedVehicleClasses, setSelectedVehicleClasses] = useState<string[]>([]);
   const [searchQuery, setSearchQuery] = useState('');

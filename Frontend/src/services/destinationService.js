@@ -58,6 +58,12 @@ export const normalizeDestination = (destination) => {
     destination_id: Number.isFinite(normalizedId) ? normalizedId : null,
     owner_id: destination?.owner_id ?? null,
     user_id: destination?.user_id ?? destination?.owner_id ?? null,
+    owner: destination?.owner ? {
+      id: destination.owner.id ?? destination.owner.user_id ?? null,
+      name: destination.owner.name ?? destination.owner.full_name ?? null,
+      email: destination.owner.email ?? null,
+      avatar: destination.owner.avatar ?? null,
+    } : null,
     name: String(destination?.name ?? '').trim(),
     type: String(destination?.type ?? '').trim(),
     description: String(destination?.description ?? '').trim(),

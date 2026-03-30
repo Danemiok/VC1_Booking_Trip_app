@@ -772,6 +772,7 @@ export const AppRoutes: React.FC<AppRoutesProps> = ({
           browseDestination={browseDestination}
           onBack={() => setView(hotelBackView || 'landing')}
           onSelectHotel={handleSelectHotel}
+          onOpenMessages={() => setView('messages')}
         />
       );
     case 'hotel-details':
