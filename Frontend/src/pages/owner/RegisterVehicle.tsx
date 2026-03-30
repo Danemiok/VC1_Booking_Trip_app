@@ -20,8 +20,9 @@ const RegisterVehicle = () => {
 
   const [formData, setFormData] = React.useState({
     name: '',
-    type: 'Car Rental' as 'Car Rental' | 'Train' | 'Bus' | 'Other',
+    type: 'Car Rental' as 'Car Rental' | 'Motobike' | 'Bus' | 'Other',
     status: 'pending' as 'active' | 'inactive' | 'pending',
+
     route: '',
     details: '',
     price_per_KM: '',
@@ -166,7 +167,7 @@ const RegisterVehicle = () => {
                       "w-full px-4 py-3 bg-slate-50 dark:bg-slate-800 border-transparent rounded-xl text-sm focus:bg-white dark:focus:bg-slate-900 focus:ring-2 focus:ring-blue-600/10 transition-all font-medium",
                       errors.name && 'border border-red-500'
                     )}
-                    placeholder="e.g. Phnom Penh Train Station"
+                    placeholder="e.g. Phnom Penh Motobike Station"
                   />
                   {errors.name && <p className="text-xs text-red-500 mt-1">{errors.name}</p>}
                 </div>
@@ -178,7 +179,7 @@ const RegisterVehicle = () => {
                     className="w-full px-4 py-3 bg-slate-50 dark:bg-slate-800 border-transparent rounded-xl text-sm focus:bg-white dark:focus:bg-slate-900 focus:ring-2 focus:ring-blue-600/10 transition-all font-medium appearance-none"
                   >
                     <option value="Car Rental">Car Rental</option>
-                    <option value="Train">Train</option>
+                    <option value="Motobike">Motobike</option>
                     <option value="Bus">Bus</option>
                     <option value="Other">Other</option>
                   </select>

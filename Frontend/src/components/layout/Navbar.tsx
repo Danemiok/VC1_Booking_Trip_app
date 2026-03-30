@@ -70,6 +70,8 @@ export const Navbar: React.FC<NavbarProps> = ({
   };
 
   const unreadCount = notifications.filter(n => !n.read).length;
+  const unreadMessageCount = notifications.filter(n => !n.read && n.type === 'message').length;
+  const messageNotifications = notifications.filter(n => n.type === 'message');
 
   useEffect(() => {
     const handleScroll = () => {
@@ -266,12 +268,18 @@ export const Navbar: React.FC<NavbarProps> = ({
                             Mark all as read
                           </button>
                         )}
-                        <span className="text-[10px] font-bold text-blue-600 bg-blue-50 dark:bg-blue-900/20 px-2 py-0.5 rounded-full">{unreadCount} New</span>
+                        <span className="text-[10px] font-bold text-blue-600 bg-blue-50 dark:bg-blue-900/20 px-2 py-0.5 rounded-full">
+                          {unreadMessageCount > 0 ? `${unreadMessageCount} Owner Message${unreadMessageCount > 1 ? 's' : ''}` : `${unreadCount} New`}
+                        </span>
                       </div>
                     </div>
                     <div className="max-h-80 overflow-y-auto px-2">
                       {notifications.length > 0 ? (
-                        notifications.map((n) => (
+                        notifications.map((n) => {
+                          const messageIndex = messageNotifications.findIndex((m) => m.id === n.id) + 1;
+                          const displayTitle = n.type === 'message' ? `${n.title} #${messageIndex}` : n.title;
+
+                          return (
                           <div 
                             key={n.id} 
                             onClick={() => {
@@ -286,13 +294,14 @@ export const Navbar: React.FC<NavbarProps> = ({
                                 {n.type === 'booking' ? <CheckCircle2 className="w-5 h-5" /> : <Bell className="w-5 h-5" />}
                               </div>
                               <div className="flex-1">
-                                <p className="text-xs font-bold text-slate-900 dark:text-white mb-0.5">{n.title}</p>
+                                <p className="text-xs font-bold text-slate-900 dark:text-white mb-0.5">{displayTitle}</p>
                                 <p className="text-[10px] text-slate-500 dark:text-slate-400 line-clamp-2 leading-relaxed">{n.message}</p>
                                 <p className="text-[9px] text-slate-400 mt-1 font-medium">{n.time}</p>
                               </div>
                             </div>
                           </div>
-                        ))
+                        );
+                        })
                       ) : (
                         <div className="py-12 text-center">
                           <Bell className="w-10 h-10 text-slate-200 dark:text-slate-700 mx-auto mb-3" />

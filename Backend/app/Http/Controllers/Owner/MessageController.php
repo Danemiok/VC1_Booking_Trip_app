@@ -66,16 +66,21 @@ class MessageController extends Controller
     {
         $request->validate([
             'receiver_id' => 'required|exists:users,id',
-            'message' => 'required'
+            'message' => 'required|string|max:2000'
         ]);
+
+        $text = trim((string) $request->input('message'));
+        if ($text === '') {
+            return response()->json(['success' => false, 'message' => 'Message cannot be empty.'], 422);
+        }
 
         $message = Message::create([
             'sender_id' => auth()->id(),
             'receiver_id' => $request->receiver_id,
-            'message' => $request->message
+            'message' => $text,
         ]);
 
-        return response()->json($message);
+        return response()->json(['success' => true, 'message' => $message], 201);
     }
 
     public function findCustomerByEmail(Request $request)

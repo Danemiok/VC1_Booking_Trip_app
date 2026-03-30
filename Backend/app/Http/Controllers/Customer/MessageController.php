@@ -55,15 +55,22 @@ class MessageController extends Controller
      */
     public function send(Request $request)
     {
+        // Accept both 'message' and legacy 'content' keys to keep API stable.
         $request->validate([
             'receiver_id' => 'required|exists:users,id',
-            'content' => 'required|string|max:2000',
+            'message' => 'nullable|string|max:2000',
+            'content' => 'nullable|string|max:2000',
         ]);
+
+        $text = trim((string) ($request->input('message') ?? $request->input('content') ?? ''));
+        if ($text === '') {
+            return response()->json(['success' => false, 'message' => 'Message cannot be empty.'], 422);
+        }
 
         $message = Message::create([
             'sender_id' => auth()->id(),
             'receiver_id' => $request->receiver_id,
-            'content' => $request->content,
+            'message' => $text,
         ]);
 
         return response()->json([

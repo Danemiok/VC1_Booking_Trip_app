@@ -242,7 +242,7 @@ export default function Destinations() {
               {visibleDestinations.map((destination, index) => {
                 const itemIndex = index;
                 const badge = itemIndex % 3 === 0 ? 'Special Deal' : itemIndex % 3 === 2 ? 'Limited Offer' : 'Featured Stay';
-                const interestCount = groupMode ? 3 + (itemIndex % 4) : 1 + (itemIndex % 2);
+                const interestCount = 1 + (itemIndex % 2);
                 const formerPrice = Math.round(destination.price * 1.3);
                 const note =
                   itemIndex % 3 === 2
@@ -743,7 +743,6 @@ const parseHotelCreatedAt = (value?: string | null): number => {
 };
 
 export const Hotels: React.FC<HotelsPageProps> = ({ tripData, browseDestination, onBack, onSelectHotel }) => {
-  const [groupMode, setGroupMode] = useState(true);
   const [priceRange, setPriceRange] = useState(2000);
   const [searchQuery, setSearchQuery] = useState(() => String(browseDestination?.location || browseDestination?.name || '').trim());
   const [mapLocationQuery, setMapLocationQuery] = useState(
@@ -1219,7 +1218,7 @@ export const Hotels: React.FC<HotelsPageProps> = ({ tripData, browseDestination,
           </nav>
 
           <section className="relative z-30 mb-7 overflow-visible rounded-[1.8rem] border border-slate-200 shadow-[0_24px_60px_-40px_rgba(15,23,42,0.5)] dark:border-slate-800">
-            <div className="relative min-h-[310px]">
+            <div className="relative min-h-screen flex flex-col justify-center">
               <img
                 src={hotelBannerImage}
                 alt={`${regionLabel} hotel banner`}
@@ -1229,7 +1228,7 @@ export const Hotels: React.FC<HotelsPageProps> = ({ tripData, browseDestination,
               <div className="absolute inset-0 bg-gradient-to-r from-slate-950/85 via-slate-900/55 to-slate-950/80" />
               <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_left,rgba(37,99,235,0.35),transparent_55%)]" />
 
-              <div className="relative z-10 px-5 py-8 sm:px-8 sm:py-10 lg:px-10">
+              <div className="relative z-10 px-5 py-8 sm:px-8 sm:py-10 lg:px-10 flex flex-col justify-center items-center text-center h-full">
                 <p className="text-[10px] font-bold uppercase tracking-[0.36em] text-white/70">{t('curated_collection')}</p>
                 <h1 className="mt-4 max-w-2xl text-3xl font-semibold leading-tight text-white sm:text-4xl lg:text-[2.8rem]">
                   {t('prestige_stays')}
@@ -1238,7 +1237,7 @@ export const Hotels: React.FC<HotelsPageProps> = ({ tripData, browseDestination,
                   {t('prestige_stays_desc')}
                 </p>
 
-                <div className="mt-7 grid gap-2 rounded-[1.5rem] bg-white/95 p-2 shadow-2xl shadow-slate-900/20 backdrop-blur md:grid-cols-[1.2fr_1fr_1fr_auto] dark:bg-slate-950/90 dark:shadow-none">
+                <div className="mt-7 w-full max-w-5xl grid gap-2 rounded-[1.5rem] bg-white/95 p-2 shadow-2xl shadow-slate-900/20 backdrop-blur md:grid-cols-[1.2fr_1fr_1fr_auto] dark:bg-slate-950/90 dark:shadow-none">
                   <label className="flex min-w-0 items-center gap-3 rounded-xl px-4 py-3 transition-colors hover:bg-slate-100/80 dark:hover:bg-slate-900">
                     <Search className="h-5 w-5 text-blue-600" />
                     <div className="min-w-0 flex-1">
@@ -1386,31 +1385,43 @@ export const Hotels: React.FC<HotelsPageProps> = ({ tripData, browseDestination,
           </section>
 
           <div className="grid gap-6 xl:grid-cols-[280px_minmax(0,1fr)]">
-            <aside className="space-y-5">
-              <div className="rounded-[1.4rem] border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-800 dark:bg-slate-950">
-                <div className="flex items-center justify-between gap-4">
-                  <div>
-                    <h2 className="text-sm font-bold text-slate-900 dark:text-white">Group Trip Mode</h2>
-                    <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">Split costs with friends</p>
-                  </div>
-                  <button
-                    type="button"
-                    aria-pressed={groupMode}
-                    onClick={() => setGroupMode((previous) => !previous)}
-                    className={`relative h-7 w-11 rounded-full transition-colors ${groupMode ? 'bg-blue-600' : 'bg-slate-200 dark:bg-slate-700'}`}
-                  >
-                    <span className={`absolute top-1 h-5 w-5 rounded-full bg-white transition-all ${groupMode ? 'left-5' : 'left-1'}`} />
-                  </button>
-                </div>
-              </div>
-
-              <div className="rounded-[1.6rem] border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-800 dark:bg-slate-950">
+            <aside className="space-y-5 sticky top-20 self-start">
+              <div className="rounded-[1.6rem] border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-800 dark:bg-slate-950 xl:overflow-hidden xl:overflow-y-auto xl:max-h-[calc(100vh-6rem)]">
                 <div className="mb-5 flex items-center justify-between">
                   <h2 className="text-lg font-bold text-slate-900 dark:text-white">{t('filters')}</h2>
                   <SlidersHorizontal className="h-4 w-4 text-slate-400" />
                 </div>
 
                 <div className="space-y-6">
+                  <section className="rounded-[1rem] border border-slate-200 bg-slate-50 p-3 dark:border-slate-800 dark:bg-slate-900/70">
+                    <h3 className="text-sm font-semibold text-slate-700 dark:text-slate-200">Location Map</h3>
+                    <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">
+                      {selectedMapDisplay.location}
+                    </p>
+
+                    <div className="mt-2 overflow-hidden rounded-xl border border-slate-200 dark:border-slate-700">
+                      <iframe
+                        title={`OpenStreetMap for ${selectedMapDisplay.location}`}
+                        src={selectedMapEmbedUrl}
+                        className="h-[190px] w-full border-0"
+                        loading="lazy"
+                        referrerPolicy="no-referrer-when-downgrade"
+                      />
+                    </div>
+
+                    <p className="mt-2 text-[11px] text-slate-500 dark:text-slate-400">
+                      {`Lat ${selectedMapCenter.lat.toFixed(6)}, Lng ${selectedMapCenter.lng.toFixed(6)}`}
+                    </p>
+                    <a
+                      href={getOpenStreetMapSearchUrl(selectedMapDisplay.location)}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="mt-1 inline-flex text-[11px] font-medium text-blue-600 hover:text-blue-500"
+                    >
+                      Open in OpenStreetMap
+                    </a>
+                  </section>
+
                   <section>
                     <div className="mb-3 flex items-center gap-2 text-sm font-semibold text-slate-700 dark:text-slate-200">
                       <Filter className="h-4 w-4 text-slate-400" />
@@ -1513,35 +1524,6 @@ export const Hotels: React.FC<HotelsPageProps> = ({ tripData, browseDestination,
                   >
                     Apply All Filters
                   </button>
-
-                  <section className="rounded-[1rem] border border-slate-200 bg-slate-50 p-3 dark:border-slate-800 dark:bg-slate-900/70">
-                    <h3 className="text-sm font-semibold text-slate-700 dark:text-slate-200">Location Map</h3>
-                    <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">
-                      {selectedMapDisplay.location}
-                    </p>
-
-                    <div className="mt-2 overflow-hidden rounded-xl border border-slate-200 dark:border-slate-700">
-                      <iframe
-                        title={`OpenStreetMap for ${selectedMapDisplay.location}`}
-                        src={selectedMapEmbedUrl}
-                        className="h-[190px] w-full border-0"
-                        loading="lazy"
-                        referrerPolicy="no-referrer-when-downgrade"
-                      />
-                    </div>
-
-                    <p className="mt-2 text-[11px] text-slate-500 dark:text-slate-400">
-                      {`Lat ${selectedMapCenter.lat.toFixed(6)}, Lng ${selectedMapCenter.lng.toFixed(6)}`}
-                    </p>
-                    <a
-                      href={getOpenStreetMapSearchUrl(selectedMapDisplay.location)}
-                      target="_blank"
-                      rel="noreferrer"
-                      className="mt-1 inline-flex text-[11px] font-medium text-blue-600 hover:text-blue-500"
-                    >
-                      Open in OpenStreetMap
-                    </a>
-                  </section>
                 </div>
               </div>
             </aside>

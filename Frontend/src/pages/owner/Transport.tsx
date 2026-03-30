@@ -22,7 +22,7 @@ import { getAuthToken } from '../../services/authService';
 interface TransportService {
   id: string;
   name: string;
-  type: 'Flight' | 'Bus' | 'Train' | 'Car Rental';
+  type: 'Flight' | 'Bus' | 'Motobike' | 'Car Rental';
   status: 'Active' | 'Fixing' | 'Not working' | 'Waiting';
   route: string;
   details: string;
@@ -145,7 +145,7 @@ const Transport = () => {
     {
       id: 'transport-1',
       title: 'New transport booking',
-      description: 'A customer booked “Shared Train • PP — Siem Reap”.',
+      description: 'A customer booked “Shared Motobike • PP — Siem Reap”.',
       time: '5 mins ago',
       type: 'booking',
       read: false,
@@ -199,7 +199,7 @@ const Transport = () => {
         }) as { data?: any[] };
         const mapped = (transportsResponse?.data ?? []).map((item: any) => {
           const rawType = String(item?.transport_type ?? 'Car Rental');
-          const type = rawType === 'Shuttle' ? 'Train' : rawType === 'Other' ? 'Car Rental' : rawType;
+          const type = rawType === 'Shuttle' || rawType === 'Train' ? 'Motobike' : rawType === 'Other' ? 'Car Rental' : rawType;
           const rawStatus = String(item?.status ?? 'pending');
           const status =
             rawStatus === 'active'
@@ -290,7 +290,7 @@ const Transport = () => {
 
     const typeMap: Record<TransportService['type'], 'Car Rental' | 'Train' | 'Bus' | 'Other'> = {
       'Car Rental': 'Car Rental',
-      Train: 'Train',
+      Motobike: 'Other',
       Bus: 'Bus',
       Flight: 'Other',
     };
@@ -318,7 +318,7 @@ const Transport = () => {
       .then((response: any) => {
         const item = response?.data ?? response;
         const rawType = String(item?.transport_type ?? editForm.type ?? 'Car Rental');
-        const type = rawType === 'Shuttle' ? 'Train' : rawType === 'Other' ? 'Car Rental' : rawType;
+        const type = rawType === 'Shuttle' || rawType === 'Train' ? 'Motobike' : rawType === 'Other' ? 'Car Rental' : rawType;
         const rawStatus = String(item?.status ?? statusMap[editForm.status] ?? 'pending');
         const status =
           rawStatus === 'active'
@@ -411,7 +411,7 @@ const Transport = () => {
       all: allServices.length,
       flights: 0,
       buses: 0,
-      trains: 0,
+      motobikes: 0,
       'car-rentals': 0,
     };
 
@@ -423,8 +423,8 @@ const Transport = () => {
         case 'Bus':
           counts.buses += 1;
           break;
-        case 'Train':
-          counts.trains += 1;
+        case 'Motobike':
+          counts.motobikes += 1;
           break;
         case 'Car Rental':
           counts['car-rentals'] += 1;
@@ -433,7 +433,6 @@ const Transport = () => {
           break;
       }
     });
-
     return counts;
   }, [allServices]);
 
@@ -441,7 +440,7 @@ const Transport = () => {
     { id: 'all', label: 'All Services', count: tabCounts.all },
     { id: 'flights', label: 'Flights', count: tabCounts.flights },
     { id: 'buses', label: 'Buses', count: tabCounts.buses },
-    { id: 'trains', label: 'Trains', count: tabCounts.trains },
+    { id: 'motobikes', label: 'Motobikes', count: tabCounts.motobikes },
     { id: 'car-rentals', label: 'Car Rentals', count: tabCounts['car-rentals'] }
   ];
 
@@ -449,7 +448,7 @@ const Transport = () => {
     switch (type) {
       case 'Flight': return Plane;
       case 'Bus': return Bus;
-      case 'Train': return Train;
+      case 'Motobike': return Car;
       case 'Car Rental': return Car;
       default: return Plane;
     }
@@ -459,7 +458,7 @@ const Transport = () => {
     switch (type) {
       case 'Flight': return 'bg-blue-100 text-blue-600';
       case 'Bus': return 'bg-green-100 text-green-600';
-      case 'Train': return 'bg-purple-100 text-purple-600';
+      case 'Motobike': return 'bg-purple-100 text-purple-600';
       case 'Car Rental': return 'bg-orange-100 text-orange-600';
       default: return 'bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-300';
     }
@@ -481,7 +480,7 @@ const Transport = () => {
     const matchesTab = activeTab === 'all' || 
                       (activeTab === 'flights' && service.type === 'Flight') ||
                       (activeTab === 'buses' && service.type === 'Bus') ||
-                      (activeTab === 'trains' && service.type === 'Train') ||
+                      (activeTab === 'motobikes' && service.type === 'Motobike') ||
                       (activeTab === 'car-rentals' && service.type === 'Car Rental');
     return matchesSearch && matchesTab;
   });
@@ -778,7 +777,7 @@ const Transport = () => {
                   >
                     <option value="Flight">Flight</option>
                     <option value="Bus">Bus</option>
-                    <option value="Train">Train</option>
+                    <option value="Motobike">Motobike</option>
                     <option value="Car Rental">Car Rental</option>
                   </select>
                 </div>
