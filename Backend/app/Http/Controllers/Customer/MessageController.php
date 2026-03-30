@@ -52,7 +52,7 @@ class MessageController extends Controller
 
     /**
      * Send a message to an owner.
-     */
+    */
     public function send(Request $request)
     {
         // Accept both 'message' and legacy 'content' keys to keep API stable.
@@ -77,5 +77,15 @@ class MessageController extends Controller
             'success' => true,
             'message' => $message
         ], 201);
+    }
+
+    public function unreadCount()
+    {
+        $userId = auth()->id();
+        $count = Message::where('receiver_id', $userId)
+            ->whereNull('read_at')
+            ->count();
+
+        return response()->json(['unread_count' => $count]);
     }
 }
