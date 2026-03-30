@@ -251,6 +251,7 @@ if (app()->environment('local')) {
 Route::middleware(['auth:sanctum','role:owner'])->group(function () {
 
     Route::get('/owner/customers/search', [MessageController::class,'findCustomerByEmail']);
+    Route::get('/owner/messages/unread-count', [MessageController::class, 'unreadCount']);
 
     Route::get('/messages', [MessageController::class,'index']);
 
@@ -279,4 +280,6 @@ Route::middleware(['auth:sanctum','role:customer'])->group(function () {
 
     // Send a new message to an owner
     Route::post('/customer/messages/send', [CustomerMessageController::class,'send']);
+
+    Route::get('/customer/messages/unread-count', [CustomerMessageController::class, 'unreadCount']);
 });

@@ -110,9 +110,38 @@ class PromotionController extends Controller
         ]);
     }
 
+    private function normalizeLinkedIds(array $items, string $idField = 'id'): array
+    {
+        return array_values(array_filter(array_map(function ($item) use ($idField) {
+            if (is_array($item)) {
+                if (isset($item[$idField])) {
+                    return (int) $item[$idField];
+                }
+
+                if (isset($item['destination_id'])) {
+                    return (int) $item['destination_id'];
+                }
+
+                if (isset($item['transport_id'])) {
+                    return (int) $item['transport_id'];
+                }
+            }
+
+            return is_numeric($item) ? (int) $item : null;
+        }, $items), fn ($value) => $value > 0));
+    }
+
     public function store(Request $request)
     {
         try {
+            $normalizedDestinations = $this->normalizeLinkedIds($request->input('linked_destinations', []));
+            $normalizedTransports = $this->normalizeLinkedIds($request->input('linked_transports', []));
+
+            $request->merge([
+                'linked_destinations' => $normalizedDestinations,
+                'linked_transports' => $normalizedTransports,
+            ]);
+
             $validated = $request->validate([
                 'title' => 'required|string|max:255',
                 'description' => 'nullable|string',
@@ -138,6 +167,7 @@ class PromotionController extends Controller
 
         $validated['owner_id'] = auth()->id();
         $validated['expiry'] = $validated['end_date'] ?? ($validated['expiry'] ?? null);
+        $validated['is_active'] = $validated['is_active'] ?? true;
 
         // Extract linked items before creating promotion
         $linkedDestinations = $validated['linked_destinations'] ?? [];
@@ -241,6 +271,14 @@ class PromotionController extends Controller
         $userId = auth()->id();
 
         $promotion = Promotion::where('owner_id', $userId)->findOrFail($id);
+
+        $normalizedDestinations = $this->normalizeLinkedIds($request->input('linked_destinations', []));
+        $normalizedTransports = $this->normalizeLinkedIds($request->input('linked_transports', []));
+
+        $request->merge([
+            'linked_destinations' => $normalizedDestinations ?: null,
+            'linked_transports' => $normalizedTransports ?: null,
+        ]);
 
         $validated = $request->validate([
             'title' => 'sometimes|string|max:255',
