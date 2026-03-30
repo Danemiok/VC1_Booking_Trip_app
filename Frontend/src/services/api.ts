@@ -79,12 +79,23 @@ export async function apiRequest<T = any>(path: string, options: ApiOptions = {}
     try {
       data = JSON.parse(rawBody);
     } catch {
-      data = { message: rawBody };
+      // Back-end may return HTML in non-production modes (e.g. SQLSTATE stacktrace) -- normalize to friendly message
+      const normalizedMessage =
+        typeof rawBody === 'string' && rawBody.includes('SQLSTATE')
+          ? 'Database connection failed. Ensure the backend database is running and DB settings are valid.'
+          : rawBody;
+      data = { message: normalizedMessage };
     }
   }
 
   if (!response.ok) {
-    const error: any = new Error(data?.message ?? 'Request failed');
+    let errorMessage = data?.message ?? 'Request failed';
+
+    if (typeof errorMessage === 'string' && errorMessage.includes('SQLSTATE')) {
+      errorMessage = 'Database connection failed. Ensure the backend and database are running.';
+    }
+
+    const error: any = new Error(errorMessage);
     error.status = response.status;
     error.data = data;
     error.errors = data?.errors ?? null;
