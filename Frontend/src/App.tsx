@@ -283,7 +283,7 @@ const AppContent = () => {
   };
   const isAuthModalOpen = view === 'login' || view === 'register';
   const mainView = isAuthModalOpen ? 'landing' : view;
-  const shouldShowFooter = !isAdminUser && user === null;
+  const shouldShowFooter = !isAdminUser;
   const handleAuthSuccess = (nextView: string) => {
     setView(nextView);
   };
