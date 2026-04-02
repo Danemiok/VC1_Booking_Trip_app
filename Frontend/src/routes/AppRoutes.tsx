@@ -151,6 +151,18 @@ const OwnerShellInner: React.FC<{ onLogout: () => void }> = ({ onLogout }) => {
   const navigate = useNavigate();
   const [ownerNotifications, setOwnerNotifications] = React.useState<AdminNotification[]>([]);
 
+  // Redirect to home if user is not authenticated
+  React.useEffect(() => {
+    if (!user) {
+      navigate('/', { replace: true });
+    }
+  }, [user, navigate]);
+
+  // Don't render if user is not authenticated
+  if (!user) {
+    return null;
+  }
+
   const formatRelativeTime = (iso: string | null | undefined) => {
     if (!iso) return '';
     const createdAt = new Date(iso).getTime();
@@ -370,6 +382,11 @@ const AdminShell: React.FC<{ view: string; setView: (view: string) => void; onLo
   const [hasUnsavedProfileChanges, setHasUnsavedProfileChanges] = React.useState(false);
   const [pendingNavigationView, setPendingNavigationView] = React.useState<string | null>(null);
 
+  // Don't render if user is not authenticated or not admin
+  if (!user || user.role !== 'admin') {
+    return null;
+  }
+
   const safeSetView = React.useCallback(
     (nextView: string) => {
       if (hasUnsavedProfileChanges && normalizedView === 'profile' && nextView !== 'profile') {
@@ -538,6 +555,28 @@ export const AppRoutes: React.FC<AppRoutesProps> = ({
   const { user, logout } = useAuth();
   const isGuest = !user;
   const location = useLocation();
+  const navigate = useNavigate();
+
+  // Handle logout navigation - redirect to home if on owner/admin routes after logout
+  React.useEffect(() => {
+    if (isGuest) {
+      const pathname = location.pathname;
+      const isOwnerRoute = pathname.startsWith('/destinations') || 
+                          pathname.startsWith('/transport') || 
+                          pathname.startsWith('/bookings') || 
+                          pathname.startsWith('/messages') || 
+                          pathname.startsWith('/promotions') || 
+                          pathname.startsWith('/analytics') || 
+                          pathname.startsWith('/financials') || 
+                          pathname.startsWith('/profile') || 
+                          pathname.startsWith('/settings');
+      
+      if (isOwnerRoute) {
+        navigate('/', { replace: true });
+        setView('landing');
+      }
+    }
+  }, [isGuest, location.pathname, navigate, setView]);
 
   const requireAuth = React.useCallback(() => {
     if (isGuest) {
