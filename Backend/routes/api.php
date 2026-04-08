@@ -63,6 +63,12 @@ use App\Http\Controllers\Api\HotelController;
 |--------------------------------------------------------------------------
 */
 
+Route::get('/', function () {
+    return response()->json([
+        'message' => 'Laravel Backend API running',
+    ]);
+});
+
 Route::get('/files/{path}', [PublicFileController::class, 'show'])->where('path', '.*');
 
 // Get all active hotels for customers
@@ -116,9 +122,6 @@ Route::get('/promotions/public', [ApiPromotionController::class, 'index']);
 Route::get('/destinations/public', [DestinationController::class, 'getAllPublic']);
 Route::get('/destinations/public/all', [DestinationController::class, 'getAllPublic']);
 
-Route::middleware(['auth:sanctum', 'role:admin'])->get('/admin/access', function () {
-    return response()->json(['message' => 'Admin access granted']);
-});
 /*
 |--------------------------------------------------------------------------
 | Role Protected Routes
@@ -158,8 +161,6 @@ Route::middleware(['auth:sanctum', 'role:owner'])->post('/owner/transports', [Tr
 Route::middleware(['auth:sanctum', 'role:owner'])->put('/owner/transports/{transport}', [TransportController::class, 'update']);
 Route::middleware(['auth:sanctum', 'role:owner'])->patch('/owner/transports/{transport}', [TransportController::class, 'update']);
 Route::middleware(['auth:sanctum', 'role:owner'])->delete('/owner/transports/{transport}', [TransportController::class, 'destroy']);
-
-Route::apiResource('users', AuthController::class);
 
 
 // PROTECTED ROUTES (require authentication)
@@ -205,22 +206,6 @@ Route::middleware(['auth:sanctum'])->group(function () {
         Route::get('/owner/recent-activities', [OwnerRecentActivityController::class, 'index']);
     });
     
-    // Admin only routes
-    Route::middleware(['role:admin'])->group(function () {
-        Route::get('/admin/access', function () {
-            return response()->json(['message' => 'Admin access granted']);
-        });
-    });
-    
-    // Customer routes
-    Route::middleware(['role:customer'])->get('/customer/access', function () {
-        return response()->json(['message' => 'Customer access granted']);
-    });
-    
-    // Owner routes
-    Route::middleware(['role:owner'])->get('/owner/access', function () {
-        return response()->json(['message' => 'Owner access granted']);
-    });
 });
 
 /*

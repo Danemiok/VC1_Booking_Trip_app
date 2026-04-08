@@ -18,18 +18,7 @@ use Inertia\Inertia;
 |
 */
 
-Route::get('/', function () {
-    /** @var Request $request */
-    $request = request();
 
-    if ($request->expectsJson() || $request->query('format') === 'json') {
-        return response()->json([
-            'message' => 'Laravel Backend API running',
-        ]);
-    }
-
-    return view('welcome');
-});
 
 Route::get('/dashboard', function () {
     $user = auth()->user();
