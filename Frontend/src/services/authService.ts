@@ -1,5 +1,4 @@
-import axios from 'axios';
-import { apiRequest, clearApiAuthToken, getApiAuthToken, setApiAuthToken } from './api';
+import { BACKEND_ORIGIN, apiRequest, clearApiAuthToken, getApiAuthToken, setApiAuthToken } from './api';
 
 const STORAGE_KEYS = {
   token: 'auth_token',
@@ -101,7 +100,9 @@ export const getUserRole = () => getAuthUser()?.role ?? null;
 export const isAuthenticated = () => Boolean(getAuthToken());
 
 const ensureCsrfCookie = async () => {
-  await axios.get('/sanctum/csrf-cookie');
+  await fetch(`${BACKEND_ORIGIN}/sanctum/csrf-cookie`, {
+    credentials: 'include',
+  });
 };
 
 type LoginPayload = { email: string; password: string };

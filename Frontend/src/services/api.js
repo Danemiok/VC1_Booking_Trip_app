@@ -13,6 +13,7 @@ const normalizeApiBaseUrl = (value) => {
 };
 
 export const API_BASE_URL = normalizeApiBaseUrl(RAW_API_BASE_URL);
+export const BACKEND_ORIGIN = API_BASE_URL.replace(/\/api$/, '');
 
 let authToken = null;
 
@@ -65,8 +66,9 @@ export async function apiRequest(path, options = {}) {
   let response;
   try {
     response = await fetch(`${API_BASE_URL}${path}`, {
-      headers,
       ...options,
+      credentials: options.credentials ?? 'include',
+      headers,
     });
   } catch (cause) {
     const error = new Error(

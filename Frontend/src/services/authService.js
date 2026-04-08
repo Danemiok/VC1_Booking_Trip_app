@@ -1,5 +1,4 @@
-import axios from 'axios';
-import { apiRequest, clearApiAuthToken, getApiAuthToken, setApiAuthToken } from './api';
+import { BACKEND_ORIGIN, apiRequest, clearApiAuthToken, getApiAuthToken, setApiAuthToken } from './api';
 
 const STORAGE_KEYS = {
   token: 'auth_token',
@@ -107,7 +106,9 @@ export function isAuthenticated() {
 }
 
 async function ensureCsrfCookie() {
-  await axios.get('/sanctum/csrf-cookie');
+  await fetch(`${BACKEND_ORIGIN}/sanctum/csrf-cookie`, {
+    credentials: 'include',
+  });
 }
 
 export async function login(payload) {
