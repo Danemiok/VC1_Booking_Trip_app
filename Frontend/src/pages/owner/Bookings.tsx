@@ -22,6 +22,7 @@ import {
 import { useLocation, useNavigate } from 'react-router-dom';
 import { cn } from '@/utils/utils';
 import { bookingService } from '@/services/bookingService';
+import { apiRequest, API_BASE_URL } from '@/services/api';
 import { useAuth } from '../../context/AuthContext';
 import { ALL_HOTELS } from '../../data/hotels';
 import { RENTAL_VEHICLES } from '../../data/rentals';
@@ -161,15 +162,13 @@ const Bookings = () => {
 
       try {
         // Verify with backend
-        const response = await fetch(`${API_BASE_URL}/auth/user`, {
-          headers: {
-            'Authorization': `Bearer ${token}`,
-            'Accept': 'application/json',
-          },
-        });
-
-        if (response.ok) {
-          const data = await response.json();
+        try {
+          const data = await apiRequest('/auth/user', {
+            method: 'GET',
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          });
           console.log('✅ Backend user verification:', data);
           
           const userRole = data.user?.role || data.role;
@@ -183,7 +182,7 @@ const Bookings = () => {
             setAuthError('You do not have permission to access this page');
             setTimeout(() => navigate('/dashboard'), 3000);
           }
-        } else {
+        } catch (verificationError) {
           console.log('❌ Backend verification failed');
           setAuthError('Session expired. Please log in again.');
           logout();
@@ -209,16 +208,10 @@ const Bookings = () => {
         console.log('🧪 ===== TESTING API CONNECTION =====');
         console.log(`🧪 Fetching from: ${API_BASE_URL}/bookings`);
         
-        const response = await fetch(`${API_BASE_URL}/bookings`, {
-          headers: {
-            'Authorization': token ? `Bearer ${token}` : '',
-            'Accept': 'application/json',
-          },
+        const data = await apiRequest('/bookings', {
+          method: 'GET',
+          headers: token ? { Authorization: `Bearer ${token}` } : undefined,
         });
-        
-        console.log('🧪 Response status:', response.status);
-        
-        const data = await response.json();
         console.log('🧪 API Response Data:', data);
         
         if (data.data && data.data.length > 0) {

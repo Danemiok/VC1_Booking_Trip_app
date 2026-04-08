@@ -15,7 +15,7 @@ import {
 } from 'lucide-react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { cn } from '@/utils/utils';
-import { apiRequest } from '@/services/api';
+import { BACKEND_ORIGIN, apiRequest } from '@/services/api';
 
 type DestinationStatus = 'active' | 'draft';
 
@@ -37,13 +37,9 @@ interface DestinationApiRecord {
 
 const DEFAULT_IMAGE = 'https://picsum.photos/seed/updatedproperty/800/600';
 const REQUIRED_DESTINATION_IMAGES = 4;
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL ?? 'http://127.0.0.1:8000/api';
-const API_ORIGIN = /^https?:\/\//i.test(API_BASE_URL)
-  ? API_BASE_URL.replace(/\/api\/?$/, '')
-  : '';
 const ASSET_ORIGIN =
   import.meta.env.VITE_ASSET_ORIGIN ||
-  API_ORIGIN ||
+  BACKEND_ORIGIN ||
   (typeof window !== 'undefined' ? window.location.origin : '');
 
 const toNumber = (value: number | string | null | undefined, fallback = 0) => {

@@ -2,6 +2,7 @@ import { FormEvent, useEffect, useMemo, useRef, useState } from 'react';
 import { ArrowLeft, Clock3, Mail, Search, Send, Phone, Video, MoreVertical, Info, MessageCircle } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
+import { apiRequest } from '../../services/api';
 
 type AppUser = {
   id: number | string;
@@ -37,57 +38,6 @@ type OwnerThread = {
   lastMessage: MessageItem;
   unreadCount?: number;
 };
-
-const API_BASE = ((import.meta as any).env.VITE_API_URL || '').replace(/\/$/, '');
-
-const authToken = () => {
-  const stores = [localStorage, sessionStorage];
-  const keys = [
-    'token',
-    'access_token',
-    'authToken',
-    'auth_token',
-    'api_token',
-    'bearerToken',
-    'bearer_token',
-    'laravel_token',
-  ];
-
-  for (const store of stores) {
-    for (const key of keys) {
-      const value = store.getItem(key);
-      if (value) return value;
-    }
-  }
-
-  return '';
-};
-
-async function apiRequest<T>(path: string, init: RequestInit = {}): Promise<T> {
-  const headers = new Headers(init.headers || {});
-  headers.set('Accept', 'application/json');
-  const token = authToken();
-  if (token) headers.set('Authorization', `Bearer ${token}`);
-  if (init.body && typeof init.body === 'string' && !headers.has('Content-Type')) {
-    headers.set('Content-Type', 'application/json');
-  }
-
-  const candidates = API_BASE
-    ? [`${API_BASE}${path}`, `${API_BASE}/api${path}`]
-    : [`/api${path}`];
-
-  let lastError: Error | null = null;
-
-  for (const url of candidates) {
-    const response = await fetch(url, { ...init, headers });
-    if (response.ok) return response.json();
-    const text = await response.text();
-    lastError = new Error(text || `Request failed with status ${response.status}`);
-    if (response.status !== 404) throw lastError;
-  }
-
-  throw lastError || new Error('Request failed');
-}
 
 function normalizeMessages(payload: unknown): MessageItem[] {
   if (Array.isArray(payload)) return payload as MessageItem[];

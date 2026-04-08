@@ -16,7 +16,7 @@ import {
 } from 'lucide-react';
 import { NotificationDropdown, type AdminNotification } from '../../components/common/NotificationDropdown';
 import { cn } from '../../utils/utils';
-import { apiRequest } from '../../services/api';
+import { BACKEND_ORIGIN, apiRequest } from '../../services/api';
 import { getAuthToken } from '../../services/authService';
 
 interface TransportService {
@@ -35,7 +35,7 @@ const DEFAULT_TRANSPORT_IMAGE =
   'https://upload.wikimedia.org/wikipedia/commons/a/a2/Traffic_in_Cambodia..JPG';
 
 const resolveTransportImageUrl = (value: unknown): string => {
-  const backendOrigin = (import.meta.env.VITE_BACKEND_ORIGIN || 'http://127.0.0.1:8000').replace(/\/+$/, '');
+  const backendOrigin = BACKEND_ORIGIN.replace(/\/+$/, '');
   const rawValue = typeof value === 'string' ? value.trim() : '';
 
   if (!rawValue) {

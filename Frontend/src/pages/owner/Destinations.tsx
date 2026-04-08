@@ -1,7 +1,7 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Search, Plus, Star, MapPin, Edit, Trash2, X, Building2, CheckCircle2, Clock, TrendingUp, RefreshCw } from 'lucide-react';
-import { apiRequest } from '@/services/api';
+import { API_BASE_URL, BACKEND_ORIGIN, apiRequest } from '@/services/api';
 
 type DestinationStatus = 'active' | 'draft';
 
@@ -89,13 +89,9 @@ interface DestinationModalProps {
 }
 
 const DEFAULT_IMAGE = 'https://picsum.photos/seed/destination-default/800/600';
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL ?? 'http://127.0.0.1:8000/api';
-const API_ORIGIN = /^https?:\/\//i.test(API_BASE_URL)
-  ? API_BASE_URL.replace(/\/api\/?$/, '')
-  : '';
 const ASSET_ORIGIN =
   import.meta.env.VITE_ASSET_ORIGIN ||
-  API_ORIGIN ||
+  BACKEND_ORIGIN ||
   (typeof window !== 'undefined' ? window.location.origin : '');
 
 const PROPERTY_TYPES = [

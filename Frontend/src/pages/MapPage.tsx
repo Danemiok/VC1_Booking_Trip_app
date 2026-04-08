@@ -2,6 +2,7 @@ import { GoogleMap, InfoWindow, LoadScript, Marker } from '@react-google-maps/ap
 import axios from 'axios';
 import { useEffect, useMemo, useState, type CSSProperties } from 'react';
 import { useLocation } from 'react-router-dom';
+import { API_BASE_URL } from '../services/api';
 
 type MarkerType = 'hotel' | 'destination';
 type MarkerFilterType = MarkerType | 'all';
@@ -62,13 +63,11 @@ const normalizePayload = (responseData: unknown): unknown[] => {
 };
 
 const getHotelsEndpoint = (): string => {
-  const apiBase = import.meta.env.VITE_API_BASE_URL?.replace(/\/$/, '');
-  return apiBase ? `${apiBase}/hotels/public` : 'http://127.0.0.1:8000/api/hotels/public';
+  return `${API_BASE_URL}/hotels/public`;
 };
 
 const getDestinationsEndpoint = (): string => {
-  const apiBase = import.meta.env.VITE_API_BASE_URL?.replace(/\/$/, '');
-  return apiBase ? `${apiBase}/destinations/public` : 'http://127.0.0.1:8000/api/destinations/public';
+  return `${API_BASE_URL}/destinations/public`;
 };
 
 const normalizePlaces = (payload: unknown[], type: MarkerType): PlacePoint[] =>

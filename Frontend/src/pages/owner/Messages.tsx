@@ -1,6 +1,7 @@
 import { FormEvent, useEffect, useMemo, useRef, useState } from 'react';
 import { ArrowLeft, Clock3, Mail, Search, Send, MessageCircle, Phone, Video, MoreVertical, Info } from 'lucide-react';
 import { Link } from 'react-router-dom';
+import { apiRequest } from '../../services/api';
 
 type AppUser = {
   id: number | string;
@@ -21,80 +22,6 @@ type MessageItem = {
   sender?: AppUser | null;
   receiver?: AppUser | null;
 };
-
-const API_BASE = ((import.meta as any).env.VITE_API_URL || '').replace(/\/$/, '');
-
-function authToken() {
-  const stores = [localStorage, sessionStorage];
-  const keys = [
-    'token',
-    'access_token',
-    'authToken',
-    'auth_token',
-    'api_token',
-    'bearerToken',
-    'bearer_token',
-    'laravel_token',
-  ];
-
-  for (const store of stores) {
-    for (const key of keys) {
-      const value = store.getItem(key);
-      if (value) return value;
-    }
-
-    for (let index = 0; index < store.length; index += 1) {
-      const key = store.key(index);
-      if (!key || !key.toLowerCase().includes('token')) continue;
-      const value = store.getItem(key);
-      if (value) return value;
-    }
-  }
-
-  return '';
-}
-
-async function apiRequest<T>(path: string, init: RequestInit = {}): Promise<T> {
-  const headers = new Headers(init.headers || {});
-  headers.set('Accept', 'application/json');
-
-  const token = authToken();
-  if (token) headers.set('Authorization', `Bearer ${token}`);
-
-  const isJsonBody =
-    init.body != null &&
-    typeof init.body === 'string' &&
-    !headers.has('Content-Type');
-
-  if (isJsonBody) {
-    headers.set('Content-Type', 'application/json');
-  }
-
-  const urlCandidates = API_BASE
-    ? [`${API_BASE}${path}`, `${API_BASE}/api${path}`]
-    : [`/api${path}`];
-
-  let lastError: Error | null = null;
-
-  for (const url of urlCandidates) {
-    const response = await fetch(url, {
-      ...init,
-      headers,
-    });
-
-    if (response.ok) {
-      return response.json();
-    }
-
-    const text = await response.text();
-    lastError = new Error(text || `Request failed with status ${response.status}`);
-    if (response.status !== 404) {
-      throw lastError;
-    }
-  }
-
-  throw lastError || new Error('Request failed');
-}
 
 function displayName(user: AppUser) {
   return user.name?.trim() || user.full_name?.trim() || user.email.split('@')[0] || 'Customer';
