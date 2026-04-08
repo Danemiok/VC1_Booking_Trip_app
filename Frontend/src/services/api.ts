@@ -1,11 +1,10 @@
-const DEFAULT_API_BASE_URL =
-  typeof window !== 'undefined'
-    ? `${window.location.origin}/api`
-    : 'http://127.0.0.1:8000/api';
-const RAW_API_BASE_URL = import.meta.env.VITE_API_BASE_URL ?? DEFAULT_API_BASE_URL;
+const RAW_API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
 
 const normalizeApiBaseUrl = (value: string) => {
   const trimmed = String(value ?? '').trim();
+  if (!trimmed) {
+    throw new Error('VITE_API_BASE_URL is required and was not loaded by Vite.');
+  }
   const withoutTrailingSlash = trimmed.replace(/\/+$/, '');
   return withoutTrailingSlash.endsWith('/api') ? withoutTrailingSlash : `${withoutTrailingSlash}/api`;
 };
