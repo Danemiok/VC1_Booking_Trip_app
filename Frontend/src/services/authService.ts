@@ -1,3 +1,4 @@
+import axios from 'axios';
 import { apiRequest, clearApiAuthToken, getApiAuthToken, setApiAuthToken } from './api';
 
 const STORAGE_KEYS = {
@@ -99,6 +100,10 @@ export const getUserRole = () => getAuthUser()?.role ?? null;
 
 export const isAuthenticated = () => Boolean(getAuthToken());
 
+const ensureCsrfCookie = async () => {
+  await axios.get('/sanctum/csrf-cookie');
+};
+
 type LoginPayload = { email: string; password: string };
 type RegisterPayload = { name?: string; email: string; password: string; password_confirmation?: string };
 
@@ -108,6 +113,7 @@ export const login = async (payload: LoginPayload) => {
     email: typeof payload?.email === 'string' ? payload.email.trim().toLowerCase() : payload?.email,
   };
 
+  await ensureCsrfCookie();
   const data: any = await apiRequest('/auth/login', {
     method: 'POST',
     body: JSON.stringify(normalizedPayload),
@@ -130,6 +136,7 @@ export const register = async (payload: RegisterPayload) => {
     email: typeof payload?.email === 'string' ? payload.email.trim().toLowerCase() : payload?.email,
   };
 
+  await ensureCsrfCookie();
   const data: any = await apiRequest('/auth/register', {
     method: 'POST',
     body: JSON.stringify(normalizedPayload),
