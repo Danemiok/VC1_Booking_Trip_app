@@ -37,7 +37,7 @@ A layout wrapper that includes the help center provider and optional floating bu
 
 ### 1. Basic Usage with Provider
 
-```tsx
+```jsx
 import { HelpCenterProvider, HelpButton, useHelpCenterContext } from '@/components/help';
 
 function MyComponent() {
@@ -62,7 +62,7 @@ function App() {
 
 ### 2. Using HelpCenterLayout (Recommended)
 
-```tsx
+```jsx
 import { HelpCenterLayout } from '@/components/layout/HelpCenterLayout';
 
 function App() {
@@ -80,7 +80,7 @@ function App() {
 
 ### 3. Custom Implementation
 
-```tsx
+```jsx
 import { HelpCenter, HelpButton } from '@/components/help';
 import { useState } from 'react';
 
@@ -98,7 +98,7 @@ function CustomHelpImplementation() {
 
 ### 4. In Navigation/Header
 
-```tsx
+```jsx
 import { HelpButton, useHelpCenterContext } from '@/components/help';
 
 function Header() {
@@ -168,7 +168,7 @@ The components use Tailwind CSS classes and are fully customizable. The modal is
 
 You can easily customize:
 - Colors and styling (modify Tailwind classes)
-- Contact information (update in HelpCenter.tsx)
-- FAQ content (modify in HelpCenter.tsx)
-- Modal size (adjust max-width in HelpCenter.tsx)
+- Contact information (update in HelpCenter.jsx)
+- FAQ content (modify in HelpCenter.jsx)
+- Modal size (adjust max-width in HelpCenter.jsx)
 - Tab labels and content
