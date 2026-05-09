@@ -4,9 +4,9 @@ import { format } from 'date-fns';
 import { Link } from 'react-router-dom';
 import { Search, Calendar, Hotel, Ship, Waves, Star, CheckCircle2, Heart, X, MapPin, ArrowRight, ChevronLeft, ChevronRight as ChevronRightIcon } from 'lucide-react';
 import { startOfMonth, endOfMonth, startOfWeek, endOfWeek, eachDayOfInterval, isSameMonth, isSameDay, isToday, addMonths, subMonths, isBefore, isAfter } from 'date-fns';
-import { ALL_HOTELS } from '../../data/hotels';
 import { useAuth } from '../../context/AuthContext';
 import { bookingService } from '@/services/bookingService';
+import { getPublicDestinations } from '@/services/destinationService';
 // --- Sub-components (could be further split) ---
 const normalizeSearchText = (value) => value
     .normalize('NFD')
@@ -45,16 +45,7 @@ const getDatesFromTripData = (tripData) => {
     }
     return { start: null, end: null };
 };
-const DESTINATION_SUGGESTIONS = Array.from(new Set([
-    ...ALL_HOTELS.map((hotel) => hotel.location),
-    'Siem Reap',
-    'Seim Reap',
-    'Phnom Penh',
-    'Sihanoukville',
-    'Koh Rong',
-    'Kampot',
-]));
-const Hero = ({ onSearch, location, setLocation, tripData }) => {
+const Hero = ({ onSearch, location, setLocation, tripData, destinationSuggestions }) => {
     const [showDatePicker, setShowDatePicker] = useState(false);
     const initialDates = getDatesFromTripData(tripData);
     const [guests, setGuests] = useState(() => parseGuestsFromLabel(tripData?.guests));
@@ -70,9 +61,9 @@ const Hero = ({ onSearch, location, setLocation, tripData }) => {
     const locationSuggestions = React.useMemo(() => {
         const query = normalizeSearchText(location.trim());
         if (!query) {
-            return DESTINATION_SUGGESTIONS.slice(0, 6);
+            return destinationSuggestions.slice(0, 6);
         }
-        return DESTINATION_SUGGESTIONS
+        return destinationSuggestions
             .filter((option) => normalizeSearchText(option).includes(query))
             .sort((a, b) => {
             const aStarts = normalizeSearchText(a).startsWith(query) ? 0 : 1;
@@ -82,7 +73,7 @@ const Hero = ({ onSearch, location, setLocation, tripData }) => {
             return a.localeCompare(b);
         })
             .slice(0, 6);
-    }, [location]);
+    }, [destinationSuggestions, location]);
     useEffect(() => {
         const nextDates = getDatesFromTripData(tripData);
         setDates(nextDates);
@@ -348,151 +339,7 @@ const EcoTourPromotion = ({ onClick }) => {
       </div>
     </section>);
 };
-const RecommendedForYou = ({ onSelect }) => {
-    const recommendations = [
-        {
-            id: 1,
-            name: "Elephant Valley Project",
-            title: "Elephant Valley Project",
-            location: "Mondulkiri, Cambodia",
-            rating: 4.9,
-            price: "$85",
-            unit: "night",
-            image: "https://images.unsplash.com/photo-1581852017103-68ac65514cf7?auto=format&fit=crop&q=80&w=800",
-            badge: "ECO-CERTIFIED",
-            type: "hotel"
-        },
-        {
-            id: 2,
-            name: "The Peninsula Paris",
-            title: "The Peninsula Paris",
-            location: "16th Arr., Paris",
-            rating: 5.0,
-            price: "$1,580",
-            unit: "night",
-            image: "https://images.unsplash.com/photo-1544551763-46a013bb70d5?auto=format&fit=crop&q=80&w=800",
-            badge: "TOP RATED",
-            type: "hotel"
-        },
-        {
-            id: 3,
-            name: "Raffles Grand Hotel d'Angkor",
-            title: "Raffles Grand Hotel d'Angkor",
-            location: "Siem Reap, Cambodia",
-            rating: 5.0,
-            price: "$350",
-            unit: "night",
-            image: "https://images.unsplash.com/photo-1542314831-068cd1dbfeeb?auto=format&fit=crop&q=80&w=800",
-            badge: "ULTRA-LUXURY",
-            type: "hotel"
-        },
-        {
-            id: 4,
-            name: "Le Bristol Paris",
-            title: "Le Bristol Paris",
-            location: "8th Arr., Paris",
-            rating: 5.0,
-            price: "$1,420",
-            unit: "night",
-            image: "https://images.unsplash.com/photo-1500048993953-d23a436266cf?auto=format&fit=crop&q=80&w=800",
-            badge: "CLASSIC LUXURY",
-            type: "hotel"
-        }
-    ];
-    return (<section className="py-20 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto">
-      <div className="flex flex-col md:flex-row md:items-end justify-between mb-12 gap-4">
-        <div>
-          <span className="text-[10px] font-bold text-emerald-600 dark:text-emerald-400 uppercase tracking-[0.3em] mb-3 block">Curated Selection</span>
-          <h2 className="text-4xl font-bold text-slate-900 dark:text-white">Recommended for You</h2>
-        </div>
-        <button className="text-sm font-bold text-slate-900 dark:text-white flex items-center gap-2 group">
-          View All Collections <ArrowRight className="w-4 h-4 transition-transform group-hover:translate-x-1"/>
-        </button>
-      </div>
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
-        {recommendations.map((item) => (<motion.div key={item.id} whileHover={{ y: -12 }} onClick={() => onSelect(item)} className="group bg-white dark:bg-slate-800/40 backdrop-blur-sm rounded-[2.5rem] overflow-hidden border border-slate-100 dark:border-white/5 shadow-sm hover:shadow-2xl transition-all cursor-pointer">
-            <div className="relative h-64 overflow-hidden">
-              <img src={item.image} alt={item.title} className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" referrerPolicy="no-referrer"/>
-              <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity"/>
-              <button onClick={(e) => {
-                e.stopPropagation();
-            }} className="absolute top-6 right-6 p-3 bg-white/10 backdrop-blur-md border border-white/20 rounded-full text-white hover:bg-red-500 hover:border-red-500 transition-all">
-                <Heart className="w-4 h-4"/>
-              </button>
-              {item.badge && (<span className="absolute top-6 left-6 bg-white/90 backdrop-blur-md text-slate-900 text-[9px] font-bold px-3 py-1.5 rounded-full tracking-wider">
-                  {item.badge}
-                </span>)}
-            </div>
-            <div className="p-8">
-              <div className="flex items-center gap-1 mb-3">
-                {[...Array(5)].map((_, i) => (<Star key={i} className={`w-3 h-3 ${i < Math.floor(item.rating) ? 'fill-amber-400 text-amber-400' : 'text-slate-200 dark:text-slate-700'}`}/>))}
-                <span className="text-[10px] font-bold text-slate-400 ml-1">{item.rating}</span>
-              </div>
-              <h3 className="font-bold text-slate-900 dark:text-white text-lg mb-1 line-clamp-1">{item.title}</h3>
-              <p className="text-xs text-slate-500 dark:text-slate-400 mb-6 flex items-center gap-1">
-                <MapPin className="w-3 h-3"/> {item.location}
-              </p>
-              <div className="flex items-center justify-between pt-4 border-t border-slate-100 dark:border-white/5">
-                <p className="text-lg font-bold text-slate-900 dark:text-white">
-                  {item.price} <span className="text-xs font-medium text-slate-400">/ {item.unit}</span>
-                </p>
-                <div className="w-10 h-10 rounded-full bg-slate-900 dark:bg-white flex items-center justify-center text-white dark:text-slate-900 scale-0 group-hover:scale-100 transition-transform">
-                  <ArrowRight className="w-4 h-4"/>
-                </div>
-              </div>
-            </div>
-          </motion.div>))}
-      </div>
-    </section>);
-};
-const TrendingDestinations = ({ onSelect }) => {
-    const destinations = [
-        {
-            id: 1,
-            name: "Siem Reap",
-            count: "1,200+ experiences",
-            image: "https://images.unsplash.com/photo-1528127269322-539801943592?auto=format&fit=crop&q=80&w=800",
-            description: "The gateway to the ancient world of Angkor.",
-            source: "trending",
-            popularSpots: ["Angkor Wat", "Pub Street", "Tonle Sap Lake"]
-        },
-        {
-            id: 2,
-            name: "Koh Rong",
-            count: "450+ experiences",
-            image: "https://images.unsplash.com/photo-1544551763-46a013bb70d5?auto=format&fit=crop&q=80&w=800",
-            description: "Cambodia's second largest island.",
-            source: "trending",
-            popularSpots: ["Long Beach", "Koh Touch", "Coconut Beach"]
-        },
-        {
-            id: 3,
-            name: "Phnom Penh",
-            count: "800+ experiences",
-            image: "https://images.unsplash.com/photo-1563200193-066366530438?auto=format&fit=crop&q=80&w=800",
-            description: "The bustling capital of Cambodia.",
-            source: "trending",
-            popularSpots: ["Royal Palace", "Central Market", "Riverside"]
-        },
-        {
-            id: 4,
-            name: "Kep",
-            count: "230+ experiences",
-            image: "https://images.unsplash.com/photo-1596394516093-501ba68a0ba6?auto=format&fit=crop&q=80&w=800",
-            description: "A charming seaside town.",
-            source: "trending",
-            popularSpots: ["Crab Market", "Kep National Park", "Rabbit Island"]
-        },
-        {
-            id: 5,
-            name: "Kampot",
-            count: "310+ experiences",
-            image: "https://images.unsplash.com/photo-1581852017103-68ac65514cf7?auto=format&fit=crop&q=80&w=800",
-            description: "Riverside town with a laid-back atmosphere.",
-            source: "trending",
-            popularSpots: ["Bokor Mountain", "River Cruises", "Pepper Plantations"]
-        }
-    ];
+const TrendingDestinations = ({ onSelect, destinations = [] }) => {
     return (<section className="py-20 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto">
       <div className="flex flex-col md:flex-row md:items-end justify-between mb-12 gap-4">
         <div>
@@ -682,9 +529,53 @@ export const Dashboard = ({ tripData, onSelectRecommendation, onSelectDestinatio
     const [searchQuery, setSearchQuery] = useState('');
     const [searchResults, setSearchResults] = useState([]);
     const [hasSearched, setHasSearched] = useState(false);
+    const [publicDestinations, setPublicDestinations] = useState([]);
+    const [publicDestinationsLoading, setPublicDestinationsLoading] = useState(true);
     const { user, isAuthenticated } = useAuth();
     const [myBookings, setMyBookings] = useState([]);
     const [myBookingsLoading, setMyBookingsLoading] = useState(false);
+    useEffect(() => {
+        let cancelled = false;
+        const loadPublicDestinations = async () => {
+            try {
+                setPublicDestinationsLoading(true);
+                const data = await getPublicDestinations();
+                if (!cancelled) {
+                    setPublicDestinations(Array.isArray(data) ? data : []);
+                }
+            }
+            catch {
+                if (!cancelled) {
+                    setPublicDestinations([]);
+                }
+            }
+            finally {
+                if (!cancelled) {
+                    setPublicDestinationsLoading(false);
+                }
+            }
+        };
+        void loadPublicDestinations();
+        return () => {
+            cancelled = true;
+        };
+    }, []);
+    const destinationSuggestions = React.useMemo(() => Array.from(new Set(publicDestinations
+        .flatMap((destination) => [
+        String(destination.location || '').trim(),
+        String(destination.city || '').trim(),
+        String(destination.country || '').trim(),
+    ])
+        .filter(Boolean))), [publicDestinations]);
+    const trendingDestinations = React.useMemo(() => publicDestinations.slice(0, 5).map((destination, index) => ({
+        id: destination.id ?? `${destination.name}-${index}`,
+        name: destination.name,
+        count: `${Number(destination.total_bookings || 0)}+ bookings`,
+        image: destination.image,
+        description: destination.description || '',
+        source: destination.status || 'public',
+        popularSpots: Array.isArray(destination.amenities) ? destination.amenities.slice(0, 3) : [],
+    })), [publicDestinations]);
     useEffect(() => {
         const run = async () => {
             if (!isAuthenticated || user?.role !== 'customer' || !user?.id) {
@@ -723,7 +614,7 @@ export const Dashboard = ({ tripData, onSelectRecommendation, onSelectDestinatio
             return;
         }
         const queryTokens = normalizeSearchText(trimmedQuery).split(/\s+/).filter(Boolean);
-        const results = ALL_HOTELS.filter((hotel) => {
+        const results = publicDestinations.filter((hotel) => {
             const searchableText = normalizeSearchText([
                 hotel.name,
                 hotel.location,
@@ -735,7 +626,7 @@ export const Dashboard = ({ tripData, onSelectRecommendation, onSelectDestinatio
         setSearchResults(results);
     };
     return (<main>
-      <Hero onSearch={handleSearchInternal} location={location} setLocation={setLocation} tripData={tripData}/>
+      <Hero onSearch={handleSearchInternal} location={location} setLocation={setLocation} tripData={tripData} destinationSuggestions={destinationSuggestions}/>
 
       <section className="py-10 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto">
         <div className="card p-6">
@@ -833,9 +724,8 @@ export const Dashboard = ({ tripData, onSelectRecommendation, onSelectDestinatio
       {!hasSearched && (<>
           <Categories onHotelsClick={onHotelsClick} onRentalsClick={onRentalsClick} onActivitiesClick={onActivitiesClick}/>
           <EcoTourPromotion onClick={onPromotionsClick}/>
-          <RecommendedForYou onSelect={onSelectRecommendation}/>
           <AngkorWatGallery />
-          <TrendingDestinations onSelect={onSelectDestination}/>
+          {!publicDestinationsLoading && trendingDestinations.length > 0 ? (<TrendingDestinations onSelect={onSelectDestination} destinations={trendingDestinations}/>) : null}
           <SplitBillFeature onStartGroupBooking={onStartGroupBooking}/>
           <Newsletter />
         </>)}

@@ -5,8 +5,6 @@ import { cn } from '@/utils/utils';
 import { bookingService } from '@/services/bookingService';
 import { apiRequest, API_BASE_URL } from '@/services/api';
 import { useAuth } from '../../context/AuthContext';
-import { ALL_HOTELS } from '../../data/hotels';
-import { RENTAL_VEHICLES } from '../../data/rentals';
 const Bookings = () => {
     const navigate = useNavigate();
     const location = useLocation();
@@ -923,18 +921,6 @@ const Bookings = () => {
             booking?.rental?.image;
         if (typeof explicit === 'string' && explicit.trim())
             return explicit;
-        const serviceName = String(booking?.service ?? '').trim();
-        const routeName = String(booking?.route ?? '').trim();
-        const hotel = ALL_HOTELS.find((h) => h.name === serviceName) ||
-            ALL_HOTELS.find((h) => serviceName && h.name && serviceName.toLowerCase().includes(h.name.toLowerCase())) ||
-            ALL_HOTELS.find((h) => routeName && h.location && routeName.toLowerCase().includes(h.location.toLowerCase()));
-        if (hotel?.image)
-            return hotel.image;
-        const vehicleName = String(booking?.vehicleType ?? booking?.service ?? '').trim();
-        const vehicle = RENTAL_VEHICLES.find((v) => v.name === vehicleName) ||
-            RENTAL_VEHICLES.find((v) => vehicleName && v.name && vehicleName.toLowerCase().includes(v.name.toLowerCase()));
-        if (vehicle?.image)
-            return vehicle.image;
         return null;
     };
     const activeFilterCount = Object.values(filters).filter((val) => val !== 'all' && val !== '').length +

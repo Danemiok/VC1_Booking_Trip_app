@@ -2,7 +2,6 @@ import { BedDouble, Calendar, CheckCircle2, ChevronDown, Coffee, Dumbbell, Filte
 import React, { useEffect, useState } from 'react';
 import { motion } from 'motion/react';
 import { format } from 'date-fns';
-import { getHotels } from '@/data/hotels';
 import { getPublicDestinations } from '@/services/destinationService';
 import { getPublicPromotions } from '@/services/promotionService';
 export default function Destinations({ onOpenMessages }) {
@@ -595,7 +594,7 @@ export const Hotels = ({ tripData, browseDestination, onBack, onSelectHotel, set
     const [sortBy, setSortBy] = useState('newest');
     const [savedHotelIds, setSavedHotelIds] = useState({});
     const [expandedHotelGalleryIds, setExpandedHotelGalleryIds] = useState({});
-    const [hotels, setHotels] = useState(getHotels());
+    const [hotels, setHotels] = useState([]);
     const [hotelsLoading, setHotelsLoading] = useState(true);
     const [hotelsError, setHotelsError] = useState('');
     const [searchDestinations, setSearchDestinations] = useState([]);
@@ -678,14 +677,14 @@ export const Hotels = ({ tripData, browseDestination, onBack, onSelectHotel, set
                         : hotel;
                 });
                 if (!cancelled) {
-                    setHotels(normalized.length > 0 ? normalized : getHotels());
+                    setHotels(normalized);
                     setSearchDestinations(Array.isArray(data) ? data : []);
                 }
             }
             catch (error) {
                 if (!cancelled) {
-                    setHotelsError('Failed to load hotels. Showing curated collections.');
-                    setHotels(getHotels());
+                    setHotelsError('Failed to load hotels from the backend.');
+                    setHotels([]);
                 }
             }
             finally {
@@ -804,10 +803,7 @@ export const Hotels = ({ tripData, browseDestination, onBack, onSelectHotel, set
         if (primaryMatches.length > 0 || queryTokens.length === 0) {
             return primaryMatches;
         }
-        // If the live API data doesn't have a city match, fall back to the curated hotel set
-        // so searched locations like Siem Reap still show real stays instead of an empty page.
-        const fallbackMatches = getHotels().filter(matchesCurrentFilters);
-        return fallbackMatches.length > 0 ? fallbackMatches : primaryMatches;
+        return primaryMatches;
     }, [hotels, matchesCurrentFilters, queryTokens.length]);
     const sortedHotels = React.useMemo(() => {
         const items = [...filteredHotels];

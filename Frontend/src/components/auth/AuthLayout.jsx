@@ -2,7 +2,6 @@ import React, { useEffect, useState } from 'react';
 import { motion as Motion, AnimatePresence } from 'motion/react';
 import { X } from 'lucide-react';
 import { useTheme } from '../../context/ThemeContext';
-import { BrandLogo } from '../common/BrandLogo';
 
 const slides = [
     {
@@ -106,9 +105,6 @@ export const AuthLayout = ({
                 <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/30 to-transparent"/>
                 
                 <div className="absolute inset-0 flex flex-col justify-between p-8 lg:p-10">
-                  <div className="flex items-center gap-3">
-                    <BrandLogo variant="full" className="h-16 w-[280px] max-w-[45vw]"/>
-                  </div>
 
                   <div className="max-w-[300px]">
                     <Motion.h1 initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }} className="mb-5 text-[32px] font-bold leading-[1.03] text-white">
