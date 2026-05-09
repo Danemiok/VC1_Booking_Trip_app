@@ -185,7 +185,7 @@ const calculateRangeMetrics = (bookings, range) => {
 };
 const StatCard = ({ title, value, note, change, changeType, icon: Icon, subtitle, }) => (<div className="bg-white dark:bg-slate-900 p-6 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm hover:shadow-lg transition-shadow">
     <div className="flex items-center justify-between mb-4">
-      <div className="p-3 bg-blue-50 dark:bg-blue-900/20 text-blue-600 rounded-xl">
+      <div className="p-3 bg-emerald-50 dark:bg-emerald-900/20 text-emerald-600 rounded-xl">
         <Icon size={24}/>
       </div>
       {change ? (<span className={cn('text-xs font-bold px-2 py-1 rounded-lg flex items-center gap-1', changeType === 'negative'
@@ -294,18 +294,18 @@ const Analytics = () => {
         <div className="flex flex-wrap items-center gap-3">
           <div className="flex p-1 bg-slate-100 dark:bg-slate-800 rounded-xl shadow-sm">
             <button type="button" onClick={() => setRange('last12')} className={cn('px-4 py-2 text-xs font-bold rounded-lg transition-colors', range === 'last12'
-            ? 'bg-white dark:bg-slate-700 text-blue-600 shadow-sm'
+            ? 'bg-white dark:bg-slate-700 text-emerald-600 shadow-sm'
             : 'text-slate-500 hover:text-slate-700 dark:hover:text-slate-200')}>
               Last 12 Months
             </button>
             <button type="button" onClick={() => setRange('last30')} className={cn('px-4 py-2 text-xs font-bold rounded-lg transition-colors', range === 'last30'
-            ? 'bg-white dark:bg-slate-700 text-blue-600 shadow-sm'
+            ? 'bg-white dark:bg-slate-700 text-emerald-600 shadow-sm'
             : 'text-slate-500 hover:text-slate-700 dark:hover:text-slate-200')}>
               Last 30 Days
             </button>
           </div>
 
-          <button type="button" onClick={handleExport} className="px-5 py-2.5 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl flex items-center gap-2 font-bold text-sm hover:border-blue-600/30 hover:text-blue-600 transition-all shadow-sm">
+          <button type="button" onClick={handleExport} className="px-5 py-2.5 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl flex items-center gap-2 font-bold text-sm hover:border-emerald-600/30 hover:text-emerald-600 transition-all shadow-sm">
             {exporting ? <RefreshCcw size={18} className="animate-spin"/> : <Download size={18}/>}
             {exporting ? 'Exporting...' : 'Export Report'}
           </button>
@@ -466,7 +466,7 @@ const Analytics = () => {
               <p className="text-[10px] uppercase font-bold tracking-[0.1em] text-slate-500">Backend Stats</p>
               <h4 className="font-bold mt-1">Total Bookings</h4>
             </div>
-            <BarChart3 size={20} className="text-blue-600"/>
+            <BarChart3 size={20} className="text-emerald-600"/>
           </div>
           <p className="mt-4 text-3xl font-bold">{loading ? '—' : stats.totalBookings}</p>
           <p className="mt-2 text-sm text-slate-500">From `GET /api/bookings/stats`</p>
@@ -499,3 +499,4 @@ const Analytics = () => {
     </div>);
 };
 export default Analytics;
+

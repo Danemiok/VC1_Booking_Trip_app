@@ -1,13 +1,20 @@
 const RAW_API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
-const normalizeApiBaseUrl = (value) => {
+const RAW_BACKEND_ORIGIN = import.meta.env.VITE_BACKEND_ORIGIN;
+const normalizeApiBaseUrl = (value, backendOrigin) => {
     const trimmed = String(value ?? '').trim();
-    if (!trimmed) {
-        throw new Error('VITE_API_BASE_URL is required and was not loaded by Vite.');
+    if (trimmed) {
+        const withoutTrailingSlash = trimmed.replace(/\/+$/, '');
+        return withoutTrailingSlash.endsWith('/api')
+            ? withoutTrailingSlash
+            : `${withoutTrailingSlash}/api`;
     }
-    const withoutTrailingSlash = trimmed.replace(/\/+$/, '');
-    return withoutTrailingSlash.endsWith('/api') ? withoutTrailingSlash : `${withoutTrailingSlash}/api`;
+    const normalizedOrigin = String(backendOrigin ?? '').trim().replace(/\/+$/, '');
+    if (normalizedOrigin) {
+        return `${normalizedOrigin}/api`;
+    }
+    throw new Error('VITE_API_BASE_URL or VITE_BACKEND_ORIGIN is required and was not loaded by Vite.');
 };
-export const API_BASE_URL = normalizeApiBaseUrl(RAW_API_BASE_URL);
+export const API_BASE_URL = normalizeApiBaseUrl(RAW_API_BASE_URL, RAW_BACKEND_ORIGIN);
 export const BACKEND_ORIGIN = API_BASE_URL.replace(/\/api$/, '');
 let authToken = null;
 const readStoredToken = () => {

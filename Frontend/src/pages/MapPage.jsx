@@ -1,334 +1,102 @@
-import { GoogleMap, InfoWindow, LoadScript, Marker } from '@react-google-maps/api';
-import axios from 'axios';
-import { useEffect, useMemo, useState } from 'react';
-import { useLocation } from 'react-router-dom';
-import { API_BASE_URL } from '../services/api';
-const DEFAULT_CENTER = { lat: 11.5564, lng: 104.9282 };
-const MAP_CONTAINER_STYLE = { width: '100%', height: '560px' };
-const toNumber = (value) => {
-    const parsed = typeof value === 'number' ? value : Number.parseFloat(String(value ?? ''));
-    return Number.isFinite(parsed) ? parsed : null;
-};
-const normalizePayload = (responseData) => {
-    if (Array.isArray(responseData)) {
-        return responseData;
-    }
-    if (responseData && typeof responseData === 'object') {
-        const nested = responseData.data;
-        if (Array.isArray(nested)) {
-            return nested;
-        }
-    }
-    return [];
-};
-const getHotelsEndpoint = () => {
-    return `${API_BASE_URL}/hotels/public`;
-};
-const getDestinationsEndpoint = () => {
-    return `${API_BASE_URL}/destinations/public`;
-};
-const normalizePlaces = (payload, type) => payload
-    .map((entry, index) => {
-    if (!entry || typeof entry !== 'object')
-        return null;
-    const place = entry;
-    const latitude = toNumber(place.latitude);
-    const longitude = toNumber(place.longitude);
-    if (latitude === null || longitude === null) {
-        return null;
-    }
-    const candidateId = place.id;
-    const normalizedId = typeof candidateId === 'string' || typeof candidateId === 'number'
-        ? candidateId
-        : `${type}-${index}`;
-    return {
-        ...place,
-        id: normalizedId,
-        latitude,
-        longitude,
-        markerType: type,
-    };
-})
-    .filter((place) => place !== null);
-const getPlaceName = (place) => String(place?.hotel_name || place?.name || '').trim();
-const getPlaceLocation = (place) => String(place?.address || place?.location || '').trim();
-const normalizeText = (value) => String(value ?? '')
-    .normalize('NFD')
-    .replace(/[\u0300-\u036f]/g, '')
-    .toLowerCase();
-const matchesSearch = (place, queryTokens) => {
-    if (queryTokens.length === 0)
-        return true;
-    const searchableText = normalizeText(`${getPlaceName(place)} ${getPlaceLocation(place)} ${place.markerType}`);
-    return queryTokens.every((token) => searchableText.includes(token));
-};
-const getTypeFromQuery = (value) => {
-    const normalized = String(value ?? '').toLowerCase();
-    if (normalized === 'hotel' || normalized === 'destination')
-        return normalized;
-    return 'all';
-};
-const formatCoordinate = (value) => {
-    const numeric = toNumber(value);
-    return numeric === null ? 'N/A' : numeric.toFixed(6);
-};
-const isValidCoordinate = (lat, lng) => lat >= -90 && lat <= 90 && lng >= -180 && lng <= 180;
-const getPointFromSearchParams = (searchParams) => {
-    const lat = toNumber(searchParams.get('lat'));
-    const lng = toNumber(searchParams.get('lng'));
-    if (lat === null || lng === null)
-        return null;
-    if (!isValidCoordinate(lat, lng))
-        return null;
-    return { lat, lng };
-};
+import React from 'react';
+import { ArrowLeft, MapPin, Navigation, Search } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
+import { BrandLogo } from '@/components/common/BrandLogo';
+
 export default function MapPage() {
-    const location = useLocation();
-    const [hotels, setHotels] = useState([]);
-    const [destinations, setDestinations] = useState([]);
-    const [selectedPlace, setSelectedPlace] = useState(null);
-    const [pickedPoint, setPickedPoint] = useState(null);
-    const [loading, setLoading] = useState(true);
-    const [error, setError] = useState('');
-    const searchParams = useMemo(() => new URLSearchParams(location.search), [location.search]);
-    const requestedQuery = String(searchParams.get('q') || '').trim();
-    const requestedType = getTypeFromQuery(searchParams.get('type'));
-    const requestedPoint = getPointFromSearchParams(searchParams);
-    const [searchQuery, setSearchQuery] = useState(() => requestedQuery);
-    const [markerType, setMarkerType] = useState(() => requestedType);
-    const googleMapsApiKey = import.meta.env.VITE_GOOGLE_MAPS_API_KEY || '';
-    useEffect(() => {
-        setSearchQuery(requestedQuery);
-        setMarkerType(requestedType);
-        setSelectedPlace(null);
-        setPickedPoint(requestedPoint);
-    }, [requestedPoint, requestedQuery, requestedType]);
-    useEffect(() => {
-        let active = true;
-        let pendingRequests = 2;
-        const finishLoading = () => {
-            pendingRequests -= 1;
-            if (active && pendingRequests <= 0) {
-                setLoading(false);
-            }
-        };
-        axios
-            .get(getHotelsEndpoint())
-            .then((res) => {
-            if (!active)
-                return;
-            setHotels(normalizePlaces(normalizePayload(res.data), 'hotel'));
-        })
-            .catch((requestError) => {
-            if (!active)
-                return;
-            console.error('Failed to load hotels for map:', requestError);
-            setError('Unable to load hotels and destinations right now.');
-        })
-            .finally(() => {
-            finishLoading();
-        });
-        axios
-            .get(getDestinationsEndpoint())
-            .then((res) => {
-            if (!active)
-                return;
-            setDestinations(normalizePlaces(normalizePayload(res.data), 'destination'));
-        })
-            .catch((requestError) => {
-            if (!active)
-                return;
-            console.error('Failed to load destinations for map:', requestError);
-            setError('Unable to load hotels and destinations right now.');
-        })
-            .finally(() => {
-            finishLoading();
-        });
-        return () => {
-            active = false;
-        };
-    }, []);
-    const queryTokens = useMemo(() => normalizeText(searchQuery).trim().split(/\s+/).filter(Boolean), [searchQuery]);
-    const filteredHotels = useMemo(() => hotels.filter((hotel) => matchesSearch(hotel, queryTokens)), [hotels, queryTokens]);
-    const filteredDestinations = useMemo(() => destinations.filter((destination) => matchesSearch(destination, queryTokens)), [destinations, queryTokens]);
-    const visibleHotels = useMemo(() => (markerType === 'destination' ? [] : filteredHotels), [filteredHotels, markerType]);
-    const visibleDestinations = useMemo(() => (markerType === 'hotel' ? [] : filteredDestinations), [filteredDestinations, markerType]);
-    const combinedVisiblePlaces = useMemo(() => [...visibleHotels, ...visibleDestinations], [visibleDestinations, visibleHotels]);
-    const queryMatchedPlace = useMemo(() => {
-        const normalizedQuery = normalizeText(searchQuery).trim();
-        if (!normalizedQuery)
-            return null;
-        const exact = combinedVisiblePlaces.find((place) => {
-            const placeName = normalizeText(getPlaceName(place));
-            const placeLocation = normalizeText(getPlaceLocation(place));
-            return placeName === normalizedQuery || placeLocation === normalizedQuery;
-        });
-        if (exact)
-            return exact;
-        return (combinedVisiblePlaces.find((place) => normalizeText(`${getPlaceName(place)} ${getPlaceLocation(place)}`).includes(normalizedQuery)) || null);
-    }, [combinedVisiblePlaces, searchQuery]);
-    const activeSelectedPlace = useMemo(() => {
-        if (!selectedPlace)
-            return null;
-        const stillVisible = combinedVisiblePlaces.some((place) => place.id === selectedPlace.id && place.markerType === selectedPlace.markerType);
-        return stillVisible ? selectedPlace : null;
-    }, [combinedVisiblePlaces, selectedPlace]);
-    const mapCenter = useMemo(() => {
-        if (pickedPoint)
-            return pickedPoint;
-        if (activeSelectedPlace) {
-            return {
-                lat: activeSelectedPlace.latitude,
-                lng: activeSelectedPlace.longitude,
-            };
-        }
-        if (queryMatchedPlace) {
-            return {
-                lat: queryMatchedPlace.latitude,
-                lng: queryMatchedPlace.longitude,
-            };
-        }
-        const firstVisible = combinedVisiblePlaces[0];
-        if (firstVisible) {
-            return {
-                lat: firstVisible.latitude,
-                lng: firstVisible.longitude,
-            };
-        }
-        return DEFAULT_CENTER;
-    }, [activeSelectedPlace, combinedVisiblePlaces, pickedPoint, queryMatchedPlace]);
-    const handleMapClick = (event) => {
-        const mapEvent = event;
-        const lat = mapEvent?.latLng?.lat?.();
-        const lng = mapEvent?.latLng?.lng?.();
-        if (!Number.isFinite(lat) || !Number.isFinite(lng))
-            return;
-        const nextPoint = { lat, lng };
-        setSelectedPlace(null);
-        setPickedPoint(nextPoint);
-        console.log('[MapPage] picked coordinates:', nextPoint);
-    };
-    return (<section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
-      <div className="mb-6">
-        <p className="text-xs font-bold uppercase tracking-[0.25em] text-slate-400">Travel Map</p>
-        <h1 className="mt-3 text-3xl font-extrabold text-slate-900 dark:text-white">Browse hotels and destinations on the map</h1>
-        <p className="mt-2 text-sm text-slate-600 dark:text-slate-300">
-          Search places, choose marker type, and click a map pin or the map area to get coordinates.
-        </p>
-      </div>
+  const navigate = useNavigate();
 
-      <div className="mb-5 rounded-3xl border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-800 dark:bg-slate-950">
-        <div className="grid gap-3 md:grid-cols-[minmax(0,1fr)_200px_auto]">
-          <label className="flex min-w-0 items-center gap-3 rounded-2xl border border-slate-200 px-4 py-3 dark:border-slate-800">
-            <span className="text-[10px] font-bold uppercase tracking-[0.2em] text-slate-400">Search</span>
-            <input type="text" value={searchQuery} onChange={(event) => {
-            setSearchQuery(event.target.value);
-            setSelectedPlace(null);
-            setPickedPoint(null);
-        }} placeholder="Search hotel, destination, or location" className="w-full border-none bg-transparent p-0 text-sm font-semibold text-slate-900 placeholder:text-slate-400 focus:ring-0 dark:text-white"/>
-          </label>
-
-          <label className="flex items-center gap-2 rounded-2xl border border-slate-200 px-4 py-3 text-sm dark:border-slate-800">
-            <span className="text-[10px] font-bold uppercase tracking-[0.2em] text-slate-400">Type</span>
-            <select value={markerType} onChange={(event) => {
-            setMarkerType(getTypeFromQuery(event.target.value));
-            setSelectedPlace(null);
-            setPickedPoint(null);
-        }} className="w-full border-none bg-transparent p-0 font-semibold text-slate-900 focus:ring-0 dark:text-white">
-              <option value="all">All</option>
-              <option value="hotel">Hotels</option>
-              <option value="destination">Destinations</option>
-            </select>
-          </label>
-
-          <button type="button" onClick={() => {
-            setSearchQuery('');
-            setMarkerType('all');
-            setSelectedPlace(null);
-            setPickedPoint(null);
-        }} className="rounded-2xl border border-slate-200 px-4 py-3 text-sm font-semibold text-slate-600 transition-colors hover:bg-slate-50 dark:border-slate-800 dark:text-slate-300 dark:hover:bg-slate-900">
-            Clear
+  return (
+    <main className="min-h-screen bg-[radial-gradient(circle_at_top,rgba(47,160,132,0.14),transparent_32%),linear-gradient(180deg,#f8fbff_0%,#eef4ff_100%)] px-4 py-6 sm:px-6 lg:px-8">
+      <div className="mx-auto flex min-h-[calc(100vh-3rem)] w-full max-w-7xl flex-col overflow-hidden rounded-[2rem] border border-slate-200/70 bg-white shadow-[0_30px_80px_rgba(15,23,42,0.12)] dark:border-white/10 dark:bg-slate-950">
+        <div className="flex items-center justify-between border-b border-slate-200/70 px-5 py-4 dark:border-white/10 sm:px-6">
+          <button
+            type="button"
+            onClick={() => navigate(-1)}
+            className="inline-flex items-center gap-2 rounded-full border border-slate-200 px-4 py-2 text-sm font-semibold text-slate-700 transition-colors hover:bg-slate-50 dark:border-white/10 dark:text-slate-200 dark:hover:bg-white/5"
+          >
+            <ArrowLeft className="h-4 w-4" />
+            Back
           </button>
+
+          <BrandLogo variant="mark" className="h-10 w-10 overflow-hidden rounded-xl" />
+
+          <div className="w-[72px]" />
+        </div>
+
+        <div className="grid flex-1 gap-0 lg:grid-cols-[1.15fr_0.85fr]">
+          <section className="relative min-h-[420px] overflow-hidden bg-slate-900">
+            <div className="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1589308078059-2bd1c2c5180d?auto=format&fit=crop&q=80&w=2000')] bg-cover bg-center opacity-75" />
+            <div className="absolute inset-0 bg-gradient-to-tr from-slate-950 via-slate-950/40 to-emerald-900/20" />
+
+            <div className="relative z-10 flex h-full flex-col justify-between p-6 sm:p-8 lg:p-10">
+              <div className="max-w-xl">
+                <span className="inline-flex items-center gap-2 rounded-full bg-white/10 px-3 py-1 text-[10px] font-bold uppercase tracking-[0.24em] text-white/80 backdrop-blur">
+                  <Search className="h-3.5 w-3.5" />
+                  Explore Destinations
+                </span>
+                <h1 className="mt-4 max-w-2xl text-4xl font-black tracking-tight text-white sm:text-5xl">
+                  Find routes, places, and travel spots across Cambodia
+                </h1>
+                <p className="mt-4 max-w-xl text-sm leading-6 text-white/80 sm:text-base">
+                  The interactive map view is ready to connect with your destination data. For now, this route gives travelers a quick visual starting point for exploring where they want to go next.
+                </p>
+              </div>
+
+              <div className="grid gap-3 sm:grid-cols-3">
+                {[
+                  { label: 'Popular', value: 'Siem Reap' },
+                  { label: 'City', value: 'Phnom Penh' },
+                  { label: 'Coast', value: 'Sihanoukville' },
+                ].map((item) => (
+                  <div key={item.label} className="rounded-2xl border border-white/10 bg-white/10 p-4 text-white backdrop-blur">
+                    <div className="text-[10px] font-bold uppercase tracking-[0.22em] text-white/60">{item.label}</div>
+                    <div className="mt-2 text-base font-semibold">{item.value}</div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </section>
+
+          <aside className="flex flex-col gap-5 p-6 sm:p-8">
+            <div className="rounded-[1.75rem] border border-slate-200 bg-slate-50 p-5 dark:border-white/10 dark:bg-white/5">
+              <div className="flex items-center gap-3">
+                <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-emerald-600/10 text-emerald-600 dark:bg-emerald-500/15 dark:text-emerald-300">
+                  <MapPin className="h-5 w-5" />
+                </div>
+                <div>
+                  <h2 className="text-lg font-bold text-slate-900 dark:text-white">Map preview</h2>
+                  <p className="text-sm text-slate-500 dark:text-slate-400">Route placeholder connected to destination browsing.</p>
+                </div>
+              </div>
+
+              <div className="mt-5 overflow-hidden rounded-[1.5rem] border border-slate-200 bg-white shadow-sm dark:border-white/10 dark:bg-slate-900">
+                <div className="h-64 bg-[linear-gradient(135deg,rgba(59,130,246,0.14),rgba(16,185,129,0.14))] p-5">
+                  <div className="flex h-full items-center justify-center rounded-[1.25rem] border border-dashed border-slate-300 bg-white/70 text-center dark:border-white/15 dark:bg-slate-950/70">
+                    <div>
+                      <Navigation className="mx-auto h-10 w-10 text-emerald-600 dark:text-emerald-300" />
+                      <p className="mt-3 text-sm font-semibold text-slate-700 dark:text-slate-200">Interactive map coming soon</p>
+                      <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">
+                        This page is now available so the app can load cleanly while the live map integration is connected.
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div className="rounded-[1.75rem] border border-slate-200 bg-white p-5 shadow-sm dark:border-white/10 dark:bg-slate-950">
+              <h3 className="text-sm font-bold uppercase tracking-[0.22em] text-slate-500 dark:text-slate-400">Next steps</h3>
+              <ul className="mt-4 space-y-3 text-sm text-slate-600 dark:text-slate-300">
+                <li>Connect this route to a map provider when you are ready.</li>
+                <li>Show destination pins from the existing hotel and trip data.</li>
+                <li>Keep the current route so the Vite import stays stable.</li>
+              </ul>
+            </div>
+          </aside>
         </div>
       </div>
-
-      {!googleMapsApiKey ? (<div className="rounded-3xl border border-amber-200 bg-amber-50 px-6 py-5 text-amber-800">
-          Add `VITE_GOOGLE_MAPS_API_KEY` to your frontend environment file to display the Google Map.
-        </div>) : (<div className="overflow-hidden rounded-[2rem] border border-slate-200 bg-white shadow-xl dark:border-slate-800 dark:bg-slate-950">
-          <LoadScript googleMapsApiKey={googleMapsApiKey}>
-            <GoogleMap mapContainerStyle={MAP_CONTAINER_STYLE} zoom={12} center={mapCenter} onClick={handleMapClick}>
-              {visibleHotels.map((hotel) => (<Marker key={`hotel-${hotel.id}`} position={{ lat: hotel.latitude, lng: hotel.longitude }} onClick={() => {
-                    setSelectedPlace(hotel);
-                    setPickedPoint({ lat: hotel.latitude, lng: hotel.longitude });
-                }} icon="http://maps.google.com/mapfiles/ms/icons/red-dot.png"/>))}
-
-              {visibleDestinations.map((destination) => (<Marker key={`dest-${destination.id}`} position={{ lat: destination.latitude, lng: destination.longitude }} onClick={() => {
-                    setSelectedPlace(destination);
-                    setPickedPoint({ lat: destination.latitude, lng: destination.longitude });
-                }} icon="http://maps.google.com/mapfiles/ms/icons/blue-dot.png"/>))}
-
-              {pickedPoint && (<Marker key="picked-point" position={pickedPoint} onClick={() => setPickedPoint(pickedPoint)} icon="http://maps.google.com/mapfiles/ms/icons/green-dot.png"/>)}
-
-              {activeSelectedPlace && (<InfoWindow position={{ lat: activeSelectedPlace.latitude, lng: activeSelectedPlace.longitude }} onCloseClick={() => setSelectedPlace(null)}>
-                  <div className="max-w-[220px]">
-                    <h4 className="text-sm font-bold text-slate-900">
-                      {getPlaceName(activeSelectedPlace) || 'Place'}
-                    </h4>
-                    <p className="mt-1 text-xs text-slate-600">
-                      {getPlaceLocation(activeSelectedPlace) || 'No address available'}
-                    </p>
-                    <p className="mt-2 text-xs font-semibold text-slate-800">
-                      Type: {activeSelectedPlace.markerType === 'hotel' ? 'Hotel' : 'Destination'}
-                    </p>
-                    <p className="mt-1 text-xs font-semibold text-slate-800">
-                      Rating: {String(activeSelectedPlace.stars_rating ?? activeSelectedPlace.rating ?? 0)} star
-                    </p>
-                    <p className="mt-1 text-xs font-semibold text-slate-800">
-                      Lat: {formatCoordinate(activeSelectedPlace.latitude)}
-                    </p>
-                    <p className="mt-1 text-xs font-semibold text-slate-800">
-                      Lng: {formatCoordinate(activeSelectedPlace.longitude)}
-                    </p>
-                  </div>
-                </InfoWindow>)}
-
-              {pickedPoint && (<InfoWindow position={pickedPoint} onCloseClick={() => setPickedPoint(null)}>
-                  <div className="max-w-[220px]">
-                    <h4 className="text-sm font-bold text-slate-900">Picked Point</h4>
-                    <p className="mt-2 text-xs font-semibold text-slate-800">
-                      Lat: {formatCoordinate(pickedPoint.lat)}
-                    </p>
-                    <p className="mt-1 text-xs font-semibold text-slate-800">
-                      Lng: {formatCoordinate(pickedPoint.lng)}
-                    </p>
-                  </div>
-                </InfoWindow>)}
-            </GoogleMap>
-          </LoadScript>
-        </div>)}
-
-      <div className="mt-5 flex flex-wrap items-center gap-4 text-sm text-slate-600 dark:text-slate-300">
-        <span>
-          {loading
-            ? 'Loading hotel and destination locations...'
-            : `${visibleHotels.length} hotels and ${visibleDestinations.length} destinations shown on map`}
-        </span>
-        <span className="inline-flex items-center gap-2">
-          <span className="h-3 w-3 rounded-full bg-red-500"/>
-          Hotels
-        </span>
-        <span className="inline-flex items-center gap-2">
-          <span className="h-3 w-3 rounded-full bg-blue-500"/>
-          Destinations
-        </span>
-        <span className="inline-flex items-center gap-2">
-          <span className="h-3 w-3 rounded-full bg-green-500"/>
-          Picked point
-        </span>
-        {pickedPoint ? (<span>
-            Picked: {formatCoordinate(pickedPoint.lat)}, {formatCoordinate(pickedPoint.lng)}
-          </span>) : (<span>Click map to pick lat/lng.</span>)}
-        {error ? <span className="text-red-600 dark:text-red-400">{error}</span> : null}
-      </div>
-    </section>);
+    </main>
+  );
 }
+

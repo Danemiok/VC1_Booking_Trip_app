@@ -297,7 +297,7 @@ export const HotelDetails = ({ tripData, hotel: initialHotel, onBack, onReserve 
               <h2 className="text-xl font-serif italic text-slate-900 dark:text-white">What this place offers</h2>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-y-6 gap-x-12">
                 {hotel.amenities.map((amenity, i) => (<div key={i} className="flex items-center gap-4 text-slate-600 dark:text-slate-400">
-                    <div className="text-blue-600">
+                    <div className="text-emerald-600">
                       {amenity.icon}
                     </div>
                     <span className="text-sm font-medium">{amenity.label}</span>
@@ -311,7 +311,7 @@ export const HotelDetails = ({ tripData, hotel: initialHotel, onBack, onReserve 
             <div className="space-y-8">
               <div className="flex items-center justify-between">
                 <h2 className="text-xl font-serif italic text-slate-900 dark:text-white">Reviews</h2>
-                <button className="text-xs font-bold text-blue-600 hover:underline">See All Reviews</button>
+                <button className="text-xs font-bold text-emerald-600 hover:underline">See All Reviews</button>
               </div>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 {hotel.reviews.map((review) => (<div key={review.id} className="p-8 bg-slate-50 dark:bg-slate-900 rounded-[2rem] space-y-4">
@@ -403,7 +403,7 @@ export const HotelDetails = ({ tripData, hotel: initialHotel, onBack, onReserve 
                 <div className="space-y-3">
                   <div className="flex items-center justify-between">
                     <h4 className="text-[11px] font-bold text-slate-400 uppercase tracking-widest">Choose Room Type</h4>
-                    {selectedRoom && (<span className="text-[10px] font-bold text-blue-600">
+                    {selectedRoom && (<span className="text-[10px] font-bold text-emerald-600">
                         Sleeps up to {selectedRoom.maxOccupancy}
                       </span>)}
                   </div>
@@ -411,15 +411,15 @@ export const HotelDetails = ({ tripData, hotel: initialHotel, onBack, onReserve 
                     {roomOptions.map((room) => {
             const isSelected = room.id === selectedRoom?.id;
             return (<button key={room.id} onClick={() => setSelectedRoomId(room.id)} className={`w-full rounded-2xl border p-4 text-left transition-all ${isSelected
-                    ? 'border-blue-500 bg-blue-50/70 dark:bg-blue-900/20 shadow-sm'
-                    : 'border-slate-100 dark:border-slate-800 hover:border-blue-200 dark:hover:border-blue-700'}`}>
+                    ? 'border-emerald-500 bg-emerald-50/70 dark:bg-emerald-900/20 shadow-sm'
+                    : 'border-slate-100 dark:border-slate-800 hover:border-emerald-200 dark:hover:border-emerald-700'}`}>
                           <div className="flex items-start justify-between gap-3 mb-2">
                             <div>
                               <p className="text-sm font-bold text-slate-900 dark:text-white">{room.name}</p>
                               <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">{room.category}</p>
                             </div>
                             <div className="text-right">
-                              <p className="text-sm font-bold text-blue-600">${room.basePrice}</p>
+                              <p className="text-sm font-bold text-emerald-600">${room.basePrice}</p>
                               <p className="text-[10px] text-slate-400">per night</p>
                             </div>
                           </div>
@@ -441,10 +441,10 @@ export const HotelDetails = ({ tripData, hotel: initialHotel, onBack, onReserve 
                   </div>)}
 
                 {/* Group Booking Mode */}
-                <div className="p-6 bg-blue-50/50 dark:bg-blue-900/10 rounded-2xl border border-blue-100/50 dark:border-blue-900/20 space-y-4">
+                <div className="p-6 bg-emerald-50/50 dark:bg-emerald-900/10 rounded-2xl border border-emerald-100/50 dark:border-emerald-900/20 space-y-4">
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-3">
-                      <div className="w-10 h-10 bg-blue-600 rounded-xl flex items-center justify-center text-white shadow-lg shadow-blue-600/20">
+                      <div className="w-10 h-10 bg-emerald-600 rounded-xl flex items-center justify-center text-white shadow-lg shadow-emerald-600/20">
                         <Users className="w-5 h-5"/>
                       </div>
                       <div>
@@ -452,15 +452,15 @@ export const HotelDetails = ({ tripData, hotel: initialHotel, onBack, onReserve 
                         <p className="text-[9px] text-slate-400 font-medium uppercase tracking-widest">Split costs with friends</p>
                       </div>
                     </div>
-                    <button onClick={() => setIsGroupMode(!isGroupMode)} className={`w-12 h-6 rounded-full transition-all relative ${isGroupMode ? 'bg-blue-600' : 'bg-slate-200 dark:bg-slate-700'}`}>
+                    <button onClick={() => setIsGroupMode(!isGroupMode)} className={`w-12 h-6 rounded-full transition-all relative ${isGroupMode ? 'bg-emerald-600' : 'bg-slate-200 dark:bg-slate-700'}`}>
                       <div className={`absolute top-1 w-4 h-4 bg-white rounded-full transition-all ${isGroupMode ? 'left-7' : 'left-1'}`}/>
                     </button>
                   </div>
                   
                   <AnimatePresence>
-                    {isGroupMode && (<motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: 'auto', opacity: 1 }} exit={{ height: 0, opacity: 0 }} className="overflow-hidden pt-2 border-t border-blue-100 dark:border-blue-900/30">
+                    {isGroupMode && (<motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: 'auto', opacity: 1 }} exit={{ height: 0, opacity: 0 }} className="overflow-hidden pt-2 border-t border-emerald-100 dark:border-emerald-900/30">
                         <div className="flex justify-between items-center">
-                          <span className="text-xs font-bold text-blue-600">Cost per person: ${perPerson.toFixed(2)}</span>
+                          <span className="text-xs font-bold text-emerald-600">Cost per person: ${perPerson.toFixed(2)}</span>
                           <span className="text-[9px] text-slate-400 uppercase tracking-widest">Split equally between {guests} people</span>
                         </div>
                       </motion.div>)}
@@ -468,7 +468,7 @@ export const HotelDetails = ({ tripData, hotel: initialHotel, onBack, onReserve 
                 </div>
 
                 {/* Reserve Button */}
-                <button onClick={handleReserveClick} className="w-full bg-blue-600 hover:bg-blue-700 text-white py-5 rounded-2xl text-sm font-bold shadow-xl shadow-blue-600/20 transition-all active:scale-[0.98]">
+                <button onClick={handleReserveClick} className="w-full bg-emerald-600 hover:bg-emerald-700 text-white py-5 rounded-2xl text-sm font-bold shadow-xl shadow-emerald-600/20 transition-all active:scale-[0.98]">
                   Booking
                 </button>
                 <p className="text-[10px] text-center text-slate-400 font-medium uppercase tracking-widest">You won't be charged yet</p>
@@ -500,3 +500,4 @@ export const HotelDetails = ({ tripData, hotel: initialHotel, onBack, onReserve 
       </div>
     </div>);
 };
+

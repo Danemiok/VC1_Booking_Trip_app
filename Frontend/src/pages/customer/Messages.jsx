@@ -285,7 +285,7 @@ export default function CustomerMessagesPage() {
             
             <label className="relative mt-6 block">
               <Search className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={18}/>
-              <input value={search} onChange={(event) => setSearch(event.target.value)} placeholder="Search..." className="h-11 w-full rounded-2xl border border-slate-200 bg-slate-50 pl-10 pr-4 text-sm outline-none transition focus:border-blue-500 focus:bg-white"/>
+              <input value={search} onChange={(event) => setSearch(event.target.value)} placeholder="Search..." className="h-11 w-full rounded-2xl border border-slate-200 bg-slate-50 pl-10 pr-4 text-sm outline-none transition focus:border-emerald-500 focus:bg-white"/>
             </label>
           </div>
 
@@ -304,9 +304,9 @@ export default function CustomerMessagesPage() {
                     ownerAvatar: item.avatar || '',
                 });
                 await loadOwnerConversation(String(item.id));
-            }} className={`flex w-full items-center gap-4 px-6 py-4 text-left transition hover:bg-slate-50 ${String(thread?.ownerId || '') === String(item.id) ? 'bg-blue-50/50' : ''}`}>
+            }} className={`flex w-full items-center gap-4 px-6 py-4 text-left transition hover:bg-slate-50 ${String(thread?.ownerId || '') === String(item.id) ? 'bg-emerald-50/50' : ''}`}>
                   <div className="relative shrink-0">
-                    {item.avatar ? (<img src={item.avatar} alt={displayName(item)} className="h-14 w-14 rounded-full object-cover shadow-sm border-2 border-white"/>) : (<div className="flex h-14 w-14 items-center justify-center rounded-full bg-blue-100 text-lg font-bold text-blue-700 shadow-inner border-2 border-white">
+                    {item.avatar ? (<img src={item.avatar} alt={displayName(item)} className="h-14 w-14 rounded-full object-cover shadow-sm border-2 border-white"/>) : (<div className="flex h-14 w-14 items-center justify-center rounded-full bg-emerald-100 text-lg font-bold text-emerald-700 shadow-inner border-2 border-white">
                         {(displayName(item)[0] || 'O').toUpperCase()}
                       </div>)}
                     <span className="absolute bottom-0.5 right-0.5 h-3.5 w-3.5 rounded-full border-2 border-white bg-emerald-500 shadow-sm"/>
@@ -328,13 +328,13 @@ export default function CustomerMessagesPage() {
         <main className="flex min-w-0 flex-1 flex-col bg-slate-50 relative overflow-hidden">
           {/* Sticky Premium Header */}
           <div className="sticky top-0 z-30 flex items-center gap-4 border-b border-slate-200 bg-white/95 px-6 py-3 backdrop-blur-md shadow-sm">
-            <Link to="/" className="inline-flex h-10 w-10 items-center justify-center rounded-full border border-slate-200 text-slate-500 transition hover:bg-slate-50 hover:text-blue-600">
+            <Link to="/" className="inline-flex h-10 w-10 items-center justify-center rounded-full border border-slate-200 text-slate-500 transition hover:bg-slate-50 hover:text-emerald-600">
               <ArrowLeft size={20}/>
             </Link>
 
             <div className="flex min-w-0 flex-1 items-center gap-3">
               <div className="relative shrink-0">
-                {owner?.avatar ? (<img src={owner.avatar} alt={displayName(owner)} className="h-11 w-11 rounded-full object-cover shadow-sm border-2 border-white"/>) : (<div className="flex h-11 w-11 items-center justify-center rounded-full bg-blue-100 text-sm font-bold text-blue-700 shadow-sm border-2 border-white">
+                {owner?.avatar ? (<img src={owner.avatar} alt={displayName(owner)} className="h-11 w-11 rounded-full object-cover shadow-sm border-2 border-white"/>) : (<div className="flex h-11 w-11 items-center justify-center rounded-full bg-emerald-100 text-sm font-bold text-emerald-700 shadow-sm border-2 border-white">
                     {(displayName(owner)[0] || 'O').toUpperCase()}
                   </div>)}
                 <span className="absolute bottom-0 right-0 h-3 w-3 rounded-full border-2 border-white bg-emerald-500 shadow-sm"/>
@@ -349,13 +349,13 @@ export default function CustomerMessagesPage() {
             </div>
 
             <div className="flex items-center gap-1">
-              <button className="inline-flex h-10 w-10 items-center justify-center rounded-full text-blue-600 transition hover:bg-blue-50" title="Video Call">
+              <button className="inline-flex h-10 w-10 items-center justify-center rounded-full text-emerald-600 transition hover:bg-emerald-50" title="Video Call">
                 <Video size={20}/>
               </button>
-              <button className="inline-flex h-10 w-10 items-center justify-center rounded-full text-blue-600 transition hover:bg-blue-50" title="Voice Call">
+              <button className="inline-flex h-10 w-10 items-center justify-center rounded-full text-emerald-600 transition hover:bg-emerald-50" title="Voice Call">
                 <Phone size={18}/>
               </button>
-              <button onClick={() => setShowProfile(!showProfile)} className={`inline-flex h-10 w-10 items-center justify-center rounded-full transition ${showProfile ? 'bg-blue-100 text-blue-700' : 'text-slate-500 hover:bg-slate-100'}`} title="Agent Info">
+              <button onClick={() => setShowProfile(!showProfile)} className={`inline-flex h-10 w-10 items-center justify-center rounded-full transition ${showProfile ? 'bg-emerald-100 text-emerald-700' : 'text-slate-500 hover:bg-slate-100'}`} title="Agent Info">
                 <Info size={20}/>
               </button>
               <button className="inline-flex h-10 w-10 items-center justify-center rounded-full text-slate-500 transition hover:bg-slate-100">
@@ -392,17 +392,17 @@ export default function CustomerMessagesPage() {
                         return (<div key={String(message.id)} className={`flex ${incoming ? 'justify-start' : 'justify-end'} animate-in fade-in slide-in-from-bottom-2 duration-300`}>
                                       <div className={`relative max-w-[85%] rounded-[1.5rem] px-5 py-3 shadow-sm ${incoming
                                 ? 'rounded-tl-none border border-slate-200 bg-white text-slate-800'
-                                : 'rounded-tr-none bg-blue-600 text-white shadow-blue-100'}`}>
+                                : 'rounded-tr-none bg-emerald-600 text-white shadow-emerald-100'}`}>
                                         <p className="whitespace-pre-wrap text-sm leading-relaxed">{message.message}</p>
-                                        <div className={`mt-1 flex items-center justify-end gap-1.5 text-[10px] font-medium ${incoming ? 'text-slate-400' : 'text-blue-100/80'}`}>
+                                        <div className={`mt-1 flex items-center justify-end gap-1.5 text-[10px] font-medium ${incoming ? 'text-slate-400' : 'text-emerald-100/80'}`}>
                                           <span>{formatClock(message.created_at)}</span>
-                                          {!incoming && <div className="flex items-center gap-0.5"><div className="h-1 w-1 rounded-full bg-blue-100"/><div className="h-1 w-1 rounded-full bg-blue-100"/></div>}
+                                          {!incoming && <div className="flex items-center gap-0.5"><div className="h-1 w-1 rounded-full bg-emerald-100"/><div className="h-1 w-1 rounded-full bg-emerald-100"/></div>}
                                         </div>
 
                                         {/* Bubble Tails */}
                                         <div className={`absolute top-0 h-4 w-4 ${incoming
                                 ? '-left-2 bg-white [clip-path:polygon(100%_0,0_0,100%_100%)] border-l border-t border-slate-200'
-                                : '-right-2 bg-blue-600 [clip-path:polygon(0_0,100%_0,0_100%)]'}`}/>
+                                : '-right-2 bg-emerald-600 [clip-path:polygon(0_0,100%_0,0_100%)]'}`}/>
                                       </div>
                                     </div>);
                     })}
@@ -410,7 +410,7 @@ export default function CustomerMessagesPage() {
                             </div>))}
                         </div>) : (<div className="flex h-full items-center justify-center py-10">
                           <div className="max-w-md rounded-[2.5rem] border border-dashed border-slate-300 bg-white/60 backdrop-blur-sm px-8 py-10 text-center shadow-lg">
-                            <div className="mx-auto h-16 w-16 rounded-full bg-blue-50 flex items-center justify-center text-blue-500 mb-6 shadow-inner">
+                            <div className="mx-auto h-16 w-16 rounded-full bg-emerald-50 flex items-center justify-center text-emerald-500 mb-6 shadow-inner">
                               <MessageCircle size={32}/>
                             </div>
                             <h3 className="text-xl font-bold text-slate-900 tracking-tight">Start Conversation</h3>
@@ -429,7 +429,7 @@ export default function CustomerMessagesPage() {
             {/* Profile Sidebar (Right Column) */}
             {showProfile && (<div className="w-[320px] border-l border-slate-200 bg-white p-8 transition-all overflow-y-auto animate-in slide-in-from-right duration-300">
                 <div className="text-center">
-                  {owner?.avatar ? (<img src={owner.avatar} alt={displayName(owner)} className="mx-auto h-32 w-32 rounded-full border-4 border-slate-50 object-cover shadow-xl"/>) : (<div className="mx-auto flex h-32 w-32 items-center justify-center rounded-full bg-blue-50 text-4xl font-black text-blue-600 shadow-inner border-4 border-slate-50">
+                  {owner?.avatar ? (<img src={owner.avatar} alt={displayName(owner)} className="mx-auto h-32 w-32 rounded-full border-4 border-slate-50 object-cover shadow-xl"/>) : (<div className="mx-auto flex h-32 w-32 items-center justify-center rounded-full bg-emerald-50 text-4xl font-black text-emerald-600 shadow-inner border-4 border-slate-50">
                       {(displayName(owner)[0] || 'O').toUpperCase()}
                     </div>)}
                   <h3 className="mt-6 text-xl font-bold text-slate-900 leading-tight">{displayName(owner)}</h3>
@@ -444,7 +444,7 @@ export default function CustomerMessagesPage() {
                     <p className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 border-b border-slate-100 pb-2">Business Details</p>
                     <div className="mt-4 space-y-4">
                       <div className="flex items-center gap-4 group">
-                        <div className="h-10 w-10 rounded-xl bg-slate-50 flex items-center justify-center text-slate-400 group-hover:bg-blue-50 group-hover:text-blue-500 transition-colors">
+                        <div className="h-10 w-10 rounded-xl bg-slate-50 flex items-center justify-center text-slate-400 group-hover:bg-emerald-50 group-hover:text-emerald-500 transition-colors">
                           <Mail size={18}/>
                         </div>
                         <div className="min-w-0">
@@ -458,7 +458,7 @@ export default function CustomerMessagesPage() {
                   <div className="pt-4">
                     <p className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 border-b border-slate-100 pb-2">Support</p>
                     <div className="mt-4 space-y-2">
-                      <button className="w-full rounded-2xl py-3.5 px-4 text-center text-sm font-bold text-blue-600 bg-blue-50 transition hover:bg-blue-600 hover:text-white group">
+                      <button className="w-full rounded-2xl py-3.5 px-4 text-center text-sm font-bold text-emerald-600 bg-emerald-50 transition hover:bg-emerald-600 hover:text-white group">
                         Contact Support
                       </button>
                     </div>
@@ -468,8 +468,8 @@ export default function CustomerMessagesPage() {
           </div>
 
           <form onSubmit={sendMessage} className="flex items-end gap-3 border-t border-slate-200 bg-white/95 px-4 py-4 lg:px-6 backdrop-blur-md z-20">
-            <textarea value={draft} onChange={(event) => setDraft(event.target.value)} placeholder="Type your message here..." rows={1} className="min-h-[56px] flex-1 resize-none rounded-3xl border border-slate-200 bg-slate-50 px-5 py-4 text-sm outline-none transition focus:border-blue-500 focus:bg-white focus:shadow-sm"/>
-            <button type="submit" disabled={!draft.trim() || sending} className="inline-flex h-14 w-14 items-center justify-center rounded-full bg-blue-600 text-white shadow-lg shadow-blue-200 transition hover:bg-blue-700 hover:scale-105 active:scale-95 disabled:cursor-not-allowed disabled:opacity-60">
+            <textarea value={draft} onChange={(event) => setDraft(event.target.value)} placeholder="Type your message here..." rows={1} className="min-h-[56px] flex-1 resize-none rounded-3xl border border-slate-200 bg-slate-50 px-5 py-4 text-sm outline-none transition focus:border-emerald-500 focus:bg-white focus:shadow-sm"/>
+            <button type="submit" disabled={!draft.trim() || sending} className="inline-flex h-14 w-14 items-center justify-center rounded-full bg-emerald-600 text-white shadow-lg shadow-emerald-200 transition hover:bg-emerald-700 hover:scale-105 active:scale-95 disabled:cursor-not-allowed disabled:opacity-60">
               <Send size={18}/>
             </button>
           </form>
@@ -477,3 +477,4 @@ export default function CustomerMessagesPage() {
       </div>
     </div>);
 }
+

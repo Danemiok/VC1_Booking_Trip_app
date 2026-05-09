@@ -1,13 +1,14 @@
-import React, { useState, useEffect } from 'react';
-import { motion, AnimatePresence } from 'motion/react';
+import React, { useEffect, useState } from 'react';
+import { motion as Motion, AnimatePresence } from 'motion/react';
 import { X } from 'lucide-react';
 import { useTheme } from '../../context/ThemeContext';
 import { BrandLogo } from '../common/BrandLogo';
+
 const slides = [
     {
         id: 1,
         title: "Explore the Wonders of Cambodia",
-        subtitle: "Start your unforgettable journey through Cambodia’s rich culture and natural beauty.",
+        subtitle: "Start your unforgettable journey through Cambodia's rich culture and natural beauty.",
         image: "https://images.unsplash.com/photo-1545569341-9eb8b30979d9?auto=format&fit=crop&q=80&w=2000"
     },
     {
@@ -23,6 +24,7 @@ const slides = [
         image: "https://images.unsplash.com/photo-1500530855697-b586d89ba3ee?auto=format&fit=crop&q=80&w=2000"
     }
 ];
+
 const normalizeBackendOrigin = (value) => {
     const raw = String(value ?? '').trim();
     if (!raw)
@@ -40,6 +42,7 @@ const normalizeBackendOrigin = (value) => {
         return null;
     }
 };
+
 const resolveGoogleAuthUrl = (activeTab) => {
     const env = import.meta.env ?? {};
     const backendOrigin = normalizeBackendOrigin(env.VITE_BACKEND_ORIGIN) ||
@@ -50,82 +53,89 @@ const resolveGoogleAuthUrl = (activeTab) => {
     target.searchParams.set('auth', activeTab);
     return target.toString();
 };
-export const AuthLayout = ({ children, title, subtitle, activeTab, onTabChange, onClose = () => { }, // Default empty function
- }) => {
+
+export const AuthLayout = ({
+    children,
+    title,
+    subtitle,
+    activeTab,
+    onTabChange,
+    onClose = () => { },
+}) => {
     const { isDarkMode } = useTheme();
     const [currentSlide, setCurrentSlide] = useState(0);
-    const [oauthError, setOauthError] = useState('');
+    const [oauthError] = useState(() => {
+        if (typeof window === 'undefined') {
+            return '';
+        }
+
+        return new URLSearchParams(window.location.search).get('oauth_error') ?? '';
+    });
     const googleAuthUrl = resolveGoogleAuthUrl(activeTab);
-    const nextSlide = () => {
-        setCurrentSlide((prev) => (prev + 1) % slides.length);
-    };
-    const prevSlide = () => {
-        setCurrentSlide((prev) => (prev - 1 + slides.length) % slides.length);
-    };
+
     const goToSlide = (index) => {
         setCurrentSlide(index);
     };
-    // Auto-advance removed - carousel is now frozen
+
     useEffect(() => {
-        const timer = setInterval(nextSlide, 3000);
-        return () => clearInterval(timer);
-    }, []);
-    useEffect(() => {
-        const params = new URLSearchParams(window.location.search);
-        const error = params.get('oauth_error');
-        if (!error)
+        if (typeof window === 'undefined') {
             return;
-        setOauthError(error);
+        }
+
+        if (!oauthError)
+            return;
+
+        const params = new URLSearchParams(window.location.search);
         params.delete('oauth_error');
         params.delete('auth');
         const nextQuery = params.toString();
         const nextUrl = `${window.location.pathname}${nextQuery ? `?${nextQuery}` : ''}${window.location.hash}`;
         window.history.replaceState({}, '', nextUrl);
-    }, []);
+    }, [oauthError]);
+
     return (<div className="flex min-h-screen items-center justify-center p-4 transition-colors duration-300">
       <div className={`flex h-[min(90vh,620px)] w-full max-w-[1000px] overflow-hidden rounded-2xl shadow-[0_24px_60px_rgba(15,23,42,0.25)] md:flex-row ${isDarkMode ? 'bg-slate-800' : 'bg-white'}`}>
         {/* Left Side: Carousel & Branding */}
         <div className="relative hidden overflow-hidden md:flex md:w-1/2">
           <AnimatePresence mode="wait">
-            <motion.div key={currentSlide} initial={{ opacity: 0, x: 300 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -300 }} transition={{ duration: 0.5, ease: "easeInOut" }} className="absolute inset-0">
+            <Motion.div key={currentSlide} initial={{ opacity: 0, x: 300 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -300 }} transition={{ duration: 0.5, ease: "easeInOut" }} className="absolute inset-0">
               <div className="relative w-full h-full">
                 <img src={slides[currentSlide].image} alt={slides[currentSlide].title} className="w-full h-full object-cover" onError={(e) => {
-            const target = e.target;
-            target.src = "https://images.unsplash.com/photo-1559827260-dc66d52bef19?auto=format&fit=crop&q=80&w=2000";
-        }}/>
+            e.currentTarget.src = "https://images.unsplash.com/photo-1559827260-dc66d52bef19?auto=format&fit=crop&q=80&w=2000";
+        }} />
                 <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/30 to-transparent"/>
                 
                 <div className="absolute inset-0 flex flex-col justify-between p-8 lg:p-10">
                   <div className="flex items-center gap-3">
-                  <BrandLogo variant="full" className="h-16 w-[280px] max-w-[45vw]"/>
-                </div>
+                    <BrandLogo variant="full" className="h-16 w-[280px] max-w-[45vw]"/>
+                  </div>
 
                   <div className="max-w-[300px]">
-                    <motion.h1 initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }} className="mb-5 text-[32px] font-bold leading-[1.03] text-white">
+                    <Motion.h1 initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }} className="mb-5 text-[32px] font-bold leading-[1.03] text-white">
                       {slides[currentSlide].title}
-                    </motion.h1>
-                    <motion.p initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3 }} className="text-lg leading-relaxed text-white/95">
+                    </Motion.h1>
+                    <Motion.p initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3 }} className="text-lg leading-relaxed text-white/95">
                       {slides[currentSlide].subtitle}
-                    </motion.p>
+                    </Motion.p>
                   </div>
                   
                   {/* Carousel Controls */}
                   <div className="flex justify-center">
                     <div className="flex gap-2">
-                      {slides.map((_, index) => (<button key={index} onClick={() => goToSlide(index)} className={`w-2 h-2 rounded-full transition-all ${currentSlide === index
+                      {slides.map((slide, index) => (<button key={slide.id} type="button" aria-label={`Show slide ${index + 1}`} onClick={() => goToSlide(index)} className={`h-2 rounded-full transition-all ${currentSlide === index
                 ? 'bg-white w-6'
                 : 'bg-white/50 hover:bg-white/75'}`}/>))}
                     </div>
                   </div>
                 </div>
               </div>
-            </motion.div>
+            </Motion.div>
           </AnimatePresence>
         </div>
 
         {/* Right Side: Form */}
         <div className={`flex w-full flex-col overflow-y-auto p-4 md:w-1/2 md:p-6 relative ${isDarkMode ? 'text-white' : 'text-slate-900'}`}>
-          <button onClick={onClose} className={`absolute top-2 right-2 p-1.5 rounded-full transition-colors ${isDarkMode ? 'hover:bg-slate-700' : 'hover:bg-gray-100'}`}>
+          <button type="button" onClick={onClose} aria-label="Close auth dialog" className={`absolute top-2 right-2 rounded-full p-1.5 transition-colors ${isDarkMode ? 'hover:bg-slate-700' : 'hover:bg-gray-100'}`}>
             <X className={`w-4 h-4 ${isDarkMode ? 'text-white' : 'text-slate-900'}`}/>
           </button>
           
@@ -137,21 +147,21 @@ export const AuthLayout = ({ children, title, subtitle, activeTab, onTabChange, 
           {/* Tab Switcher */}
           <div className={`relative mb-3 grid grid-cols-2 rounded-xl border p-1 ${isDarkMode ? 'border-slate-600 bg-slate-700' : 'border-slate-200 bg-slate-100'}`}>
           
-            <motion.div layout transition={{ type: 'spring', stiffness: 120, damping: 22, mass: 1.1 }} className={`absolute bottom-1 top-1 w-[calc(50%-0.25rem)] rounded-lg bg-primary shadow-[0_8px_16px_rgba(0,82,204,0.3)] ${activeTab === 'login' ? 'left-1' : 'left-[calc(50%+0rem)]'}`}/>
-            <motion.button onClick={() => onTabChange('login')} whileHover={{ scale: activeTab === 'login' ? 1 : 1.015 }} whileTap={{ scale: 0.985 }} transition={{ type: 'spring', stiffness: 250, damping: 24 }} className={`relative z-10 rounded-lg py-1.5 text-sm font-semibold transition-colors ${activeTab === 'login'
+            <Motion.div layout transition={{ type: 'spring', stiffness: 120, damping: 22, mass: 1.1 }} className={`absolute bottom-1 top-1 w-[calc(50%-0.25rem)] rounded-lg bg-primary shadow-[0_8px_16px_rgba(47,160,132,0.3)] ${activeTab === 'login' ? 'left-1' : 'left-[calc(50%+0rem)]'}`}/>
+            <Motion.button type="button" onClick={() => onTabChange('login')} whileHover={{ scale: activeTab === 'login' ? 1 : 1.015 }} whileTap={{ scale: 0.985 }} transition={{ type: 'spring', stiffness: 250, damping: 24 }} className={`relative z-10 rounded-lg py-1.5 text-sm font-semibold transition-colors ${activeTab === 'login'
             ? 'text-white'
             : isDarkMode ? 'text-slate-400 hover:text-slate-200' : 'text-slate-500 hover:text-slate-700'}`}>
-              <motion.span key={activeTab === 'login' ? 'login-active' : 'login-inactive'} initial={{ opacity: 0.75, y: 2 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.26, ease: 'easeOut' }} className="inline-block">
+              <Motion.span key={activeTab === 'login' ? 'login-active' : 'login-inactive'} initial={{ opacity: 0.75, y: 2 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.26, ease: 'easeOut' }} className="inline-block">
                 Login
-              </motion.span>
-            </motion.button>
-            <motion.button onClick={() => onTabChange('register')} whileHover={{ scale: activeTab === 'register' ? 1 : 1.015 }} whileTap={{ scale: 0.985 }} transition={{ type: 'spring', stiffness: 250, damping: 24 }} className={`relative z-10 rounded-lg py-1.5 text-sm font-semibold transition-colors ${activeTab === 'register'
+              </Motion.span>
+            </Motion.button>
+            <Motion.button type="button" onClick={() => onTabChange('register')} whileHover={{ scale: activeTab === 'register' ? 1 : 1.015 }} whileTap={{ scale: 0.985 }} transition={{ type: 'spring', stiffness: 250, damping: 24 }} className={`relative z-10 rounded-lg py-1.5 text-sm font-semibold transition-colors ${activeTab === 'register'
             ? 'text-white'
             : isDarkMode ? 'text-slate-400 hover:text-slate-200' : 'text-slate-500 hover:text-slate-700'}`}>
-              <motion.span key={activeTab === 'register' ? 'register-active' : 'register-inactive'} initial={{ opacity: 0.75, y: 2 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.26, ease: 'easeOut' }} className="inline-block">
+              <Motion.span key={activeTab === 'register' ? 'register-active' : 'register-inactive'} initial={{ opacity: 0.75, y: 2 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.26, ease: 'easeOut' }} className="inline-block">
                 Register
-              </motion.span>
-            </motion.button>
+              </Motion.span>
+            </Motion.button>
           </div>
 
           <div className="flex-1">

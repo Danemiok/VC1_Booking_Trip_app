@@ -6,7 +6,7 @@
     <title>Trip Booking App</title>
 
     @viteReactRefresh
-    @vite(['resources/js/app.jsx'])
+    @vite('resources/js/.jsx')
     @inertiaHead
 </head>
 <body>

@@ -948,7 +948,7 @@ const Bookings = () => {
           <XCircle className="w-12 h-12 mx-auto mb-4 text-red-600"/>
           <h2 className="text-xl font-bold mb-2">Access Denied</h2>
           <p>{authError || 'Please log in to access this page'}</p>
-          <button onClick={() => navigate('/login')} className="mt-4 px-6 py-2 bg-blue-600 text-white rounded-xl hover:bg-blue-700">
+          <button onClick={() => navigate('/login')} className="mt-4 px-6 py-2 bg-emerald-600 text-white rounded-xl hover:bg-emerald-700">
             Go to Login
           </button>
         </div>
@@ -971,7 +971,7 @@ const Bookings = () => {
             { label: 'PENDING PAYMENTS', value: stats.pendingPayments, icon: CreditCard, color: 'amber' },
         ].map((stat, i) => (<div key={i} className="bg-white dark:bg-slate-900 p-6 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm">
             <div className="flex items-center gap-4">
-              <div className={cn("w-12 h-12 rounded-xl flex items-center justify-center", stat.color === 'blue' ? "bg-blue-50 dark:bg-blue-900/20 text-blue-600" :
+              <div className={cn("w-12 h-12 rounded-xl flex items-center justify-center", stat.color === 'blue' ? "bg-emerald-50 dark:bg-emerald-900/20 text-emerald-600" :
                 stat.color === 'emerald' ? "bg-emerald-50 dark:bg-emerald-900/20 text-emerald-600" :
                     "bg-amber-50 dark:bg-amber-900/20 text-amber-600")}>
                 <stat.icon size={24}/>
@@ -991,7 +991,7 @@ const Bookings = () => {
           <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
             <div className="relative flex-1 max-w-xl">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 size-4"/>
-              <input className="w-full pl-10 pr-10 py-2 bg-white/80 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 focus:bg-white dark:focus:bg-slate-900 focus:ring-2 focus:ring-blue-600/20 rounded-xl text-sm transition-all shadow-sm" placeholder="Search Booking ID, Guest Name..." type="text" value={searchTerm} onChange={handleSearch}/>
+              <input className="w-full pl-10 pr-10 py-2 bg-white/80 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 focus:bg-white dark:focus:bg-slate-900 focus:ring-2 focus:ring-emerald-600/20 rounded-xl text-sm transition-all shadow-sm" placeholder="Search Booking ID, Guest Name..." type="text" value={searchTerm} onChange={handleSearch}/>
               {searchTerm && (<button type="button" onClick={() => {
                 setSearchTerm('');
                 setCurrentPage(1);
@@ -1006,7 +1006,7 @@ const Bookings = () => {
             setServiceFilter('all');
             setCurrentPage(1);
         }} className={cn("px-4 py-2 text-xs font-bold rounded-lg transition-colors whitespace-nowrap", serviceFilter === 'all'
-            ? "bg-blue-600 text-white shadow-lg shadow-blue-500/20"
+            ? "bg-emerald-600 text-white shadow-lg shadow-emerald-500/20"
             : "text-slate-500 hover:text-slate-900 dark:hover:text-slate-100")}>
                   All
                 </button>
@@ -1014,7 +1014,7 @@ const Bookings = () => {
             setServiceFilter('hotel');
             setCurrentPage(1);
         }} className={cn("px-4 py-2 text-xs font-bold rounded-lg transition-colors whitespace-nowrap", serviceFilter === 'hotel'
-            ? "bg-blue-600 text-white shadow-lg shadow-blue-500/20"
+            ? "bg-emerald-600 text-white shadow-lg shadow-emerald-500/20"
             : "text-slate-500 hover:text-slate-900 dark:hover:text-slate-100")}>
                   Hotel
                 </button>
@@ -1022,7 +1022,7 @@ const Bookings = () => {
             setServiceFilter('transport');
             setCurrentPage(1);
         }} className={cn("px-4 py-2 text-xs font-bold rounded-lg transition-colors whitespace-nowrap", serviceFilter === 'transport'
-            ? "bg-blue-600 text-white shadow-lg shadow-blue-500/20"
+            ? "bg-emerald-600 text-white shadow-lg shadow-emerald-500/20"
             : "text-slate-500 hover:text-slate-900 dark:hover:text-slate-100")}>
                   Transport
                 </button>
@@ -1047,7 +1047,7 @@ const Bookings = () => {
                 Clear
               </button>
 
-              <button onClick={handleExport} disabled={exportLoading} className="px-4 py-2 text-xs font-bold bg-blue-600 text-white rounded-xl flex items-center gap-2 hover:bg-blue-700 transition-colors shadow-lg shadow-blue-500/20 disabled:opacity-50 disabled:cursor-not-allowed">
+              <button onClick={handleExport} disabled={exportLoading} className="px-4 py-2 text-xs font-bold bg-emerald-600 text-white rounded-xl flex items-center gap-2 hover:bg-emerald-700 transition-colors shadow-lg shadow-emerald-500/20 disabled:opacity-50 disabled:cursor-not-allowed">
                 <Download size={16}/> 
                 {exportLoading ? '...' : 'CSV'}
               </button>
@@ -1067,7 +1067,7 @@ const Bookings = () => {
 
               <div className="flex items-center gap-1">
                 <button type="button" onClick={() => handleFilterChange('status', 'all')} className={cn("px-3 py-1.5 text-[10px] font-bold rounded-full transition-colors", filters.status === 'all'
-            ? "bg-blue-600 text-white"
+            ? "bg-emerald-600 text-white"
             : "bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-700")}>
                   All
                 </button>
@@ -1100,18 +1100,18 @@ const Bookings = () => {
                   <DollarSign className="absolute left-2 top-1/2 -translate-y-1/2 text-slate-400" size={12}/>
                   <input type="number" min={0} inputMode="decimal" value={filters.minAmount} onChange={(e) => handleFilterChange('minAmount', e.target.value)} placeholder="Min" className={cn("pl-7 pr-2 py-1.5 text-[10px] rounded-lg w-24 outline-none bg-white dark:bg-slate-900 border", amountRangeInvalid
             ? "border-rose-300 dark:border-rose-800 focus:ring-1 focus:ring-rose-500"
-            : "border-slate-200 dark:border-slate-700 focus:ring-1 focus:ring-blue-500")}/>
+            : "border-slate-200 dark:border-slate-700 focus:ring-1 focus:ring-emerald-500")}/>
                 </div>
                 <span className="text-slate-400 text-[10px]">-</span>
                 <div className="relative">
                   <DollarSign className="absolute left-2 top-1/2 -translate-y-1/2 text-slate-400" size={12}/>
                   <input type="number" min={0} inputMode="decimal" value={filters.maxAmount} onChange={(e) => handleFilterChange('maxAmount', e.target.value)} placeholder="Max" className={cn("pl-7 pr-2 py-1.5 text-[10px] rounded-lg w-24 outline-none bg-white dark:bg-slate-900 border", amountRangeInvalid
             ? "border-rose-300 dark:border-rose-800 focus:ring-1 focus:ring-rose-500"
-            : "border-slate-200 dark:border-slate-700 focus:ring-1 focus:ring-blue-500")}/>
+            : "border-slate-200 dark:border-slate-700 focus:ring-1 focus:ring-emerald-500")}/>
                 </div>
               </div>
 
-              {activeFilterCount > 0 && (<div className="flex items-center gap-1 px-2 py-1 bg-blue-50 dark:bg-blue-900/20 text-blue-600 rounded-full">
+              {activeFilterCount > 0 && (<div className="flex items-center gap-1 px-2 py-1 bg-emerald-50 dark:bg-emerald-900/20 text-emerald-600 rounded-full">
                   <span className="text-[8px] font-bold">
                     {activeFilterCount} active filter{activeFilterCount !== 1 ? 's' : ''}
                   </span>
@@ -1256,7 +1256,7 @@ const Bookings = () => {
               </div>
 
               <div ref={receiptRef} id="owner-booking-receipt" className="mt-5 bg-white dark:bg-slate-900 rounded-xl overflow-hidden border border-slate-200 dark:border-slate-800">
-                <div className="bg-blue-600 px-5 py-4 text-white">
+                <div className="bg-emerald-600 px-5 py-4 text-white">
                   <p className="text-[10px] font-bold uppercase tracking-[0.2em] opacity-80">Official Receipt</p>
                   <h2 className="text-lg font-serif italic mt-1">Komrong Sanctuary</h2>
                   <p className="text-[11px] opacity-90 mt-0.5">Owner Booking Receipt</p>
@@ -1356,7 +1356,7 @@ const Bookings = () => {
 
         {/* Loading State */}
         {loading ? (<div className="flex justify-center items-center py-20">
-            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-emerald-600"></div>
           </div>) : (<>
             {/* Bookings Table - Compact Version */}
             <div className="overflow-x-auto">
@@ -1376,7 +1376,7 @@ const Bookings = () => {
                 </thead>
                 <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
                   {paginatedBookings.length > 0 ? (paginatedBookings.map((booking) => (<tr key={booking.id} className="hover:bg-slate-50/30 dark:hover:bg-slate-800/30 transition-colors group cursor-pointer text-[11px]" onClick={() => openBookingDetails(booking)}>
-                        <td className="px-4 py-3 font-medium text-blue-600">{booking.id}</td>
+                        <td className="px-4 py-3 font-medium text-emerald-600">{booking.id}</td>
                         <td className="px-4 py-3">
                           <div className="flex flex-col">
                             <span className="font-medium truncate max-w-[120px]" title={booking.guest}>{booking.guest}</span>
@@ -1424,7 +1424,7 @@ const Bookings = () => {
                           <button type="button" onClick={(e) => {
                     e.stopPropagation();
                     setOpenActionBookingId((prev) => (prev === booking.id ? null : booking.id));
-                }} className="p-1 text-slate-400 hover:text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded-lg transition-all" aria-label="Booking actions">
+                }} className="p-1 text-slate-400 hover:text-emerald-600 hover:bg-emerald-50 dark:hover:bg-emerald-900/20 rounded-lg transition-all" aria-label="Booking actions">
                             <MoreHorizontal size={14}/>
                           </button>
 
@@ -1473,19 +1473,19 @@ const Bookings = () => {
                 {filteredBookings.length === 0 ? 0 : startIndex + 1}-{Math.min(startIndex + pageSize, filteredBookings.length)} of {filteredBookings.length}
               </p>
               <div className="flex items-center gap-1">
-                <button className="p-1 text-slate-400 hover:text-blue-600 disabled:opacity-30" disabled={safeCurrentPage === 1} onClick={() => setCurrentPage((p) => Math.max(1, p - 1))} aria-label="Previous page">
+                <button className="p-1 text-slate-400 hover:text-emerald-600 disabled:opacity-30" disabled={safeCurrentPage === 1} onClick={() => setCurrentPage((p) => Math.max(1, p - 1))} aria-label="Previous page">
                   <ChevronLeft size={16}/>
                 </button>
                 <div className="flex gap-0.5">
                   {getPageItems().map((page, i) => page === '...' ? (<span key={`dots-${i}`} className="w-6 h-6 inline-flex items-center justify-center text-[10px] font-medium text-slate-400">
                         ...
                       </span>) : (<button key={page} onClick={() => setCurrentPage(page)} className={cn("w-6 h-6 rounded text-[10px] font-medium transition-all", page === safeCurrentPage
-                    ? "bg-blue-600 text-white shadow-sm shadow-blue-500/20"
+                    ? "bg-emerald-600 text-white shadow-sm shadow-emerald-500/20"
                     : "text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-800")} aria-label={`Page ${page}`} aria-current={page === safeCurrentPage ? 'page' : undefined}>
                         {page}
                       </button>))}
                 </div>
-                <button className="p-1 text-slate-400 hover:text-blue-600 disabled:opacity-30" disabled={safeCurrentPage === totalPages} onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))} aria-label="Next page">
+                <button className="p-1 text-slate-400 hover:text-emerald-600 disabled:opacity-30" disabled={safeCurrentPage === totalPages} onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))} aria-label="Next page">
                   <ChevronRight size={16}/>
                 </button>
               </div>
@@ -1495,3 +1495,4 @@ const Bookings = () => {
     </div>);
 };
 export default Bookings;
+

@@ -15,7 +15,7 @@ const ProcessingStep = ({ label, delay }) => {
     return (<div className="flex items-center gap-3 py-1">
       {status === 'done' ? (<div className="w-5 h-5 bg-emerald-500 rounded-full flex items-center justify-center text-white">
           <CheckCircle2 className="w-3 h-3"/>
-        </div>) : status === 'loading' ? (<div className="w-5 h-5 border-2 border-blue-600 border-t-transparent rounded-full animate-spin"/>) : (<div className="w-5 h-5 border-2 border-slate-200 dark:border-slate-800 rounded-full"/>)}
+        </div>) : status === 'loading' ? (<div className="w-5 h-5 border-2 border-emerald-600 border-t-transparent rounded-full animate-spin"/>) : (<div className="w-5 h-5 border-2 border-slate-200 dark:border-slate-800 rounded-full"/>)}
       <span className={`text-sm font-medium ${status === 'done' ? 'text-slate-900 dark:text-white' : 'text-slate-400'}`}>
         {label}
       </span>
@@ -152,13 +152,13 @@ export const Payment = ({ tripData, onBackToHome, selectedActivityIds = [] }) =>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               {/* ABA Bank */}
               <button onClick={() => setSelectedMethod('aba')} className={`p-6 rounded-3xl border-2 transition-all text-left group ${selectedMethod === 'aba'
-                ? 'border-blue-600 bg-blue-50/30 dark:bg-blue-900/10'
+                ? 'border-emerald-600 bg-emerald-50/30 dark:bg-emerald-900/10'
                 : 'border-slate-100 dark:border-slate-800 hover:border-slate-200 dark:hover:border-slate-700'}`}>
                 <div className="flex items-start justify-between mb-4">
                   <div className="w-12 h-12 bg-[#005A8C] rounded-xl flex items-center justify-center text-white font-bold text-xs">
                     ABA
                   </div>
-                  {selectedMethod === 'aba' && <CheckCircle2 className="w-5 h-5 text-blue-600"/>}
+                  {selectedMethod === 'aba' && <CheckCircle2 className="w-5 h-5 text-emerald-600"/>}
                 </div>
                 <h4 className="font-bold text-slate-900 dark:text-white mb-1">ABA Bank</h4>
                 <p className="text-[10px] text-slate-400">Pay with KHQR or ABA PayWay</p>
@@ -166,13 +166,13 @@ export const Payment = ({ tripData, onBackToHome, selectedActivityIds = [] }) =>
 
               {/* ACLEDA Bank */}
               <button onClick={() => setSelectedMethod('acleda')} className={`p-6 rounded-3xl border-2 transition-all text-left group ${selectedMethod === 'acleda'
-                ? 'border-blue-600 bg-blue-50/30 dark:bg-blue-900/10'
+                ? 'border-emerald-600 bg-emerald-50/30 dark:bg-emerald-900/10'
                 : 'border-slate-100 dark:border-slate-800 hover:border-slate-200 dark:hover:border-slate-700'}`}>
                 <div className="flex items-start justify-between mb-4">
                   <div className="w-12 h-12 bg-[#FFD700] rounded-xl flex items-center justify-center overflow-hidden">
                     <img src="https://www.acledabank.com.kh/kh/assets/layout/images/logo.png" alt="ACLEDA" className="w-8 h-8 object-contain"/>
                   </div>
-                  {selectedMethod === 'acleda' && <CheckCircle2 className="w-5 h-5 text-blue-600"/>}
+                  {selectedMethod === 'acleda' && <CheckCircle2 className="w-5 h-5 text-emerald-600"/>}
                 </div>
                 <h4 className="font-bold text-slate-900 dark:text-white mb-1">ACLEDA Bank</h4>
                 <p className="text-[10px] text-slate-400">ACLEDA Mobile / ToanChet</p>
@@ -180,13 +180,13 @@ export const Payment = ({ tripData, onBackToHome, selectedActivityIds = [] }) =>
 
               {/* Wing Bank */}
               <button onClick={() => setSelectedMethod('wing')} className={`p-6 rounded-3xl border-2 transition-all text-left group ${selectedMethod === 'wing'
-                ? 'border-blue-600 bg-blue-50/30 dark:bg-blue-900/10'
+                ? 'border-emerald-600 bg-emerald-50/30 dark:bg-emerald-900/10'
                 : 'border-slate-100 dark:border-slate-800 hover:border-slate-200 dark:hover:border-slate-700'}`}>
                 <div className="flex items-start justify-between mb-4">
                   <div className="w-12 h-12 bg-[#92C83E] rounded-xl flex items-center justify-center text-white font-bold text-[10px]">
                     WING
                   </div>
-                  {selectedMethod === 'wing' && <CheckCircle2 className="w-5 h-5 text-blue-600"/>}
+                  {selectedMethod === 'wing' && <CheckCircle2 className="w-5 h-5 text-emerald-600"/>}
                 </div>
                 <h4 className="font-bold text-slate-900 dark:text-white mb-1">Wing Bank</h4>
                 <p className="text-[10px] text-slate-400">Wing Money & App Payments</p>
@@ -194,13 +194,13 @@ export const Payment = ({ tripData, onBackToHome, selectedActivityIds = [] }) =>
 
               {/* Amret MFI */}
               <button onClick={() => setSelectedMethod('amret')} className={`p-6 rounded-3xl border-2 transition-all text-left group ${selectedMethod === 'amret'
-                ? 'border-blue-600 bg-blue-50/30 dark:bg-blue-900/10'
+                ? 'border-emerald-600 bg-emerald-50/30 dark:bg-emerald-900/10'
                 : 'border-slate-100 dark:border-slate-800 hover:border-slate-200 dark:hover:border-slate-700'}`}>
                 <div className="flex items-start justify-between mb-4">
                   <div className="w-12 h-12 bg-white border border-slate-100 dark:border-slate-800 rounded-xl flex items-center justify-center overflow-hidden">
                     <div className="w-8 h-8 bg-[#0072BC] rounded-full"/>
                   </div>
-                  {selectedMethod === 'amret' && <CheckCircle2 className="w-5 h-5 text-blue-600"/>}
+                  {selectedMethod === 'amret' && <CheckCircle2 className="w-5 h-5 text-emerald-600"/>}
                 </div>
                 <h4 className="font-bold text-slate-900 dark:text-white mb-1">Amret MFI</h4>
                 <p className="text-[10px] text-slate-400">Amret Mobile Banking</p>
@@ -227,7 +227,7 @@ export const Payment = ({ tripData, onBackToHome, selectedActivityIds = [] }) =>
               <div className="w-12 h-12 bg-[#0072BC] rounded-xl flex items-center justify-center">
                 <img src="https://www.amret.com.kh/wp-content/uploads/2021/05/Amret-Logo-White.png" alt="Amret" className="w-8 object-contain"/>
               </div>
-              <button onClick={handlePayment} className="flex items-center gap-3 px-8 py-4 bg-blue-600 text-white rounded-2xl font-bold hover:bg-blue-700 transition-all shadow-lg shadow-blue-200 dark:shadow-none group">
+              <button onClick={handlePayment} className="flex items-center gap-3 px-8 py-4 bg-emerald-600 text-white rounded-2xl font-bold hover:bg-emerald-700 transition-all shadow-lg shadow-emerald-200 dark:shadow-none group">
                 {selectedMethod === 'aba' ? 'Scan QR Code' : 'Pay Now'} ${bookingData.pricing.total.toFixed(2)}
                 <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform"/>
               </button>
@@ -248,7 +248,7 @@ export const Payment = ({ tripData, onBackToHome, selectedActivityIds = [] }) =>
         </div>
 
         <p className="mt-8 text-center text-[10px] text-slate-400 leading-relaxed max-w-2xl mx-auto">
-          By clicking "Pay Now", you agree to Komrong's <span className="text-blue-600 cursor-pointer font-medium">Terms of Service</span> and <span className="text-blue-600 cursor-pointer font-medium">Cancellation Policy</span>.
+          By clicking "Pay Now", you agree to Komrong's <span className="text-emerald-600 cursor-pointer font-medium">Terms of Service</span> and <span className="text-emerald-600 cursor-pointer font-medium">Cancellation Policy</span>.
         </p>
       </div>);
     };
@@ -256,8 +256,8 @@ export const Payment = ({ tripData, onBackToHome, selectedActivityIds = [] }) =>
         return (<div className="min-h-screen bg-slate-50 dark:bg-slate-950 flex flex-col items-center justify-center p-4">
         <div className="w-full max-w-md text-center">
           <div className="relative w-24 h-24 mx-auto mb-8">
-            <div className="absolute inset-0 border-4 border-blue-100 dark:border-blue-900/30 rounded-full"></div>
-            <div className="absolute inset-0 border-4 border-blue-600 rounded-full border-t-transparent animate-spin"></div>
+            <div className="absolute inset-0 border-4 border-emerald-100 dark:border-emerald-900/30 rounded-full"></div>
+            <div className="absolute inset-0 border-4 border-emerald-600 rounded-full border-t-transparent animate-spin"></div>
           </div>
           <h2 className="text-2xl font-bold text-slate-900 dark:text-white mb-2">Processing Payment</h2>
           <p className="text-slate-500 dark:text-slate-400 mb-8">Please do not close this window or refresh the page.</p>
@@ -290,14 +290,14 @@ export const Payment = ({ tripData, onBackToHome, selectedActivityIds = [] }) =>
                 <button onClick={() => setShowReceipt(true)} className="w-full sm:w-auto px-8 py-4 bg-white dark:bg-slate-900 text-slate-900 dark:text-white border border-slate-200 dark:border-slate-800 rounded-2xl font-bold hover:bg-slate-50 dark:hover:bg-slate-800 transition-all shadow-sm">
                   View Receipt
                 </button>
-                <button onClick={handleDone} className="w-full sm:w-auto px-8 py-4 bg-blue-600 text-white rounded-2xl font-bold hover:bg-blue-700 transition-all shadow-lg shadow-blue-200 dark:shadow-none">
+                <button onClick={handleDone} className="w-full sm:w-auto px-8 py-4 bg-emerald-600 text-white rounded-2xl font-bold hover:bg-emerald-700 transition-all shadow-lg shadow-emerald-200 dark:shadow-none">
                   Back to Home
                 </button>
               </div>
             </div>) : (
             /* Receipt View */
             <div ref={receiptRef} id="printable-receipt" className="bg-white dark:bg-slate-900 rounded-[2.5rem] shadow-2xl overflow-hidden border border-slate-100 dark:border-slate-800">
-              <div className="bg-blue-600 p-8 text-white text-center relative">
+              <div className="bg-emerald-600 p-8 text-white text-center relative">
                 <div className="absolute top-4 left-8 text-[10px] font-bold uppercase tracking-[0.2em] opacity-60">Official Receipt</div>
                 <h2 className="text-2xl font-serif italic">Komrong Sanctuary</h2>
                 <p className="text-xs opacity-80 mt-1">Riverside District, Komrong, Cambodia</p>
@@ -379,7 +379,7 @@ export const Payment = ({ tripData, onBackToHome, selectedActivityIds = [] }) =>
                   </div>
                   <div className="pt-4 border-t border-slate-100 dark:border-slate-800 flex justify-between items-center">
                     <span className="text-lg font-serif italic text-slate-900 dark:text-white">Total Paid</span>
-                    <span className="text-2xl font-bold text-blue-600">${bookingData.pricing.total.toFixed(2)}</span>
+                    <span className="text-2xl font-bold text-emerald-600">${bookingData.pricing.total.toFixed(2)}</span>
                   </div>
                 </div>
 
@@ -397,7 +397,7 @@ export const Payment = ({ tripData, onBackToHome, selectedActivityIds = [] }) =>
                     <button onClick={handlePrint} className="flex-1 md:flex-none px-6 py-3 bg-slate-100 dark:bg-slate-800 text-slate-900 dark:text-white rounded-xl text-xs font-bold hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors">
                       Download PDF
                     </button>
-                    <button onClick={handleDone} className="flex-1 md:flex-none px-6 py-3 bg-blue-600 text-white rounded-xl text-xs font-bold hover:bg-blue-700 transition-all">
+                    <button onClick={handleDone} className="flex-1 md:flex-none px-6 py-3 bg-emerald-600 text-white rounded-xl text-xs font-bold hover:bg-emerald-700 transition-all">
                       Done
                     </button>
                   </div>
@@ -417,11 +417,11 @@ export const Payment = ({ tripData, onBackToHome, selectedActivityIds = [] }) =>
       <div className="max-w-7xl mx-auto">
         {/* Breadcrumbs */}
         <nav className="breadcrumbs no-print flex items-center gap-2 text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-8">
-          <span onClick={handleDone} className="hover:text-blue-600 cursor-pointer">HOME</span>
+          <span onClick={handleDone} className="hover:text-emerald-600 cursor-pointer">HOME</span>
           <ChevronRight className="w-3 h-3"/>
-          <span className="hover:text-blue-600 cursor-pointer">TRIP DETAILS</span>
+          <span className="hover:text-emerald-600 cursor-pointer">TRIP DETAILS</span>
           <ChevronRight className="w-3 h-3"/>
-          <span className="text-blue-600">PAYMENT</span>
+          <span className="text-emerald-600">PAYMENT</span>
         </nav>
 
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
@@ -515,31 +515,31 @@ export const Payment = ({ tripData, onBackToHome, selectedActivityIds = [] }) =>
                   
                   <div className="pt-4 border-t border-slate-50 dark:border-slate-800 flex justify-between items-center">
                     <span className="text-lg font-bold text-slate-900 dark:text-white">Total Amount</span>
-                    <span className="text-3xl font-bold text-blue-600 tracking-tight">
+                    <span className="text-3xl font-bold text-emerald-600 tracking-tight">
                       ${bookingData.pricing.total.toFixed(2)}
                     </span>
                   </div>
                 </div>
 
                 <div className="mt-8 pt-6 border-t border-slate-50 dark:border-slate-800">
-                  <button onClick={handlePayment} className="w-full flex items-center justify-center gap-3 px-8 py-4 bg-blue-600 text-white rounded-2xl font-bold hover:bg-blue-700 transition-all shadow-lg shadow-blue-200 dark:shadow-none group">
+                  <button onClick={handlePayment} className="w-full flex items-center justify-center gap-3 px-8 py-4 bg-emerald-600 text-white rounded-2xl font-bold hover:bg-emerald-700 transition-all shadow-lg shadow-emerald-200 dark:shadow-none group">
                     Scan QR Code ${bookingData.pricing.total.toFixed(2)}
                     <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform"/>
                   </button>
                   <p className="mt-3 text-center text-[10px] text-slate-400 leading-relaxed">
-                    By clicking "Scan QR Code", you agree to Komrong's <span className="text-blue-600 cursor-pointer font-medium">Terms of Service</span> and <span className="text-blue-600 cursor-pointer font-medium">Cancellation Policy</span>.
+                    By clicking "Scan QR Code", you agree to Komrong's <span className="text-emerald-600 cursor-pointer font-medium">Terms of Service</span> and <span className="text-emerald-600 cursor-pointer font-medium">Cancellation Policy</span>.
                   </p>
                 </div>
               </div>
             </div>
 
-            <div className="bg-blue-50/50 dark:bg-blue-900/10 border border-blue-100 dark:border-blue-900/20 rounded-3xl p-6 flex gap-4">
-              <div className="w-10 h-10 bg-blue-100 dark:bg-blue-900/40 rounded-xl flex items-center justify-center text-blue-600 flex-shrink-0">
+            <div className="bg-emerald-50/50 dark:bg-emerald-900/10 border border-emerald-100 dark:border-emerald-900/20 rounded-3xl p-6 flex gap-4">
+              <div className="w-10 h-10 bg-emerald-100 dark:bg-emerald-900/40 rounded-xl flex items-center justify-center text-emerald-600 flex-shrink-0">
                 <ShieldCheck className="w-6 h-6"/>
               </div>
               <div>
-                <h4 className="font-bold text-blue-900 dark:text-blue-100 text-sm mb-1">Safe & Secure Payment</h4>
-                <p className="text-[10px] text-blue-600/70 dark:text-blue-400/70 leading-relaxed">
+                <h4 className="font-bold text-emerald-900 dark:text-emerald-100 text-sm mb-1">Safe & Secure Payment</h4>
+                <p className="text-[10px] text-emerald-600/70 dark:text-emerald-400/70 leading-relaxed">
                   Your transaction is protected by industry-leading 256-bit SSL encryption.
                 </p>
               </div>
@@ -552,3 +552,4 @@ export const Payment = ({ tripData, onBackToHome, selectedActivityIds = [] }) =>
     </div>);
 };
 export default Payment;
+

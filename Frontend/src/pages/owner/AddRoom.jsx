@@ -214,7 +214,7 @@ const AddRoom = () => {
         <div className="text-center">
           <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-4">Property not found</h2>
           <p className="text-sm text-gray-600 dark:text-gray-300 mb-4">Returning to destination list...</p>
-          <button type="button" onClick={goToDestinations} className="inline-flex items-center gap-2 px-6 py-3 bg-blue-600 text-white rounded-xl font-semibold hover:bg-blue-700 transition-colors shadow-sm">
+          <button type="button" onClick={goToDestinations} className="inline-flex items-center gap-2 px-6 py-3 bg-emerald-600 text-white rounded-xl font-semibold hover:bg-emerald-700 transition-colors shadow-sm">
             <ArrowLeft size={18}/>
             Back to Destinations
           </button>
@@ -224,7 +224,7 @@ const AddRoom = () => {
     return (<div className="p-8 max-w-[1000px] mx-auto space-y-8">
       {/* Header */}
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-        <button type="button" onClick={goToDestinations} className="inline-flex w-fit items-center gap-2 rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-semibold text-slate-700 transition-all hover:border-blue-200 hover:text-blue-600 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-200 dark:hover:border-blue-700 dark:hover:text-blue-400">
+        <button type="button" onClick={goToDestinations} className="inline-flex w-fit items-center gap-2 rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-semibold text-slate-700 transition-all hover:border-emerald-200 hover:text-emerald-600 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-200 dark:hover:border-emerald-700 dark:hover:text-emerald-400">
           <ArrowLeft size={20}/>
           <span>Back to Destinations</span>
         </button>
@@ -238,7 +238,7 @@ const AddRoom = () => {
       <div className="flex items-center justify-between bg-white dark:bg-slate-900 p-4 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm">
         {steps.map((s, i) => (<React.Fragment key={s.id}>
             <div className="flex items-center gap-3">
-              <div className={cn("w-8 h-8 rounded-lg flex items-center justify-center text-xs font-bold transition-all", step >= s.id ? "bg-blue-600 text-white shadow-md shadow-blue-500/20" : "bg-slate-100 dark:bg-slate-800 text-slate-400")}>
+              <div className={cn("w-8 h-8 rounded-lg flex items-center justify-center text-xs font-bold transition-all", step >= s.id ? "bg-emerald-600 text-white shadow-md shadow-emerald-500/20" : "bg-slate-100 dark:bg-slate-800 text-slate-400")}>
                 {step > s.id ? <CheckCircle2 size={16}/> : s.id}
               </div>
               <span className={cn("text-xs font-bold uppercase tracking-wider hidden sm:block", step >= s.id ? "text-slate-900 dark:text-slate-100" : "text-slate-400")}>
@@ -257,13 +257,13 @@ const AddRoom = () => {
               <div className="space-y-6">
                 <div className="space-y-2">
                   <label className="text-[10px] uppercase font-bold tracking-widest text-slate-400">Room Name</label>
-                  <input value={formData.name} onChange={(e) => setFormData({ ...formData, name: e.target.value })} className={cn("w-full px-4 py-3 bg-slate-50 dark:bg-slate-800 border-transparent rounded-xl text-sm focus:bg-white dark:focus:bg-slate-900 focus:ring-2 focus:ring-blue-600/10 transition-all font-medium", errors.name && "border-red-500")} placeholder="e.g. Deluxe Ocean View Suite"/>
+                  <input value={formData.name} onChange={(e) => setFormData({ ...formData, name: e.target.value })} className={cn("w-full px-4 py-3 bg-slate-50 dark:bg-slate-800 border-transparent rounded-xl text-sm focus:bg-white dark:focus:bg-slate-900 focus:ring-2 focus:ring-emerald-600/10 transition-all font-medium", errors.name && "border-red-500")} placeholder="e.g. Deluxe Ocean View Suite"/>
                   {errors.name && <p className="text-xs text-red-500 mt-1">{errors.name}</p>}
                 </div>
 
                 <div className="space-y-2">
                   <label className="text-[10px] uppercase font-bold tracking-widest text-slate-400">Room Type</label>
-                  <select value={formData.type} onChange={(e) => setFormData({ ...formData, type: e.target.value })} className="w-full px-4 py-3 bg-slate-50 dark:bg-slate-800 border-transparent rounded-xl text-sm focus:bg-white dark:focus:bg-slate-900 focus:ring-2 focus:ring-blue-600/10 transition-all font-medium appearance-none">
+                  <select value={formData.type} onChange={(e) => setFormData({ ...formData, type: e.target.value })} className="w-full px-4 py-3 bg-slate-50 dark:bg-slate-800 border-transparent rounded-xl text-sm focus:bg-white dark:focus:bg-slate-900 focus:ring-2 focus:ring-emerald-600/10 transition-all font-medium appearance-none">
                     {roomTypes.map(type => (<option key={type} value={type}>{type}</option>))}
                   </select>
                   {errors.type && <p className="text-xs text-red-500 mt-1">{errors.type}</p>}
@@ -271,13 +271,13 @@ const AddRoom = () => {
 
                 <div className="space-y-2">
                   <label className="text-[10px] uppercase font-bold tracking-widest text-slate-400">Price per Night (USD)</label>
-                  <input type="number" value={formData.price} onChange={(e) => setFormData({ ...formData, price: e.target.value })} className={cn("w-full px-4 py-3 bg-slate-50 dark:bg-slate-800 border-transparent rounded-xl text-sm focus:bg-white dark:focus:bg-slate-900 focus:ring-2 focus:ring-blue-600/10 transition-all font-medium", errors.price && "border-red-500")} placeholder="150"/>
+                  <input type="number" value={formData.price} onChange={(e) => setFormData({ ...formData, price: e.target.value })} className={cn("w-full px-4 py-3 bg-slate-50 dark:bg-slate-800 border-transparent rounded-xl text-sm focus:bg-white dark:focus:bg-slate-900 focus:ring-2 focus:ring-emerald-600/10 transition-all font-medium", errors.price && "border-red-500")} placeholder="150"/>
                   {errors.price && <p className="text-xs text-red-500 mt-1">{errors.price}</p>}
                 </div>
 
                 <div className="space-y-2">
                   <label className="text-[10px] uppercase font-bold tracking-widest text-slate-400">Description</label>
-                  <textarea value={formData.description} onChange={(e) => setFormData({ ...formData, description: e.target.value })} rows={4} className="w-full px-4 py-3 bg-slate-50 dark:bg-slate-800 border-transparent rounded-xl text-sm focus:bg-white dark:focus:bg-slate-900 focus:ring-2 focus:ring-blue-600/10 transition-all font-medium resize-none" placeholder="Describe the room features and highlights..."></textarea>
+                  <textarea value={formData.description} onChange={(e) => setFormData({ ...formData, description: e.target.value })} rows={4} className="w-full px-4 py-3 bg-slate-50 dark:bg-slate-800 border-transparent rounded-xl text-sm focus:bg-white dark:focus:bg-slate-900 focus:ring-2 focus:ring-emerald-600/10 transition-all font-medium resize-none" placeholder="Describe the room features and highlights..."></textarea>
                 </div>
               </div>
 
@@ -285,8 +285,8 @@ const AddRoom = () => {
                 <div className="space-y-2">
                   <label className="text-[10px] uppercase font-bold tracking-widest text-slate-400">Capacity</label>
                   <div className="flex items-center gap-3">
-                    <Users size={20} className="text-blue-600"/>
-                    <input type="number" value={formData.max_capacity || formData.capacity} onChange={(e) => setFormData({ ...formData, max_capacity: e.target.value, capacity: e.target.value })} className={cn("flex-1 px-4 py-3 bg-slate-50 dark:bg-slate-800 border-transparent rounded-xl text-sm focus:bg-white dark:focus:bg-slate-900 focus:ring-2 focus:ring-blue-600/10 transition-all font-medium", errors.capacity && "border-red-500")} placeholder="2"/>
+                    <Users size={20} className="text-emerald-600"/>
+                    <input type="number" value={formData.max_capacity || formData.capacity} onChange={(e) => setFormData({ ...formData, max_capacity: e.target.value, capacity: e.target.value })} className={cn("flex-1 px-4 py-3 bg-slate-50 dark:bg-slate-800 border-transparent rounded-xl text-sm focus:bg-white dark:focus:bg-slate-900 focus:ring-2 focus:ring-emerald-600/10 transition-all font-medium", errors.capacity && "border-red-500")} placeholder="2"/>
                     <span className="text-sm text-slate-500">guests</span>
                   </div>
                   {errors.capacity && <p className="text-xs text-red-500 mt-1">{errors.capacity}</p>}
@@ -295,18 +295,18 @@ const AddRoom = () => {
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <div className="space-y-2">
                     <label className="text-[10px] uppercase font-bold tracking-widest text-slate-400">Room Number</label>
-                    <input value={formData.room_number} onChange={(e) => setFormData({ ...formData, room_number: e.target.value })} className="w-full px-4 py-3 bg-slate-50 dark:bg-slate-800 border-transparent rounded-xl text-sm focus:bg-white dark:focus:bg-slate-900 focus:ring-2 focus:ring-blue-600/10 transition-all font-medium" placeholder="e.g. 302"/>
+                    <input value={formData.room_number} onChange={(e) => setFormData({ ...formData, room_number: e.target.value })} className="w-full px-4 py-3 bg-slate-50 dark:bg-slate-800 border-transparent rounded-xl text-sm focus:bg-white dark:focus:bg-slate-900 focus:ring-2 focus:ring-emerald-600/10 transition-all font-medium" placeholder="e.g. 302"/>
                   </div>
 
                   <div className="space-y-2">
                     <label className="text-[10px] uppercase font-bold tracking-widest text-slate-400">Room Floor</label>
-                    <input value={formData.room_floor} onChange={(e) => setFormData({ ...formData, room_floor: e.target.value })} className="w-full px-4 py-3 bg-slate-50 dark:bg-slate-800 border-transparent rounded-xl text-sm focus:bg-white dark:focus:bg-slate-900 focus:ring-2 focus:ring-blue-600/10 transition-all font-medium" placeholder="e.g. 3"/>
+                    <input value={formData.room_floor} onChange={(e) => setFormData({ ...formData, room_floor: e.target.value })} className="w-full px-4 py-3 bg-slate-50 dark:bg-slate-800 border-transparent rounded-xl text-sm focus:bg-white dark:focus:bg-slate-900 focus:ring-2 focus:ring-emerald-600/10 transition-all font-medium" placeholder="e.g. 3"/>
                   </div>
                 </div>
 
                 <div className="space-y-2">
                   <label className="text-[10px] uppercase font-bold tracking-widest text-slate-400">Bed Configuration</label>
-                  <select value={formData.beds} onChange={(e) => setFormData({ ...formData, beds: e.target.value })} className="w-full px-4 py-3 bg-slate-50 dark:bg-slate-800 border-transparent rounded-xl text-sm focus:bg-white dark:focus:bg-slate-900 focus:ring-2 focus:ring-blue-600/10 transition-all font-medium appearance-none">
+                  <select value={formData.beds} onChange={(e) => setFormData({ ...formData, beds: e.target.value })} className="w-full px-4 py-3 bg-slate-50 dark:bg-slate-800 border-transparent rounded-xl text-sm focus:bg-white dark:focus:bg-slate-900 focus:ring-2 focus:ring-emerald-600/10 transition-all font-medium appearance-none">
                     <option value="">Select bed type</option>
                     {bedOptions.map(option => (<option key={option} value={option}>{option}</option>))}
                   </select>
@@ -316,15 +316,15 @@ const AddRoom = () => {
                 <div className="space-y-2">
                   <label className="text-[10px] uppercase font-bold tracking-widest text-slate-400">Bathrooms</label>
                   <div className="flex items-center gap-3">
-                    <Bath size={20} className="text-blue-600"/>
-                    <input type="number" value={formData.baths} onChange={(e) => setFormData({ ...formData, baths: e.target.value })} className={cn("flex-1 px-4 py-3 bg-slate-50 dark:bg-slate-800 border-transparent rounded-xl text-sm focus:bg-white dark:focus:bg-slate-900 focus:ring-2 focus:ring-blue-600/10 transition-all font-medium", errors.baths && "border-red-500")} placeholder="1"/>
+                    <Bath size={20} className="text-emerald-600"/>
+                    <input type="number" value={formData.baths} onChange={(e) => setFormData({ ...formData, baths: e.target.value })} className={cn("flex-1 px-4 py-3 bg-slate-50 dark:bg-slate-800 border-transparent rounded-xl text-sm focus:bg-white dark:focus:bg-slate-900 focus:ring-2 focus:ring-emerald-600/10 transition-all font-medium", errors.baths && "border-red-500")} placeholder="1"/>
                   </div>
                   {errors.baths && <p className="text-xs text-red-500 mt-1">{errors.baths}</p>}
                 </div>
 
                 <div className="space-y-2">
                   <label className="text-[10px] uppercase font-bold tracking-widest text-slate-400">Room Size</label>
-                  <input value={formData.size} onChange={(e) => setFormData({ ...formData, size: e.target.value })} className={cn("w-full px-4 py-3 bg-slate-50 dark:bg-slate-800 border-transparent rounded-xl text-sm focus:bg-white dark:focus:bg-slate-900 focus:ring-2 focus:ring-blue-600/10 transition-all font-medium", errors.size && "border-red-500")} placeholder="e.g. 35 sqm"/>
+                  <input value={formData.size} onChange={(e) => setFormData({ ...formData, size: e.target.value })} className={cn("w-full px-4 py-3 bg-slate-50 dark:bg-slate-800 border-transparent rounded-xl text-sm focus:bg-white dark:focus:bg-slate-900 focus:ring-2 focus:ring-emerald-600/10 transition-all font-medium", errors.size && "border-red-500")} placeholder="e.g. 35 sqm"/>
                   {errors.size && <p className="text-xs text-red-500 mt-1">{errors.size}</p>}
                 </div>
 
@@ -341,14 +341,14 @@ const AddRoom = () => {
 
         {/* Step 2: Media */}
         {step === 2 && (<div className="p-8 space-y-8">
-            <div className="border-2 border-dashed border-slate-200 dark:border-slate-800 rounded-2xl p-12 flex flex-col items-center justify-center text-center hover:bg-blue-50 dark:hover:bg-blue-900/10 hover:border-blue-600/50 transition-all cursor-pointer group" onDragOver={handleDragOver} onDrop={handleDrop}>
-              <div className="w-16 h-16 bg-slate-100 dark:bg-slate-900 rounded-2xl flex items-center justify-center mb-4 group-hover:bg-blue-600 group-hover:text-white transition-all shadow-sm">
+            <div className="border-2 border-dashed border-slate-200 dark:border-slate-800 rounded-2xl p-12 flex flex-col items-center justify-center text-center hover:bg-emerald-50 dark:hover:bg-emerald-900/10 hover:border-emerald-600/50 transition-all cursor-pointer group" onDragOver={handleDragOver} onDrop={handleDrop}>
+              <div className="w-16 h-16 bg-slate-100 dark:bg-slate-900 rounded-2xl flex items-center justify-center mb-4 group-hover:bg-emerald-600 group-hover:text-white transition-all shadow-sm">
                 <Upload size={32}/>
               </div>
               <h4 className="font-bold text-lg">Upload Room Photos</h4>
               <p className="text-xs text-slate-500 mt-2 max-w-xs">Drag and drop high-quality room images here. Minimum 3 photos recommended. Supported formats: JPG, PNG, WebP</p>
               <div className="flex gap-3 mt-6">
-                <label className="px-6 py-2 bg-blue-600 text-white rounded-xl text-xs font-bold hover:bg-blue-700 transition-all cursor-pointer">
+                <label className="px-6 py-2 bg-emerald-600 text-white rounded-xl text-xs font-bold hover:bg-emerald-700 transition-all cursor-pointer">
                   Select Files
                   <input type="file" multiple accept="image/*" onChange={addImage} className="hidden"/>
                 </label>
@@ -379,7 +379,7 @@ const AddRoom = () => {
                         {index + 1}
                       </div>
                     </div>))}
-                  {formData.images.length < 8 && (<div onClick={() => addImage()} className="aspect-square border-2 border-dashed border-slate-200 dark:border-slate-800 rounded-xl flex flex-col items-center justify-center text-slate-400 hover:text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-900/10 hover:border-blue-600/50 transition-all cursor-pointer group">
+                  {formData.images.length < 8 && (<div onClick={() => addImage()} className="aspect-square border-2 border-dashed border-slate-200 dark:border-slate-800 rounded-xl flex flex-col items-center justify-center text-slate-400 hover:text-emerald-600 hover:bg-emerald-50 dark:hover:bg-emerald-900/10 hover:border-emerald-600/50 transition-all cursor-pointer group">
                       <Plus size={24} className="group-hover:scale-110 transition-transform"/>
                       <span className="text-xs mt-2">Add More</span>
                     </div>)}
@@ -398,7 +398,7 @@ const AddRoom = () => {
               <h4 className="text-lg font-semibold text-slate-900 dark:text-slate-100 mb-6">Select Room Amenities</h4>
               <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
                 {amenityOptions.map((amenity) => (<button key={amenity.name} onClick={() => toggleAmenity(amenity.name)} className={cn("p-4 rounded-xl border-2 transition-all flex flex-col items-center gap-2 text-center", formData.amenities.includes(amenity.name)
-                    ? "border-blue-600 bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400"
+                    ? "border-emerald-600 bg-emerald-50 dark:bg-emerald-900/20 text-emerald-600 dark:text-emerald-400"
                     : "border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:border-slate-300 dark:hover:border-slate-600")}>
                     <amenity.icon size={24}/>
                     <span className="text-xs font-medium">{amenity.name}</span>
@@ -406,10 +406,10 @@ const AddRoom = () => {
               </div>
             </div>
 
-            {formData.amenities.length > 0 && (<div className="bg-blue-50 dark:bg-blue-900/10 border border-blue-200 dark:border-blue-800 rounded-xl p-4">
-                <h5 className="font-semibold text-blue-900 dark:text-blue-100 mb-2">Selected Amenities ({formData.amenities.length})</h5>
+            {formData.amenities.length > 0 && (<div className="bg-emerald-50 dark:bg-emerald-900/10 border border-emerald-200 dark:border-emerald-800 rounded-xl p-4">
+                <h5 className="font-semibold text-emerald-900 dark:text-emerald-100 mb-2">Selected Amenities ({formData.amenities.length})</h5>
                 <div className="flex flex-wrap gap-2">
-                  {formData.amenities.map((amenity, index) => (<span key={index} className="bg-blue-600 text-white px-3 py-1 rounded-full text-xs font-medium">
+                  {formData.amenities.map((amenity, index) => (<span key={index} className="bg-emerald-600 text-white px-3 py-1 rounded-full text-xs font-medium">
                       {amenity}
                     </span>))}
                 </div>
@@ -418,8 +418,8 @@ const AddRoom = () => {
 
         {/* Step 4: Review */}
         {step === 4 && (<div className="p-8 space-y-8">
-            <div className="bg-blue-50 dark:bg-blue-900/10 border border-blue-200 dark:border-blue-800 rounded-2xl p-6">
-              <h4 className="font-bold text-lg text-blue-900 dark:text-blue-100 mb-4">Room Review</h4>
+            <div className="bg-emerald-50 dark:bg-emerald-900/10 border border-emerald-200 dark:border-emerald-800 rounded-2xl p-6">
+              <h4 className="font-bold text-lg text-emerald-900 dark:text-emerald-100 mb-4">Room Review</h4>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div className="space-y-4">
                   <div>
@@ -458,7 +458,7 @@ const AddRoom = () => {
                   </div>
                 </div>
               </div>
-              {formData.description && (<div className="mt-6 pt-6 border-t border-blue-200 dark:border-blue-800">
+              {formData.description && (<div className="mt-6 pt-6 border-t border-emerald-200 dark:border-emerald-800">
                   <span className="text-[10px] uppercase font-bold tracking-widest text-slate-400">Description</span>
                   <p className="mt-2 text-sm text-slate-700 dark:text-slate-300">{formData.description}</p>
                 </div>)}
@@ -488,7 +488,7 @@ const AddRoom = () => {
           <button disabled={step === 1} onClick={() => setStep(s => s - 1)} className="px-6 py-2.5 text-sm font-bold text-slate-500 hover:text-slate-900 dark:hover:text-slate-100 disabled:opacity-30 transition-all">
             Back
           </button>
-          <button onClick={() => step < 4 ? handleNextStep() : handleSubmit()} className="px-8 py-2.5 bg-blue-600 text-white rounded-xl font-bold text-sm hover:bg-blue-700 transition-all shadow-lg shadow-blue-500/20 active:scale-95 flex items-center gap-2">
+          <button onClick={() => step < 4 ? handleNextStep() : handleSubmit()} className="px-8 py-2.5 bg-emerald-600 text-white rounded-xl font-bold text-sm hover:bg-emerald-700 transition-all shadow-lg shadow-emerald-500/20 active:scale-95 flex items-center gap-2">
             {step === 4 ? (roomToEdit ? 'Update Room' : 'Add Room') : 'Continue'}
             <ChevronRight size={18}/>
           </button>
@@ -497,3 +497,4 @@ const AddRoom = () => {
     </div>);
 };
 export default AddRoom;
+

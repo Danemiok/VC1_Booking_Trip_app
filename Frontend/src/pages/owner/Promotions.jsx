@@ -86,7 +86,7 @@ const Promotions = () => {
           <h3 className="text-2xl font-bold tracking-tight">Promotions Management</h3>
           <p className="text-sm text-slate-500 mt-1">Create and track marketing campaigns to boost your bookings.</p>
         </div>
-        <button onClick={() => navigate('/promotions/new')} className="px-5 py-2.5 bg-blue-600 text-white rounded-xl flex items-center gap-2 font-bold text-sm hover:bg-blue-700 transition-all shadow-lg shadow-blue-500/20 active:scale-95">
+        <button onClick={() => navigate('/promotions/new')} className="px-5 py-2.5 bg-emerald-600 text-white rounded-xl flex items-center gap-2 font-bold text-sm hover:bg-emerald-700 transition-all shadow-lg shadow-emerald-500/20 active:scale-95">
           <Plus size={18}/> Create New Promotion
         </button>
       </div>
@@ -98,7 +98,7 @@ const Promotions = () => {
             { label: 'Avg. Conversion', value: stats.avgConversion, icon: TrendingUp, color: 'blue' },
         ].map((stat, i) => (<div key={i} className="bg-white dark:bg-slate-900 p-6 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm">
             <div className="flex items-center gap-4">
-              <div className={cn("w-12 h-12 rounded-xl flex items-center justify-center", stat.color === 'blue' ? "bg-blue-50 dark:bg-blue-900/20 text-blue-600" : "bg-emerald-50 dark:bg-emerald-900/20 text-emerald-600")}>
+              <div className={cn("w-12 h-12 rounded-xl flex items-center justify-center", stat.color === 'blue' ? "bg-emerald-50 dark:bg-emerald-900/20 text-emerald-600" : "bg-emerald-50 dark:bg-emerald-900/20 text-emerald-600")}>
                 <stat.icon size={24}/>
               </div>
               <div>
@@ -118,17 +118,17 @@ const Promotions = () => {
           <div className="flex gap-2">
             <div className="bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl p-1 flex items-center gap-1">
               <button onClick={() => setCategoryFilter('all')} className={cn("px-4 py-2 text-xs font-bold rounded-lg transition-colors", categoryFilter === 'all'
-            ? "bg-blue-600 text-white shadow-lg shadow-blue-500/20"
+            ? "bg-emerald-600 text-white shadow-lg shadow-emerald-500/20"
             : "text-slate-500 hover:text-slate-900 dark:hover:text-slate-100")}>
                 All
               </button>
               <button onClick={() => setCategoryFilter('hotel')} className={cn("px-4 py-2 text-xs font-bold rounded-lg transition-colors", categoryFilter === 'hotel'
-            ? "bg-blue-600 text-white shadow-lg shadow-blue-500/20"
+            ? "bg-emerald-600 text-white shadow-lg shadow-emerald-500/20"
             : "text-slate-500 hover:text-slate-900 dark:hover:text-slate-100")}>
                 Hotel
               </button>
               <button onClick={() => setCategoryFilter('transport')} className={cn("px-4 py-2 text-xs font-bold rounded-lg transition-colors", categoryFilter === 'transport'
-            ? "bg-blue-600 text-white shadow-lg shadow-blue-500/20"
+            ? "bg-emerald-600 text-white shadow-lg shadow-emerald-500/20"
             : "text-slate-500 hover:text-slate-900 dark:hover:text-slate-100")}>
                 Transport
               </button>
@@ -174,11 +174,11 @@ const Promotions = () => {
                     <span className="text-xs font-medium text-slate-600 dark:text-slate-400">{campaign.type}</span>
                   </td>
                   <td className="px-6 py-4">
-                    <span className="text-sm font-bold text-blue-600">{campaign.discount}</span>
+                    <span className="text-sm font-bold text-emerald-600">{campaign.discount}</span>
                   </td>
                   <td className="px-6 py-4">
                     <span className={cn("inline-flex items-center gap-1.5 px-2.5 py-1 text-[11px] font-bold rounded-full", campaign.status === 'active' ? "bg-emerald-50 dark:bg-emerald-900/20 text-emerald-600" :
-                campaign.status === 'scheduled' ? "bg-blue-50 dark:bg-blue-900/20 text-blue-600" :
+                campaign.status === 'scheduled' ? "bg-emerald-50 dark:bg-emerald-900/20 text-emerald-600" :
                     "bg-slate-100 dark:bg-slate-800 text-slate-500")}>
                       {campaign.status === 'active' ? <CheckCircle2 size={12}/> : campaign.status === 'scheduled' ? <Clock size={12}/> : <AlertCircle size={12}/>}
                       {campaign.status.charAt(0).toUpperCase() + campaign.status.slice(1)}
@@ -190,7 +190,7 @@ const Promotions = () => {
                   </td>
                   <td className="px-6 py-4 text-sm font-medium">{campaign.end}</td>
                   <td className="px-6 py-4 text-right">
-                    <button className="p-2 text-slate-400 hover:text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded-lg transition-all">
+                    <button className="p-2 text-slate-400 hover:text-emerald-600 hover:bg-emerald-50 dark:hover:bg-emerald-900/20 rounded-lg transition-all">
                       <MoreHorizontal size={18}/>
                     </button>
                   </td>
@@ -202,3 +202,4 @@ const Promotions = () => {
     </div>);
 };
 export default Promotions;
+

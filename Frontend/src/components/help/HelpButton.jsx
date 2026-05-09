@@ -8,7 +8,7 @@ export const HelpButton = ({ onClick, variant = 'floating', size = 'md', classNa
         lg: 'w-12 h-12'
     };
     const variantClasses = {
-        floating: 'bg-blue-600 text-white shadow-lg hover:bg-blue-700 hover:shadow-xl',
+        floating: 'bg-emerald-600 text-white shadow-lg hover:bg-emerald-700 hover:shadow-xl',
         inline: 'bg-gray-100 text-gray-600 hover:bg-gray-200'
     };
     const iconSizes = {
@@ -25,3 +25,4 @@ export const HelpButton = ({ onClick, variant = 'floating', size = 'md', classNa
       <HelpCircle className={iconSizes[size]}/>
     </button>);
 };
+

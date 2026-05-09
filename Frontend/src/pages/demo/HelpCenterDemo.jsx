@@ -39,7 +39,7 @@ const DemoContent = () => {
               <div className="bg-white p-6 rounded-lg shadow">
                 <h3 className="font-semibold text-gray-900 mb-2">Floating Button</h3>
                 <p className="text-gray-600 mb-4">Global access with floating button (bottom-right)</p>
-                <div className="text-blue-600 text-sm">See bottom-right corner →</div>
+                <div className="text-emerald-600 text-sm">See bottom-right corner →</div>
               </div>
             </div>
           </div>
@@ -48,9 +48,9 @@ const DemoContent = () => {
           <div>
             <h2 className="text-xl font-semibold text-gray-800 mb-4">Help Center Features</h2>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div className="bg-blue-50 p-4 rounded-lg">
-                <h3 className="font-semibold text-blue-900 mb-2">📚 Comprehensive Content</h3>
-                <ul className="text-sm text-blue-800 space-y-1">
+              <div className="bg-emerald-50 p-4 rounded-lg">
+                <h3 className="font-semibold text-emerald-900 mb-2">📚 Comprehensive Content</h3>
+                <ul className="text-sm text-emerald-800 space-y-1">
                   <li>• Help Center with FAQs</li>
                   <li>• Terms of Service</li>
                   <li>• Privacy Policy</li>
@@ -91,10 +91,10 @@ const DemoContent = () => {
           </div>
 
           {/* Call to Action */}
-          <div className="bg-gradient-to-r from-blue-600 to-purple-600 text-white p-8 rounded-lg text-center">
+          <div className="bg-gradient-to-r from-emerald-600 to-purple-600 text-white p-8 rounded-lg text-center">
             <h2 className="text-2xl font-bold mb-4">Try the Help Center!</h2>
             <p className="mb-6">Click any help button or the floating button to see the full help center in action.</p>
-            <button onClick={openHelpCenter} className="bg-white text-blue-600 px-6 py-3 rounded-lg font-semibold hover:bg-gray-100 transition-colors">
+            <button onClick={openHelpCenter} className="bg-white text-emerald-600 px-6 py-3 rounded-lg font-semibold hover:bg-gray-100 transition-colors">
               Open Help Center
             </button>
           </div>
@@ -108,3 +108,4 @@ const HelpCenterDemo = () => {
     </HelpCenterLayout>);
 };
 export default HelpCenterDemo;
+

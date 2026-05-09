@@ -39,7 +39,7 @@ export const GroupPlanningModal = (props) => {
               <div className="flex items-center justify-between">
                 <button type="button" onClick={() => {
                     copyToClipboard();
-                }} className="inline-flex items-center gap-2 px-4 py-2 rounded-2xl bg-blue-600/10 text-blue-700 dark:text-blue-300 hover:bg-blue-600/15 font-bold text-xs">
+                }} className="inline-flex items-center gap-2 px-4 py-2 rounded-2xl bg-emerald-600/10 text-emerald-700 dark:text-emerald-300 hover:bg-emerald-600/15 font-bold text-xs">
                   <Copy className="w-4 h-4"/>
                   {isCopied ? 'Copied!' : 'Copy invite link'}
                 </button>
@@ -56,7 +56,7 @@ export const GroupPlanningModal = (props) => {
               <div className="mt-6 space-y-3 max-h-[50vh] overflow-auto pr-1">
                 {members.length === 0 ? (<p className="text-sm text-slate-500">No members yet.</p>) : (members.map((m) => (<div key={m.user_email} className="flex items-center justify-between p-4 rounded-2xl border border-slate-200/70 dark:border-white/10 bg-slate-50/50 dark:bg-white/5">
                       <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 rounded-2xl bg-blue-600/10 text-blue-700 dark:text-blue-300 flex items-center justify-center font-extrabold">
+                        <div className="w-10 h-10 rounded-2xl bg-emerald-600/10 text-emerald-700 dark:text-emerald-300 flex items-center justify-center font-extrabold">
                           {String(m.user_name || m.user_email || '?').charAt(0).toUpperCase()}
                         </div>
                         <div>
@@ -93,7 +93,7 @@ export const GroupPlanningModal = (props) => {
                 }} className="flex-1 px-4 py-3 rounded-2xl bg-slate-100 hover:bg-slate-200 dark:bg-white/5 dark:hover:bg-white/10 text-slate-800 dark:text-slate-200 font-bold">
                     Back
                   </button>
-                  <button type="button" onClick={addMemberToGroup} className="flex-1 px-4 py-3 rounded-2xl bg-blue-600 hover:bg-blue-700 text-white font-bold shadow-[0_18px_40px_rgba(37,99,235,0.22)]">
+                  <button type="button" onClick={addMemberToGroup} className="flex-1 px-4 py-3 rounded-2xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold shadow-[0_18px_40px_rgba(47,160,132,0.22)]">
                     Add
                   </button>
                 </div>
@@ -125,7 +125,7 @@ export const GroupPlanningModal = (props) => {
                   <button type="button" onClick={() => setIsAddingActivity(false)} className="flex-1 px-4 py-3 rounded-2xl bg-slate-100 hover:bg-slate-200 dark:bg-white/5 dark:hover:bg-white/10 text-slate-800 dark:text-slate-200 font-bold">
                     Cancel
                   </button>
-                  <button type="button" onClick={handleAddActivity} className="flex-1 px-4 py-3 rounded-2xl bg-blue-600 hover:bg-blue-700 text-white font-bold">
+                  <button type="button" onClick={handleAddActivity} className="flex-1 px-4 py-3 rounded-2xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold">
                     Add
                   </button>
                 </div>
@@ -164,7 +164,7 @@ export const GroupPlanningModal = (props) => {
                   <button type="button" onClick={() => setIsCreatingPoll(false)} className="flex-1 px-4 py-3 rounded-2xl bg-slate-100 hover:bg-slate-200 dark:bg-white/5 dark:hover:bg-white/10 text-slate-800 dark:text-slate-200 font-bold">
                     Cancel
                   </button>
-                  <button type="button" onClick={handleCreatePoll} className="flex-1 px-4 py-3 rounded-2xl bg-blue-600 hover:bg-blue-700 text-white font-bold inline-flex items-center justify-center gap-2">
+                  <button type="button" onClick={handleCreatePoll} className="flex-1 px-4 py-3 rounded-2xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold inline-flex items-center justify-center gap-2">
                     <Users className="w-4 h-4"/>
                     Create
                   </button>
@@ -174,3 +174,4 @@ export const GroupPlanningModal = (props) => {
         </Backdrop>)}
     </AnimatePresence>);
 };
+

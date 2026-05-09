@@ -65,9 +65,9 @@ export const ImageUpload = ({ onUploadSuccess, folder = 'uploads', label = 'Uplo
               </div>) : (<button onClick={removeImage} type="button" className="absolute top-2 right-2 p-1.5 bg-red-500 text-white rounded-full opacity-0 group-hover:opacity-100 transition-opacity">
                 <X className="w-4 h-4"/>
               </button>)}
-          </div>) : (<button type="button" onClick={() => fileInputRef.current?.click()} disabled={isUploading} className="w-full aspect-video flex flex-col items-center justify-center border-2 border-dashed border-slate-300 dark:border-slate-700 rounded-xl hover:border-blue-500 dark:hover:border-blue-400 hover:bg-blue-50/50 dark:hover:bg-blue-900/10 transition-all group">
-            <div className="p-3 rounded-full bg-slate-100 dark:bg-slate-800 group-hover:bg-blue-100 dark:group-hover:bg-blue-900/30 transition-colors">
-              {isUploading ? (<Loader2 className="w-6 h-6 text-blue-600 animate-spin"/>) : (<Upload className="w-6 h-6 text-slate-500 dark:text-slate-400 group-hover:text-blue-600"/>)}
+          </div>) : (<button type="button" onClick={() => fileInputRef.current?.click()} disabled={isUploading} className="w-full aspect-video flex flex-col items-center justify-center border-2 border-dashed border-slate-300 dark:border-slate-700 rounded-xl hover:border-emerald-500 dark:hover:border-emerald-400 hover:bg-emerald-50/50 dark:hover:bg-emerald-900/10 transition-all group">
+            <div className="p-3 rounded-full bg-slate-100 dark:bg-slate-800 group-hover:bg-emerald-100 dark:group-hover:bg-emerald-900/30 transition-colors">
+              {isUploading ? (<Loader2 className="w-6 h-6 text-emerald-600 animate-spin"/>) : (<Upload className="w-6 h-6 text-slate-500 dark:text-slate-400 group-hover:text-emerald-600"/>)}
             </div>
             <span className="mt-2 text-sm text-slate-500 dark:text-slate-400">
               {isUploading ? 'Uploading...' : 'Click to upload or drag and drop'}
@@ -81,3 +81,4 @@ export const ImageUpload = ({ onUploadSuccess, folder = 'uploads', label = 'Uplo
       </div>
     </div>);
 };
+

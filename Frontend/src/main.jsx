@@ -4,12 +4,10 @@ import { createRoot } from 'react-dom/client';
 import { BrowserRouter } from 'react-router-dom';
 import App from './App';
 import { AuthProvider } from './context/AuthContext';
-import { applyInitialTheme, ThemeProvider } from './theme';
+import { applyInitialTheme, ThemeProvider } from './context/ThemeContext';
+import { API_BASE_URL } from './services/api';
 import './index.css';
-const backendOrigin = String(import.meta.env.VITE_BACKEND_ORIGIN ?? '').trim();
-if (backendOrigin) {
-    axios.defaults.baseURL = backendOrigin;
-}
+axios.defaults.baseURL = API_BASE_URL;
 axios.defaults.withCredentials = true;
 applyInitialTheme();
 createRoot(document.getElementById('root')).render(<StrictMode>

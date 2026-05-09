@@ -49,7 +49,7 @@ const Sidebar = () => {
           <BrandLogo variant="mark" className="w-10 h-10 rounded-xl"/>
           <div>
             <h1 className="font-bold text-lg leading-none tracking-tight">Komroung</h1>
-            <span className="text-[10px] font-bold text-blue-600 uppercase tracking-wider">Platform</span>
+            <span className="text-[10px] font-bold text-emerald-600 uppercase tracking-wider">Platform</span>
           </div>
         </div>
       </div>
@@ -57,14 +57,14 @@ const Sidebar = () => {
       <nav className="mt-2 px-4 space-y-1 flex-1 overflow-y-auto custom-scrollbar">
         <p className="px-3 mb-2 text-[10px] uppercase font-bold tracking-[0.15em] text-slate-400 dark:text-slate-500">Navigation</p>
         {ownerNav.map((item) => (<NavLink key={item.path} to={item.path} className={({ isActive }) => cn("flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all group", isActive
-                ? "bg-blue-600 text-white shadow-md shadow-blue-500/20"
-                : "text-slate-600 dark:text-slate-400 hover:bg-blue-50 dark:hover:bg-blue-900/20 hover:text-blue-600 dark:hover:text-blue-400")}>
+                ? "bg-emerald-600 text-white shadow-md shadow-emerald-500/20"
+                : "text-slate-600 dark:text-slate-400 hover:bg-emerald-50 dark:hover:bg-emerald-900/20 hover:text-emerald-600 dark:hover:text-emerald-400")}>
             {({ isActive }) => (<>
-                <item.icon size={20} className={cn("transition-colors", "group-hover:text-blue-600 group-[.bg-blue-600]:text-white")}/>
+                <item.icon size={20} className={cn("transition-colors", "group-hover:text-emerald-600 group-[.bg-emerald-600]:text-white")}/>
                 <span className="font-semibold text-sm flex-1">{item.label}</span>
                 {item.count !== undefined && item.count !== null && (<span className={cn("px-2 py-0.5 rounded-full text-[10px] font-bold", isActive
-                        ? "bg-white text-blue-600"
-                        : "bg-blue-100 text-blue-600 dark:bg-blue-900/40 dark:text-blue-400 group-hover:bg-blue-600 group-hover:text-white")}>
+                        ? "bg-white text-emerald-600"
+                        : "bg-emerald-100 text-emerald-600 dark:bg-emerald-900/40 dark:text-emerald-400 group-hover:bg-emerald-600 group-hover:text-white")}>
                     {item.count}
                   </span>)}
               </>)}
@@ -73,9 +73,9 @@ const Sidebar = () => {
         {ownerInsights.length > 0 && (<>
             <p className="px-3 mt-8 mb-2 text-[10px] uppercase font-bold tracking-[0.15em] text-slate-400 dark:text-slate-500">Insights</p>
             {ownerInsights.map((item) => (<NavLink key={item.path} to={item.path} className={({ isActive }) => cn("flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all group", isActive
-                    ? "bg-blue-600 text-white shadow-md shadow-blue-500/20"
-                    : "text-slate-600 dark:text-slate-400 hover:bg-blue-50 dark:hover:bg-blue-900/20 hover:text-blue-600 dark:hover:text-blue-400")}>
-                <item.icon size={20} className={cn("transition-colors", "group-hover:text-blue-600 group-[.bg-blue-600]:text-white")}/>
+                    ? "bg-emerald-600 text-white shadow-md shadow-emerald-500/20"
+                    : "text-slate-600 dark:text-slate-400 hover:bg-emerald-50 dark:hover:bg-emerald-900/20 hover:text-emerald-600 dark:hover:text-emerald-400")}>
+                <item.icon size={20} className={cn("transition-colors", "group-hover:text-emerald-600 group-[.bg-emerald-600]:text-white")}/>
                 <span className="font-semibold text-sm">{item.label}</span>
               </NavLink>))}
           </>)}
@@ -86,10 +86,11 @@ const Sidebar = () => {
           <img alt="User Profile" className="w-10 h-10 rounded-full object-cover border border-white dark:border-slate-700 shadow-sm" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBf1j8gZCAIYB9RtAz0xbUOZ2Wf5lv7Of09l86ZljBDTiN9S-1jrLFpggpyAWfXlmtqluOGo-u13JydHHQzTINF94E1AkZ8zOhdCzVoWb8DrjxajIqDptveyDTiBMLjvc-SOqLiScxuArSCmtoFwR3D0ML1IRVGOqcqhtsSAc90wGoBpypE37vZqFmqyasqPibC8tcaEQivPs7b-0Zm7qgds4LDwFHMCLCghjqsbb9gFiLM1dQRDvshaO0E1GzVdMRflmZpoVelNIg" referrerPolicy="no-referrer"/>
           <div className="overflow-hidden">
             <p className="text-sm font-bold truncate leading-tight">Alex Sterling</p>
-            <p className="text-[10px] text-blue-600 font-bold truncate uppercase tracking-wider">Premium Partner</p>
+            <p className="text-[10px] text-emerald-600 font-bold truncate uppercase tracking-wider">Premium Partner</p>
           </div>
         </div>
       </div>
     </aside>);
 };
 export default Sidebar;
+

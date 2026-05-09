@@ -46,7 +46,7 @@ export const NotificationDropdown = ({ isOpen, onClose, notifications: notificat
     }, [notificationsProp]);
     const getIcon = (type) => {
         switch (type) {
-            case 'user': return <UserPlus size={16} className="text-blue-500"/>;
+            case 'user': return <UserPlus size={16} className="text-emerald-500"/>;
             case 'booking': return <Calendar size={16} className="text-emerald-500"/>;
             case 'system': return <CheckCircle2 size={16} className="text-slate-500"/>;
             case 'alert': return <AlertCircle size={16} className="text-red-500"/>;
@@ -89,7 +89,7 @@ export const NotificationDropdown = ({ isOpen, onClose, notifications: notificat
               {items.map((notif) => (<div key={notif.id} onClick={() => handleItemClick(notif)} className={cn("px-4 py-3 transition-colors flex gap-3", isClickable
                     ? "cursor-pointer hover:bg-slate-50 dark:hover:bg-slate-800/60"
                     : "cursor-default", !notif.read && "bg-primary/5")}>
-                  <div className={cn("w-9 h-9 rounded-full flex items-center justify-center flex-shrink-0", notif.type === 'user' ? "bg-blue-100 dark:bg-blue-900/20" :
+                  <div className={cn("w-9 h-9 rounded-full flex items-center justify-center flex-shrink-0", notif.type === 'user' ? "bg-emerald-100 dark:bg-emerald-900/20" :
                     notif.type === 'booking' ? "bg-emerald-100 dark:bg-emerald-900/20" :
                         notif.type === 'alert' ? "bg-red-100 dark:bg-red-900/20" : "bg-slate-100 dark:bg-slate-800")}>
                     {getIcon(notif.type)}
@@ -124,3 +124,4 @@ export const NotificationDropdown = ({ isOpen, onClose, notifications: notificat
       </motion.div>
     </>);
 };
+

@@ -1,4 +1,5 @@
 const STORAGE_KEY = 'vc1.groupPlanning.groups';
+
 const safeParseGroups = (raw) => {
     if (!raw)
         return {};
@@ -12,33 +13,39 @@ const safeParseGroups = (raw) => {
         return {};
     }
 };
+
 export function normalizeAccessCode(value) {
     return String(value ?? '')
         .replace(/\s+/g, '')
         .trim()
         .toUpperCase();
 }
+
 export function createId() {
     if (typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function') {
         return crypto.randomUUID();
     }
     return `id_${Date.now().toString(36)}_${Math.random().toString(36).slice(2, 10)}`;
 }
+
 export function loadGroupsFromStorage() {
     if (typeof window === 'undefined' || !window.localStorage)
         return {};
     return safeParseGroups(window.localStorage.getItem(STORAGE_KEY));
 }
+
 const saveGroupsToStorage = (groups) => {
     if (typeof window === 'undefined' || !window.localStorage)
         return;
     window.localStorage.setItem(STORAGE_KEY, JSON.stringify(groups));
 };
+
 export function upsertGroupInStorage(group) {
     const groups = loadGroupsFromStorage();
     groups[group.id] = group;
     saveGroupsToStorage(groups);
 }
+
 export function findGroupByCode(code) {
     const normalized = normalizeAccessCode(code);
     if (!normalized)

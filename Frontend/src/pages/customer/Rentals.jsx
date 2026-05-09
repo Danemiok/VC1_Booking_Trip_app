@@ -241,7 +241,7 @@ export const Rentals = ({ onBack, onSelectVehicle }) => {
       <section className="relative h-[54vh] min-h-[500px] overflow-hidden mb-14">
         <img src="https://images.unsplash.com/photo-1503376780353-7e6692767b70?auto=format&fit=crop&q=80&w=2000" alt="Luxury Car Rental Banner" className="absolute inset-0 w-full h-full object-cover" referrerPolicy="no-referrer"/>
         <div className="absolute inset-0 bg-gradient-to-r from-slate-950/85 via-slate-900/45 to-slate-950/70"/>
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_left,rgba(37,99,235,0.32),transparent_55%)]"/>
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_left,rgba(47,160,132,0.32),transparent_55%)]"/>
         <div className="absolute inset-0 flex flex-col items-center justify-center text-center px-6">
           <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="max-w-4xl">
             <p className="text-white/80 text-[11px] font-bold uppercase tracking-[0.4em] mb-5">Drive and Stay</p>
@@ -263,23 +263,23 @@ export const Rentals = ({ onBack, onSelectVehicle }) => {
 
         {/* Tabs */}
         <div className="flex items-center gap-8 mb-8 border-b border-slate-100 dark:border-slate-800">
-          <button onClick={() => setActiveTab('vehicles')} className={`flex items-center gap-2 pb-4 text-sm font-bold transition-all relative ${activeTab === 'vehicles' ? 'text-blue-600' : 'text-slate-400 hover:text-slate-600'}`}>
+          <button onClick={() => setActiveTab('vehicles')} className={`flex items-center gap-2 pb-4 text-sm font-bold transition-all relative ${activeTab === 'vehicles' ? 'text-emerald-600' : 'text-slate-400 hover:text-slate-600'}`}>
             <Car className="w-4 h-4"/>
             Vehicle Rentals
-            {activeTab === 'vehicles' && (<motion.div layoutId="activeTab" className="absolute bottom-0 left-0 right-0 h-0.5 bg-blue-600"/>)}
+            {activeTab === 'vehicles' && (<motion.div layoutId="activeTab" className="absolute bottom-0 left-0 right-0 h-0.5 bg-emerald-600"/>)}
           </button>
-          <button onClick={() => setActiveTab('homes')} className={`flex items-center gap-2 pb-4 text-sm font-bold transition-all relative ${activeTab === 'homes' ? 'text-blue-600' : 'text-slate-400 hover:text-slate-600'}`}>
+          <button onClick={() => setActiveTab('homes')} className={`flex items-center gap-2 pb-4 text-sm font-bold transition-all relative ${activeTab === 'homes' ? 'text-emerald-600' : 'text-slate-400 hover:text-slate-600'}`}>
             <Home className="w-4 h-4"/>
             Vacation Homes
-            {activeTab === 'homes' && (<motion.div layoutId="activeTab" className="absolute bottom-0 left-0 right-0 h-0.5 bg-blue-600"/>)}
+            {activeTab === 'homes' && (<motion.div layoutId="activeTab" className="absolute bottom-0 left-0 right-0 h-0.5 bg-emerald-600"/>)}
           </button>
         </div>
 
         {/* Search Bar */}
-        <div className="bg-white dark:bg-slate-900 p-2 rounded-[2rem] shadow-2xl shadow-blue-900/5 border border-slate-100 dark:border-slate-800 flex flex-col md:flex-row items-center gap-2 mb-16">
+        <div className="bg-white dark:bg-slate-900 p-2 rounded-[2rem] shadow-2xl shadow-emerald-900/5 border border-slate-100 dark:border-slate-800 flex flex-col md:flex-row items-center gap-2 mb-16">
           <div className="flex-1 grid grid-cols-1 md:grid-cols-3 gap-2 w-full">
             <div className="flex items-center gap-3 px-6 py-4 hover:bg-slate-50 dark:hover:bg-slate-800/50 rounded-2xl transition-colors cursor-pointer group">
-              <Search className="w-5 h-5 text-blue-500 group-hover:scale-110 transition-transform"/>
+              <Search className="w-5 h-5 text-emerald-500 group-hover:scale-110 transition-transform"/>
               <div className="flex-1">
                 <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-0.5">
                   {activeTab === 'vehicles' ? 'Vehicle Name' : 'Stay Name'}
@@ -288,21 +288,21 @@ export const Rentals = ({ onBack, onSelectVehicle }) => {
               </div>
             </div>
             <div className="flex items-center gap-3 px-6 py-4 hover:bg-slate-50 dark:hover:bg-slate-800/50 rounded-2xl transition-colors cursor-pointer group border-l border-slate-100 dark:border-slate-800">
-              <MapPin className="w-5 h-5 text-blue-500 group-hover:scale-110 transition-transform"/>
+              <MapPin className="w-5 h-5 text-emerald-500 group-hover:scale-110 transition-transform"/>
               <div className="flex-1">
                 <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-0.5">Location</p>
                 <p className="text-sm font-bold text-slate-300 dark:text-slate-600">Select location</p>
               </div>
             </div>
             <div className="flex items-center gap-3 px-6 py-4 hover:bg-slate-50 dark:hover:bg-slate-800/50 rounded-2xl transition-colors cursor-pointer group border-l border-slate-100 dark:border-slate-800">
-              <Calendar className="w-5 h-5 text-blue-500 group-hover:scale-110 transition-transform"/>
+              <Calendar className="w-5 h-5 text-emerald-500 group-hover:scale-110 transition-transform"/>
               <div className="flex-1">
                 <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-0.5">Check in - out</p>
                 <p className="text-sm font-bold text-slate-300 dark:text-slate-600">Set dates</p>
               </div>
             </div>
           </div>
-          <button onClick={() => document.getElementById('rental-results')?.scrollIntoView({ behavior: 'smooth', block: 'start' })} className="w-full md:w-auto bg-blue-600 hover:bg-blue-700 text-white px-12 py-5 rounded-[1.5rem] font-bold text-sm shadow-xl shadow-blue-600/20 transition-all active:scale-95">
+          <button onClick={() => document.getElementById('rental-results')?.scrollIntoView({ behavior: 'smooth', block: 'start' })} className="w-full md:w-auto bg-emerald-600 hover:bg-emerald-700 text-white px-12 py-5 rounded-[1.5rem] font-bold text-sm shadow-xl shadow-emerald-600/20 transition-all active:scale-95">
             Search
           </button>
         </div>
@@ -329,20 +329,20 @@ export const Rentals = ({ onBack, onSelectVehicle }) => {
                     <span>$0</span>
                     <span>${priceRange}+</span>
                   </div>
-                  <input type="range" min="0" max="1000" value={priceRange} onChange={(e) => setPriceRange(parseInt(e.target.value))} className="w-full h-1 bg-slate-100 dark:bg-slate-800 rounded-lg appearance-none cursor-pointer accent-blue-600"/>
+                  <input type="range" min="0" max="1000" value={priceRange} onChange={(e) => setPriceRange(parseInt(e.target.value))} className="w-full h-1 bg-slate-100 dark:bg-slate-800 rounded-lg appearance-none cursor-pointer accent-emerald-600"/>
                 </div>
 
                 {/* Vehicle Class */}
                 {activeTab === 'vehicles' && (<div className="space-y-4">
                     <div className="flex items-center justify-between">
                       <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Vehicle Class</label>
-                      {selectedVehicleClasses.length > 0 && (<button onClick={() => setSelectedVehicleClasses([])} className="text-[10px] font-bold text-blue-600 hover:underline">
+                      {selectedVehicleClasses.length > 0 && (<button onClick={() => setSelectedVehicleClasses([])} className="text-[10px] font-bold text-emerald-600 hover:underline">
                           Clear
                         </button>)}
                     </div>
                     <div className="space-y-3">
                       {vehicleClasses.map((cls) => (<label key={cls} className="flex items-center gap-3 cursor-pointer group">
-                          <input type="checkbox" checked={selectedVehicleClasses.includes(cls)} onChange={() => toggleVehicleClass(cls)} className="w-4 h-4 rounded border-slate-200 text-blue-600 focus:ring-blue-500"/>
+                          <input type="checkbox" checked={selectedVehicleClasses.includes(cls)} onChange={() => toggleVehicleClass(cls)} className="w-4 h-4 rounded border-slate-200 text-emerald-600 focus:ring-emerald-500"/>
                           <span className="text-xs font-medium text-slate-600 dark:text-slate-400 group-hover:text-slate-900 dark:group-hover:text-white transition-colors">{cls}</span>
                         </label>))}
                     </div>
@@ -352,7 +352,7 @@ export const Rentals = ({ onBack, onSelectVehicle }) => {
                 <div className="space-y-4">
                   <div className="flex items-center justify-between">
                     <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Instant Booking</label>
-                    <button onClick={() => setShowInstantOnly(!showInstantOnly)} className={`w-10 h-5 rounded-full transition-all relative ${showInstantOnly ? 'bg-blue-600' : 'bg-slate-200 dark:bg-slate-700'}`}>
+                    <button onClick={() => setShowInstantOnly(!showInstantOnly)} className={`w-10 h-5 rounded-full transition-all relative ${showInstantOnly ? 'bg-emerald-600' : 'bg-slate-200 dark:bg-slate-700'}`}>
                       <div className={`absolute top-0.5 w-4 h-4 bg-white rounded-full transition-all ${showInstantOnly ? 'left-5.5' : 'left-0.5'}`}/>
                     </button>
                   </div>
@@ -365,7 +365,7 @@ export const Rentals = ({ onBack, onSelectVehicle }) => {
                   <p className="text-xs font-bold text-slate-900 dark:text-white mb-3 leading-relaxed">
                     Bundle your car & stay to save up to 15% on your booking!
                   </p>
-                  <button className="text-[10px] font-bold text-blue-600 flex items-center gap-1 hover:underline">
+                  <button className="text-[10px] font-bold text-emerald-600 flex items-center gap-1 hover:underline">
                     Learn more <ArrowRight className="w-3 h-3"/>
                   </button>
                 </div>
@@ -414,7 +414,7 @@ export const Rentals = ({ onBack, onSelectVehicle }) => {
                         car.route_description ||
                         car.drive ||
                         (car.bags ? `${car.bags} Bags` : car.ac || 'Unlim.');
-                    return (<motion.div key={car.id} initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} className="bg-white dark:bg-slate-900 rounded-[2rem] border border-slate-100 dark:border-slate-800 overflow-hidden group hover:shadow-2xl hover:shadow-blue-900/5 transition-all duration-500">
+                    return (<motion.div key={car.id} initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} className="bg-white dark:bg-slate-900 rounded-[2rem] border border-slate-100 dark:border-slate-800 overflow-hidden group hover:shadow-2xl hover:shadow-emerald-900/5 transition-all duration-500">
                           <div className="relative h-48 overflow-hidden">
                             <img src={car.image} alt={car.name} className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" referrerPolicy="no-referrer"/>
                             {car.badge && (<div className="absolute top-4 left-4">
@@ -433,7 +433,7 @@ export const Rentals = ({ onBack, onSelectVehicle }) => {
                               <div className="flex items-center justify-between mb-4">
                                 <h3 className="text-lg font-bold text-slate-900 dark:text-white">{car.name}</h3>
                                 <div className="text-right">
-                                  <p className="text-xl font-bold text-blue-600 leading-none">${displayPrice}</p>
+                                  <p className="text-xl font-bold text-emerald-600 leading-none">${displayPrice}</p>
                                   {hasCarDiscount && (<p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-slate-400 line-through">
                                       ${originalPrice}
                                     </p>)}
@@ -465,17 +465,17 @@ export const Rentals = ({ onBack, onSelectVehicle }) => {
                                 <span className="text-[9px] font-bold text-emerald-600 uppercase tracking-widest">{car.insurance}</span>
                               </div>)}
                             {car.style && (<div className="flex items-center gap-2 mb-4">
-                                <div className="w-1 h-1 bg-blue-500 rounded-full"/>
-                                <span className="text-[9px] font-bold text-blue-600 uppercase tracking-widest">{car.style}</span>
+                                <div className="w-1 h-1 bg-emerald-500 rounded-full"/>
+                                <span className="text-[9px] font-bold text-emerald-600 uppercase tracking-widest">{car.style}</span>
                               </div>)}
-                            <button onClick={() => onSelectVehicle?.(car)} className="w-full bg-blue-600 hover:bg-blue-700 text-white py-3.5 rounded-xl text-xs font-bold transition-all active:scale-95 shadow-lg shadow-blue-600/10">
+                            <button onClick={() => onSelectVehicle?.(car)} className="w-full bg-emerald-600 hover:bg-emerald-700 text-white py-3.5 rounded-xl text-xs font-bold transition-all active:scale-95 shadow-lg shadow-emerald-600/10">
                               Book Now
                             </button>
                           </div>
                         </motion.div>);
                 })}
                   </div>) : (<div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
-                    {paginatedItems.map((stay) => (<motion.div key={stay.id} initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} className="bg-white dark:bg-slate-900 rounded-[2rem] border border-slate-100 dark:border-slate-800 overflow-hidden group hover:shadow-2xl hover:shadow-blue-900/5 transition-all duration-500">
+                    {paginatedItems.map((stay) => (<motion.div key={stay.id} initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} className="bg-white dark:bg-slate-900 rounded-[2rem] border border-slate-100 dark:border-slate-800 overflow-hidden group hover:shadow-2xl hover:shadow-emerald-900/5 transition-all duration-500">
                         <div className="relative h-52 overflow-hidden">
                           <img src={stay.image} alt={stay.name} className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" referrerPolicy="no-referrer"/>
                           <div className="absolute top-4 right-4">
@@ -488,7 +488,7 @@ export const Rentals = ({ onBack, onSelectVehicle }) => {
                         <div className="p-6">
                           <div className="flex items-center justify-between gap-4 mb-3">
                             <h3 className="text-lg font-bold text-slate-900 dark:text-white leading-snug">{stay.name}</h3>
-                            <p className="text-xl font-bold text-blue-600 shrink-0">${stay.price}</p>
+                            <p className="text-xl font-bold text-emerald-600 shrink-0">${stay.price}</p>
                           </div>
                           <p className="text-xs text-slate-500 dark:text-slate-400 mb-4">{stay.location}</p>
                           <div className="flex items-center justify-between text-[10px] font-bold text-slate-500 mb-5">
@@ -499,7 +499,7 @@ export const Rentals = ({ onBack, onSelectVehicle }) => {
                         ...stay,
                         type: 'Vacation Stay',
                         transmission: 'Home'
-                    })} className="w-full bg-blue-600 hover:bg-blue-700 text-white py-3.5 rounded-xl text-xs font-bold transition-all active:scale-95 shadow-lg shadow-blue-600/10">
+                    })} className="w-full bg-emerald-600 hover:bg-emerald-700 text-white py-3.5 rounded-xl text-xs font-bold transition-all active:scale-95 shadow-lg shadow-emerald-600/10">
                             Reserve Stay
                           </button>
                         </div>
@@ -531,7 +531,7 @@ export const Rentals = ({ onBack, onSelectVehicle }) => {
               <h2 className="text-5xl font-bold text-slate-900 dark:text-white mb-4 tracking-tight">Exclusive Stays</h2>
               <p className="text-slate-500 dark:text-slate-400 text-lg">Curated architectural gems for the discerning traveler.</p>
             </div>
-            <button className="flex items-center gap-2 text-sm font-bold text-blue-600 hover:underline group">
+            <button className="flex items-center gap-2 text-sm font-bold text-emerald-600 hover:underline group">
               Explore all <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform"/>
             </button>
           </div>
@@ -544,12 +544,13 @@ export const Rentals = ({ onBack, onSelectVehicle }) => {
                     <Heart className="w-5 h-5"/>
                   </button>
                 </div>
-                <h3 className="text-lg font-bold text-slate-900 dark:text-white mb-1 group-hover:text-blue-600 transition-colors">{stay.name}</h3>
+                <h3 className="text-lg font-bold text-slate-900 dark:text-white mb-1 group-hover:text-emerald-600 transition-colors">{stay.name}</h3>
                 <p className="text-sm text-slate-400 mb-3">{stay.location}</p>
-                <p className="text-sm font-bold text-blue-600">${stay.price} <span className="text-slate-400 font-medium">/ night</span></p>
+                <p className="text-sm font-bold text-emerald-600">${stay.price} <span className="text-slate-400 font-medium">/ night</span></p>
               </motion.div>))}
           </div>
         </div>)}
       </div>
     </div>);
 };
+

@@ -1,6 +1,6 @@
 import { apiRequest } from '@/services/api';
 
-const DESTINATION_ENDPOINTS = ['/destinations', '/destinations/public', '/destinations/public/all'];
+const DESTINATION_ENDPOINTS = ['/destinations', '/destinations/public'];
 
 function asArray(payload) {
   if (Array.isArray(payload)) return payload;

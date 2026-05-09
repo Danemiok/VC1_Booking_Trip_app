@@ -228,13 +228,13 @@ export const AdminProfile = ({ onDirtyChange }) => {
         if (alert.type === 'warning') {
             return <AlertTriangle size={18} className="text-amber-600 dark:text-amber-400"/>;
         }
-        return <Info size={18} className="text-blue-600 dark:text-blue-400"/>;
+        return <Info size={18} className="text-emerald-600 dark:text-emerald-400"/>;
     };
     const alertStyles = alert?.type === 'success'
         ? 'border-emerald-200 bg-emerald-50/90 dark:border-emerald-900/70 dark:bg-emerald-900/20'
         : alert?.type === 'warning'
             ? 'border-amber-200 bg-amber-50/90 dark:border-amber-900/70 dark:bg-amber-900/20'
-            : 'border-blue-200 bg-blue-50/90 dark:border-blue-900/70 dark:bg-blue-900/20';
+            : 'border-emerald-200 bg-emerald-50/90 dark:border-emerald-900/70 dark:bg-emerald-900/20';
     const handleCancelAction = () => {
         if (!isEditingProfile) {
             setAlert({ type: 'info', message: 'No edit session is active.' });
@@ -319,7 +319,7 @@ export const AdminProfile = ({ onDirtyChange }) => {
             <h2 className="text-2xl font-bold tracking-tight">{profileForm.fullName || 'Admin'}</h2>
             <p className="text-slate-600 dark:text-slate-300 text-lg md:text-xl mt-1">{toTitleCase(userRole)} - {memberSinceLabel}</p>
             <div className="flex flex-wrap items-center gap-2.5 pt-2">
-              <span className="px-3 py-1 rounded-full text-sm font-semibold bg-blue-100 text-blue-700 border border-blue-200 dark:bg-blue-500/20 dark:text-blue-300 dark:border-blue-500/30">Active Status</span>
+              <span className="px-3 py-1 rounded-full text-sm font-semibold bg-emerald-100 text-emerald-700 border border-emerald-200 dark:bg-emerald-500/20 dark:text-emerald-300 dark:border-emerald-500/30">Active Status</span>
               <span className="px-3 py-1 rounded-full text-sm font-semibold bg-emerald-100 text-emerald-700 border border-emerald-200 dark:bg-emerald-500/20 dark:text-emerald-300 dark:border-emerald-500/30">Verified</span>
             </div>
             <p className="text-sm text-slate-500 dark:text-slate-400 mt-3">Click the camera icon to edit photo.</p>
@@ -484,3 +484,4 @@ export const AdminProfile = ({ onDirtyChange }) => {
         </>)}
     </div>);
 };
+

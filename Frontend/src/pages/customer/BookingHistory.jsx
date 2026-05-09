@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { differenceInCalendarDays, format } from 'date-fns';
 import { CheckCircle2, ChevronRight, MapPin, Calendar, Users, Edit2, Download, Share2, Hotel, Car, Activity, Plus, MessageSquare, CreditCard, QrCode, ShieldCheck, RefreshCw, Landmark, Wallet, X, Save } from 'lucide-react';
@@ -30,6 +30,34 @@ const toReadableDateRange = (startDate, endDate) => {
     }
     return `${format(start, 'MMM d, yyyy')} - ${format(end, 'MMM d, yyyy')}`;
 };
+const formatHistoryMoney = (value) => {
+    const amount = Number(value);
+    if (!Number.isFinite(amount)) {
+        return '$0.00';
+    }
+    return `$${amount.toFixed(2)}`;
+};
+const formatHistoryDate = (value) => {
+    if (!value)
+        return '';
+    const parsed = new Date(String(value));
+    if (Number.isNaN(parsed.getTime())) {
+        return String(value);
+    }
+    return format(parsed, 'MMM d, yyyy');
+};
+const normalizeHistoryRow = (row) => ({
+    id: String(row?.id ?? row?.booking_id ?? row?.booking_code ?? `history-${Math.random().toString(36).slice(2, 8)}`),
+    bookingCode: String(row?.booking_code ?? row?.bookingCode ?? ''),
+    destination: String(row?.destination ?? ''),
+    travelDate: String(row?.travel_date ?? row?.travelDate ?? ''),
+    travelers: Number(row?.travelers ?? 0) || 0,
+    amount: Number(row?.amount ?? 0) || 0,
+    status: String(row?.status ?? 'pending'),
+    customerName: row?.customer_name ?? row?.customerName ?? '',
+    customerEmail: row?.customer_email ?? row?.customerEmail ?? '',
+    createdAt: row?.created_at ?? row?.createdAt ?? null,
+});
 export const BookingHistory = ({ onPaymentClick, onHotelClick, onRentalClick, onGroupPlanningClick, selectedActivityIds, setSelectedActivityIds, tripData, setTripData }) => {
     const availableActivities = AVAILABLE_ACTIVITIES;
     const { user, isAuthenticated } = useAuth();
@@ -63,6 +91,9 @@ export const BookingHistory = ({ onPaymentClick, onHotelClick, onRentalClick, on
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [bookingError, setBookingError] = useState(null);
     const [bookingSuccess, setBookingSuccess] = useState(false);
+    const [historyRows, setHistoryRows] = useState([]);
+    const [historyLoading, setHistoryLoading] = useState(false);
+    const [historyError, setHistoryError] = useState(null);
     const selectedActivities = availableActivities.filter((a) => selectedActivityIds.includes(a.id));
     const pricing = calculateTripPricing({ tripData, selectedActivities });
     const bookingStayLabel = React.useMemo(() => {
@@ -85,6 +116,39 @@ export const BookingHistory = ({ onPaymentClick, onHotelClick, onRentalClick, on
             guestCount: parseGuestCount(tripData?.guests)
         });
     }, [tripData, isEditModalOpen]);
+    const loadBookingHistory = useCallback(async () => {
+        if (!isAuthenticated) {
+            setHistoryRows([]);
+            setHistoryLoading(false);
+            setHistoryError(null);
+            return;
+        }
+
+        try {
+            setHistoryLoading(true);
+            setHistoryError(null);
+            const response = await bookingService.getBookingHistory({ limit: 12 });
+            const rows = Array.isArray(response.data) ? response.data.map(normalizeHistoryRow) : [];
+            setHistoryRows(rows);
+        }
+        catch (error) {
+            setHistoryError(error instanceof Error ? error.message : 'Failed to load booking history');
+            setHistoryRows([]);
+        }
+        finally {
+            setHistoryLoading(false);
+        }
+    }, [isAuthenticated]);
+
+    useEffect(() => {
+        loadBookingHistory();
+    }, [loadBookingHistory]);
+
+    const handleRefreshHistory = useCallback(async () => {
+        if (!isAuthenticated)
+            return;
+        await loadBookingHistory();
+    }, [isAuthenticated, loadBookingHistory]);
     // Function to save booking to database
     const saveBookingToDatabase = async (opts) => {
         try {
@@ -335,7 +399,7 @@ export const BookingHistory = ({ onPaymentClick, onHotelClick, onRentalClick, on
             doc.text("Trip Summary", margin, y);
             y += 12;
             doc.setFontSize(16);
-            doc.setTextColor(37, 99, 235); // blue-600
+            doc.setTextColor(37, 99, 235); // emerald-600
             doc.text(`${tripData.title} ${tripData.emoji}`, margin, y);
             y += 10;
             doc.setFontSize(10);
@@ -463,64 +527,6 @@ Booked via Cambodia Travel`;
             console.error('Error sharing:', err);
         }
     };
-    const supportContent = {
-        help: {
-            title: 'Help Center',
-            subtitle: 'We are here to make your trip smooth and stress-free.',
-            intro: 'Welcome to our Help Center! You can contact us via email or live chat. Here you’ll find answers to the most common questions and tips to get the best experience.',
-            details: [
-                'Company: Cambodia Travel (local-first travel platform)',
-                'Email: support@cambodiatravel.com',
-                'Live chat: 24/7 in-app concierge',
-                'Typical response time: under 15 minutes'
-            ],
-            faqsTitle: 'Common FAQs',
-            faqs: [
-                'How do I change my hotel or transport booking?',
-                'Can I add or remove guests after booking?',
-                'Where can I download my receipt?',
-                'How do refunds work if plans change?'
-            ],
-            tipsTitle: 'Helpful tips',
-            tips: [
-                'Double-check dates and guest counts before paying.',
-                'Download your receipt for quick hotel check-in.',
-                'Share your itinerary with fellow travelers.'
-            ]
-        },
-        terms: {
-            title: 'Terms of Service',
-            subtitle: 'A quick summary of the rules that keep everyone safe.',
-            intro: 'By booking with us, you agree to use the service responsibly and provide accurate information. These terms protect both travelers and partners.',
-            highlights: [
-                'Provide accurate traveler details and payment information.',
-                'No resale or unauthorized commercial use of bookings.',
-                'Respect property rules and local regulations.',
-                'Changes and cancellations follow the stated policy for each booking.'
-            ]
-        },
-        privacy: {
-            title: 'Privacy Policy',
-            subtitle: 'Clear, simple information about how we handle your data.',
-            intro: 'We collect only the data needed to manage bookings, provide support, and improve your experience. We never sell your personal information.',
-            controlsTitle: 'Your controls',
-            controls: [
-                'Request a copy of your data.',
-                'Update communication preferences.',
-                'Ask for account deletion or anonymization.'
-            ]
-        },
-        refund: {
-            title: 'Refund Policy',
-            subtitle: 'Refund eligibility and timelines at a glance.',
-            intro: 'Refunds depend on the cancellation window and the provider policy. We will always show the refundable amount before you confirm a cancellation.',
-            details: [
-                'Eligibility: within the provider’s cancellation window.',
-                'Timeline: 5–10 business days after approval.',
-                'Process: submit a request and we handle the provider follow-up.'
-            ]
-        }
-    };
     return (<div className="min-h-screen bg-slate-50 dark:bg-slate-950 pt-24 pb-20 px-4 sm:px-6 lg:px-8">
       <div className="max-w-7xl mx-auto">
         
@@ -534,12 +540,81 @@ Booked via Cambodia Travel`;
         {bookingError && (<motion.div initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }} className="bg-red-50 border border-red-200 text-red-700 px-6 py-4 rounded-2xl mb-6">
             {bookingError}
           </motion.div>)}
+
+        {/* Booking History */}
+        <section className="mb-12">
+          <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-3 mb-4">
+            <div>
+              <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-emerald-600">Database history</p>
+              <h3 className="text-2xl font-bold text-slate-900 dark:text-white">Booking history from <code className="px-2 py-0.5 rounded-md bg-slate-100 dark:bg-slate-800 text-sm">booking_history</code></h3>
+              <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">This section is loaded directly from the backend table for the signed-in customer.</p>
+            </div>
+            <button onClick={handleRefreshHistory} disabled={historyLoading || !isAuthenticated} className="inline-flex items-center justify-center gap-2 px-4 py-2 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 text-sm font-bold text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors disabled:opacity-50">
+              <RefreshCw className={`w-4 h-4 ${historyLoading ? 'animate-spin' : ''}`}/>
+              Refresh
+            </button>
+          </div>
+
+          {!isAuthenticated ? (<div className="rounded-[28px] border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-6 text-slate-600 dark:text-slate-300">
+              Please log in to view your booking history.
+            </div>) : historyError ? (<div className="rounded-[28px] border border-red-200 bg-red-50 text-red-700 p-6">
+              {historyError}
+            </div>) : historyLoading ? (<div className="rounded-[28px] border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-10 flex items-center justify-center">
+              <div className="flex items-center gap-3 text-slate-500 dark:text-slate-400">
+                <div className="h-5 w-5 animate-spin rounded-full border-2 border-emerald-600 border-t-transparent"></div>
+                Loading history...
+              </div>
+            </div>) : historyRows.length === 0 ? (<div className="rounded-[28px] border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-8 text-center">
+              <p className="font-semibold text-slate-900 dark:text-white">No booking history yet.</p>
+              <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">Once you complete a booking, it will appear here from the database.</p>
+            </div>) : (<div className="overflow-hidden rounded-[28px] border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900">
+              <div className="overflow-x-auto">
+                <table className="w-full text-left">
+                  <thead className="bg-slate-50 dark:bg-slate-800/60">
+                    <tr className="text-[10px] uppercase tracking-widest text-slate-500 dark:text-slate-400">
+                      <th className="px-6 py-4">Booking code</th>
+                      <th className="px-6 py-4">Destination</th>
+                      <th className="px-6 py-4">Travel date</th>
+                      <th className="px-6 py-4">Travelers</th>
+                      <th className="px-6 py-4">Amount</th>
+                      <th className="px-6 py-4">Status</th>
+                      <th className="px-6 py-4">Created</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {historyRows.map((row) => (<tr key={row.id} className="border-t border-slate-100 dark:border-slate-800">
+                        <td className="px-6 py-4 font-bold text-emerald-600 whitespace-nowrap">{row.bookingCode || `#${row.id}`}</td>
+                        <td className="px-6 py-4">
+                          <div className="font-semibold text-slate-900 dark:text-white">{row.destination || 'Unknown destination'}</div>
+                          {(row.customerName || row.customerEmail) && (<div className="text-xs text-slate-500 dark:text-slate-400 mt-1">
+                              {row.customerName || row.customerEmail}
+                            </div>)}
+                        </td>
+                        <td className="px-6 py-4 text-sm font-semibold text-slate-700 dark:text-slate-200 whitespace-nowrap">
+                          {formatHistoryDate(row.travelDate) || row.travelDate || '-'}
+                        </td>
+                        <td className="px-6 py-4 text-sm font-semibold text-slate-700 dark:text-slate-200">{row.travelers}</td>
+                        <td className="px-6 py-4 text-sm font-semibold text-slate-700 dark:text-slate-200 whitespace-nowrap">{formatHistoryMoney(row.amount)}</td>
+                        <td className="px-6 py-4">
+                          <span className="inline-flex items-center rounded-full px-3 py-1 text-[10px] font-bold uppercase tracking-wider bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-200">
+                            {row.status}
+                          </span>
+                        </td>
+                        <td className="px-6 py-4 text-sm text-slate-500 dark:text-slate-400 whitespace-nowrap">
+                          {formatHistoryDate(row.createdAt) || '-'}
+                        </td>
+                      </tr>))}
+                  </tbody>
+                </table>
+              </div>
+            </div>)}
+        </section>
         
         {/* Review Banner */}
         <motion.div initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }} className="relative overflow-hidden rounded-[32px] p-16 md:p-24 mb-12 text-center min-h-[450px] flex items-center justify-center group">
           <div className="absolute inset-0">
             <img src="https://images.unsplash.com/photo-1540611025311-01df3cef54b5?auto=format&fit=crop&q=80&w=2000" alt="Cambodia Banner" className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105" referrerPolicy="no-referrer"/>
-            <div className="absolute inset-0 bg-gradient-to-b from-blue-900/80 to-blue-900/40 backdrop-blur-[2px]"/>
+            <div className="absolute inset-0 bg-gradient-to-b from-emerald-900/80 to-emerald-900/40 backdrop-blur-[2px]"/>
           </div>
           
           <div className="relative z-10 w-full">
@@ -562,7 +637,7 @@ Booked via Cambodia Travel`;
             <div className="flex items-center gap-2 text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-2">
               <span>Trips</span>
               <ChevronRight className="w-3 h-3"/>
-              <span className="text-blue-600">{tripData.title}</span>
+              <span className="text-emerald-600">{tripData.title}</span>
             </div>
             <h2 className="text-5xl font-bold text-slate-900 dark:text-white flex items-center gap-3">
               {tripData.title} {tripData.emoji}
@@ -585,7 +660,7 @@ Booked via Cambodia Travel`;
             <button onClick={handleDownload} className="p-3 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors">
               <Download className="w-5 h-5"/>
             </button>
-            <button onClick={onGroupPlanningClick} className="flex items-center gap-2 px-6 py-3 bg-blue-600 text-white rounded-xl font-bold hover:bg-blue-700 transition-all shadow-lg shadow-blue-500/20">
+            <button onClick={onGroupPlanningClick} className="flex items-center gap-2 px-6 py-3 bg-emerald-600 text-white rounded-xl font-bold hover:bg-emerald-700 transition-all shadow-lg shadow-emerald-500/20">
               <Users className="w-5 h-5"/> Group Planning
             </button>
             <button onClick={handleShare} className="relative flex items-center gap-2 px-6 py-3 bg-slate-900 dark:bg-white text-white dark:text-slate-900 rounded-xl font-bold hover:opacity-90 transition-opacity">
@@ -630,7 +705,7 @@ Booked via Cambodia Travel`;
                     </div>
                     <div className="text-right">
                       <p className="text-xs text-slate-400 mb-1">Total for {tripData.hotel.nights} nights</p>
-                      <p className="text-2xl font-bold text-blue-600">${tripData.hotel.price.toFixed(2)}</p>
+                      <p className="text-2xl font-bold text-emerald-600">${tripData.hotel.price.toFixed(2)}</p>
                     </div>
                   </div>
                   <div className="grid grid-cols-2 gap-8 pt-6 border-t border-slate-50 dark:border-slate-800">
@@ -643,7 +718,7 @@ Booked via Cambodia Travel`;
                       <p className="text-sm font-bold text-slate-900 dark:text-white">{tripData.hotel.guests}</p>
                     </div>
                   </div>
-                  <button onClick={() => onHotelClick()} className="mt-6 text-blue-600 font-bold text-sm flex items-center gap-2 hover:opacity-80 transition-opacity">
+                  <button onClick={() => onHotelClick()} className="mt-6 text-emerald-600 font-bold text-sm flex items-center gap-2 hover:opacity-80 transition-opacity">
                     <RefreshCw className="w-4 h-4"/> Change Hotel
                   </button>
                 </div>
@@ -685,7 +760,7 @@ Booked via Cambodia Travel`;
                     </div>
                     <div className="text-right">
                       <p className="text-xs text-slate-400 mb-1">Total for {tripData.rental.days} days</p>
-                      <p className={`text-2xl font-bold ${tripData.rental.isBooked ? "text-blue-600" : "text-slate-300"}`}>
+                      <p className={`text-2xl font-bold ${tripData.rental.isBooked ? "text-emerald-600" : "text-slate-300"}`}>
                         ${tripData.rental.price.toFixed(2)}
                       </p>
                     </div>
@@ -695,7 +770,7 @@ Booked via Cambodia Travel`;
                     <span>{tripData.rental.features}</span>
                   </div>
                   <div className="flex items-center gap-4 mt-6">
-                    <button onClick={onRentalClick} className="text-blue-600 font-bold text-sm flex items-center gap-2 hover:opacity-80 transition-opacity">
+                    <button onClick={onRentalClick} className="text-emerald-600 font-bold text-sm flex items-center gap-2 hover:opacity-80 transition-opacity">
                       <RefreshCw className="w-4 h-4"/> Change Vehicle
                     </button>
                     {!tripData.rental.isBooked && (<button onClick={toggleRentalBooking} className="text-emerald-600 font-bold text-sm flex items-center gap-2 hover:opacity-80 transition-opacity">
@@ -709,7 +784,7 @@ Booked via Cambodia Travel`;
             {/* Activities Section */}
             <section>
               <div className="flex items-center justify-between mb-4">
-                <div className="flex items-center gap-2 text-blue-600 font-bold">
+                <div className="flex items-center gap-2 text-emerald-600 font-bold">
                   <Activity className="w-5 h-5"/>
                   <h3>Activities</h3>
                 </div>
@@ -718,7 +793,7 @@ Booked via Cambodia Travel`;
                 {availableActivities.map((activity) => {
             const isSelected = selectedActivityIds.includes(activity.id);
             return (<div key={activity.id} className={`bg-white dark:bg-slate-900 rounded-[24px] p-4 border transition-all flex items-center gap-4 ${isSelected
-                    ? "border-blue-500 shadow-md ring-1 ring-blue-500/20"
+                    ? "border-emerald-500 shadow-md ring-1 ring-emerald-500/20"
                     : "border-slate-100 dark:border-slate-800 shadow-sm opacity-70 hover:opacity-100"}`}>
                       <div className="w-20 h-20 rounded-2xl overflow-hidden flex-shrink-0">
                         <img src={activity.image} alt={activity.name} className="w-full h-full object-cover"/>
@@ -734,7 +809,7 @@ Booked via Cambodia Travel`;
                         </div>
                         <button onClick={() => toggleActivity(activity.id)} className={`px-4 py-1.5 rounded-xl text-[10px] font-bold transition-all ${isSelected
                     ? "bg-red-50 text-red-600 hover:bg-red-100"
-                    : "bg-blue-600 text-white hover:bg-blue-700"}`}>
+                    : "bg-emerald-600 text-white hover:bg-emerald-700"}`}>
                           {isSelected ? 'Remove' : 'Select'}
                         </button>
                       </div>
@@ -778,7 +853,7 @@ Booked via Cambodia Travel`;
               <div className="bg-slate-50 dark:bg-slate-800/50 rounded-2xl p-6 mb-8">
                 <div className="flex items-center justify-between mb-1">
                   <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Total Amount</p>
-                  <Wallet className="w-4 h-4 text-blue-600"/>
+                  <Wallet className="w-4 h-4 text-emerald-600"/>
                 </div>
                 <p className="text-4xl font-bold text-slate-900 dark:text-white tracking-tight">
                   ${pricing.total.toLocaleString(undefined, { minimumFractionDigits: 2 })}
@@ -786,7 +861,7 @@ Booked via Cambodia Travel`;
               </div>
 
               <div className="space-y-3 mb-8">
-                <button onClick={() => openPaymentDetails('aba')} disabled={isSubmitting} className="w-full flex items-center justify-center gap-3 py-4 bg-blue-600 text-white rounded-xl font-bold hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed">
+                <button onClick={() => openPaymentDetails('aba')} disabled={isSubmitting} className="w-full flex items-center justify-center gap-3 py-4 bg-emerald-600 text-white rounded-xl font-bold hover:bg-emerald-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed">
                   {isSubmitting ? (<>
                       <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div>
                       Processing...
@@ -795,7 +870,7 @@ Booked via Cambodia Travel`;
                     </>)}
                 </button>
 
-                <button onClick={() => openPaymentDetails('acleda')} disabled={isSubmitting} className="w-full flex items-center justify-center gap-3 py-4 bg-blue-800 text-white rounded-xl font-bold hover:bg-blue-900 transition-colors disabled:opacity-50 disabled:cursor-not-allowed">
+                <button onClick={() => openPaymentDetails('acleda')} disabled={isSubmitting} className="w-full flex items-center justify-center gap-3 py-4 bg-emerald-800 text-white rounded-xl font-bold hover:bg-emerald-900 transition-colors disabled:opacity-50 disabled:cursor-not-allowed">
                   {isSubmitting ? (<>
                       <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div>
                       Processing...
@@ -822,7 +897,7 @@ Booked via Cambodia Travel`;
               </button>
 
               <p className="text-[10px] text-slate-400 text-center mt-6 leading-relaxed">
-                By confirming, you agree to our <span className="text-blue-600 cursor-pointer">Terms</span>. Flexible cancellation up to 48h before arrival.
+                By confirming, you agree to our <span className="text-emerald-600 cursor-pointer">Terms</span>. Flexible cancellation up to 48h before arrival.
               </p>
             </div>
 
@@ -830,7 +905,7 @@ Booked via Cambodia Travel`;
             <div className="bg-slate-900 dark:bg-white rounded-[32px] p-8 text-white dark:text-slate-900 relative overflow-hidden">
               <div className="relative z-10">
                 <div className="flex items-center gap-2 mb-4">
-                  <div className="w-10 h-10 bg-blue-600 rounded-xl flex items-center justify-center">
+                  <div className="w-10 h-10 bg-emerald-600 rounded-xl flex items-center justify-center">
                     <MessageSquare className="w-5 h-5 text-white"/>
                   </div>
                   <h4 className="text-lg font-bold">Need help?</h4>
@@ -842,7 +917,7 @@ Booked via Cambodia Travel`;
                   Chat with Agent
                 </button>
               </div>
-              <div className="absolute -right-4 -bottom-4 w-32 h-32 bg-blue-600/20 rounded-full blur-3xl"></div>
+              <div className="absolute -right-4 -bottom-4 w-32 h-32 bg-emerald-600/20 rounded-full blur-3xl"></div>
             </div>
 
           </div>
@@ -866,16 +941,16 @@ Booked via Cambodia Travel`;
                 <div className="space-y-6">
                   <div>
                     <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-2">Trip Title</label>
-                    <input type="text" value={editForm.title} onChange={(e) => setEditForm(prev => ({ ...prev, title: e.target.value }))} className="w-full px-4 py-3 bg-slate-50 dark:bg-slate-800 border border-slate-100 dark:border-slate-700 rounded-xl text-slate-900 dark:text-white font-medium focus:ring-2 focus:ring-blue-500 outline-none transition-all"/>
+                    <input type="text" value={editForm.title} onChange={(e) => setEditForm(prev => ({ ...prev, title: e.target.value }))} className="w-full px-4 py-3 bg-slate-50 dark:bg-slate-800 border border-slate-100 dark:border-slate-700 rounded-xl text-slate-900 dark:text-white font-medium focus:ring-2 focus:ring-emerald-500 outline-none transition-all"/>
                   </div>
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div>
                       <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-2">Check-in</label>
-                      <input type="date" value={editForm.startDate} onChange={(e) => setEditForm(prev => ({ ...prev, startDate: e.target.value }))} className="w-full px-4 py-3 bg-slate-50 dark:bg-slate-800 border border-slate-100 dark:border-slate-700 rounded-xl text-slate-900 dark:text-white font-medium focus:ring-2 focus:ring-blue-500 outline-none transition-all"/>
+                      <input type="date" value={editForm.startDate} onChange={(e) => setEditForm(prev => ({ ...prev, startDate: e.target.value }))} className="w-full px-4 py-3 bg-slate-50 dark:bg-slate-800 border border-slate-100 dark:border-slate-700 rounded-xl text-slate-900 dark:text-white font-medium focus:ring-2 focus:ring-emerald-500 outline-none transition-all"/>
                     </div>
                     <div>
                       <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-2">Check-out</label>
-                      <input type="date" value={editForm.endDate} min={editForm.startDate || undefined} onChange={(e) => setEditForm(prev => ({ ...prev, endDate: e.target.value }))} className="w-full px-4 py-3 bg-slate-50 dark:bg-slate-800 border border-slate-100 dark:border-slate-700 rounded-xl text-slate-900 dark:text-white font-medium focus:ring-2 focus:ring-blue-500 outline-none transition-all"/>
+                      <input type="date" value={editForm.endDate} min={editForm.startDate || undefined} onChange={(e) => setEditForm(prev => ({ ...prev, endDate: e.target.value }))} className="w-full px-4 py-3 bg-slate-50 dark:bg-slate-800 border border-slate-100 dark:border-slate-700 rounded-xl text-slate-900 dark:text-white font-medium focus:ring-2 focus:ring-emerald-500 outline-none transition-all"/>
                     </div>
                   </div>
                   <div>
@@ -910,7 +985,7 @@ Booked via Cambodia Travel`;
                 setIsEditModalOpen(false);
                 onRentalClick();
             }} className="flex-1 flex items-center justify-center gap-2 p-3 bg-slate-50 dark:bg-slate-800 border border-slate-100 dark:border-slate-700 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-700 transition-all group">
-                            <Car className="w-4 h-4 text-blue-600 group-hover:scale-110 transition-transform"/>
+                            <Car className="w-4 h-4 text-emerald-600 group-hover:scale-110 transition-transform"/>
                             <span className="text-[10px] font-bold text-slate-900 dark:text-white uppercase tracking-wider">Change</span>
                           </button>
                           <button onClick={(e) => {
@@ -932,7 +1007,7 @@ Booked via Cambodia Travel`;
                   <button onClick={() => setIsEditModalOpen(false)} className="flex-1 py-4 bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 rounded-xl font-bold hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors">
                     Cancel
                   </button>
-                  <button onClick={handleSaveEdit} className="flex-1 py-4 bg-blue-600 text-white rounded-xl font-bold hover:bg-blue-700 shadow-lg shadow-blue-500/20 transition-all flex items-center justify-center gap-2">
+                  <button onClick={handleSaveEdit} className="flex-1 py-4 bg-emerald-600 text-white rounded-xl font-bold hover:bg-emerald-700 shadow-lg shadow-emerald-500/20 transition-all flex items-center justify-center gap-2">
                     <Save className="w-5 h-5"/> Save Changes
                   </button>
                 </div>
@@ -962,25 +1037,25 @@ Booked via Cambodia Travel`;
                   {paymentForm.method !== 'aba' && (<>
                       <div>
                         <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-2">Payment Date</label>
-                        <input type="date" value={paymentForm.paymentDate} onChange={(e) => setPaymentForm((prev) => ({ ...prev, paymentDate: e.target.value }))} className="w-full px-4 py-3 bg-slate-50 dark:bg-slate-800 border border-slate-100 dark:border-slate-700 rounded-xl text-slate-900 dark:text-white font-medium focus:ring-2 focus:ring-blue-500 outline-none transition-all"/>
+                        <input type="date" value={paymentForm.paymentDate} onChange={(e) => setPaymentForm((prev) => ({ ...prev, paymentDate: e.target.value }))} className="w-full px-4 py-3 bg-slate-50 dark:bg-slate-800 border border-slate-100 dark:border-slate-700 rounded-xl text-slate-900 dark:text-white font-medium focus:ring-2 focus:ring-emerald-500 outline-none transition-all"/>
                       </div>
 
                       <div>
                         <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-2">Payment Time</label>
-                        <input type="time" value={paymentForm.paymentTime} onChange={(e) => setPaymentForm((prev) => ({ ...prev, paymentTime: e.target.value }))} className="w-full px-4 py-3 bg-slate-50 dark:bg-slate-800 border border-slate-100 dark:border-slate-700 rounded-xl text-slate-900 dark:text-white font-medium focus:ring-2 focus:ring-blue-500 outline-none transition-all"/>
+                        <input type="time" value={paymentForm.paymentTime} onChange={(e) => setPaymentForm((prev) => ({ ...prev, paymentTime: e.target.value }))} className="w-full px-4 py-3 bg-slate-50 dark:bg-slate-800 border border-slate-100 dark:border-slate-700 rounded-xl text-slate-900 dark:text-white font-medium focus:ring-2 focus:ring-emerald-500 outline-none transition-all"/>
                       </div>
                     </>)}
 
                   <div>
                     <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-2">Phone Number</label>
-                    <input type="tel" placeholder="+855 12 345 678" value={paymentForm.phone} onChange={(e) => setPaymentForm((prev) => ({ ...prev, phone: e.target.value }))} className="w-full px-4 py-3 bg-slate-50 dark:bg-slate-800 border border-slate-100 dark:border-slate-700 rounded-xl text-slate-900 dark:text-white font-medium focus:ring-2 focus:ring-blue-500 outline-none transition-all"/>
+                    <input type="tel" placeholder="+855 12 345 678" value={paymentForm.phone} onChange={(e) => setPaymentForm((prev) => ({ ...prev, phone: e.target.value }))} className="w-full px-4 py-3 bg-slate-50 dark:bg-slate-800 border border-slate-100 dark:border-slate-700 rounded-xl text-slate-900 dark:text-white font-medium focus:ring-2 focus:ring-emerald-500 outline-none transition-all"/>
                     <p className="mt-2 text-xs text-slate-400">Used for payment confirmation and booking contact.</p>
                   </div>
 
                   <div className="pt-2">
                     <div className="bg-slate-50 dark:bg-slate-800/50 rounded-2xl p-4 flex items-center justify-between">
                       <p className="text-sm font-bold text-slate-900 dark:text-white">Payment Method</p>
-                      <p className="text-sm font-extrabold text-blue-600 uppercase tracking-wider">
+                      <p className="text-sm font-extrabold text-emerald-600 uppercase tracking-wider">
                         {paymentForm.method === 'aba' ? 'ABA' : 'ACLEDA'}
                       </p>
                     </div>
@@ -991,7 +1066,7 @@ Booked via Cambodia Travel`;
                   <button onClick={() => setIsPaymentModalOpen(false)} disabled={isSubmitting} className="flex-1 py-4 bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 rounded-xl font-bold hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed">
                     Cancel
                   </button>
-                  <button onClick={handleConfirmPaymentDetails} disabled={isSubmitting} className="flex-1 py-4 bg-blue-600 text-white rounded-xl font-bold hover:bg-blue-700 shadow-lg shadow-blue-500/20 transition-all flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed">
+                  <button onClick={handleConfirmPaymentDetails} disabled={isSubmitting} className="flex-1 py-4 bg-emerald-600 text-white rounded-xl font-bold hover:bg-emerald-700 shadow-lg shadow-emerald-500/20 transition-all flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed">
                     {isSubmitting ? (<>
                         <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div>
                         Processing...
@@ -1007,3 +1082,4 @@ Booked via Cambodia Travel`;
     </div>);
 };
 export default BookingHistory;
+

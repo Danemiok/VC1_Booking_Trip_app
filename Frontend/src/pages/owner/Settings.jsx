@@ -234,7 +234,7 @@ const Settings = () => {
       <div className="flex flex-col lg:flex-row gap-8">
         <aside className="w-full lg:w-64 space-y-1">
           {tabs.map((tab) => (<button key={tab.id} onClick={() => setActiveTab(tab.id)} className={cn("w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all font-bold text-sm", activeTab === tab.id
-                ? "bg-blue-600 text-white shadow-lg shadow-blue-500/20"
+                ? "bg-emerald-600 text-white shadow-lg shadow-emerald-500/20"
                 : "text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-800")}>
               <tab.icon size={18}/>
               {tab.label}
@@ -249,7 +249,7 @@ const Settings = () => {
                     <div className="w-24 h-24 rounded-2xl bg-slate-100 dark:bg-slate-800 flex items-center justify-center text-slate-400 overflow-hidden border-2 border-slate-200 dark:border-slate-700">
                       <img alt="Business Logo" className="w-full h-full object-cover" src={businessLogo}/>
                     </div>
-                    <button type="button" onClick={() => logoInputRef.current?.click()} className="absolute -bottom-2 -right-2 w-8 h-8 bg-blue-600 text-white rounded-lg flex items-center justify-center shadow-lg hover:bg-blue-700 transition-all" title="Change logo">
+                    <button type="button" onClick={() => logoInputRef.current?.click()} className="absolute -bottom-2 -right-2 w-8 h-8 bg-emerald-600 text-white rounded-lg flex items-center justify-center shadow-lg hover:bg-emerald-700 transition-all" title="Change logo">
                       <Camera size={16}/>
                     </button>
                   </div>
@@ -259,7 +259,7 @@ const Settings = () => {
                     <p className="text-sm text-slate-500 mt-1">Premium Travel Partner in Cambodia</p>
                     <div className="flex flex-wrap justify-center sm:justify-start gap-2 mt-4">
                       <span className="px-2.5 py-1 bg-emerald-50 dark:bg-emerald-900/20 text-emerald-600 text-[10px] font-bold rounded-full uppercase tracking-wider border border-emerald-100 dark:border-emerald-800">Verified Business</span>
-                      <span className="px-2.5 py-1 bg-blue-50 dark:bg-blue-900/20 text-blue-600 text-[10px] font-bold rounded-full uppercase tracking-wider border border-blue-100 dark:border-blue-800">Partner Since 2021</span>
+                      <span className="px-2.5 py-1 bg-emerald-50 dark:bg-emerald-900/20 text-emerald-600 text-[10px] font-bold rounded-full uppercase tracking-wider border border-emerald-100 dark:border-emerald-800">Partner Since 2021</span>
                     </div>
                   </div>
                 </div>
@@ -273,10 +273,10 @@ const Settings = () => {
                       <p className="text-xs text-slate-500 mt-0.5 font-medium">Account details for the owner of this portal.</p>
                     </div>
 
-                    {!isEditingOwner ? (<button onClick={startEditOwner} className="h-9 w-9 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-slate-500 hover:text-blue-600 hover:border-blue-600/40 transition-colors inline-flex items-center justify-center" title="Edit" aria-label="Edit owner information">
+                    {!isEditingOwner ? (<button onClick={startEditOwner} className="h-9 w-9 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-slate-500 hover:text-emerald-600 hover:border-emerald-600/40 transition-colors inline-flex items-center justify-center" title="Edit" aria-label="Edit owner information">
                         <Pencil size={16}/>
                       </button>) : (<div className="flex items-center gap-2">
-                        <button onClick={saveOwnerInfo} className="h-9 w-9 rounded-xl bg-blue-600 text-white hover:bg-blue-700 transition-colors inline-flex items-center justify-center" title="Save" aria-label="Save owner information">
+                        <button onClick={saveOwnerInfo} className="h-9 w-9 rounded-xl bg-emerald-600 text-white hover:bg-emerald-700 transition-colors inline-flex items-center justify-center" title="Save" aria-label="Save owner information">
                           <Check size={16}/>
                         </button>
                         <button onClick={cancelEditOwner} className="h-9 w-9 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-slate-500 hover:text-rose-600 hover:border-rose-600/40 transition-colors inline-flex items-center justify-center" title="Cancel" aria-label="Cancel editing owner information">
@@ -328,7 +328,7 @@ const Settings = () => {
                         <img alt={ownerDraft.name} className="w-12 h-12 rounded-2xl object-cover border border-slate-200 dark:border-slate-700" src={ownerDraft.avatar} referrerPolicy="no-referrer"/>
                         <div className="min-w-0 flex-1">
                           <p className="text-[10px] uppercase font-bold tracking-widest text-slate-400">Avatar URL</p>
-                          <input value={ownerDraft.avatar} onChange={(e) => setOwnerDraft((prev) => ({ ...prev, avatar: e.target.value }))} className="w-full mt-1 px-3 py-2 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-sm focus:bg-white dark:focus:bg-slate-900 focus:ring-2 focus:ring-blue-600/10 transition-all font-medium" placeholder="https://..."/>
+                          <input value={ownerDraft.avatar} onChange={(e) => setOwnerDraft((prev) => ({ ...prev, avatar: e.target.value }))} className="w-full mt-1 px-3 py-2 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-sm focus:bg-white dark:focus:bg-slate-900 focus:ring-2 focus:ring-emerald-600/10 transition-all font-medium" placeholder="https://..."/>
                         </div>
                       </div>
 
@@ -336,7 +336,7 @@ const Settings = () => {
                         <label className="text-[10px] uppercase font-bold tracking-widest text-slate-400">Owner Name</label>
                         <div className="relative">
                           <User className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 size-4"/>
-                          <input value={ownerDraft.name} onChange={(e) => setOwnerDraft((prev) => ({ ...prev, name: e.target.value }))} className="w-full pl-10 pr-4 py-2.5 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-sm focus:bg-white dark:focus:bg-slate-900 focus:ring-2 focus:ring-blue-600/10 transition-all font-medium"/>
+                          <input value={ownerDraft.name} onChange={(e) => setOwnerDraft((prev) => ({ ...prev, name: e.target.value }))} className="w-full pl-10 pr-4 py-2.5 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-sm focus:bg-white dark:focus:bg-slate-900 focus:ring-2 focus:ring-emerald-600/10 transition-all font-medium"/>
                         </div>
                       </div>
 
@@ -344,7 +344,7 @@ const Settings = () => {
                         <label className="text-[10px] uppercase font-bold tracking-widest text-slate-400">Email</label>
                         <div className="relative">
                           <Mail className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 size-4"/>
-                          <input value={ownerDraft.email} onChange={(e) => setOwnerDraft((prev) => ({ ...prev, email: e.target.value }))} className="w-full pl-10 pr-4 py-2.5 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-sm focus:bg-white dark:focus:bg-slate-900 focus:ring-2 focus:ring-blue-600/10 transition-all font-medium"/>
+                          <input value={ownerDraft.email} onChange={(e) => setOwnerDraft((prev) => ({ ...prev, email: e.target.value }))} className="w-full pl-10 pr-4 py-2.5 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-sm focus:bg-white dark:focus:bg-slate-900 focus:ring-2 focus:ring-emerald-600/10 transition-all font-medium"/>
                         </div>
                       </div>
 
@@ -352,7 +352,7 @@ const Settings = () => {
                         <label className="text-[10px] uppercase font-bold tracking-widest text-slate-400">Phone</label>
                         <div className="relative">
                           <Phone className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 size-4"/>
-                          <input value={ownerDraft.phone} onChange={(e) => setOwnerDraft((prev) => ({ ...prev, phone: e.target.value }))} className="w-full pl-10 pr-4 py-2.5 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-sm focus:bg-white dark:focus:bg-slate-900 focus:ring-2 focus:ring-blue-600/10 transition-all font-medium"/>
+                          <input value={ownerDraft.phone} onChange={(e) => setOwnerDraft((prev) => ({ ...prev, phone: e.target.value }))} className="w-full pl-10 pr-4 py-2.5 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-sm focus:bg-white dark:focus:bg-slate-900 focus:ring-2 focus:ring-emerald-600/10 transition-all font-medium"/>
                         </div>
                       </div>
 
@@ -360,7 +360,7 @@ const Settings = () => {
                         <label className="text-[10px] uppercase font-bold tracking-widest text-slate-400">Role</label>
                         <div className="relative">
                           <Shield className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 size-4"/>
-                          <input value={ownerDraft.role} onChange={(e) => setOwnerDraft((prev) => ({ ...prev, role: e.target.value }))} className="w-full pl-10 pr-4 py-2.5 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-sm focus:bg-white dark:focus:bg-slate-900 focus:ring-2 focus:ring-blue-600/10 transition-all font-medium"/>
+                          <input value={ownerDraft.role} onChange={(e) => setOwnerDraft((prev) => ({ ...prev, role: e.target.value }))} className="w-full pl-10 pr-4 py-2.5 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-sm focus:bg-white dark:focus:bg-slate-900 focus:ring-2 focus:ring-emerald-600/10 transition-all font-medium"/>
                         </div>
                       </div>
                     </div>)}
@@ -371,7 +371,7 @@ const Settings = () => {
           {activeTab === 'permissions' && (<div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm overflow-hidden">
               <div className="p-6 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between">
                 <h4 className="font-bold">Team Members</h4>
-                <button onClick={openAddMember} className="px-4 py-2 bg-blue-600 text-white rounded-xl flex items-center gap-2 font-bold text-xs hover:bg-blue-700 transition-all shadow-lg shadow-blue-500/20">
+                <button onClick={openAddMember} className="px-4 py-2 bg-emerald-600 text-white rounded-xl flex items-center gap-2 font-bold text-xs hover:bg-emerald-700 transition-all shadow-lg shadow-emerald-500/20">
                   <Plus size={16}/> Add Member
                 </button>
               </div>
@@ -408,7 +408,7 @@ const Settings = () => {
                         <td className="px-6 py-4 text-right">
                           {member.role !== 'Owner' ? (<button onClick={() => removeMember(member.email)} className="px-3 py-1.5 rounded-xl border border-slate-200 dark:border-slate-700 text-xs font-bold text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-900/10 transition-colors">
                               Remove
-                            </button>) : (<button className="p-2 text-slate-400 hover:text-blue-600 transition-all" title="Owner account">
+                            </button>) : (<button className="p-2 text-slate-400 hover:text-emerald-600 transition-all" title="Owner account">
                               <MoreHorizontal size={18}/>
                             </button>)}
                         </td>
@@ -426,7 +426,7 @@ const Settings = () => {
                       <p className="text-sm font-bold">{item.title}</p>
                       <p className="text-xs text-slate-500 mt-1 font-medium">{item.desc}</p>
                     </div>
-                    <button onClick={() => toggleNotification(item.key)} className={cn("w-12 h-6 rounded-full relative transition-all duration-300", item.active ? "bg-blue-600" : "bg-slate-200 dark:bg-slate-700")}>
+                    <button onClick={() => toggleNotification(item.key)} className={cn("w-12 h-6 rounded-full relative transition-all duration-300", item.active ? "bg-emerald-600" : "bg-slate-200 dark:bg-slate-700")}>
                       <div className={cn("absolute top-1 w-4 h-4 bg-white rounded-full transition-all duration-300", item.active ? "left-7" : "left-1")}></div>
                     </button>
                   </div>))}
@@ -436,9 +436,9 @@ const Settings = () => {
           {activeTab === 'security' && (<div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm p-8 space-y-8">
               <h4 className="font-bold text-lg">Security Settings</h4>
               <div className="space-y-6">
-                <div className="p-4 bg-blue-50 dark:bg-blue-900/10 rounded-xl border border-blue-100 dark:border-blue-900/30 flex items-center justify-between">
+                <div className="p-4 bg-emerald-50 dark:bg-emerald-900/10 rounded-xl border border-emerald-100 dark:border-emerald-900/30 flex items-center justify-between">
                   <div className="flex items-center gap-4">
-                    <div className="w-10 h-10 rounded-xl bg-blue-600 text-white flex items-center justify-center">
+                    <div className="w-10 h-10 rounded-xl bg-emerald-600 text-white flex items-center justify-center">
                       <Shield size={20}/>
                     </div>
                     <div>
@@ -448,7 +448,7 @@ const Settings = () => {
                   </div>
                   <button onClick={toggleTwoFactor} className={cn("px-4 py-2 rounded-lg text-xs font-bold transition-all", securityPrefs.twoFactorEnabled
                 ? "bg-emerald-600 text-white hover:bg-emerald-700"
-                : "bg-blue-600 text-white hover:bg-blue-700")}>
+                : "bg-emerald-600 text-white hover:bg-emerald-700")}>
                     {securityPrefs.twoFactorEnabled ? 'Enabled' : 'Enable'}
                   </button>
                 </div>
@@ -458,7 +458,7 @@ const Settings = () => {
                       <p className="text-sm font-bold">Password</p>
                       <p className="text-xs text-slate-500 mt-1 font-medium">Last changed {securityPrefs.lastPasswordChangeLabel}</p>
                     </div>
-                    <button onClick={openPassword} className="text-xs font-bold text-blue-600 hover:underline">Update Password</button>
+                    <button onClick={openPassword} className="text-xs font-bold text-emerald-600 hover:underline">Update Password</button>
                   </div>
                   <div className="flex items-center justify-between py-4">
                     <div>
@@ -482,16 +482,16 @@ const Settings = () => {
             <div className="p-6 space-y-4">
               <div className="space-y-2">
                 <label className="text-[10px] uppercase font-bold tracking-widest text-slate-400">Name</label>
-                <input value={newMemberDraft.name} onChange={(e) => setNewMemberDraft((prev) => ({ ...prev, name: e.target.value }))} className="w-full px-3 py-2.5 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-sm focus:bg-white dark:focus:bg-slate-900 focus:ring-2 focus:ring-blue-600/10 transition-all font-medium" placeholder="Full name"/>
+                <input value={newMemberDraft.name} onChange={(e) => setNewMemberDraft((prev) => ({ ...prev, name: e.target.value }))} className="w-full px-3 py-2.5 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-sm focus:bg-white dark:focus:bg-slate-900 focus:ring-2 focus:ring-emerald-600/10 transition-all font-medium" placeholder="Full name"/>
               </div>
               <div className="space-y-2">
                 <label className="text-[10px] uppercase font-bold tracking-widest text-slate-400">Email</label>
-                <input value={newMemberDraft.email} onChange={(e) => setNewMemberDraft((prev) => ({ ...prev, email: e.target.value }))} className="w-full px-3 py-2.5 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-sm focus:bg-white dark:focus:bg-slate-900 focus:ring-2 focus:ring-blue-600/10 transition-all font-medium" placeholder="email@company.com"/>
+                <input value={newMemberDraft.email} onChange={(e) => setNewMemberDraft((prev) => ({ ...prev, email: e.target.value }))} className="w-full px-3 py-2.5 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-sm focus:bg-white dark:focus:bg-slate-900 focus:ring-2 focus:ring-emerald-600/10 transition-all font-medium" placeholder="email@company.com"/>
               </div>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div className="space-y-2">
                   <label className="text-[10px] uppercase font-bold tracking-widest text-slate-400">Role</label>
-                  <select value={newMemberDraft.role} onChange={(e) => setNewMemberDraft((prev) => ({ ...prev, role: e.target.value }))} className="w-full px-3 py-2.5 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-sm focus:bg-white dark:focus:bg-slate-900 focus:ring-2 focus:ring-blue-600/10 transition-all font-bold">
+                  <select value={newMemberDraft.role} onChange={(e) => setNewMemberDraft((prev) => ({ ...prev, role: e.target.value }))} className="w-full px-3 py-2.5 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-sm focus:bg-white dark:focus:bg-slate-900 focus:ring-2 focus:ring-emerald-600/10 transition-all font-bold">
                     <option value="Manager">Manager</option>
                     <option value="Driver">Driver</option>
                     <option value="Staff">Staff</option>
@@ -499,7 +499,7 @@ const Settings = () => {
                 </div>
                 <div className="space-y-2">
                   <label className="text-[10px] uppercase font-bold tracking-widest text-slate-400">Status</label>
-                  <select value={newMemberDraft.status} onChange={(e) => setNewMemberDraft((prev) => ({ ...prev, status: e.target.value }))} className="w-full px-3 py-2.5 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-sm focus:bg-white dark:focus:bg-slate-900 focus:ring-2 focus:ring-blue-600/10 transition-all font-bold">
+                  <select value={newMemberDraft.status} onChange={(e) => setNewMemberDraft((prev) => ({ ...prev, status: e.target.value }))} className="w-full px-3 py-2.5 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-sm focus:bg-white dark:focus:bg-slate-900 focus:ring-2 focus:ring-emerald-600/10 transition-all font-bold">
                     <option value="pending">Pending</option>
                     <option value="active">Active</option>
                   </select>
@@ -510,7 +510,7 @@ const Settings = () => {
               <button onClick={closeAddMember} className="px-4 py-2 rounded-xl border border-slate-200 dark:border-slate-700 text-xs font-bold text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors">
                 Cancel
               </button>
-              <button onClick={addMember} className="px-4 py-2 rounded-xl bg-blue-600 text-white text-xs font-bold hover:bg-blue-700 transition-colors shadow-lg shadow-blue-500/20">
+              <button onClick={addMember} className="px-4 py-2 rounded-xl bg-emerald-600 text-white text-xs font-bold hover:bg-emerald-700 transition-colors shadow-lg shadow-emerald-500/20">
                 Add
               </button>
             </div>
@@ -526,22 +526,22 @@ const Settings = () => {
             <div className="p-6 space-y-4">
               <div className="space-y-2">
                 <label className="text-[10px] uppercase font-bold tracking-widest text-slate-400">Current password</label>
-                <input type="password" value={passwordDraft.current} onChange={(e) => setPasswordDraft((prev) => ({ ...prev, current: e.target.value }))} className="w-full px-3 py-2.5 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-sm focus:bg-white dark:focus:bg-slate-900 focus:ring-2 focus:ring-blue-600/10 transition-all font-medium"/>
+                <input type="password" value={passwordDraft.current} onChange={(e) => setPasswordDraft((prev) => ({ ...prev, current: e.target.value }))} className="w-full px-3 py-2.5 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-sm focus:bg-white dark:focus:bg-slate-900 focus:ring-2 focus:ring-emerald-600/10 transition-all font-medium"/>
               </div>
               <div className="space-y-2">
                 <label className="text-[10px] uppercase font-bold tracking-widest text-slate-400">New password</label>
-                <input type="password" value={passwordDraft.next} onChange={(e) => setPasswordDraft((prev) => ({ ...prev, next: e.target.value }))} className="w-full px-3 py-2.5 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-sm focus:bg-white dark:focus:bg-slate-900 focus:ring-2 focus:ring-blue-600/10 transition-all font-medium"/>
+                <input type="password" value={passwordDraft.next} onChange={(e) => setPasswordDraft((prev) => ({ ...prev, next: e.target.value }))} className="w-full px-3 py-2.5 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-sm focus:bg-white dark:focus:bg-slate-900 focus:ring-2 focus:ring-emerald-600/10 transition-all font-medium"/>
               </div>
               <div className="space-y-2">
                 <label className="text-[10px] uppercase font-bold tracking-widest text-slate-400">Confirm new password</label>
-                <input type="password" value={passwordDraft.confirm} onChange={(e) => setPasswordDraft((prev) => ({ ...prev, confirm: e.target.value }))} className="w-full px-3 py-2.5 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-sm focus:bg-white dark:focus:bg-slate-900 focus:ring-2 focus:ring-blue-600/10 transition-all font-medium"/>
+                <input type="password" value={passwordDraft.confirm} onChange={(e) => setPasswordDraft((prev) => ({ ...prev, confirm: e.target.value }))} className="w-full px-3 py-2.5 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-sm focus:bg-white dark:focus:bg-slate-900 focus:ring-2 focus:ring-emerald-600/10 transition-all font-medium"/>
               </div>
             </div>
             <div className="px-6 py-4 border-t border-slate-200 dark:border-slate-800 flex justify-end gap-2">
               <button onClick={closePassword} className="px-4 py-2 rounded-xl border border-slate-200 dark:border-slate-700 text-xs font-bold text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors">
                 Cancel
               </button>
-              <button onClick={savePassword} className="px-4 py-2 rounded-xl bg-blue-600 text-white text-xs font-bold hover:bg-blue-700 transition-colors shadow-lg shadow-blue-500/20">
+              <button onClick={savePassword} className="px-4 py-2 rounded-xl bg-emerald-600 text-white text-xs font-bold hover:bg-emerald-700 transition-colors shadow-lg shadow-emerald-500/20">
                 Save
               </button>
             </div>
@@ -550,3 +550,4 @@ const Settings = () => {
     </div>);
 };
 export default Settings;
+

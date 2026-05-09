@@ -46,22 +46,22 @@ export const Navbar = ({ onLoginClick, user, onLogout, onProfileClick, notificat
           <BrandLogo variant="mark" className="w-12 h-12 rounded-2xl overflow-hidden flex-shrink-0 group-hover:scale-110 group-hover:rotate-3 transition-all"/>
           <div className="flex flex-col">
             <span className="text-xl font-bold text-slate-900 dark:text-white leading-none tracking-tighter">Komrong</span>
-            <span className="text-[9px] font-bold text-blue-600 dark:text-blue-400 uppercase tracking-[0.4em] mt-0.5">BOOKING TRIP APP</span>
+            <span className="text-[9px] font-bold text-emerald-600 dark:text-emerald-400 uppercase tracking-[0.4em] mt-0.5">BOOKING TRIP APP</span>
           </div>
         </div>
         
         {/* Desktop Menu */}
         <div className="hidden lg:flex items-center gap-10">
-          <button onClick={onHomeClick} className={`text-sm font-medium transition-colors ${currentView === 'landing' ? 'text-blue-600' : 'text-slate-600 dark:text-slate-400 hover:text-blue-600'}`}>
+          <button onClick={onHomeClick} className={`text-sm font-medium transition-colors ${currentView === 'landing' ? 'text-emerald-600' : 'text-slate-600 dark:text-slate-400 hover:text-emerald-600'}`}>
             Home
           </button>
           
           <div className="relative" onMouseEnter={() => setIsPlanTripOpen(true)} onMouseLeave={() => setIsPlanTripOpen(false)}>
             <div className="flex items-center gap-1">
-              <motion.button onClick={onTripPlannerClick} whileHover={{ y: -1 }} whileTap={{ scale: 0.98 }} className={`text-sm font-medium transition-colors py-2 ${currentView === 'trip-planner' ? 'text-blue-600' : 'text-slate-600 dark:text-slate-400 hover:text-blue-600'}`}>
+              <motion.button onClick={onTripPlannerClick} whileHover={{ y: -1 }} whileTap={{ scale: 0.98 }} className={`text-sm font-medium transition-colors py-2 ${currentView === 'trip-planner' ? 'text-emerald-600' : 'text-slate-600 dark:text-slate-400 hover:text-emerald-600'}`}>
                 My Plan
               </motion.button>
-              <motion.button onMouseEnter={() => setIsPlanTripOpen(true)} onClick={() => setIsPlanTripOpen(!isPlanTripOpen)} whileHover={{ scale: 1.08 }} whileTap={{ scale: 0.95 }} className={`flex items-center gap-1.5 text-sm font-medium transition-colors py-2 ${['hotels', 'rentals', 'destinations', 'activities'].includes(currentView) ? 'text-blue-600' : 'text-slate-600 dark:text-slate-400 hover:text-blue-600'}`}>
+              <motion.button onMouseEnter={() => setIsPlanTripOpen(true)} onClick={() => setIsPlanTripOpen(!isPlanTripOpen)} whileHover={{ scale: 1.08 }} whileTap={{ scale: 0.95 }} className={`flex items-center gap-1.5 text-sm font-medium transition-colors py-2 ${['hotels', 'rentals', 'destinations', 'activities'].includes(currentView) ? 'text-emerald-600' : 'text-slate-600 dark:text-slate-400 hover:text-emerald-600'}`}>
                 <ChevronDown className={`w-4 h-4 transition-transform duration-300 ${isPlanTripOpen ? 'rotate-180' : ''}`}/>
               </motion.button>
             </div>
@@ -74,16 +74,16 @@ export const Navbar = ({ onLoginClick, user, onLogout, onProfileClick, notificat
                   <motion.button custom={1} variants={planMenuItemVariants} initial="hidden" animate="visible" onClick={() => {
                 onHotelsClick();
                 setIsPlanTripOpen(false);
-            }} whileHover={{ x: 4, scale: 1.01 }} whileTap={{ scale: 0.98 }} className={`w-full text-left px-6 py-4 text-sm font-bold flex items-center gap-4 transition-all ${currentView === 'hotels' ? 'text-blue-600 bg-blue-50 dark:bg-blue-900/20' : 'text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-white/5'}`}>
-                    <div className="w-8 h-8 rounded-xl bg-blue-500/10 flex items-center justify-center">
-                      <Hotel className="w-4 h-4 text-blue-500"/>
+            }} whileHover={{ x: 4, scale: 1.01 }} whileTap={{ scale: 0.98 }} className={`w-full text-left px-6 py-4 text-sm font-bold flex items-center gap-4 transition-all ${currentView === 'hotels' ? 'text-emerald-600 bg-emerald-50 dark:bg-emerald-900/20' : 'text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-white/5'}`}>
+                    <div className="w-8 h-8 rounded-xl bg-emerald-500/10 flex items-center justify-center">
+                      <Hotel className="w-4 h-4 text-emerald-500"/>
                     </div>
                     Hotel
                   </motion.button>
                   <motion.button custom={2} variants={planMenuItemVariants} initial="hidden" animate="visible" onClick={() => {
                 onRentalsClick();
                 setIsPlanTripOpen(false);
-            }} whileHover={{ x: 4, scale: 1.01 }} whileTap={{ scale: 0.98 }} className={`w-full text-left px-6 py-4 text-sm font-bold flex items-center gap-4 transition-all ${currentView === 'rentals' ? 'text-blue-600 bg-blue-50 dark:bg-blue-900/20' : 'text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-white/5'}`}>
+            }} whileHover={{ x: 4, scale: 1.01 }} whileTap={{ scale: 0.98 }} className={`w-full text-left px-6 py-4 text-sm font-bold flex items-center gap-4 transition-all ${currentView === 'rentals' ? 'text-emerald-600 bg-emerald-50 dark:bg-emerald-900/20' : 'text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-white/5'}`}>
                     <div className="w-8 h-8 rounded-xl bg-emerald-500/10 flex items-center justify-center">
                       <Ship className="w-4 h-4 text-emerald-500"/>
                     </div>
@@ -92,7 +92,7 @@ export const Navbar = ({ onLoginClick, user, onLogout, onProfileClick, notificat
                   <motion.button custom={3} variants={planMenuItemVariants} initial="hidden" animate="visible" onClick={() => {
                 onActivitiesClick();
                 setIsPlanTripOpen(false);
-            }} whileHover={{ x: 4, scale: 1.01 }} whileTap={{ scale: 0.98 }} className={`w-full text-left px-6 py-4 text-sm font-bold flex items-center gap-4 transition-all ${currentView === 'activities' ? 'text-blue-600 bg-blue-50 dark:bg-blue-900/20' : 'text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-white/5'}`}>
+            }} whileHover={{ x: 4, scale: 1.01 }} whileTap={{ scale: 0.98 }} className={`w-full text-left px-6 py-4 text-sm font-bold flex items-center gap-4 transition-all ${currentView === 'activities' ? 'text-emerald-600 bg-emerald-50 dark:bg-emerald-900/20' : 'text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-white/5'}`}>
                     <div className="w-8 h-8 rounded-xl bg-amber-500/10 flex items-center justify-center">
                       <Compass className="w-4 h-4 text-amber-500"/>
                     </div>
@@ -102,7 +102,7 @@ export const Navbar = ({ onLoginClick, user, onLogout, onProfileClick, notificat
             </AnimatePresence>
           </div>
 
-          {showBookings && (<button onClick={onBookingsClick} className={`text-sm font-medium transition-colors ${currentView === 'bookings' ? 'text-blue-600' : 'text-slate-600 dark:text-slate-400 hover:text-blue-600'}`}>
+          {showBookings && (<button onClick={onBookingsClick} className={`text-sm font-medium transition-colors ${currentView === 'bookings' ? 'text-emerald-600' : 'text-slate-600 dark:text-slate-400 hover:text-emerald-600'}`}>
               My booking
             </button>)}
         </div>
@@ -129,10 +129,10 @@ export const Navbar = ({ onLoginClick, user, onLogout, onProfileClick, notificat
                         {unreadCount > 0 && (<button onClick={(e) => {
                         e.stopPropagation();
                         onMarkAllAsRead();
-                    }} className="text-[10px] font-bold text-blue-600 hover:underline">
+                    }} className="text-[10px] font-bold text-emerald-600 hover:underline">
                             Mark all as read
                           </button>)}
-                        <span className="text-[10px] font-bold text-blue-600 bg-blue-50 dark:bg-blue-900/20 px-2 py-0.5 rounded-full">
+                        <span className="text-[10px] font-bold text-emerald-600 bg-emerald-50 dark:bg-emerald-900/20 px-2 py-0.5 rounded-full">
                           {unreadMessageCount > 0 ? `${unreadMessageCount} Owner Message${unreadMessageCount > 1 ? 's' : ''}` : `${unreadCount} New`}
                         </span>
                       </div>
@@ -145,9 +145,9 @@ export const Navbar = ({ onLoginClick, user, onLogout, onProfileClick, notificat
                             onMarkAsRead(n.id);
                             onProfileClick('notifications');
                             setIsNotificationsOpen(false);
-                        }} className={`px-4 py-4 rounded-2xl hover:bg-slate-50 dark:hover:bg-slate-700/50 cursor-pointer transition-all mb-1 ${n.read ? 'opacity-60' : 'bg-blue-50/30 dark:bg-blue-900/10'}`}>
+                        }} className={`px-4 py-4 rounded-2xl hover:bg-slate-50 dark:hover:bg-slate-700/50 cursor-pointer transition-all mb-1 ${n.read ? 'opacity-60' : 'bg-emerald-50/30 dark:bg-emerald-900/10'}`}>
                             <div className="flex gap-3">
-                              <div className={`w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0 ${n.type === 'booking' ? 'bg-emerald-100 text-emerald-600' : 'bg-blue-100 text-blue-600'}`}>
+                              <div className={`w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0 ${n.type === 'booking' ? 'bg-emerald-100 text-emerald-600' : 'bg-emerald-100 text-emerald-600'}`}>
                                 {n.type === 'booking' ? <CheckCircle2 className="w-5 h-5"/> : <Bell className="w-5 h-5"/>}
                               </div>
                               <div className="flex-1">
@@ -166,7 +166,7 @@ export const Navbar = ({ onLoginClick, user, onLogout, onProfileClick, notificat
                       <button onClick={() => {
                     onProfileClick('notifications');
                     setIsNotificationsOpen(false);
-                }} className="w-full text-center text-[10px] font-bold text-blue-600 hover:underline">
+                }} className="w-full text-center text-[10px] font-bold text-emerald-600 hover:underline">
                         View All Activity
                       </button>
                     </div>
@@ -178,7 +178,7 @@ export const Navbar = ({ onLoginClick, user, onLogout, onProfileClick, notificat
               <button onClick={() => {
                 setIsProfileOpen(!isProfileOpen);
                 setIsNotificationsOpen(false);
-            }} className="w-10 h-10 rounded-full overflow-hidden border-2 border-slate-100 dark:border-slate-700 hover:border-blue-500 transition-all">
+            }} className="w-10 h-10 rounded-full overflow-hidden border-2 border-slate-100 dark:border-slate-700 hover:border-emerald-500 transition-all">
                 <img src={`https://ui-avatars.com/api/?name=${user.name}&background=0D8ABC&color=fff`} alt={user.name} className="w-full h-full object-cover"/>
               </button>
               
@@ -207,7 +207,7 @@ export const Navbar = ({ onLoginClick, user, onLogout, onProfileClick, notificat
                     </button>
                   </motion.div>)}
               </AnimatePresence>
-            </div>) : (<button onClick={onLoginClick} className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2.5 rounded-xl text-sm font-bold transition-all shadow-lg shadow-blue-200">
+            </div>) : (<button onClick={onLoginClick} className="bg-emerald-600 hover:bg-emerald-700 text-white px-6 py-2.5 rounded-xl text-sm font-bold transition-all shadow-lg shadow-emerald-200">
               Login
             </button>)}
 
@@ -239,21 +239,21 @@ export const Navbar = ({ onLoginClick, user, onLogout, onProfileClick, notificat
                 <button onClick={() => {
                 onHotelsClick();
                 setIsMobileMenuOpen(false);
-            }} className={`w-full text-left px-4 py-3 text-base font-bold rounded-2xl flex items-center gap-3 ${currentView === 'hotels' ? 'text-blue-600 bg-blue-50 dark:bg-blue-900/20' : 'text-slate-900 dark:text-white hover:bg-slate-50 dark:hover:bg-slate-800'}`}>
+            }} className={`w-full text-left px-4 py-3 text-base font-bold rounded-2xl flex items-center gap-3 ${currentView === 'hotels' ? 'text-emerald-600 bg-emerald-50 dark:bg-emerald-900/20' : 'text-slate-900 dark:text-white hover:bg-slate-50 dark:hover:bg-slate-800'}`}>
                   <Hotel className="w-5 h-5"/> Hotel
                 </button>
 
                 <button onClick={() => {
                 onRentalsClick();
                 setIsMobileMenuOpen(false);
-            }} className={`w-full text-left px-4 py-3 text-base font-bold rounded-2xl flex items-center gap-3 ${currentView === 'rentals' ? 'text-blue-600 bg-blue-50 dark:bg-blue-900/20' : 'text-slate-900 dark:text-white hover:bg-slate-50 dark:hover:bg-slate-800'}`}>
+            }} className={`w-full text-left px-4 py-3 text-base font-bold rounded-2xl flex items-center gap-3 ${currentView === 'rentals' ? 'text-emerald-600 bg-emerald-50 dark:bg-emerald-900/20' : 'text-slate-900 dark:text-white hover:bg-slate-50 dark:hover:bg-slate-800'}`}>
                   <Ship className="w-5 h-5"/> Rental
                 </button>
 
                 <button onClick={() => {
                 onActivitiesClick();
                 setIsMobileMenuOpen(false);
-            }} className={`w-full text-left px-4 py-3 text-base font-bold rounded-2xl flex items-center gap-3 ${currentView === 'activities' ? 'text-blue-600 bg-blue-50 dark:bg-blue-900/20' : 'text-slate-900 dark:text-white hover:bg-slate-50 dark:hover:bg-slate-800'}`}>
+            }} className={`w-full text-left px-4 py-3 text-base font-bold rounded-2xl flex items-center gap-3 ${currentView === 'activities' ? 'text-emerald-600 bg-emerald-50 dark:bg-emerald-900/20' : 'text-slate-900 dark:text-white hover:bg-slate-50 dark:hover:bg-slate-800'}`}>
                   <Compass className="w-5 h-5"/> Activities
                 </button>
               </div>
@@ -276,7 +276,7 @@ export const Navbar = ({ onLoginClick, user, onLogout, onProfileClick, notificat
                   <button onClick={handleRequestLogout} className="w-full bg-red-50 dark:bg-red-900/20 text-red-600 px-4 py-4 rounded-2xl font-bold text-center">
                     Log out
                   </button>
-                </div>) : (<button onClick={onLoginClick} className="w-full bg-blue-600 text-white px-4 py-4 rounded-2xl font-bold shadow-lg shadow-blue-100">
+                </div>) : (<button onClick={onLoginClick} className="w-full bg-emerald-600 text-white px-4 py-4 rounded-2xl font-bold shadow-lg shadow-emerald-100">
                   Log in
                 </button>)}
             </div>
@@ -286,3 +286,4 @@ export const Navbar = ({ onLoginClick, user, onLogout, onProfileClick, notificat
       <LogoutConfirmModal isOpen={isLogoutConfirmOpen} onCancel={() => setIsLogoutConfirmOpen(false)} onConfirm={handleConfirmLogout}/>
     </nav>);
 };
+

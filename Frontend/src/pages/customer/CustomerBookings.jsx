@@ -98,7 +98,7 @@ export const CustomerBookings = () => {
           <h1 className="text-2xl font-extrabold text-slate-900 dark:text-white">My bookings</h1>
           <p className="mt-2 text-sm text-slate-600 dark:text-slate-300">Manage your travel reservations.</p>
         </div>
-        <Link to="/customer/book" className="h-11 px-5 rounded-xl bg-blue-600 text-white font-bold hover:bg-blue-700 transition-colors">
+        <Link to="/customer/book" className="h-11 px-5 rounded-xl bg-emerald-600 text-white font-bold hover:bg-emerald-700 transition-colors">
           New booking
         </Link>
       </div>
@@ -109,7 +109,7 @@ export const CustomerBookings = () => {
 
       <div className="mt-8 card overflow-hidden">
         {loading ? (<div className="flex justify-center items-center py-16">
-            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-emerald-600"></div>
           </div>) : bookings.length === 0 ? (<div className="py-16 text-center">
             <p className="text-slate-600 dark:text-slate-300 font-semibold">No bookings found.</p>
             <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">Create your first trip booking.</p>
@@ -132,7 +132,7 @@ export const CustomerBookings = () => {
               </thead>
               <tbody>
                 {bookings.map((b) => (<tr key={b.id} className="table-row">
-                    <td className="px-6 py-4 font-bold text-blue-600">{b.id}</td>
+                    <td className="px-6 py-4 font-bold text-emerald-600">{b.id}</td>
                     <td className="px-6 py-4">
                       <div className="font-semibold text-slate-900 dark:text-slate-100">{b.service}</div>
                       <div className="text-xs text-slate-500 dark:text-slate-400">{b.route}</div>
@@ -148,3 +148,4 @@ export const CustomerBookings = () => {
       </div>
     </div>);
 };
+

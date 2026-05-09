@@ -152,9 +152,9 @@ const Hero = ({ onSearch, location, setLocation, tripData }) => {
                   relative h-10 w-full flex items-center justify-center text-[11px] font-medium transition-all
                   ${!isCurrentMonth ? 'text-white/5' : 'text-white'}
                   ${isPast ? 'opacity-20 cursor-not-allowed' : 'hover:bg-white/10'}
-                  ${isSelected ? 'bg-blue-600 text-white font-bold rounded-lg z-10' : ''}
-                  ${range ? 'bg-blue-600/20 text-blue-400' : ''}
-                  ${isToday(day) && !isSelected ? 'after:content-[""] after:absolute after:bottom-1 after:w-1 after:h-1 after:bg-blue-500 after:rounded-full' : ''}
+                  ${isSelected ? 'bg-emerald-600 text-white font-bold rounded-lg z-10' : ''}
+                  ${range ? 'bg-emerald-600/20 text-emerald-400' : ''}
+                  ${isToday(day) && !isSelected ? 'after:content-[""] after:absolute after:bottom-1 after:w-1 after:h-1 after:bg-emerald-500 after:rounded-full' : ''}
                   ${isStart && (dates.end || hoveredDate) && !isSameDay(dates.start, dates.end || hoveredDate) ? 'rounded-r-none rounded-l-lg' : ''}
                   ${isEnd && dates.start && !isSameDay(dates.start, dates.end) ? 'rounded-l-none rounded-r-lg' : ''}
                 `}>
@@ -242,7 +242,7 @@ const Hero = ({ onSearch, location, setLocation, tripData }) => {
               <button type="button" onClick={() => {
             setShowDatePicker((previous) => !previous);
         }} className="flex-1 md:flex-[0.95] flex items-center gap-4 px-8 py-4 w-full border-b md:border-b-0 md:border-r border-white/10 text-left">
-                <MapPin className="w-5 h-5 text-blue-500 flex-shrink-0"/>
+                <MapPin className="w-5 h-5 text-emerald-500 flex-shrink-0"/>
                 <div className="min-w-0">
                   <p className="text-[10px] font-bold uppercase tracking-[0.22em] text-white/45">View on Map</p>
                   <p className="truncate text-sm font-semibold text-white">{location.trim() || 'Seim Reap'}</p>
@@ -252,7 +252,7 @@ const Hero = ({ onSearch, location, setLocation, tripData }) => {
               <button type="button" onClick={() => {
             setShowDatePicker((previous) => !previous);
         }} className="flex-1 md:flex-[0.95] flex items-center gap-4 px-8 py-4 w-full border-b md:border-b-0 md:border-r border-white/10 text-left">
-                <Calendar className="w-5 h-5 text-blue-500 flex-shrink-0"/>
+                <Calendar className="w-5 h-5 text-emerald-500 flex-shrink-0"/>
                 <div className="min-w-0">
                   <p className="text-[10px] font-bold uppercase tracking-[0.22em] text-white/45">Check-in / Check-out</p>
                   <p className="truncate text-sm font-semibold text-white">
@@ -263,7 +263,7 @@ const Hero = ({ onSearch, location, setLocation, tripData }) => {
                 </div>
               </button>
 
-              <button onClick={handleSearch} disabled={isSearching} className="bg-white text-slate-900 hover:bg-blue-50 px-10 py-4 rounded-[2rem] font-bold text-sm transition-all w-full md:w-auto flex items-center justify-center gap-2 min-w-[140px]">
+              <button onClick={handleSearch} disabled={isSearching} className="bg-white text-slate-900 hover:bg-emerald-50 px-10 py-4 rounded-[2rem] font-bold text-sm transition-all w-full md:w-auto flex items-center justify-center gap-2 min-w-[140px]">
                 {isSearching ? (<motion.div animate={{ rotate: 360 }} transition={{ repeat: Infinity, duration: 1, ease: 'linear' }} className="w-4 h-4 border-2 border-slate-900/30 border-t-slate-900 rounded-full"/>) : 'Explore'}
               </button>
             </div>
@@ -285,7 +285,7 @@ const Hero = ({ onSearch, location, setLocation, tripData }) => {
                       <div className="w-px h-8 bg-white/10"/>
                       <div className="flex flex-col">
                         <span className="text-[10px] font-bold text-white/40 uppercase tracking-widest mb-1 text-left">Price Range</span>
-                        <span className="text-sm font-bold text-blue-400">Premium Selection</span>
+                        <span className="text-sm font-bold text-emerald-400">Premium Selection</span>
                       </div>
                     </div>
                     <div className="flex items-center gap-4 w-full sm:w-auto">
@@ -295,7 +295,7 @@ const Hero = ({ onSearch, location, setLocation, tripData }) => {
                       <button onClick={() => {
                 onSearch(location, dates, guests);
                 setShowDatePicker(false);
-            }} className="flex-1 sm:flex-none bg-white text-slate-900 px-10 py-4 rounded-2xl text-xs font-bold hover:bg-blue-50 transition-all shadow-xl">
+            }} className="flex-1 sm:flex-none bg-white text-slate-900 px-10 py-4 rounded-2xl text-xs font-bold hover:bg-emerald-50 transition-all shadow-xl">
                         Confirm Dates
                       </button>
                     </div>
@@ -309,13 +309,13 @@ const Hero = ({ onSearch, location, setLocation, tripData }) => {
 };
 const Categories = ({ onHotelsClick, onRentalsClick, onActivitiesClick }) => {
     const categories = [
-        { icon: Hotel, title: "Hotel", desc: "Villas & Resorts", color: "bg-blue-500/10 text-blue-500", onClick: onHotelsClick },
+        { icon: Hotel, title: "Hotel", desc: "Villas & Resorts", color: "bg-emerald-500/10 text-emerald-500", onClick: onHotelsClick },
         { icon: Ship, title: "Rental", desc: "Ferries & Boats", color: "bg-emerald-500/10 text-emerald-500", onClick: onRentalsClick },
         { icon: Waves, title: "Activities", desc: "Tours & Diving", color: "bg-amber-500/10 text-amber-500", onClick: onActivitiesClick },
     ];
     return (<section className="py-12 px-4 sm:px-6 lg:px-8">
       <div className="max-w-7xl mx-auto grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
-        {categories.map((cat, i) => (<motion.div key={i} whileHover={{ y: -6, scale: 1.01 }} onClick={cat.onClick} className="bg-white dark:bg-slate-800/40 backdrop-blur-sm p-6 rounded-[2rem] border border-slate-100 dark:border-white/5 flex flex-col gap-4 cursor-pointer hover:shadow-2xl hover:shadow-blue-500/10 transition-all group">
+        {categories.map((cat, i) => (<motion.div key={i} whileHover={{ y: -6, scale: 1.01 }} onClick={cat.onClick} className="bg-white dark:bg-slate-800/40 backdrop-blur-sm p-6 rounded-[2rem] border border-slate-100 dark:border-white/5 flex flex-col gap-4 cursor-pointer hover:shadow-2xl hover:shadow-emerald-500/10 transition-all group">
             <div className={`${cat.color} w-12 h-12 rounded-xl flex items-center justify-center transition-transform group-hover:rotate-6`}>
               <cat.icon className="w-6 h-6"/>
             </div>
@@ -323,7 +323,7 @@ const Categories = ({ onHotelsClick, onRentalsClick, onActivitiesClick }) => {
               <h3 className="text-lg font-bold text-slate-900 dark:text-white mb-1">{cat.title}</h3>
               <p className="text-xs text-slate-500 dark:text-slate-400 leading-relaxed">{cat.desc}</p>
             </div>
-            <div className="pt-2 flex items-center gap-2 text-[10px] font-bold text-blue-600 dark:text-blue-400 opacity-0 group-hover:opacity-100 transition-opacity">
+            <div className="pt-2 flex items-center gap-2 text-[10px] font-bold text-emerald-600 dark:text-emerald-400 opacity-0 group-hover:opacity-100 transition-opacity">
               Explore Now <ArrowRight className="w-3 h-3"/>
             </div>
           </motion.div>))}
@@ -402,7 +402,7 @@ const RecommendedForYou = ({ onSelect }) => {
     return (<section className="py-20 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto">
       <div className="flex flex-col md:flex-row md:items-end justify-between mb-12 gap-4">
         <div>
-          <span className="text-[10px] font-bold text-blue-600 dark:text-blue-400 uppercase tracking-[0.3em] mb-3 block">Curated Selection</span>
+          <span className="text-[10px] font-bold text-emerald-600 dark:text-emerald-400 uppercase tracking-[0.3em] mb-3 block">Curated Selection</span>
           <h2 className="text-4xl font-bold text-slate-900 dark:text-white">Recommended for You</h2>
         </div>
         <button className="text-sm font-bold text-slate-900 dark:text-white flex items-center gap-2 group">
@@ -496,7 +496,7 @@ const TrendingDestinations = ({ onSelect }) => {
     return (<section className="py-20 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto">
       <div className="flex flex-col md:flex-row md:items-end justify-between mb-12 gap-4">
         <div>
-          <span className="text-[10px] font-bold text-blue-600 dark:text-blue-400 uppercase tracking-[0.3em] mb-3 block">Global Trends</span>
+          <span className="text-[10px] font-bold text-emerald-600 dark:text-emerald-400 uppercase tracking-[0.3em] mb-3 block">Global Trends</span>
           <h2 className="text-4xl font-bold text-slate-900 dark:text-white">Trending Destinations</h2>
         </div>
         <div className="flex gap-2">
@@ -572,7 +572,7 @@ const SplitBillFeature = ({ onStartGroupBooking }) => {
       <div className="max-w-7xl mx-auto flex flex-col lg:flex-row items-center gap-16 lg:gap-32">
         <div className="flex-1 w-full order-2 lg:order-1">
           <motion.div initial={{ opacity: 0, x: -30 }} whileInView={{ opacity: 1, x: 0 }} viewport={{ once: true }}>
-            <span className="inline-block px-4 py-1.5 rounded-full bg-blue-600/10 text-blue-600 dark:text-blue-400 text-[10px] font-bold uppercase tracking-[0.3em] mb-8">
+            <span className="inline-block px-4 py-1.5 rounded-full bg-emerald-600/10 text-emerald-600 dark:text-emerald-400 text-[10px] font-bold uppercase tracking-[0.3em] mb-8">
               Seamless Collaboration
             </span>
             <h2 className="text-4xl sm:text-6xl font-bold text-slate-900 dark:text-white mb-8 leading-[1.1] tracking-tight">
@@ -649,7 +649,7 @@ const Newsletter = () => {
     return (<section className="py-24 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto">
       <div className="bg-slate-900 dark:bg-white rounded-[3rem] p-12 md:p-20 text-center relative overflow-hidden">
         <div className="absolute top-0 left-0 w-full h-full opacity-10 pointer-events-none">
-          <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] bg-blue-500 rounded-full blur-[120px]"/>
+          <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] bg-emerald-500 rounded-full blur-[120px]"/>
           <div className="absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] bg-emerald-500 rounded-full blur-[120px]"/>
         </div>
         
@@ -750,9 +750,9 @@ export const Dashboard = ({ tripData, onSelectRecommendation, onSelectDestinatio
             </div>
 
             <div className="flex flex-wrap items-center gap-3">
-              {isAuthenticated && user?.role === 'customer' ? (<Link to="/customer/book" className="h-11 px-5 rounded-xl bg-blue-600 text-white font-bold hover:bg-blue-700 transition-colors inline-flex items-center justify-center">
+              {isAuthenticated && user?.role === 'customer' ? (<Link to="/customer/book" className="h-11 px-5 rounded-xl bg-emerald-600 text-white font-bold hover:bg-emerald-700 transition-colors inline-flex items-center justify-center">
                   Create booking
-                </Link>) : (<Link to="/login" className="h-11 px-5 rounded-xl bg-blue-600 text-white font-bold hover:bg-blue-700 transition-colors inline-flex items-center justify-center">
+                </Link>) : (<Link to="/login" className="h-11 px-5 rounded-xl bg-emerald-600 text-white font-bold hover:bg-emerald-700 transition-colors inline-flex items-center justify-center">
                   Login to book
                 </Link>)}
               <Link to="/customer/bookings" className="h-11 px-5 rounded-xl border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-200 font-bold hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors inline-flex items-center justify-center">
@@ -765,7 +765,7 @@ export const Dashboard = ({ tripData, onSelectRecommendation, onSelectDestinatio
             {!isAuthenticated || user?.role !== 'customer' ? (<div className="py-10 text-center text-slate-600 dark:text-slate-300 font-semibold">
                 Login as a customer to see your bookings.
               </div>) : myBookingsLoading ? (<div className="flex justify-center items-center py-10">
-                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-emerald-600"></div>
               </div>) : myBookings.length === 0 ? (<div className="py-10 text-center text-slate-600 dark:text-slate-300 font-semibold">
                 No bookings yet.
               </div>) : (<div className="divide-y divide-slate-100 dark:divide-slate-800 rounded-xl overflow-hidden border border-slate-200/60 dark:border-slate-800/60">
@@ -816,7 +816,7 @@ export const Dashboard = ({ tripData, onSelectRecommendation, onSelectDestinatio
                       <p className="text-xs text-slate-500 dark:text-slate-400 mb-4">{hotel.location}</p>
                       <div className="flex items-center justify-between">
                         <p className="text-sm font-bold text-slate-900 dark:text-white">{hotel.price} / night</p>
-                        <ArrowRight className="w-4 h-4 text-blue-600"/>
+                        <ArrowRight className="w-4 h-4 text-emerald-600"/>
                       </div>
                     </div>
                   </motion.div>))}
@@ -841,3 +841,4 @@ export const Dashboard = ({ tripData, onSelectRecommendation, onSelectDestinatio
         </>)}
     </main>);
 };
+

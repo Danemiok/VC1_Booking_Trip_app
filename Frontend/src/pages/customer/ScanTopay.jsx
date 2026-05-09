@@ -37,7 +37,7 @@ export const ScanToPay = ({ bookingDetails, onSuccess, onBack, onCancel }) => {
             </div>
             <div className="w-12 h-px bg-slate-200 dark:bg-slate-800"/>
             <div className="flex items-center gap-2">
-              <div className="w-6 h-6 rounded-full bg-blue-600 flex items-center justify-center text-white text-[10px] font-bold">
+              <div className="w-6 h-6 rounded-full bg-emerald-600 flex items-center justify-center text-white text-[10px] font-bold">
                 2
               </div>
               <span className="text-xs font-bold text-slate-900 dark:text-white uppercase tracking-widest">Payment</span>
@@ -62,7 +62,7 @@ export const ScanToPay = ({ bookingDetails, onSuccess, onBack, onCancel }) => {
                   <h2 className="text-lg font-bold text-slate-900 dark:text-white">Scan to Pay</h2>
                   <p className="text-xs text-slate-400">ABA Bank KHQR Merchant</p>
                 </div>
-                <div className="px-4 py-2 bg-blue-50 dark:bg-blue-900/20 rounded-xl flex items-center gap-2 text-blue-600">
+                <div className="px-4 py-2 bg-emerald-50 dark:bg-emerald-900/20 rounded-xl flex items-center gap-2 text-emerald-600">
                   <Clock className="w-4 h-4"/>
                   <span className="text-sm font-bold font-mono">{formatTime(timeLeft)}</span>
                 </div>
@@ -100,7 +100,7 @@ export const ScanToPay = ({ bookingDetails, onSuccess, onBack, onCancel }) => {
                     <span className="text-sm font-medium text-slate-600 dark:text-slate-400">Waiting for transaction...</span>
                   </div>
                   
-                  <button onClick={handleVerify} disabled={isVerifying} className="w-full py-4 bg-blue-600 text-white rounded-2xl font-bold flex items-center justify-center gap-2 hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all shadow-lg shadow-blue-500/20">
+                  <button onClick={handleVerify} disabled={isVerifying} className="w-full py-4 bg-emerald-600 text-white rounded-2xl font-bold flex items-center justify-center gap-2 hover:bg-emerald-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all shadow-lg shadow-emerald-500/20">
                     {isVerifying ? (<>
                         <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"/>
                         Verifying Payment...
@@ -120,19 +120,19 @@ export const ScanToPay = ({ bookingDetails, onSuccess, onBack, onCancel }) => {
                   <h3 className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-4">How to Pay</h3>
                   <div className="space-y-4">
                     <div className="flex gap-4">
-                      <span className="text-sm font-bold text-blue-600">1.</span>
+                      <span className="text-sm font-bold text-emerald-600">1.</span>
                       <p className="text-xs text-slate-600 dark:text-slate-400 leading-relaxed">
                         Open the ABA Mobile app or any KHQR supported bank app.
                       </p>
                     </div>
                     <div className="flex gap-4">
-                      <span className="text-sm font-bold text-blue-600">2.</span>
+                      <span className="text-sm font-bold text-emerald-600">2.</span>
                       <p className="text-xs text-slate-600 dark:text-slate-400 leading-relaxed">
                         Tap on the Scan QR button on your mobile device.
                       </p>
                     </div>
                     <div className="flex gap-4">
-                      <span className="text-sm font-bold text-blue-600">3.</span>
+                      <span className="text-sm font-bold text-emerald-600">3.</span>
                       <p className="text-xs text-slate-600 dark:text-slate-400 leading-relaxed">
                         Scan the code and confirm the payment on your phone.
                       </p>
@@ -152,7 +152,7 @@ export const ScanToPay = ({ bookingDetails, onSuccess, onBack, onCancel }) => {
                 <div>
                   <div className="flex items-center justify-between mb-2">
                     <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Booking For</span>
-                    <span className="px-2 py-1 bg-blue-50 dark:bg-blue-900/20 text-blue-600 text-[10px] font-bold rounded-lg uppercase tracking-widest">
+                    <span className="px-2 py-1 bg-emerald-50 dark:bg-emerald-900/20 text-emerald-600 text-[10px] font-bold rounded-lg uppercase tracking-widest">
                       {bookingDetails.id}
                     </span>
                   </div>
@@ -170,24 +170,24 @@ export const ScanToPay = ({ bookingDetails, onSuccess, onBack, onCancel }) => {
                   <div className="flex justify-between items-center">
                     <span className="text-sm text-slate-500 dark:text-slate-400">Amount in KHR</span>
                     <div className="flex items-center gap-1">
-                      <span className="text-lg font-bold text-blue-600">៛ {bookingDetails.amountKhr.toLocaleString()}</span>
+                      <span className="text-lg font-bold text-emerald-600">៛ {bookingDetails.amountKhr.toLocaleString()}</span>
                     </div>
                   </div>
                 </div>
               </div>
             </div>
 
-            <div className="bg-blue-50/50 dark:bg-blue-900/10 border border-blue-100 dark:border-blue-900/20 rounded-[32px] p-6">
+            <div className="bg-emerald-50/50 dark:bg-emerald-900/10 border border-emerald-100 dark:border-emerald-900/20 rounded-[32px] p-6">
               <div className="flex gap-4">
-                <div className="w-10 h-10 bg-blue-100 dark:bg-blue-900/40 rounded-xl flex items-center justify-center text-blue-600 flex-shrink-0">
+                <div className="w-10 h-10 bg-emerald-100 dark:bg-emerald-900/40 rounded-xl flex items-center justify-center text-emerald-600 flex-shrink-0">
                   <MessageCircle className="w-5 h-5"/>
                 </div>
                 <div>
-                  <h4 className="font-bold text-blue-900 dark:text-blue-100 text-sm mb-1">Having trouble?</h4>
-                  <p className="text-[10px] text-blue-600/70 dark:text-blue-400/70 leading-relaxed mb-3">
+                  <h4 className="font-bold text-emerald-900 dark:text-emerald-100 text-sm mb-1">Having trouble?</h4>
+                  <p className="text-[10px] text-emerald-600/70 dark:text-emerald-400/70 leading-relaxed mb-3">
                     If your scan isn't working, try refreshing the page or contact our support team.
                   </p>
-                  <button className="text-xs font-bold text-blue-600 hover:underline">Open Live Support</button>
+                  <button className="text-xs font-bold text-emerald-600 hover:underline">Open Live Support</button>
                 </div>
               </div>
             </div>
@@ -206,3 +206,4 @@ export const ScanToPay = ({ bookingDetails, onSuccess, onBack, onCancel }) => {
       </div>
     </div>);
 };
+

@@ -7,7 +7,6 @@ import { AppRoutes } from './routes/AppRoutes';
 import { Login } from './pages/auth/Login';
 import { Register } from './pages/auth/Register';
 import { useAuth } from './context/AuthContext';
-import { ThemeProvider } from './context/ThemeContext';
 import { messageService } from './services/messageService';
 class AppErrorBoundary extends React.Component {
     constructor(props) {
@@ -24,7 +23,7 @@ class AppErrorBoundary extends React.Component {
         if (this.state.hasError) {
             return (<div className="min-h-screen bg-white px-6 py-16 text-slate-900 dark:bg-slate-950 dark:text-slate-100">
           <div className="mx-auto max-w-2xl rounded-3xl border border-slate-200 bg-white p-8 shadow-xl dark:border-slate-800 dark:bg-slate-900">
-            <p className="text-xs font-bold uppercase tracking-[0.2em] text-blue-600">Komrong</p>
+            <p className="text-xs font-bold uppercase tracking-[0.2em] text-primary">Komrong</p>
             <h1 className="mt-3 text-2xl font-bold tracking-tight">The page could not load</h1>
             <p className="mt-2 text-sm text-slate-500 dark:text-slate-400">
               A runtime error stopped the app from rendering. Please refresh the page, and if it still fails,
@@ -33,7 +32,7 @@ class AppErrorBoundary extends React.Component {
             <pre className="mt-5 overflow-auto rounded-2xl bg-slate-950 px-4 py-3 text-sm text-slate-100">
               {this.state.error?.message || 'Unknown render error'}
             </pre>
-            <button type="button" onClick={() => window.location.reload()} className="mt-6 rounded-2xl bg-blue-600 px-5 py-3 text-sm font-semibold text-white transition hover:bg-blue-500">
+            <button type="button" onClick={() => window.location.reload()} className="mt-6 rounded-2xl bg-primary px-5 py-3 text-sm font-semibold text-white transition hover:bg-primary-soft">
               Reload
             </button>
           </div>
@@ -368,12 +367,10 @@ const AppContent = () => {
 };
 const App = () => {
     return (<>
-        <ThemeProvider>
         <AppErrorBoundary>
           <AppContent />
         </AppErrorBoundary>
-      </ThemeProvider>
-      
     </>);
 };
 export default App;
+

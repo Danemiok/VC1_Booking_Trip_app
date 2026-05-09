@@ -209,7 +209,7 @@ export default function Destinations({ onOpenMessages }) {
                         : '';
                 const buttonClass = itemIndex % 3 === 1
                     ? 'bg-slate-900 hover:bg-slate-800 dark:bg-slate-100 dark:text-slate-900 dark:hover:bg-white'
-                    : 'bg-blue-600 hover:bg-blue-700';
+                    : 'bg-emerald-600 hover:bg-emerald-700';
                 const highlightAmenities = (Array.isArray(destination.amenities) ? destination.amenities : []).slice(0, 3);
                 return (<motion.article key={destination.id} initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} className="overflow-hidden rounded-[1.35rem] border border-slate-200 bg-white shadow-[0_10px_30px_rgba(15,23,42,0.06)] transition-shadow hover:shadow-[0_18px_40px_rgba(15,23,42,0.08)] dark:border-slate-800 dark:bg-slate-900">
                     <div className="flex flex-col lg:flex-row">
@@ -236,7 +236,7 @@ export default function Destinations({ onOpenMessages }) {
                         }
                         return (<img src={displayImages[0] || destination.image} alt={destination.name} className="h-60 w-full object-cover lg:h-full" referrerPolicy="no-referrer"/>);
                     })()}
-                        <div className={`absolute left-4 top-4 rounded-full px-3 py-1 text-[10px] font-bold uppercase tracking-[0.18em] text-white ${itemIndex % 3 === 2 ? 'bg-blue-600' : 'bg-red-500'}`}>{badge}</div>
+                        <div className={`absolute left-4 top-4 rounded-full px-3 py-1 text-[10px] font-bold uppercase tracking-[0.18em] text-white ${itemIndex % 3 === 2 ? 'bg-emerald-600' : 'bg-red-500'}`}>{badge}</div>
                         <button className="absolute right-4 top-4 rounded-full bg-white/95 p-2 text-slate-400 shadow-md transition-colors hover:text-red-500">
                           <Heart className="h-4 w-4"/>
                         </button>
@@ -286,7 +286,7 @@ export default function Destinations({ onOpenMessages }) {
                             <div className="flex -space-x-2">
                               {[0, 1, 2].map((avatar) => (<div key={avatar} className="h-7 w-7 rounded-full border-2 border-white bg-gradient-to-br from-slate-200 to-slate-400 dark:border-slate-900"/>))}
                             </div>
-                            <p className="text-xs font-medium text-blue-600 dark:text-blue-400">{interestCount} friends interested</p>
+                            <p className="text-xs font-medium text-emerald-600 dark:text-emerald-400">{interestCount} friends interested</p>
                           </div>
 
                           <div className="flex items-center gap-2">
@@ -374,14 +374,14 @@ export default function Destinations({ onOpenMessages }) {
                   </div>
                   <div className="text-right">
                     {destination.has_promotion ? (<div className="flex flex-col gap-1">
-                        <p className="text-lg font-bold text-blue-600 dark:text-blue-400">
+                        <p className="text-lg font-bold text-emerald-600 dark:text-emerald-400">
                           ${destination.discounted_price.toFixed(0)}
                           <span className="ml-1 text-xs font-medium text-slate-500 dark:text-slate-400">/ night</span>
                         </p>
                         <p className="text-sm line-through text-slate-400 dark:text-slate-500">
                           ${destination.price.toFixed(0)}
                         </p>
-                      </div>) : (<p className="text-lg font-bold text-blue-600 dark:text-blue-400">
+                      </div>) : (<p className="text-lg font-bold text-emerald-600 dark:text-emerald-400">
                         ${destination.price.toFixed(0)}
                         <span className="ml-1 text-xs font-medium text-slate-500 dark:text-slate-400">/ night</span>
                       </p>)}
@@ -1071,7 +1071,7 @@ export const Hotels = ({ tripData, browseDestination, onBack, onSelectHotel, set
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         <div className="rounded-[2rem] bg-[#f5f7fb] p-4 shadow-[0_24px_80px_-48px_rgba(15,23,42,0.45)] dark:bg-slate-900/70 sm:p-6 lg:p-8">
           <nav className="mb-6 flex flex-wrap items-center gap-2 text-[10px] font-semibold uppercase tracking-[0.18em] text-slate-400">
-            <button type="button" onClick={onBack} className="transition-colors hover:text-blue-600">
+            <button type="button" onClick={onBack} className="transition-colors hover:text-emerald-600">
               {t('home')}
             </button>
             <span>&gt;</span>
@@ -1084,7 +1084,7 @@ export const Hotels = ({ tripData, browseDestination, onBack, onSelectHotel, set
             <div className="relative min-h-screen flex flex-col justify-center">
               <img src={hotelBannerImage} alt={`${regionLabel} hotel banner`} className="absolute inset-0 h-full w-full object-cover" referrerPolicy="no-referrer"/>
               <div className="absolute inset-0 bg-gradient-to-r from-slate-950/85 via-slate-900/55 to-slate-950/80"/>
-              <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_left,rgba(37,99,235,0.35),transparent_55%)]"/>
+              <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_left,rgba(47,160,132,0.35),transparent_55%)]"/>
 
               <div className="relative z-10 px-5 py-8 sm:px-8 sm:py-10 lg:px-10 flex flex-col justify-center items-center text-center h-full">
                 <p className="text-[10px] font-bold uppercase tracking-[0.36em] text-white/70">{t('curated_collection')}</p>
@@ -1097,7 +1097,7 @@ export const Hotels = ({ tripData, browseDestination, onBack, onSelectHotel, set
 
                 <div className="mt-7 w-full max-w-5xl grid gap-2 rounded-[1.5rem] bg-white/95 p-2 shadow-2xl shadow-slate-900/20 backdrop-blur md:grid-cols-[1.2fr_1fr_1fr_auto] dark:bg-slate-950/90 dark:shadow-none">
                   <label className="flex min-w-0 items-center gap-3 rounded-xl px-4 py-3 transition-colors hover:bg-slate-100/80 dark:hover:bg-slate-900">
-                    <Search className="h-5 w-5 text-blue-600"/>
+                    <Search className="h-5 w-5 text-emerald-600"/>
                     <div className="min-w-0 flex-1">
                       <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-slate-400">{t('where_to_next')}</p>
                       <input type="text" value={searchQuery || ''} onChange={(event) => {
@@ -1123,7 +1123,7 @@ export const Hotels = ({ tripData, browseDestination, onBack, onSelectHotel, set
             setDestinationPickerQuery(mapLocationQuery || heroLocationLabel);
             setIsDestinationPickerOpen((previous) => !previous);
         }} className="flex w-full min-w-0 items-center gap-3 rounded-xl px-4 py-3 text-left transition-colors hover:bg-slate-100/80 dark:hover:bg-slate-900">
-                      <MapPin className="h-5 w-5 text-blue-600"/>
+                      <MapPin className="h-5 w-5 text-emerald-600"/>
                       <div className="min-w-0 flex-1">
                         <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-slate-400">{t('view_on_map')}</p>
                         <p className="truncate text-sm font-semibold text-slate-900 dark:text-white">
@@ -1134,7 +1134,7 @@ export const Hotels = ({ tripData, browseDestination, onBack, onSelectHotel, set
                     </button>
 
                     {isDestinationPickerOpen ? (<div id="destination-picker-menu" className="absolute left-0 top-[calc(100%+0.5rem)] z-[70] w-full min-w-[260px] rounded-2xl border border-slate-700/60 bg-slate-950/95 p-3 shadow-2xl shadow-slate-950/40 backdrop-blur">
-                        <div className="mb-2 flex items-center gap-2 rounded-xl border border-blue-500/70 bg-slate-900 px-3 py-2.5">
+                        <div className="mb-2 flex items-center gap-2 rounded-xl border border-emerald-500/70 bg-slate-900 px-3 py-2.5">
                           <Search className="h-4 w-4 text-slate-400"/>
                           <input autoFocus type="text" value={destinationPickerQuery} onChange={(event) => setDestinationPickerQuery(event.target.value)} onKeyDown={(event) => {
                 if (event.key === 'Enter') {
@@ -1146,8 +1146,8 @@ export const Hotels = ({ tripData, browseDestination, onBack, onSelectHotel, set
 
                         <div className="max-h-48 space-y-1 overflow-y-auto py-1">
                           {destinationPickerQuery.trim() &&
-                !visibleDestinationPickerOptions.some((option) => normalizeSearchText(option) === normalizeSearchText(destinationPickerQuery)) ? (<button type="button" onClick={() => applyDestinationFromPicker(destinationPickerQuery)} className="flex w-full items-center gap-2.5 rounded-lg border border-blue-500/30 bg-blue-500/10 px-2.5 py-2 text-left text-sm text-blue-100 transition-colors hover:bg-blue-500/20">
-                              <MapPin className="h-4 w-4 text-blue-300"/>
+                !visibleDestinationPickerOptions.some((option) => normalizeSearchText(option) === normalizeSearchText(destinationPickerQuery)) ? (<button type="button" onClick={() => applyDestinationFromPicker(destinationPickerQuery)} className="flex w-full items-center gap-2.5 rounded-lg border border-emerald-500/30 bg-emerald-500/10 px-2.5 py-2 text-left text-sm text-emerald-100 transition-colors hover:bg-emerald-500/20">
+                              <MapPin className="h-4 w-4 text-emerald-300"/>
                               <span className="truncate">Use: {destinationPickerQuery}</span>
                             </button>) : null}
                           {visibleDestinationPickerOptions.map((option) => (<button key={option} type="button" onClick={() => applyDestinationFromPicker(option)} className={`flex w-full items-center gap-2.5 rounded-lg px-2.5 py-2 text-left text-sm transition-colors ${normalizeSearchText(option) === normalizeSearchText(mapLocationQuery)
@@ -1167,7 +1167,7 @@ export const Hotels = ({ tripData, browseDestination, onBack, onSelectHotel, set
 
                   <div ref={stayDatePickerRef} className="relative min-w-0">
                     <button type="button" onClick={() => setIsStayDatePickerOpen((previous) => !previous)} className="flex min-w-0 items-center gap-3 rounded-xl px-4 py-3 text-left transition-colors hover:bg-slate-100/80 dark:hover:bg-slate-900">
-                      <Calendar className="h-5 w-5 text-blue-600"/>
+                      <Calendar className="h-5 w-5 text-emerald-600"/>
                       <div className="min-w-0">
                         <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-slate-400">Check-in / Check-out</p>
                         <p className="truncate text-sm font-semibold text-slate-900 dark:text-white">{stayWindowLabel}</p>
@@ -1183,7 +1183,7 @@ export const Hotels = ({ tripData, browseDestination, onBack, onSelectHotel, set
                             <input type="date" value={checkInDate} onChange={(event) => {
                 setCheckInDate(event.target.value);
                 setStayDateError('');
-            }} className="w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2.5 text-sm font-medium text-slate-900 outline-none transition focus:border-blue-500 focus:bg-white dark:border-slate-700 dark:bg-slate-900 dark:text-white"/>
+            }} className="w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2.5 text-sm font-medium text-slate-900 outline-none transition focus:border-emerald-500 focus:bg-white dark:border-slate-700 dark:bg-slate-900 dark:text-white"/>
                           </label>
                           <label className="block">
                             <span className="mb-2 block text-[10px] font-semibold uppercase tracking-[0.16em] text-slate-400">
@@ -1192,7 +1192,7 @@ export const Hotels = ({ tripData, browseDestination, onBack, onSelectHotel, set
                             <input type="date" value={checkOutDate} onChange={(event) => {
                 setCheckOutDate(event.target.value);
                 setStayDateError('');
-            }} className="w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2.5 text-sm font-medium text-slate-900 outline-none transition focus:border-blue-500 focus:bg-white dark:border-slate-700 dark:bg-slate-900 dark:text-white"/>
+            }} className="w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2.5 text-sm font-medium text-slate-900 outline-none transition focus:border-emerald-500 focus:bg-white dark:border-slate-700 dark:bg-slate-900 dark:text-white"/>
                           </label>
                         </div>
 
@@ -1212,7 +1212,7 @@ export const Hotels = ({ tripData, browseDestination, onBack, onSelectHotel, set
                             <button type="button" onClick={() => setIsStayDatePickerOpen(false)} className="rounded-xl border border-slate-200 px-3 py-2 text-xs font-semibold uppercase tracking-[0.12em] text-slate-700 transition hover:bg-slate-50 dark:border-slate-700 dark:text-slate-200 dark:hover:bg-slate-900">
                               Cancel
                             </button>
-                            <button type="button" onClick={applyStayDates} disabled={!checkInDate || !checkOutDate} className="rounded-xl bg-blue-600 px-3 py-2 text-xs font-semibold uppercase tracking-[0.12em] text-white transition hover:bg-blue-500 disabled:cursor-not-allowed disabled:bg-slate-300 disabled:text-slate-500">
+                            <button type="button" onClick={applyStayDates} disabled={!checkInDate || !checkOutDate} className="rounded-xl bg-emerald-600 px-3 py-2 text-xs font-semibold uppercase tracking-[0.12em] text-white transition hover:bg-emerald-500 disabled:cursor-not-allowed disabled:bg-slate-300 disabled:text-slate-500">
                               Apply Dates
                             </button>
                           </div>
@@ -1220,7 +1220,7 @@ export const Hotels = ({ tripData, browseDestination, onBack, onSelectHotel, set
                       </div>) : null}
                   </div>
 
-                  <button type="button" onClick={() => document.getElementById('hotel-results')?.scrollIntoView({ behavior: 'smooth', block: 'start' })} className="rounded-xl bg-blue-600 px-6 py-3 text-sm font-semibold text-white transition-colors hover:bg-blue-500">
+                  <button type="button" onClick={() => document.getElementById('hotel-results')?.scrollIntoView({ behavior: 'smooth', block: 'start' })} className="rounded-xl bg-emerald-600 px-6 py-3 text-sm font-semibold text-white transition-colors hover:bg-emerald-500">
                     {t('explore')}
                   </button>
                 </div>
@@ -1250,7 +1250,7 @@ export const Hotels = ({ tripData, browseDestination, onBack, onSelectHotel, set
                     <p className="mt-2 text-[11px] text-slate-500 dark:text-slate-400">
                       {`Lat ${selectedMapCenter.lat.toFixed(6)}, Lng ${selectedMapCenter.lng.toFixed(6)}`}
                     </p>
-                    <a href={getOpenStreetMapSearchUrl(selectedMapDisplay.location)} target="_blank" rel="noreferrer" className="mt-1 inline-flex text-[11px] font-medium text-blue-600 hover:text-blue-500">
+                    <a href={getOpenStreetMapSearchUrl(selectedMapDisplay.location)} target="_blank" rel="noreferrer" className="mt-1 inline-flex text-[11px] font-medium text-emerald-600 hover:text-emerald-500">
                       Open in OpenStreetMap
                     </a>
                   </section>
@@ -1260,7 +1260,7 @@ export const Hotels = ({ tripData, browseDestination, onBack, onSelectHotel, set
                       <Filter className="h-4 w-4 text-slate-400"/>
                       Price per night
                     </div>
-                    <input type="range" min="100" max={priceCeiling} step="25" value={priceRange} onChange={(event) => setPriceRange(parseInt(event.target.value, 10))} className="h-2 w-full cursor-pointer appearance-none rounded-full bg-slate-100 accent-blue-600 dark:bg-slate-800"/>
+                    <input type="range" min="100" max={priceCeiling} step="25" value={priceRange} onChange={(event) => setPriceRange(parseInt(event.target.value, 10))} className="h-2 w-full cursor-pointer appearance-none rounded-full bg-slate-100 accent-emerald-600 dark:bg-slate-800"/>
                     <div className="mt-3 flex items-center justify-between text-xs text-slate-400">
                       <span>$0</span>
                       <span>${priceRange}+</span>
@@ -1271,7 +1271,7 @@ export const Hotels = ({ tripData, browseDestination, onBack, onSelectHotel, set
                     <h3 className="mb-3 text-sm font-semibold text-slate-700 dark:text-slate-200">{t('star_rating')}</h3>
                     <div className="flex gap-2">
                       {[3, 4, 5].map((star) => (<button key={star} type="button" onClick={() => setSelectedStars((previous) => (previous === star ? null : star))} className={`min-w-[40px] rounded-xl border px-3 py-1.5 text-xs font-semibold transition-colors ${selectedStars === star
-                ? 'border-blue-600 bg-blue-600 text-white'
+                ? 'border-emerald-600 bg-emerald-600 text-white'
                 : 'border-slate-200 text-slate-500 hover:border-slate-300 dark:border-slate-700 dark:text-slate-300'}`}>
                           {star}
                         </button>))}
@@ -1284,7 +1284,7 @@ export const Hotels = ({ tripData, browseDestination, onBack, onSelectHotel, set
                       {areaOptions.map((area) => (<label key={area} className="flex cursor-pointer items-center gap-3 text-sm text-slate-500 dark:text-slate-400">
                           <input type="checkbox" checked={selectedAreas.includes(area)} onChange={() => setSelectedAreas((previous) => previous.includes(area)
                 ? previous.filter((item) => item !== area)
-                : [...previous, area])} className="h-4 w-4 rounded border-slate-300 text-blue-600 focus:ring-blue-500"/>
+                : [...previous, area])} className="h-4 w-4 rounded border-slate-300 text-emerald-600 focus:ring-emerald-500"/>
                           <div className="min-w-0 flex-1">
                             <span>{area}</span>
                             {areaCoordinatesByLabel.get(normalizeSearchText(area)) ? (<p className="text-[10px] text-slate-400 dark:text-slate-500">
@@ -1301,7 +1301,7 @@ export const Hotels = ({ tripData, browseDestination, onBack, onSelectHotel, set
                       {amenityOptions.map((amenity) => (<label key={amenity} className="flex cursor-pointer items-center gap-3 text-sm text-slate-500 dark:text-slate-400">
                           <input type="checkbox" checked={selectedAmenities.includes(amenity)} onChange={() => setSelectedAmenities((previous) => previous.includes(amenity)
                 ? previous.filter((item) => item !== amenity)
-                : [...previous, amenity])} className="h-4 w-4 rounded border-slate-300 text-blue-600 focus:ring-blue-500"/>
+                : [...previous, amenity])} className="h-4 w-4 rounded border-slate-300 text-emerald-600 focus:ring-emerald-500"/>
                           <span>{amenity}</span>
                         </label>))}
                     </div>
@@ -1309,7 +1309,7 @@ export const Hotels = ({ tripData, browseDestination, onBack, onSelectHotel, set
 
                   <button type="button" onClick={() => {
             document.getElementById('hotel-results')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
-        }} className="w-full rounded-2xl bg-blue-50 px-4 py-3 text-sm font-semibold text-blue-700 transition-colors hover:bg-blue-100 dark:bg-blue-500/10 dark:text-blue-200">
+        }} className="w-full rounded-2xl bg-emerald-50 px-4 py-3 text-sm font-semibold text-emerald-700 transition-colors hover:bg-emerald-100 dark:bg-emerald-500/10 dark:text-emerald-200">
                     Apply All Filters
                   </button>
                 </div>
@@ -1347,7 +1347,7 @@ export const Hotels = ({ tripData, browseDestination, onBack, onSelectHotel, set
               <div className="space-y-4">
                 {hotelsLoading && (<div className="flex items-center justify-center rounded-[1.6rem] border border-slate-200 bg-white px-5 py-10 shadow-sm dark:border-slate-800 dark:bg-slate-950">
                     <div className="flex flex-col items-center gap-3 text-slate-500 dark:text-slate-400">
-                      <div className="h-10 w-10 animate-spin rounded-full border-4 border-slate-200 border-t-blue-600 dark:border-slate-700 dark:border-t-blue-500"/>
+                      <div className="h-10 w-10 animate-spin rounded-full border-4 border-slate-200 border-t-emerald-600 dark:border-slate-700 dark:border-t-emerald-500"/>
                     </div>
                   </div>)}
 
@@ -1426,11 +1426,11 @@ export const Hotels = ({ tripData, browseDestination, onBack, onSelectHotel, set
                                     </span>
                                   </div>
 
-                                  <button type="button" onClick={() => openHotelWithSelection(hotel)} className="text-left text-xl font-bold tracking-tight text-slate-900 transition-colors hover:text-blue-600 dark:text-white sm:text-[1.7rem]">
+                                  <button type="button" onClick={() => openHotelWithSelection(hotel)} className="text-left text-xl font-bold tracking-tight text-slate-900 transition-colors hover:text-emerald-600 dark:text-white sm:text-[1.7rem]">
                                     {hotel.name}
                                   </button>
 
-                                  <button type="button" onClick={() => openMapForHotel(hotel)} className="flex items-center gap-2 text-xs text-slate-500 transition-colors hover:text-blue-600 dark:text-slate-400 sm:text-sm">
+                                  <button type="button" onClick={() => openMapForHotel(hotel)} className="flex items-center gap-2 text-xs text-slate-500 transition-colors hover:text-emerald-600 dark:text-slate-400 sm:text-sm">
                                     <MapPin className="h-4 w-4"/>
                                     <span>{hotel.location}</span>
                                   </button>
@@ -1469,7 +1469,7 @@ export const Hotels = ({ tripData, browseDestination, onBack, onSelectHotel, set
                               <div className="grid gap-2.5 sm:grid-cols-2">
                                 <div className="rounded-[1rem] border border-slate-200 bg-slate-50 px-3 py-2.5 dark:border-slate-800 dark:bg-slate-900">
                                   <div className="flex items-center gap-2.5">
-                                    <Sparkles className="h-3.5 w-3.5 text-blue-600"/>
+                                    <Sparkles className="h-3.5 w-3.5 text-emerald-600"/>
                                     <div>
                                       <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-slate-400">
                                         Total stay
@@ -1483,7 +1483,7 @@ export const Hotels = ({ tripData, browseDestination, onBack, onSelectHotel, set
 
                                 <div className="rounded-[1rem] border border-slate-200 bg-slate-50 px-3 py-2.5 dark:border-slate-800 dark:bg-slate-900">
                                   <div className="flex items-center gap-2.5">
-                                    <BedDouble className="h-3.5 w-3.5 text-blue-600"/>
+                                    <BedDouble className="h-3.5 w-3.5 text-emerald-600"/>
                                     <div>
                                       <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-slate-400">
                                         {t('nights_estimate')}
@@ -1510,7 +1510,7 @@ export const Hotels = ({ tripData, browseDestination, onBack, onSelectHotel, set
 
                                 <button type="button" onClick={() => openHotelWithSelection(hotel)} className={`rounded-xl px-5 py-2.5 text-xs font-semibold text-white transition-colors sm:text-sm ${visualIndex % 2 === 1
                         ? 'bg-slate-900 hover:bg-slate-800 dark:bg-white dark:text-slate-900 dark:hover:bg-slate-100'
-                        : 'bg-blue-600 hover:bg-blue-500'}`}>
+                        : 'bg-emerald-600 hover:bg-emerald-500'}`}>
                                   View Selection
                                 </button>
                               </div>
@@ -1549,3 +1549,4 @@ export const Hotels = ({ tripData, browseDestination, onBack, onSelectHotel, set
       </div>
     </div>);
 };
+

@@ -615,7 +615,7 @@ export const GroupPlanning = ({ onBack, tripTitle = 'My trip' }) => {
         setIsCopied(true);
         setTimeout(() => setIsCopied(false), 2000);
     };
-    return (<div className="min-h-screen bg-slate-50 dark:bg-slate-950 text-slate-600 dark:text-slate-400 font-sans selection:bg-blue-500/30 pt-20">
+    return (<div className="min-h-screen bg-slate-50 dark:bg-slate-950 text-slate-600 dark:text-slate-400 font-sans selection:bg-emerald-500/30 pt-20">
       {!groupId ? (<GroupPlanningAccessPanel accessCode={accessCode} error={error} onAccessCodeChange={setAccessCode} onCreateGroup={handleCreateGroup} onJoinGroup={handleJoinGroup}/>) : (<>
           {/* Top Header Section */}
           <header className="bg-white/80 dark:bg-slate-900/80 backdrop-blur-xl border-b border-slate-100 dark:border-white/5 sticky top-16 z-40 px-6 py-4">
@@ -626,7 +626,7 @@ export const GroupPlanning = ({ onBack, tripTitle = 'My trip' }) => {
                 </button>
                 <div>
                   <div className="flex items-center gap-2 mb-1">
-                    <span className="text-[10px] font-bold text-blue-600 dark:text-blue-400 uppercase tracking-[0.3em]">Group Planning</span>
+                    <span className="text-[10px] font-bold text-emerald-600 dark:text-emerald-400 uppercase tracking-[0.3em]">Group Planning</span>
                     <span className="w-1 h-1 rounded-full bg-slate-300 dark:bg-slate-700"/>
                     <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">{members.length} Members</span>
                   </div>
@@ -678,7 +678,7 @@ export const GroupPlanning = ({ onBack, tripTitle = 'My trip' }) => {
                     <div className="bg-white dark:bg-slate-900/50 backdrop-blur-md rounded-[2.5rem] border border-slate-100 dark:border-white/5 shadow-sm overflow-hidden flex flex-col h-[600px]">
                       <div className="p-6 border-b border-slate-100 dark:border-white/5 flex items-center justify-between">
                         <div className="flex items-center gap-4">
-                          <div className="w-11 h-11 rounded-2xl bg-blue-600/10 text-blue-600 dark:text-blue-400 flex items-center justify-center font-extrabold">
+                          <div className="w-11 h-11 rounded-2xl bg-emerald-600/10 text-emerald-600 dark:text-emerald-400 flex items-center justify-center font-extrabold">
                             {groupName.charAt(0).toUpperCase()}
                           </div>
                           <div>
@@ -737,7 +737,7 @@ export const GroupPlanning = ({ onBack, tripTitle = 'My trip' }) => {
                       </div>
 
                       <div className="p-6 border-t border-slate-100 dark:border-white/5">
-                        <form onSubmit={handleSendMessage} className="bg-white dark:bg-slate-900 rounded-[2rem] p-2 flex items-center gap-2 border border-slate-200/70 dark:border-white/10 focus-within:border-blue-500/60 transition-all">
+                        <form onSubmit={handleSendMessage} className="bg-white dark:bg-slate-900 rounded-[2rem] p-2 flex items-center gap-2 border border-slate-200/70 dark:border-white/10 focus-within:border-emerald-500/60 transition-all">
                           <input ref={fileInputRef} type="file" accept="image/*,.pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.txt" className="hidden" onChange={(event) => {
                     const file = event.target.files?.[0] || null;
                     if (!file) {
@@ -764,18 +764,18 @@ export const GroupPlanning = ({ onBack, tripTitle = 'My trip' }) => {
                         messageInputRef.current?.focus();
                     });
                 }}/>
-                          <button type="button" onClick={openFilePicker} className="p-3 rounded-2xl text-slate-400 hover:text-blue-600 hover:bg-blue-50 dark:hover:bg-white/5 transition-colors">
+                          <button type="button" onClick={openFilePicker} className="p-3 rounded-2xl text-slate-400 hover:text-emerald-600 hover:bg-emerald-50 dark:hover:bg-white/5 transition-colors">
                             <Paperclip className="w-5 h-5"/>
                           </button>
                           <button type="button" onClick={toggleVoiceRecording} className={`p-3 rounded-2xl transition-colors ${isRecording
                     ? 'text-red-500 bg-red-500/10 hover:bg-red-500/15'
-                    : 'text-slate-400 hover:text-blue-600 hover:bg-blue-50 dark:hover:bg-white/5'}`} title={isRecording ? 'Stop recording' : 'Record voice'}>
+                    : 'text-slate-400 hover:text-emerald-600 hover:bg-emerald-50 dark:hover:bg-white/5'}`} title={isRecording ? 'Stop recording' : 'Record voice'}>
                             <Mic className="w-5 h-5"/>
                           </button>
-                          <button type="button" className="p-3 rounded-2xl text-slate-400 hover:text-blue-600 hover:bg-blue-50 dark:hover:bg-white/5 transition-colors">
+                          <button type="button" className="p-3 rounded-2xl text-slate-400 hover:text-emerald-600 hover:bg-emerald-50 dark:hover:bg-white/5 transition-colors">
                             <Smile className="w-5 h-5"/>
                           </button>
-                          {pendingAttachment && (<button type="button" onClick={() => setPendingAttachment(null)} className="max-w-[180px] px-3 py-2 rounded-2xl bg-blue-600/10 text-blue-700 dark:text-blue-300 text-xs font-bold flex items-center gap-2 hover:bg-blue-600/15" title={pendingAttachment.name}>
+                          {pendingAttachment && (<button type="button" onClick={() => setPendingAttachment(null)} className="max-w-[180px] px-3 py-2 rounded-2xl bg-emerald-600/10 text-emerald-700 dark:text-emerald-300 text-xs font-bold flex items-center gap-2 hover:bg-emerald-600/15" title={pendingAttachment.name}>
                               <Paperclip className="w-4 h-4"/>
                               <span className="truncate">{pendingAttachment.name}</span>
                               <X className="w-4 h-4 opacity-70"/>
@@ -786,7 +786,7 @@ export const GroupPlanning = ({ onBack, tripTitle = 'My trip' }) => {
                         sendMessage();
                     }
                 }} placeholder="Message" className="flex-1 bg-transparent border-none focus:ring-0 text-sm py-4 text-slate-900 dark:text-white"/>
-                          <button type="submit" disabled={!newMessage.trim() && !pendingAttachment} className="p-4 bg-blue-600 disabled:bg-slate-200 disabled:text-slate-400 dark:disabled:bg-white/10 dark:disabled:text-slate-500 text-white rounded-2xl transition-all shadow-lg shadow-blue-600/15 active:scale-95">
+                          <button type="submit" disabled={!newMessage.trim() && !pendingAttachment} className="p-4 bg-emerald-600 disabled:bg-slate-200 disabled:text-slate-400 dark:disabled:bg-white/10 dark:disabled:text-slate-500 text-white rounded-2xl transition-all shadow-lg shadow-emerald-600/15 active:scale-95">
                             <Send className="w-5 h-5"/>
                           </button>
                         </form>
@@ -797,7 +797,7 @@ export const GroupPlanning = ({ onBack, tripTitle = 'My trip' }) => {
             {activeTab === 'itinerary' && (<motion.div key="itinerary" initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -20 }} className="space-y-8">
                 <div className="flex items-center justify-between">
                   <h3 className="text-2xl font-bold text-slate-900 dark:text-white">Trip Itinerary</h3>
-                  <button onClick={() => setIsAddingActivity(true)} className="flex items-center gap-2 px-6 py-3 bg-blue-600 text-white rounded-2xl text-sm font-bold hover:bg-blue-700 transition-all shadow-lg shadow-blue-500/20">
+                  <button onClick={() => setIsAddingActivity(true)} className="flex items-center gap-2 px-6 py-3 bg-emerald-600 text-white rounded-2xl text-sm font-bold hover:bg-emerald-700 transition-all shadow-lg shadow-emerald-500/20">
                     <Plus className="w-4 h-4"/> Add Activity
                   </button>
                 </div>
@@ -812,11 +812,11 @@ export const GroupPlanning = ({ onBack, tripTitle = 'My trip' }) => {
                       <div className="flex-1">
                         <h4 className="text-xl font-bold text-slate-900 dark:text-white mb-2">{item.activity}</h4>
                         <p className="text-sm text-slate-500 dark:text-slate-400 flex items-center gap-2">
-                          <MapPin className="w-4 h-4 text-blue-500"/> {item.location}
+                          <MapPin className="w-4 h-4 text-emerald-500"/> {item.location}
                         </p>
                       </div>
                       <button onClick={() => handleVoteItinerary(item.id)} className="flex flex-col items-center gap-2 group/vote">
-                        <div className="w-14 h-14 rounded-2xl bg-slate-50 dark:bg-white/5 flex items-center justify-center text-slate-400 group-hover/vote:bg-blue-600 group-hover/vote:text-white transition-all shadow-sm">
+                        <div className="w-14 h-14 rounded-2xl bg-slate-50 dark:bg-white/5 flex items-center justify-center text-slate-400 group-hover/vote:bg-emerald-600 group-hover/vote:text-white transition-all shadow-sm">
                           <ThumbsUp className="w-6 h-6"/>
                         </div>
                         <span className="text-xs font-bold text-slate-400">{item.votes} Votes</span>
@@ -828,7 +828,7 @@ export const GroupPlanning = ({ onBack, tripTitle = 'My trip' }) => {
             {activeTab === 'polls' && (<motion.div key="polls" initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -20 }} className="space-y-8">
                 <div className="flex items-center justify-between">
                   <h3 className="text-2xl font-bold text-slate-900 dark:text-white">Active Polls</h3>
-                  <button onClick={() => setIsCreatingPoll(true)} className="flex items-center gap-2 px-6 py-3 bg-blue-600 text-white rounded-2xl text-sm font-bold hover:bg-blue-700 transition-all shadow-lg shadow-blue-500/20">
+                  <button onClick={() => setIsCreatingPoll(true)} className="flex items-center gap-2 px-6 py-3 bg-emerald-600 text-white rounded-2xl text-sm font-bold hover:bg-emerald-700 transition-all shadow-lg shadow-emerald-500/20">
                     <Plus className="w-4 h-4"/> Create Poll
                   </button>
                 </div>
@@ -842,12 +842,12 @@ export const GroupPlanning = ({ onBack, tripTitle = 'My trip' }) => {
                           {poll.options.map((opt) => {
                             const pct = totalVotes > 0 ? (opt.votes / totalVotes) * 100 : 0;
                             return (<div key={opt.id} className="space-y-3">
-                                <button onClick={() => handleVotePoll(poll.id, opt.id)} className="w-full flex items-center justify-between p-6 rounded-[2rem] border bg-white dark:bg-slate-800/50 border-slate-100 dark:border-white/10 hover:border-blue-500 hover:shadow-lg transition-all">
+                                <button onClick={() => handleVotePoll(poll.id, opt.id)} className="w-full flex items-center justify-between p-6 rounded-[2rem] border bg-white dark:bg-slate-800/50 border-slate-100 dark:border-white/10 hover:border-emerald-500 hover:shadow-lg transition-all">
                                   <span className="text-base font-bold text-slate-700 dark:text-slate-200">{opt.text}</span>
                                   <span className="text-sm font-bold text-slate-400">{opt.votes} Votes</span>
                                 </button>
                                 <div className="h-2.5 w-full bg-slate-100 dark:bg-white/5 rounded-full overflow-hidden">
-                                  <motion.div initial={{ width: 0 }} animate={{ width: `${pct}%` }} className="h-full bg-blue-600 rounded-full shadow-[0_0_20px_rgba(37,99,235,0.4)]"/>
+                                  <motion.div initial={{ width: 0 }} animate={{ width: `${pct}%` }} className="h-full bg-emerald-600 rounded-full shadow-[0_0_20px_rgba(47,160,132,0.4)]"/>
                                 </div>
                               </div>);
                         })}
@@ -884,7 +884,7 @@ export const GroupPlanning = ({ onBack, tripTitle = 'My trip' }) => {
                 </div>
                 <div className="space-y-3">
                   <div className="h-2 w-full bg-slate-100 dark:bg-white/5 rounded-full overflow-hidden">
-                    <div className="h-full w-[60%] bg-blue-600 rounded-full"/>
+                    <div className="h-full w-[60%] bg-emerald-600 rounded-full"/>
                   </div>
                   <p className="text-[10px] text-slate-500 text-center font-bold uppercase tracking-widest">60% Allocated</p>
                 </div>
@@ -893,7 +893,7 @@ export const GroupPlanning = ({ onBack, tripTitle = 'My trip' }) => {
               <div className="pt-8 border-t border-slate-100 dark:border-white/5">
                 <h4 className="text-[10px] font-bold text-slate-400 uppercase tracking-[0.2em] mb-6">Next Step</h4>
                 <div className="bg-slate-50 dark:bg-white/5 p-6 rounded-[2rem] border border-slate-100 dark:border-white/5">
-                  <span className="text-[9px] font-bold text-blue-600 dark:text-blue-400 uppercase tracking-widest mb-2 block">Action Required</span>
+                  <span className="text-[9px] font-bold text-emerald-600 dark:text-emerald-400 uppercase tracking-widest mb-2 block">Action Required</span>
                   <p className="text-sm font-bold text-slate-900 dark:text-white mb-6 leading-relaxed">Confirm Villa Booking for 7 nights</p>
                   <button onClick={() => setActiveTab('polls')} className="w-full py-4 bg-slate-900 dark:bg-white text-white dark:text-slate-900 rounded-2xl text-xs font-bold hover:scale-105 transition-transform shadow-xl">
                     Vote Now
@@ -926,17 +926,17 @@ export const GroupPlanning = ({ onBack, tripTitle = 'My trip' }) => {
                   </label>
                   <input type="text" value={isAddingActivity ? newActivity.activity : newPoll.question} onChange={(e) => isAddingActivity
                 ? setNewActivity({ ...newActivity, activity: e.target.value })
-                : setNewPoll({ ...newPoll, question: e.target.value })} placeholder={isAddingActivity ? "e.g. Dinner at Pub Street" : "e.g. Where should we eat?"} className="w-full px-6 py-4 bg-slate-50 dark:bg-white/5 border border-slate-100 dark:border-white/5 rounded-2xl text-sm outline-none focus:ring-2 focus:ring-blue-500 transition-all"/>
+                : setNewPoll({ ...newPoll, question: e.target.value })} placeholder={isAddingActivity ? "e.g. Dinner at Pub Street" : "e.g. Where should we eat?"} className="w-full px-6 py-4 bg-slate-50 dark:bg-white/5 border border-slate-100 dark:border-white/5 rounded-2xl text-sm outline-none focus:ring-2 focus:ring-emerald-500 transition-all"/>
                 </div>
                 
                 {isAddingActivity ? (<div className="grid grid-cols-2 gap-6">
                     <div>
                       <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-3 block">Time</label>
-                      <input type="time" value={newActivity.time} onChange={(e) => setNewActivity({ ...newActivity, time: e.target.value })} className="w-full px-6 py-4 bg-slate-50 dark:bg-white/5 border border-slate-100 dark:border-white/5 rounded-2xl text-sm outline-none focus:ring-2 focus:ring-blue-500 transition-all"/>
+                      <input type="time" value={newActivity.time} onChange={(e) => setNewActivity({ ...newActivity, time: e.target.value })} className="w-full px-6 py-4 bg-slate-50 dark:bg-white/5 border border-slate-100 dark:border-white/5 rounded-2xl text-sm outline-none focus:ring-2 focus:ring-emerald-500 transition-all"/>
                     </div>
                     <div>
                       <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-3 block">Location</label>
-                      <input type="text" value={newActivity.location} onChange={(e) => setNewActivity({ ...newActivity, location: e.target.value })} placeholder="Location" className="w-full px-6 py-4 bg-slate-50 dark:bg-white/5 border border-slate-100 dark:border-white/5 rounded-2xl text-sm outline-none focus:ring-2 focus:ring-blue-500 transition-all"/>
+                      <input type="text" value={newActivity.location} onChange={(e) => setNewActivity({ ...newActivity, location: e.target.value })} placeholder="Location" className="w-full px-6 py-4 bg-slate-50 dark:bg-white/5 border border-slate-100 dark:border-white/5 rounded-2xl text-sm outline-none focus:ring-2 focus:ring-emerald-500 transition-all"/>
                     </div>
                   </div>) : (<div className="space-y-4">
                     <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-3 block">Options</label>
@@ -944,8 +944,8 @@ export const GroupPlanning = ({ onBack, tripTitle = 'My trip' }) => {
                         const opts = [...newPoll.options];
                         opts[idx] = e.target.value;
                         setNewPoll({ ...newPoll, options: opts });
-                    }} placeholder={`Option ${idx + 1}`} className="w-full px-6 py-4 bg-slate-50 dark:bg-white/5 border border-slate-100 dark:border-white/5 rounded-2xl text-sm outline-none focus:ring-2 focus:ring-blue-500 transition-all"/>))}
-                    <button onClick={() => setNewPoll({ ...newPoll, options: [...newPoll.options, ''] })} className="text-xs font-bold text-blue-600 flex items-center gap-2 mt-4">
+                    }} placeholder={`Option ${idx + 1}`} className="w-full px-6 py-4 bg-slate-50 dark:bg-white/5 border border-slate-100 dark:border-white/5 rounded-2xl text-sm outline-none focus:ring-2 focus:ring-emerald-500 transition-all"/>))}
+                    <button onClick={() => setNewPoll({ ...newPoll, options: [...newPoll.options, ''] })} className="text-xs font-bold text-emerald-600 flex items-center gap-2 mt-4">
                       <Plus className="w-4 h-4"/> Add Option
                     </button>
                   </div>)}
@@ -955,7 +955,7 @@ export const GroupPlanning = ({ onBack, tripTitle = 'My trip' }) => {
                 <button onClick={() => { setIsAddingActivity(false); setIsCreatingPoll(false); }} className="flex-1 py-5 bg-slate-50 dark:bg-white/5 text-slate-600 dark:text-slate-400 rounded-2xl text-sm font-bold hover:bg-slate-100 dark:hover:bg-white/10 transition-colors">
                   Cancel
                 </button>
-                <button onClick={isAddingActivity ? handleAddActivity : handleCreatePoll} className="flex-1 py-5 bg-blue-600 text-white rounded-2xl text-sm font-bold hover:bg-blue-700 transition-colors shadow-xl">
+                <button onClick={isAddingActivity ? handleAddActivity : handleCreatePoll} className="flex-1 py-5 bg-emerald-600 text-white rounded-2xl text-sm font-bold hover:bg-emerald-700 transition-colors shadow-xl">
                   {isAddingActivity ? 'Add Activity' : 'Create Poll'}
                 </button>
               </div>
@@ -964,3 +964,4 @@ export const GroupPlanning = ({ onBack, tripTitle = 'My trip' }) => {
       </AnimatePresence>
     </div>);
 };
+

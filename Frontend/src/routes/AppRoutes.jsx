@@ -549,9 +549,9 @@ export const AppRoutes = ({ view, setView, onSelectRecommendation, onSelectDesti
                 return (<div className="min-h-[70vh] px-4 sm:px-6 lg:px-8 pt-28 pb-20">
             <div className="max-w-5xl mx-auto">
               <div className="relative overflow-hidden rounded-[3rem] border border-slate-200/60 dark:border-white/10 bg-white dark:bg-slate-950 shadow-2xl">
-                <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_right,rgba(37,99,235,0.18),transparent_55%)]"/>
+                <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_right,rgba(47,160,132,0.18),transparent_55%)]"/>
                 <div className="relative p-8 sm:p-12">
-                  <div className="inline-flex items-center rounded-full bg-blue-600/10 text-blue-700 dark:text-blue-300 px-3 py-1 text-[10px] font-bold tracking-widest uppercase">
+                  <div className="inline-flex items-center rounded-full bg-emerald-600/10 text-emerald-700 dark:text-emerald-300 px-3 py-1 text-[10px] font-bold tracking-widest uppercase">
                     Profile
                   </div>
                   <h1 className="mt-4 text-3xl sm:text-4xl font-extrabold tracking-tight text-slate-900 dark:text-white">
@@ -562,7 +562,7 @@ export const AppRoutes = ({ view, setView, onSelectRecommendation, onSelectDesti
                   </p>
 
                   <div className="mt-8 flex flex-col sm:flex-row gap-3">
-                    <button onClick={() => setView('login')} className="px-6 py-4 rounded-2xl bg-blue-600 hover:bg-blue-700 text-white font-bold shadow-[0_18px_40px_rgba(37,99,235,0.28)] transition-all">
+                    <button onClick={() => setView('login')} className="px-6 py-4 rounded-2xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold shadow-[0_18px_40px_rgba(47,160,132,0.28)] transition-all">
                       Login
                     </button>
                     <button onClick={() => setView('register')} className="px-6 py-4 rounded-2xl bg-slate-900 hover:bg-slate-800 dark:bg-white dark:hover:bg-slate-100 text-white dark:text-slate-900 font-bold transition-all">
@@ -624,13 +624,13 @@ export const AppRoutes = ({ view, setView, onSelectRecommendation, onSelectDesti
                 return (<div className="min-h-[70vh] px-4 sm:px-6 lg:px-8 pt-28 pb-20">
             <div className="max-w-5xl mx-auto">
               <div className="relative overflow-hidden rounded-[3rem] border border-slate-200/60 dark:border-white/10 bg-white dark:bg-slate-950 shadow-2xl">
-                <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_right,rgba(37,99,235,0.18),transparent_55%)]"/>
+                <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_right,rgba(47,160,132,0.18),transparent_55%)]"/>
                 <div className="absolute inset-0 bg-[radial-gradient(circle_at_bottom_left,rgba(16,185,129,0.12),transparent_55%)]"/>
 
                 <div className="relative p-8 sm:p-12">
                   <div className="flex flex-col lg:flex-row lg:items-center gap-10">
                     <div className="flex-1">
-                      <div className="inline-flex items-center rounded-full bg-blue-600/10 text-blue-700 dark:text-blue-300 px-3 py-1 text-[10px] font-bold tracking-widest uppercase">
+                      <div className="inline-flex items-center rounded-full bg-emerald-600/10 text-emerald-700 dark:text-emerald-300 px-3 py-1 text-[10px] font-bold tracking-widest uppercase">
                         Bookings
                       </div>
                       <h1 className="mt-4 text-3xl sm:text-4xl font-extrabold tracking-tight text-slate-900 dark:text-white">
@@ -641,7 +641,7 @@ export const AppRoutes = ({ view, setView, onSelectRecommendation, onSelectDesti
                       </p>
 
                       <div className="mt-8 flex flex-col sm:flex-row gap-3">
-                        <button onClick={() => setView('login')} className="px-6 py-4 rounded-2xl bg-blue-600 hover:bg-blue-700 text-white font-bold shadow-[0_18px_40px_rgba(37,99,235,0.28)] transition-all">
+                        <button onClick={() => setView('login')} className="px-6 py-4 rounded-2xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold shadow-[0_18px_40px_rgba(47,160,132,0.28)] transition-all">
                           Login to continue
                         </button>
                         <button onClick={() => setView('register')} className="px-6 py-4 rounded-2xl bg-slate-900 hover:bg-slate-800 dark:bg-white dark:hover:bg-slate-100 text-white dark:text-slate-900 font-bold transition-all">
@@ -654,7 +654,7 @@ export const AppRoutes = ({ view, setView, onSelectRecommendation, onSelectDesti
                     </div>
 
                     <div className="w-full lg:w-[360px]">
-                      <div className="rounded-[2.5rem] p-[1px] bg-gradient-to-br from-blue-600/40 via-slate-900/40 to-emerald-500/30">
+                      <div className="rounded-[2.5rem] p-[1px] bg-gradient-to-br from-emerald-600/40 via-slate-900/40 to-emerald-500/30">
                         <div className="rounded-[2.45rem] bg-slate-900 dark:bg-slate-950 p-7 border border-white/10">
                           <p className="text-xs font-bold text-slate-200">What you can do now</p>
                           <div className="mt-4 space-y-3">
@@ -710,3 +710,4 @@ export const AppRoutes = ({ view, setView, onSelectRecommendation, onSelectDesti
             return (<CustomerDashboard tripData={tripData} onSelectRecommendation={onSelectRecommendation} onSelectDestination={onSelectDestination} onSearchDestination={onSearchDestination} onPromotionsClick={onPromotionsClick} onHotelsClick={onHotelsClick} onRentalsClick={onRentalsClick} onActivitiesClick={onActivitiesClick} onOpenBookTrip={() => setView('customer-book')} onOpenMyBookings={() => setView('customer-bookings')} onStartGroupBooking={() => setView('group-planning')} onRequireLogin={() => setView('login')}/>);
     }
 };
+

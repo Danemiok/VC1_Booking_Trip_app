@@ -27,7 +27,7 @@ export const DestinationModal = ({ dest, onClose }) => {
           <div className="space-y-3 mb-8">
             <h4 className="text-xs font-bold text-slate-400 uppercase tracking-wider">Must-Visit Spots</h4>
             <div className="flex flex-wrap gap-2">
-              {dest.popularSpots.map((spot, i) => (<span key={i} className="flex items-center gap-1.5 text-[10px] font-bold bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400 px-3 py-1.5 rounded-full">
+              {dest.popularSpots.map((spot, i) => (<span key={i} className="flex items-center gap-1.5 text-[10px] font-bold bg-emerald-50 dark:bg-emerald-900/20 text-emerald-600 dark:text-emerald-400 px-3 py-1.5 rounded-full">
                   <MapPin className="w-3 h-3"/>
                   {spot}
                 </span>))}
@@ -43,7 +43,7 @@ export const DestinationModal = ({ dest, onClose }) => {
               </div>
               <p className="text-[10px] font-bold text-slate-400 uppercase tracking-tighter">12k+ visited</p>
             </div>
-            <button className="bg-blue-600 hover:bg-blue-700 text-white px-8 py-3 rounded-2xl font-bold text-sm shadow-lg shadow-blue-100 dark:shadow-none transition-all active:scale-95">
+            <button className="bg-emerald-600 hover:bg-emerald-700 text-white px-8 py-3 rounded-2xl font-bold text-sm shadow-lg shadow-emerald-100 dark:shadow-none transition-all active:scale-95">
               Explore Now
             </button>
           </div>
@@ -51,3 +51,4 @@ export const DestinationModal = ({ dest, onClose }) => {
       </motion.div>
     </div>);
 };
+

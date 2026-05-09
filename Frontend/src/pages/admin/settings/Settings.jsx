@@ -1,7 +1,7 @@
 import React from 'react';
 import { Save } from 'lucide-react';
 import { cn } from '../../../utils/utils';
-import { useTheme } from '../../../theme';
+import { useTheme } from '../../../context/ThemeContext';
 import { GeneralSettingsSection } from './sections/GeneralSettingsSection';
 import { SecuritySettingsSection } from './sections/SecuritySettingsSection';
 import { NotificationsSettingsSection } from './sections/NotificationsSettingsSection';

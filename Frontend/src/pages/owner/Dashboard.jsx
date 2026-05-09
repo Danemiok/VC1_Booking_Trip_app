@@ -6,7 +6,7 @@ import { bookingService } from '@/services/bookingService';
 import { apiRequest } from '@/services/api';
 const StatCard = ({ title, value, change, changeType, icon: Icon, subtitle, note }) => (<div className="bg-white dark:bg-slate-900 p-6 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm hover:shadow-lg transition-shadow">
     <div className="flex items-center justify-between mb-4">
-      <div className="p-3 bg-blue-50 dark:bg-blue-900/20 text-blue-600 rounded-xl">
+      <div className="p-3 bg-emerald-50 dark:bg-emerald-900/20 text-emerald-600 rounded-xl">
         <Icon size={24}/>
       </div>
       {change && (<span className={cn("text-xs font-bold px-2 py-1 rounded-lg flex items-center gap-1", changeType === 'positive' ? "text-emerald-600 bg-emerald-50 dark:bg-emerald-500/10" : "text-rose-600 bg-rose-50 dark:bg-rose-500/10")}>
@@ -428,7 +428,7 @@ const Dashboard = ({ notifications, onOpenBooking, onOpenMessageThread, onMarkNo
         }
     };
     return (<div className="p-8 max-w-[1440px] mx-auto space-y-8">
-      {overviewLoading && (<div className="rounded-xl border border-blue-100 bg-blue-50 px-4 py-3 text-sm font-medium text-blue-700 dark:border-blue-900/30 dark:bg-blue-900/20 dark:text-blue-200">
+      {overviewLoading && (<div className="rounded-xl border border-emerald-100 bg-emerald-50 px-4 py-3 text-sm font-medium text-emerald-700 dark:border-emerald-900/30 dark:bg-emerald-900/20 dark:text-emerald-200">
           Loading live overview data...
         </div>)}
       {overviewError && !overviewLoading && (<div className="rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm font-medium text-amber-700 dark:border-amber-900/30 dark:bg-amber-900/20 dark:text-amber-200">
@@ -449,12 +449,12 @@ const Dashboard = ({ notifications, onOpenBooking, onOpenMessageThread, onMarkNo
             </div>
             <div className="flex p-1 bg-slate-100 dark:bg-slate-800 rounded-lg">
               <button type="button" onClick={() => setChartRange('weekly')} className={cn('px-4 py-1.5 text-[11px] font-bold rounded-md shadow-sm transition-colors', chartRange === 'weekly'
-            ? 'bg-white dark:bg-slate-700 text-blue-600'
+            ? 'bg-white dark:bg-slate-700 text-emerald-600'
             : 'text-slate-500 hover:text-slate-700 dark:hover:text-slate-300')}>
                 WEEKLY
               </button>
               <button type="button" onClick={() => setChartRange('monthly')} className={cn('px-4 py-1.5 text-[11px] font-bold rounded-md shadow-sm transition-colors', chartRange === 'monthly'
-            ? 'bg-white dark:bg-slate-700 text-blue-600'
+            ? 'bg-white dark:bg-slate-700 text-emerald-600'
             : 'text-slate-500 hover:text-slate-700 dark:hover:text-slate-300')}>
                 MONTHLY
               </button>
@@ -489,11 +489,11 @@ const Dashboard = ({ notifications, onOpenBooking, onOpenMessageThread, onMarkNo
             <div className="flex items-center justify-between mb-6">
               <div className="flex items-center gap-3">
                 <h4 className="font-bold">Recent Activities</h4>
-                {unreadCount > 0 && (<span className="text-[10px] font-extrabold bg-blue-600 text-white px-2 py-1 rounded-full uppercase tracking-wider">
+                {unreadCount > 0 && (<span className="text-[10px] font-extrabold bg-emerald-600 text-white px-2 py-1 rounded-full uppercase tracking-wider">
                     {unreadCount} new
                   </span>)}
               </div>
-              <button onClick={onViewAllActivities} className="text-xs text-blue-600 font-bold hover:bg-blue-600/5 px-2 py-1 rounded transition-colors uppercase tracking-wider">
+              <button onClick={onViewAllActivities} className="text-xs text-emerald-600 font-bold hover:bg-emerald-600/5 px-2 py-1 rounded transition-colors uppercase tracking-wider">
                 View All
               </button>
             </div>
@@ -509,8 +509,8 @@ const Dashboard = ({ notifications, onOpenBooking, onOpenMessageThread, onMarkNo
                 }
                 if (activity?.bookingId && onOpenBooking)
                     onOpenBooking(String(activity.bookingId));
-            }} className={cn("w-full flex items-center gap-3 group rounded-xl px-2.5 py-2.5 -mx-2 transition-colors text-left", (activity?.bookingId || activity?.type === 'message') ? "cursor-pointer" : "cursor-default", i !== 3 && "border-b border-slate-50 dark:border-slate-800/50", activity?.read === false && "bg-blue-50/80 dark:bg-blue-900/20", activity?.type === 'message' && "hover:bg-blue-50/60 dark:hover:bg-blue-900/15")}>
-                  <div className="w-9 h-9 rounded-lg bg-blue-50 dark:bg-blue-900/20 flex items-center justify-center text-blue-600 flex-shrink-0">
+            }} className={cn("w-full flex items-center gap-3 group rounded-xl px-2.5 py-2.5 -mx-2 transition-colors text-left", (activity?.bookingId || activity?.type === 'message') ? "cursor-pointer" : "cursor-default", i !== 3 && "border-b border-slate-50 dark:border-slate-800/50", activity?.read === false && "bg-emerald-50/80 dark:bg-emerald-900/20", activity?.type === 'message' && "hover:bg-emerald-50/60 dark:hover:bg-emerald-900/15")}>
+                  <div className="w-9 h-9 rounded-lg bg-emerald-50 dark:bg-emerald-900/20 flex items-center justify-center text-emerald-600 flex-shrink-0">
                     <activity.icon size={18}/>
                   </div>
                   <div className="flex-1 min-w-0">
@@ -521,7 +521,7 @@ const Dashboard = ({ notifications, onOpenBooking, onOpenMessageThread, onMarkNo
                   </div>
                   <div className="flex items-center gap-3 flex-shrink-0">
                     <span className="text-[9px] font-bold text-slate-400 uppercase whitespace-nowrap">{activity.time}</span>
-                    {activity?.read === false && <div className="w-2.5 h-2.5 rounded-full bg-blue-600"/>}
+                    {activity?.read === false && <div className="w-2.5 h-2.5 rounded-full bg-emerald-600"/>}
                   </div>
                 </button>)) : (<div className="rounded-xl border border-slate-100 bg-slate-50 px-4 py-6 text-sm text-slate-500 dark:border-slate-800 dark:bg-slate-950 dark:text-slate-400">
                   No recent activity yet.
@@ -554,7 +554,7 @@ const Dashboard = ({ notifications, onOpenBooking, onOpenMessageThread, onMarkNo
                 </div>
 
                 <div ref={receiptRef} id="owner-dashboard-receipt" className="mt-5 bg-white dark:bg-slate-900 rounded-xl overflow-hidden border border-slate-200 dark:border-slate-800">
-                  <div className="bg-blue-600 px-5 py-4 text-white">
+                  <div className="bg-emerald-600 px-5 py-4 text-white">
                     <p className="text-[10px] font-bold uppercase tracking-[0.2em] opacity-80">Official Receipt</p>
                     <h2 className="text-lg font-serif italic mt-1">Komrong Sanctuary</h2>
                     <p className="text-[11px] opacity-90 mt-0.5">Owner Booking Receipt</p>
@@ -654,16 +654,16 @@ const Dashboard = ({ notifications, onOpenBooking, onOpenMessageThread, onMarkNo
               </div>
             </div>)}
 
-          <div className="bg-blue-600/5 dark:bg-blue-600/10 p-6 rounded-xl border border-blue-600/10 dark:border-blue-600/20 relative overflow-hidden group">
-            <div className="absolute -right-4 -top-4 w-24 h-24 bg-blue-600/10 rounded-full blur-2xl group-hover:scale-125 transition-transform"></div>
+          <div className="bg-emerald-600/5 dark:bg-emerald-600/10 p-6 rounded-xl border border-emerald-600/10 dark:border-emerald-600/20 relative overflow-hidden group">
+            <div className="absolute -right-4 -top-4 w-24 h-24 bg-emerald-600/10 rounded-full blur-2xl group-hover:scale-125 transition-transform"></div>
             <div className="flex items-start gap-4 relative z-10">
-              <div className="w-10 h-10 rounded-xl bg-blue-600 text-white flex items-center justify-center shadow-lg shadow-blue-500/20">
+              <div className="w-10 h-10 rounded-xl bg-emerald-600 text-white flex items-center justify-center shadow-lg shadow-emerald-500/20">
                 <Rocket size={20}/>
               </div>
               <div>
-                <p className="text-sm font-bold text-blue-600 mb-1">Performance Tip</p>
+                <p className="text-sm font-bold text-emerald-600 mb-1">Performance Tip</p>
                 <p className="text-xs text-slate-600 dark:text-slate-400 leading-relaxed font-medium">Update your Mondulkiri routes for the upcoming Water Festival to capture peak holiday traffic.</p>
-                <button className="mt-4 text-[10px] font-extrabold text-blue-600 flex items-center gap-1 uppercase tracking-[0.1em] hover:gap-2 transition-all">
+                <button className="mt-4 text-[10px] font-extrabold text-emerald-600 flex items-center gap-1 uppercase tracking-[0.1em] hover:gap-2 transition-all">
                   Update Now <ArrowUpRight size={14}/>
                 </button>
               </div>
@@ -674,3 +674,4 @@ const Dashboard = ({ notifications, onOpenBooking, onOpenMessageThread, onMarkNo
     </div>);
 };
 export default Dashboard;
+

@@ -34,6 +34,22 @@ export const bookingService = {
         const response = await apiRequest('/customer/bookings', { method: 'GET' });
         return { data: response.data || [] };
     },
+    getBookingHistory: async (filters = {}) => {
+        const queryParams = new URLSearchParams();
+        if (filters.status && filters.status !== 'all') {
+            queryParams.append('status', filters.status);
+        }
+        if (filters.search) {
+            queryParams.append('search', filters.search);
+        }
+        if (filters.limit) {
+            queryParams.append('limit', String(filters.limit));
+        }
+        const queryString = queryParams.toString() ? `?${queryParams.toString()}` : '';
+        const response = await apiRequest(`/customer/booking-history${queryString}`, { method: 'GET' });
+        const rows = Array.isArray(response?.data) ? response.data : [];
+        return { data: rows };
+    },
     getCustomerBookings: async (customerId) => {
         const response = await apiRequest(`/bookings/customer/${customerId}`, { method: 'GET' });
         return { data: response.data || [] };
@@ -43,7 +59,7 @@ export const bookingService = {
             const response = await apiRequest('/bookings/stats', { method: 'GET' });
             return response;
         }
-        catch (error) {
+        catch {
             return {
                 total_bookings: '0',
                 active_guests: '0',

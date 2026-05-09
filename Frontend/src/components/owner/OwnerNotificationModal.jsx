@@ -72,7 +72,7 @@ export const OwnerNotificationModal = ({ notification, onClose, onOpenBooking })
                       {status}
                     </span>)}
                 </div>
-                {bookingId && onOpenBooking && (<button onClick={() => onOpenBooking(bookingId)} className="px-3 py-1.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-extrabold text-xs" type="button">
+                {bookingId && onOpenBooking && (<button onClick={() => onOpenBooking(bookingId)} className="px-3 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold text-xs" type="button">
                     Open in Bookings
                   </button>)}
               </div>
@@ -149,3 +149,4 @@ export const OwnerNotificationModal = ({ notification, onClose, onOpenBooking })
       </div>
     </div>);
 };
+

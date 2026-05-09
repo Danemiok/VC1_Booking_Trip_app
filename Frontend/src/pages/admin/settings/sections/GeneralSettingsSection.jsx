@@ -63,6 +63,12 @@ export const GeneralSettingsSection = ({ defaultCurrency, onDefaultCurrencyChang
               <p className="font-semibold text-sm">Dark Mode</p>
               <p className="text-xs text-slate-500 mt-1">Low-glare interface for dark environments.</p>
             </button>
+            <button type="button" onClick={() => onThemeChange('system')} className={cn('rounded-lg border px-4 py-3 text-left transition-colors sm:col-span-2', theme === 'system'
+            ? 'border-primary bg-primary/10 text-primary'
+            : 'border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 hover:bg-slate-50 dark:hover:bg-slate-800')}>
+              <p className="font-semibold text-sm">System</p>
+              <p className="text-xs text-slate-500 mt-1">Follow your device appearance automatically.</p>
+            </button>
           </div>
         </div>
       </section>

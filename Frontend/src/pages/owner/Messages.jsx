@@ -241,7 +241,7 @@ export default function OwnerMessagesPage() {
     return (<div className="h-screen bg-slate-50 text-slate-900 overflow-hidden">
       <div className="mx-auto flex h-full max-w-[1600px] flex-col">
         <div className="flex items-center gap-3 border-b border-slate-200 bg-white px-6 py-4">
-          <Link to="/owner/dashboard" className="inline-flex h-11 w-11 items-center justify-center rounded-full border border-slate-200 text-slate-500 transition hover:border-blue-500 hover:text-blue-600">
+          <Link to="/owner/dashboard" className="inline-flex h-11 w-11 items-center justify-center rounded-full border border-slate-200 text-slate-500 transition hover:border-emerald-500 hover:text-emerald-600">
             <ArrowLeft size={20}/>
           </Link>
           <div>
@@ -257,7 +257,7 @@ export default function OwnerMessagesPage() {
             <div className="border-b border-slate-200 p-4">
               <label className="relative block">
                 <Search className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={18}/>
-                <input value={search} onChange={(event) => setSearch(event.target.value)} placeholder="Search customer email..." className="h-11 w-full rounded-2xl border border-slate-200 bg-slate-50 pl-10 pr-4 text-sm outline-none transition focus:border-blue-500 focus:bg-white"/>
+                <input value={search} onChange={(event) => setSearch(event.target.value)} placeholder="Search customer email..." className="h-11 w-full rounded-2xl border border-slate-200 bg-slate-50 pl-10 pr-4 text-sm outline-none transition focus:border-emerald-500 focus:bg-white"/>
               </label>
               <p className="mt-3 text-xs uppercase tracking-[0.2em] text-slate-400">
                 Try `leakk@gmail.com`
@@ -283,7 +283,7 @@ export default function OwnerMessagesPage() {
                 .filter((message) => String(message.sender_id) === String(user.id) ||
                 String(message.receiver_id) === String(user.id))
                 .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())[0];
-            return (<button key={String(user.id)} type="button" onClick={() => void openConversation(user)} className={`flex w-full items-start gap-3 border-b border-slate-100 px-4 py-4 text-left transition ${isActive ? 'bg-blue-50' : 'hover:bg-slate-50'}`}>
+            return (<button key={String(user.id)} type="button" onClick={() => void openConversation(user)} className={`flex w-full items-start gap-3 border-b border-slate-100 px-4 py-4 text-left transition ${isActive ? 'bg-emerald-50' : 'hover:bg-slate-50'}`}>
                     <div className="flex h-12 w-12 items-center justify-center rounded-full bg-slate-100 text-sm font-semibold text-slate-600">
                       {(displayName(user)[0] || 'C').toUpperCase()}
                     </div>
@@ -314,7 +314,7 @@ export default function OwnerMessagesPage() {
                 <div className="sticky top-0 z-30 flex items-center justify-between border-b border-slate-200 bg-white/95 px-6 py-3 backdrop-blur-md shadow-sm">
                   <div className="flex items-center gap-3">
                     <div className="relative">
-                      {selectedCustomer.avatar ? (<img src={selectedCustomer.avatar} alt={displayName(selectedCustomer)} className="h-11 w-11 rounded-full border-2 border-white object-cover shadow-sm"/>) : (<div className="flex h-11 w-11 items-center justify-center rounded-full bg-blue-100 text-sm font-bold text-blue-700 shadow-sm border-2 border-white">
+                      {selectedCustomer.avatar ? (<img src={selectedCustomer.avatar} alt={displayName(selectedCustomer)} className="h-11 w-11 rounded-full border-2 border-white object-cover shadow-sm"/>) : (<div className="flex h-11 w-11 items-center justify-center rounded-full bg-emerald-100 text-sm font-bold text-emerald-700 shadow-sm border-2 border-white">
                           {(displayName(selectedCustomer)[0] || 'C').toUpperCase()}
                         </div>)}
                       <span className="absolute bottom-0.5 right-0.5 h-3 w-3 rounded-full border-2 border-white bg-emerald-500 shadow-sm"/>
@@ -330,13 +330,13 @@ export default function OwnerMessagesPage() {
                     </div>
                   </div>
                   <div className="flex items-center gap-1">
-                    <button className="inline-flex h-10 w-10 items-center justify-center rounded-full text-blue-600 transition hover:bg-blue-50" title="Video Call">
+                    <button className="inline-flex h-10 w-10 items-center justify-center rounded-full text-emerald-600 transition hover:bg-emerald-50" title="Video Call">
                       <Video size={20}/>
                     </button>
-                    <button className="inline-flex h-10 w-10 items-center justify-center rounded-full text-blue-600 transition hover:bg-blue-50" title="Voice Call">
+                    <button className="inline-flex h-10 w-10 items-center justify-center rounded-full text-emerald-600 transition hover:bg-emerald-50" title="Voice Call">
                       <Phone size={18}/>
                     </button>
-                    <button onClick={() => setShowProfile(!showProfile)} className={`inline-flex h-10 w-10 items-center justify-center rounded-full transition ${showProfile ? 'bg-blue-100 text-blue-700' : 'text-slate-500 hover:bg-slate-100'}`} title="Profile Info">
+                    <button onClick={() => setShowProfile(!showProfile)} className={`inline-flex h-10 w-10 items-center justify-center rounded-full transition ${showProfile ? 'bg-emerald-100 text-emerald-700' : 'text-slate-500 hover:bg-slate-100'}`} title="Profile Info">
                       <Info size={20}/>
                     </button>
                     <button className="inline-flex h-10 w-10 items-center justify-center rounded-full text-slate-500 transition hover:bg-slate-100">
@@ -357,7 +357,7 @@ export default function OwnerMessagesPage() {
 
                     {groupedMessages.length === 0 ? (<div className="flex h-full items-center justify-center">
                         <div className="max-w-md rounded-[2.5rem] border border-dashed border-slate-300 bg-white/60 backdrop-blur-sm px-8 py-10 text-center shadow-lg">
-                          <MessageCircle className="mx-auto text-blue-500" size={40}/>
+                          <MessageCircle className="mx-auto text-emerald-500" size={40}/>
                           <h3 className="mt-4 text-xl font-bold text-slate-900">No messages yet</h3>
                           <p className="mt-2 text-sm text-slate-500">
                             Send the first message to start the conversation with this customer.
@@ -376,17 +376,17 @@ export default function OwnerMessagesPage() {
                         return (<div key={String(message.id)} className={`flex ${incoming ? 'justify-start' : 'justify-end'} animate-in fade-in slide-in-from-bottom-2 duration-300`}>
                                   <div className={`relative max-w-[80%] rounded-[1.5rem] px-5 py-3 shadow-sm ${incoming
                                 ? 'rounded-tl-none border border-slate-200 bg-white text-slate-800'
-                                : 'rounded-tr-none bg-blue-600 text-white shadow-blue-100'}`}>
+                                : 'rounded-tr-none bg-emerald-600 text-white shadow-emerald-100'}`}>
                                     <p className="whitespace-pre-wrap text-sm leading-relaxed">{message.message}</p>
-                                    <div className={`mt-1 flex items-center justify-end gap-1.5 text-[10px] font-medium ${incoming ? 'text-slate-400' : 'text-blue-100/80'}`}>
+                                    <div className={`mt-1 flex items-center justify-end gap-1.5 text-[10px] font-medium ${incoming ? 'text-slate-400' : 'text-emerald-100/80'}`}>
                                       <span>{formatTimestamp(message.created_at)}</span>
-                                      {!incoming && <div className="flex items-center gap-0.5"><div className="h-1 w-1 rounded-full bg-blue-100"/><div className="h-1 w-1 rounded-full bg-blue-100"/></div>}
+                                      {!incoming && <div className="flex items-center gap-0.5"><div className="h-1 w-1 rounded-full bg-emerald-100"/><div className="h-1 w-1 rounded-full bg-emerald-100"/></div>}
                                     </div>
                                     
                                     {/* Bubble Tails */}
                                     <div className={`absolute top-0 h-4 w-4 ${incoming
                                 ? '-left-2 bg-white [clip-path:polygon(100%_0,0_0,100%_100%)] border-l border-t border-slate-200'
-                                : '-right-2 bg-blue-600 [clip-path:polygon(0_0,100%_0,0_100%)]'}`}/>
+                                : '-right-2 bg-emerald-600 [clip-path:polygon(0_0,100%_0,0_100%)]'}`}/>
                                   </div>
                                 </div>);
                     })}
@@ -398,14 +398,14 @@ export default function OwnerMessagesPage() {
                   {/* Profile Sidebar (Right Column) */}
                   {showProfile && (<div className="w-[320px] border-l border-slate-200 bg-white p-8 transition-all overflow-y-auto animate-in slide-in-from-right duration-300">
                       <div className="text-center">
-                        {selectedCustomer.avatar ? (<img src={selectedCustomer.avatar} alt={displayName(selectedCustomer)} className="mx-auto h-32 w-32 rounded-full border-4 border-slate-50 object-cover shadow-xl"/>) : (<div className="mx-auto flex h-32 w-32 items-center justify-center rounded-full bg-blue-50 text-4xl font-black text-blue-600 shadow-inner border-4 border-slate-50">
+                        {selectedCustomer.avatar ? (<img src={selectedCustomer.avatar} alt={displayName(selectedCustomer)} className="mx-auto h-32 w-32 rounded-full border-4 border-slate-50 object-cover shadow-xl"/>) : (<div className="mx-auto flex h-32 w-32 items-center justify-center rounded-full bg-emerald-50 text-4xl font-black text-emerald-600 shadow-inner border-4 border-slate-50">
                             {(displayName(selectedCustomer)[0] || 'C').toUpperCase()}
                           </div>)}
                         <h3 className="mt-6 text-xl font-bold text-slate-900 leading-tight">{displayName(selectedCustomer)}</h3>
                         <p className="mt-1 text-sm font-medium text-slate-500">{selectedCustomer.email}</p>
                         <div className="mt-4 flex justify-center gap-2">
                           <span className="px-3 py-1 bg-emerald-50 text-emerald-600 text-[10px] font-bold rounded-full uppercase tracking-tighter shadow-sm border border-emerald-100">Verified</span>
-                          <span className="px-3 py-1 bg-blue-50 text-blue-600 text-[10px] font-bold rounded-full uppercase tracking-tighter shadow-sm border border-blue-100">Customer</span>
+                          <span className="px-3 py-1 bg-emerald-50 text-emerald-600 text-[10px] font-bold rounded-full uppercase tracking-tighter shadow-sm border border-emerald-100">Customer</span>
                         </div>
                       </div>
 
@@ -414,7 +414,7 @@ export default function OwnerMessagesPage() {
                           <p className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 border-b border-slate-100 pb-2">Profile Details</p>
                           <div className="mt-4 space-y-4">
                             <div className="flex items-center gap-4 group">
-                              <div className="h-10 w-10 rounded-xl bg-slate-50 flex items-center justify-center text-slate-400 group-hover:bg-blue-50 group-hover:text-blue-500 transition-colors">
+                              <div className="h-10 w-10 rounded-xl bg-slate-50 flex items-center justify-center text-slate-400 group-hover:bg-emerald-50 group-hover:text-emerald-500 transition-colors">
                                 <Mail size={18}/>
                               </div>
                               <div className="min-w-0">
@@ -423,7 +423,7 @@ export default function OwnerMessagesPage() {
                               </div>
                             </div>
                             <div className="flex items-center gap-4 group">
-                              <div className="h-10 w-10 rounded-xl bg-slate-50 flex items-center justify-center text-slate-400 group-hover:bg-blue-50 group-hover:text-blue-500 transition-colors">
+                              <div className="h-10 w-10 rounded-xl bg-slate-50 flex items-center justify-center text-slate-400 group-hover:bg-emerald-50 group-hover:text-emerald-500 transition-colors">
                                 <Phone size={18}/>
                               </div>
                               <div className="min-w-0">
@@ -451,15 +451,15 @@ export default function OwnerMessagesPage() {
 
                 <form onSubmit={sendMessage} className="border-t border-slate-200 bg-white/95 px-6 py-4 backdrop-blur-md z-20">
                   <div className="flex items-end gap-3">
-                    <textarea value={draft} onChange={(event) => setDraft(event.target.value)} placeholder="Type your message here..." rows={1} className="min-h-[56px] flex-1 resize-none rounded-3xl border border-slate-200 bg-slate-50 px-5 py-4 text-sm outline-none transition focus:border-blue-500 focus:bg-white focus:shadow-sm"/>
-                    <button type="submit" disabled={!draft.trim() || sending} className="inline-flex h-14 w-14 items-center justify-center rounded-full bg-blue-600 text-white shadow-lg shadow-blue-200 transition hover:bg-blue-700 hover:scale-105 active:scale-95 disabled:cursor-not-allowed disabled:opacity-60">
+                    <textarea value={draft} onChange={(event) => setDraft(event.target.value)} placeholder="Type your message here..." rows={1} className="min-h-[56px] flex-1 resize-none rounded-3xl border border-slate-200 bg-slate-50 px-5 py-4 text-sm outline-none transition focus:border-emerald-500 focus:bg-white focus:shadow-sm"/>
+                    <button type="submit" disabled={!draft.trim() || sending} className="inline-flex h-14 w-14 items-center justify-center rounded-full bg-emerald-600 text-white shadow-lg shadow-emerald-200 transition hover:bg-emerald-700 hover:scale-105 active:scale-95 disabled:cursor-not-allowed disabled:opacity-60">
                       <Send size={18}/>
                     </button>
                   </div>
                 </form>
               </div>) : (<div className="flex flex-1 items-center justify-center px-6">
                 <div className="max-w-lg rounded-[3rem] border border-dashed border-slate-300 bg-white px-8 py-12 text-center shadow-sm">
-                  <div className="mx-auto h-20 w-20 rounded-full bg-blue-50 flex items-center justify-center text-blue-500 mb-6 shadow-inner">
+                  <div className="mx-auto h-20 w-20 rounded-full bg-emerald-50 flex items-center justify-center text-emerald-500 mb-6 shadow-inner">
                     <MessageCircle size={40}/>
                   </div>
                   <h2 className="text-3xl font-black text-slate-900 tracking-tight">Select a customer</h2>
@@ -474,3 +474,4 @@ export default function OwnerMessagesPage() {
       </div>
     </div>);
 }
+

@@ -233,7 +233,7 @@ export const DestinationPlanner = ({ tripData, setTripData, onBack, onAddToTrip 
     };
     return (<div className="min-h-screen bg-slate-100 dark:bg-slate-950 pt-20 pb-12">
       <div className="max-w-[1380px] mx-auto px-4 sm:px-6 lg:px-8 space-y-5">
-        <button onClick={onBack} className="inline-flex items-center gap-2 text-xs font-bold text-slate-500 hover:text-blue-600 uppercase tracking-widest transition-colors">
+        <button onClick={onBack} className="inline-flex items-center gap-2 text-xs font-bold text-slate-500 hover:text-emerald-600 uppercase tracking-widest transition-colors">
           <MapPin className="w-4 h-4"/>
           Back to My Plan
         </button>
@@ -255,7 +255,7 @@ export const DestinationPlanner = ({ tripData, setTripData, onBack, onAddToTrip 
               </div>
               <ChevronDown className="w-4 h-4 text-slate-500"/>
             </div>
-            <button onClick={() => setActiveDestination(destinationInput.trim() || initialDestination)} className="md:col-span-2 bg-blue-600 hover:bg-blue-700 rounded-xl text-white font-bold text-2xl py-4 transition-colors">
+            <button onClick={() => setActiveDestination(destinationInput.trim() || initialDestination)} className="md:col-span-2 bg-emerald-600 hover:bg-emerald-700 rounded-xl text-white font-bold text-2xl py-4 transition-colors">
               Search
             </button>
           </div>
@@ -271,7 +271,7 @@ export const DestinationPlanner = ({ tripData, setTripData, onBack, onAddToTrip 
               <div className="h-44 relative">
                 <img src="https://images.unsplash.com/photo-1524661135-423995f22d0b?auto=format&fit=crop&q=80&w=1000" alt="Map preview" className="w-full h-full object-cover" referrerPolicy="no-referrer"/>
                 <div className="absolute inset-0 bg-slate-900/20"/>
-                <button className="absolute bottom-4 left-1/2 -translate-x-1/2 bg-blue-600 text-white px-4 py-2 rounded-lg text-sm font-bold">
+                <button className="absolute bottom-4 left-1/2 -translate-x-1/2 bg-emerald-600 text-white px-4 py-2 rounded-lg text-sm font-bold">
                   Show on map
                 </button>
               </div>
@@ -354,11 +354,11 @@ export const DestinationPlanner = ({ tripData, setTripData, onBack, onAddToTrip 
                     </div>
 
                     <div className="flex-1">
-                      <h3 className="text-2xl font-bold text-blue-700 dark:text-blue-400 mb-1">{item.name}</h3>
+                      <h3 className="text-2xl font-bold text-emerald-700 dark:text-emerald-400 mb-1">{item.name}</h3>
                       <div className="flex items-center gap-1 mb-2">
                         {Array.from({ length: item.stars }).map((_, i) => (<Star key={i} className="w-4 h-4 text-amber-400 fill-amber-400"/>))}
                       </div>
-                      <p className="text-sm text-blue-700 dark:text-blue-400 underline mb-2">{item.locationLabel}</p>
+                      <p className="text-sm text-emerald-700 dark:text-emerald-400 underline mb-2">{item.locationLabel}</p>
                       <p className="text-sm text-slate-500 dark:text-slate-400 mb-2">{item.distanceKm} km from downtown</p>
                       <p className="text-sm text-slate-700 dark:text-slate-300">{item.description}</p>
                     </div>
@@ -367,12 +367,12 @@ export const DestinationPlanner = ({ tripData, setTripData, onBack, onAddToTrip 
                       <div className="text-right">
                         <p className="text-xl font-bold text-slate-900 dark:text-white">{item.reviewText}</p>
                         <p className="text-sm text-slate-500 dark:text-slate-400">{item.reviewCount.toLocaleString()} reviews</p>
-                        <div className="inline-flex items-center justify-center w-11 h-11 rounded-lg bg-blue-700 text-white font-bold mt-1">
+                        <div className="inline-flex items-center justify-center w-11 h-11 rounded-lg bg-emerald-700 text-white font-bold mt-1">
                           {item.reviewScore.toFixed(1)}
                         </div>
-                        <p className="text-sm font-bold text-blue-700 dark:text-blue-400 mt-1">Location {item.locationScore.toFixed(1)}</p>
+                        <p className="text-sm font-bold text-emerald-700 dark:text-emerald-400 mt-1">Location {item.locationScore.toFixed(1)}</p>
                       </div>
-                      <button onClick={() => applyDestinationBooking(item)} className="mt-3 lg:mt-4 bg-blue-600 hover:bg-blue-700 text-white px-5 py-3 rounded-lg font-bold text-sm transition-colors">
+                      <button onClick={() => applyDestinationBooking(item)} className="mt-3 lg:mt-4 bg-emerald-600 hover:bg-emerald-700 text-white px-5 py-3 rounded-lg font-bold text-sm transition-colors">
                         Show prices
                       </button>
                     </div>
@@ -386,8 +386,8 @@ export const DestinationPlanner = ({ tripData, setTripData, onBack, onAddToTrip 
                       <h3 className="font-bold text-slate-900 dark:text-white mb-1">{item.name}</h3>
                       <p className="text-xs text-slate-500 dark:text-slate-400 mb-3">{item.locationLabel}</p>
                       <div className="flex items-center justify-between">
-                        <p className="text-sm font-bold text-blue-700 dark:text-blue-400">${item.pricePerNight} / night</p>
-                        <button onClick={() => applyDestinationBooking(item)} className="bg-blue-600 hover:bg-blue-700 text-white px-3 py-2 rounded-lg text-xs font-bold transition-colors">
+                        <p className="text-sm font-bold text-emerald-700 dark:text-emerald-400">${item.pricePerNight} / night</p>
+                        <button onClick={() => applyDestinationBooking(item)} className="bg-emerald-600 hover:bg-emerald-700 text-white px-3 py-2 rounded-lg text-xs font-bold transition-colors">
                           Show prices
                         </button>
                       </div>
@@ -399,3 +399,4 @@ export const DestinationPlanner = ({ tripData, setTripData, onBack, onAddToTrip 
       </div>
     </div>);
 };
+

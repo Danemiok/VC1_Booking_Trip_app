@@ -158,7 +158,7 @@ const PropertyCard = ({ property, onView, onEdit, onDelete, activePromotion }) =
         return { finalPrice: basePrice, hasDiscount: false };
     };
     const { finalPrice, hasDiscount } = computePrice();
-    return (<div className="group bg-white dark:bg-slate-800 rounded-2xl shadow-md hover:shadow-xl hover:shadow-blue-500/10 border border-slate-100 dark:border-slate-700 overflow-hidden transform hover:-translate-y-1 transition-all duration-300 cursor-pointer" onClick={() => onView(property)}>
+    return (<div className="group bg-white dark:bg-slate-800 rounded-2xl shadow-md hover:shadow-xl hover:shadow-emerald-500/10 border border-slate-100 dark:border-slate-700 overflow-hidden transform hover:-translate-y-1 transition-all duration-300 cursor-pointer" onClick={() => onView(property)}>
       <div className="relative overflow-hidden">
         <img src={property.image} alt={property.name} className="w-full h-52 object-cover transform group-hover:scale-105 transition-transform duration-500"/>
         <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"/>
@@ -173,7 +173,7 @@ const PropertyCard = ({ property, onView, onEdit, onDelete, activePromotion }) =
             {property.images.length} photos
           </div>)}
         <div className="absolute top-2 right-2 flex space-x-2">
-          <button className="p-2.5 rounded-xl bg-white/95 text-slate-700 hover:text-blue-600 hover:bg-white shadow-lg hover:shadow-xl transition-all duration-200" onClick={(event) => {
+          <button className="p-2.5 rounded-xl bg-white/95 text-slate-700 hover:text-emerald-600 hover:bg-white shadow-lg hover:shadow-xl transition-all duration-200" onClick={(event) => {
             event.stopPropagation();
             onEdit(property);
         }} title="Edit Property">
@@ -191,7 +191,7 @@ const PropertyCard = ({ property, onView, onEdit, onDelete, activePromotion }) =
       <div className="p-5">
         {/* Title & Type */}
         <div className="flex items-start justify-between gap-3 mb-2">
-          <h3 className="text-lg font-bold text-slate-900 dark:text-white line-clamp-1 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">{property.name}</h3>
+          <h3 className="text-lg font-bold text-slate-900 dark:text-white line-clamp-1 group-hover:text-emerald-600 dark:group-hover:text-emerald-400 transition-colors">{property.name}</h3>
           <span className="shrink-0 text-xs font-semibold px-2.5 py-1 rounded-full bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-slate-600">
             {property.type}
           </span>
@@ -213,8 +213,8 @@ const PropertyCard = ({ property, onView, onEdit, onDelete, activePromotion }) =
         {/* Stats Row */}
         <div className="flex items-center justify-between pt-4 border-t border-slate-100 dark:border-slate-700">
           <div className="flex items-center gap-2">
-            <div className="p-1.5 bg-blue-50 dark:bg-blue-900/20 rounded-lg">
-              <TrendingUp size={14} className="text-blue-600 dark:text-blue-400"/>
+            <div className="p-1.5 bg-emerald-50 dark:bg-emerald-900/20 rounded-lg">
+              <TrendingUp size={14} className="text-emerald-600 dark:text-emerald-400"/>
             </div>
             <div>
               <p className="text-xs text-slate-500 dark:text-slate-400">Bookings</p>
@@ -261,13 +261,13 @@ const DestinationModal = ({ isOpen, isSubmitting, title, formData, imagePreviews
           <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
             <div>
               <label className="block text-sm font-medium text-slate-700 dark:text-slate-200 mb-2">Name</label>
-              <input value={formData.name} onChange={(event) => onFieldChange('name', event.target.value)} className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="Mekong Riverside Villa"/>
+              <input value={formData.name} onChange={(event) => onFieldChange('name', event.target.value)} className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-emerald-500" placeholder="Mekong Riverside Villa"/>
               {formErrors.name && <p className="mt-1 text-xs text-red-500">{formErrors.name}</p>}
             </div>
 
             <div>
               <label className="block text-sm font-medium text-slate-700 dark:text-slate-200 mb-2">Type</label>
-              <select value={formData.type} onChange={(event) => onFieldChange('type', event.target.value)} className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500">
+              <select value={formData.type} onChange={(event) => onFieldChange('type', event.target.value)} className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-emerald-500">
                 {PROPERTY_TYPES.map((type) => (<option key={type.value} value={type.value}>
                     {type.label}
                   </option>))}
@@ -277,31 +277,31 @@ const DestinationModal = ({ isOpen, isSubmitting, title, formData, imagePreviews
 
             <div>
               <label className="block text-sm font-medium text-slate-700 dark:text-slate-200 mb-2">Location</label>
-              <input value={formData.location} onChange={(event) => onFieldChange('location', event.target.value)} className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="Phnom Penh, Cambodia"/>
+              <input value={formData.location} onChange={(event) => onFieldChange('location', event.target.value)} className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-emerald-500" placeholder="Phnom Penh, Cambodia"/>
               {formErrors.location && <p className="mt-1 text-xs text-red-500">{formErrors.location}</p>}
             </div>
 
             <div>
               <label className="block text-sm font-medium text-slate-700 dark:text-slate-200 mb-2">Address</label>
-              <input value={formData.address} onChange={(event) => onFieldChange('address', event.target.value)} className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="Street address"/>
+              <input value={formData.address} onChange={(event) => onFieldChange('address', event.target.value)} className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-emerald-500" placeholder="Street address"/>
               {formErrors.address && <p className="mt-1 text-xs text-red-500">{formErrors.address}</p>}
             </div>
 
             <div>
               <label className="block text-sm font-medium text-slate-700 dark:text-slate-200 mb-2">Price per night (USD)</label>
-              <input type="number" min="0" step="0.01" value={formData.price} onChange={(event) => onFieldChange('price', event.target.value)} className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="150"/>
+              <input type="number" min="0" step="0.01" value={formData.price} onChange={(event) => onFieldChange('price', event.target.value)} className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-emerald-500" placeholder="150"/>
               {formErrors.price && <p className="mt-1 text-xs text-red-500">{formErrors.price}</p>}
             </div>
 
             <div>
               <label className="block text-sm font-medium text-slate-700 dark:text-slate-200 mb-2">Rating</label>
-              <input type="number" min="0" max="5" step="0.1" value={formData.rating} onChange={(event) => onFieldChange('rating', event.target.value)} className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="4.8"/>
+              <input type="number" min="0" max="5" step="0.1" value={formData.rating} onChange={(event) => onFieldChange('rating', event.target.value)} className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-emerald-500" placeholder="4.8"/>
               {formErrors.rating && <p className="mt-1 text-xs text-red-500">{formErrors.rating}</p>}
             </div>
 
             <div className="md:col-span-2">
               <label className="block text-sm font-medium text-slate-700 dark:text-slate-200 mb-2">Image Uploads</label>
-              <input type="file" accept=".jpg,.jpeg,.png,.webp,image/jpeg,image/png,image/webp" multiple onChange={onImageChange} className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"/>
+              <input type="file" accept=".jpg,.jpeg,.png,.webp,image/jpeg,image/png,image/webp" multiple onChange={onImageChange} className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-emerald-500"/>
               <p className="mt-2 text-xs text-slate-500 dark:text-slate-400">
                 Upload exactly 4 JPG, PNG, or WebP images up to 10 MB each. The first photo in the gallery becomes the main customer-facing image.
               </p>
@@ -345,13 +345,13 @@ const DestinationModal = ({ isOpen, isSubmitting, title, formData, imagePreviews
 
             <div className="md:col-span-2">
               <label className="block text-sm font-medium text-slate-700 dark:text-slate-200 mb-2">Description</label>
-              <textarea rows={4} value={formData.description} onChange={(event) => onFieldChange('description', event.target.value)} className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none" placeholder="Describe your destination..."/>
+              <textarea rows={4} value={formData.description} onChange={(event) => onFieldChange('description', event.target.value)} className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-emerald-500 resize-none" placeholder="Describe your destination..."/>
               {formErrors.description && <p className="mt-1 text-xs text-red-500">{formErrors.description}</p>}
             </div>
 
             <div>
               <label className="block text-sm font-medium text-slate-700 dark:text-slate-200 mb-2">Status</label>
-              <select value={formData.status} onChange={(event) => onFieldChange('status', event.target.value)} className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500">
+              <select value={formData.status} onChange={(event) => onFieldChange('status', event.target.value)} className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-emerald-500">
                 <option value="draft">Upcoming</option>
                 <option value="active">Active</option>
               </select>
@@ -364,7 +364,7 @@ const DestinationModal = ({ isOpen, isSubmitting, title, formData, imagePreviews
           <button onClick={onClose} disabled={isSubmitting} className="px-5 py-2.5 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-200 font-medium hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors disabled:opacity-60">
             Cancel
           </button>
-          <button onClick={onSubmit} disabled={isSubmitting} className="px-5 py-2.5 rounded-xl bg-blue-600 text-white font-medium hover:bg-blue-700 transition-colors disabled:opacity-60">
+          <button onClick={onSubmit} disabled={isSubmitting} className="px-5 py-2.5 rounded-xl bg-emerald-600 text-white font-medium hover:bg-emerald-700 transition-colors disabled:opacity-60">
             {isSubmitting ? 'Saving...' : title}
           </button>
         </div>
@@ -804,34 +804,34 @@ const Destinations = () => {
             setIsDeleting(false);
         }
     };
-    return (<div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50/30 to-indigo-50/20 dark:from-slate-950 dark:via-slate-900 dark:to-slate-800 p-6">
+    return (<div className="min-h-screen bg-gradient-to-br from-slate-50 via-emerald-50/30 to-indigo-50/20 dark:from-slate-950 dark:via-slate-900 dark:to-slate-800 p-6">
       <div className="max-w-7xl mx-auto">
         {/* Hero Header */}
         <div className="relative mb-10">
-          <div className="absolute inset-0 bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 rounded-3xl opacity-10 blur-3xl"/>
+          <div className="absolute inset-0 bg-gradient-to-r from-emerald-600 via-indigo-600 to-purple-600 rounded-3xl opacity-10 blur-3xl"/>
           <div className="relative flex flex-col gap-6 md:flex-row md:justify-between md:items-end pb-2">
             <div>
               <div className="flex items-center gap-3 mb-2">
-                <div className="p-3 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-2xl shadow-lg shadow-blue-500/25">
+                <div className="p-3 bg-gradient-to-br from-emerald-500 to-indigo-600 rounded-2xl shadow-lg shadow-emerald-500/25">
                   <MapPin className="text-white" size={28}/>
                 </div>
                 <div>
-                  <h1 className="text-4xl font-bold bg-gradient-to-r from-slate-900 via-blue-800 to-indigo-900 dark:from-white dark:via-blue-200 dark:to-indigo-200 bg-clip-text text-transparent">
+                  <h1 className="text-4xl font-bold bg-gradient-to-r from-slate-900 via-emerald-800 to-indigo-900 dark:from-white dark:via-emerald-200 dark:to-indigo-200 bg-clip-text text-transparent">
                     Hotels
                   </h1>
                 </div>
               </div>
               <p className="text-slate-600 dark:text-slate-400 text-lg ml-16">
-                Manage your hotel listings with <span className="font-semibold text-blue-600 dark:text-blue-400">live backend data</span>
+                Manage your hotel listings with <span className="font-semibold text-emerald-600 dark:text-emerald-400">live backend data</span>
               </p>
             </div>
 
             <div className="flex gap-3">
-              <button onClick={() => void loadDestinations()} className="group px-5 py-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-white/80 dark:bg-slate-800/80 backdrop-blur-sm text-slate-700 dark:text-slate-200 font-semibold hover:bg-white dark:hover:bg-slate-800 hover:border-blue-300 dark:hover:border-blue-700 hover:shadow-lg hover:shadow-blue-500/10 transition-all duration-300 flex items-center gap-2">
+              <button onClick={() => void loadDestinations()} className="group px-5 py-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-white/80 dark:bg-slate-800/80 backdrop-blur-sm text-slate-700 dark:text-slate-200 font-semibold hover:bg-white dark:hover:bg-slate-800 hover:border-emerald-300 dark:hover:border-emerald-700 hover:shadow-lg hover:shadow-emerald-500/10 transition-all duration-300 flex items-center gap-2">
                 <RefreshCw size={18} className="group-hover:rotate-180 transition-transform duration-500"/>
                 Refresh
               </button>
-              <button onClick={handleOpenCreate} className="group flex items-center px-6 py-3 bg-gradient-to-r from-blue-600 to-indigo-600 text-white font-semibold rounded-xl hover:from-blue-700 hover:to-indigo-700 transition-all duration-300 shadow-lg shadow-blue-500/25 hover:shadow-xl hover:shadow-blue-500/30 hover:-translate-y-0.5">
+              <button onClick={handleOpenCreate} className="group flex items-center px-6 py-3 bg-gradient-to-r from-emerald-600 to-indigo-600 text-white font-semibold rounded-xl hover:from-emerald-700 hover:to-indigo-700 transition-all duration-300 shadow-lg shadow-emerald-500/25 hover:shadow-xl hover:shadow-emerald-500/30 hover:-translate-y-0.5">
                 <Plus size={20} className="mr-2 group-hover:scale-110 transition-transform"/>
                 Add New Hotel
               </button>
@@ -843,8 +843,8 @@ const Destinations = () => {
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
           <div className="bg-white dark:bg-slate-800 rounded-2xl p-5 shadow-sm border border-slate-100 dark:border-slate-700 hover:shadow-md transition-shadow">
             <div className="flex items-center gap-3">
-              <div className="p-2.5 bg-blue-100 dark:bg-blue-900/30 rounded-xl">
-                <Building2 className="text-blue-600 dark:text-blue-400" size={20}/>
+              <div className="p-2.5 bg-emerald-100 dark:bg-emerald-900/30 rounded-xl">
+                <Building2 className="text-emerald-600 dark:text-emerald-400" size={20}/>
               </div>
               <div>
                 <p className="text-2xl font-bold text-slate-900 dark:text-white">{properties.length}</p>
@@ -904,8 +904,8 @@ const Destinations = () => {
         <div className="bg-white dark:bg-slate-800 rounded-2xl shadow-lg shadow-slate-200/50 dark:shadow-slate-900/50 border border-slate-100 dark:border-slate-700 p-5 mb-8 backdrop-blur-sm">
           <div className="flex flex-col lg:flex-row gap-4 lg:items-center">
             <div className="flex-1 relative group">
-              <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-blue-500 transition-colors" size={20}/>
-              <input type="text" placeholder="Search destinations by name, type, or location..." value={searchTerm} onChange={(event) => setSearchTerm(event.target.value)} className="w-full pl-12 pr-4 py-3 bg-slate-50 dark:bg-slate-900/50 border border-slate-200 dark:border-slate-700 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 dark:focus:border-blue-500 transition-all dark:text-white placeholder:text-slate-400"/>
+              <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-emerald-500 transition-colors" size={20}/>
+              <input type="text" placeholder="Search destinations by name, type, or location..." value={searchTerm} onChange={(event) => setSearchTerm(event.target.value)} className="w-full pl-12 pr-4 py-3 bg-slate-50 dark:bg-slate-900/50 border border-slate-200 dark:border-slate-700 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 dark:focus:border-emerald-500 transition-all dark:text-white placeholder:text-slate-400"/>
             </div>
 
             <div className="flex flex-wrap gap-2">
@@ -975,3 +975,4 @@ const Destinations = () => {
     </div>);
 };
 export default Destinations;
+

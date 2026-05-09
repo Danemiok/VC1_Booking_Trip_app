@@ -75,12 +75,12 @@ export const FileUpload = ({ onUpload, maxSize = 5, acceptedTypes = ['image/jpeg
             if (!disabled)
                 setIsDragging(true);
         }} onDragLeave={() => setIsDragging(false)} onDrop={handleDrop} onClick={openFilePicker} className={`relative border-2 border-dashed rounded-[2rem] p-10 transition-all text-center ${disabled ? 'cursor-not-allowed opacity-60' : 'cursor-pointer'} ${isDragging
-            ? 'border-blue-500 bg-blue-50 dark:bg-blue-900/20 scale-[0.99]'
-            : 'border-slate-200 dark:border-slate-700 hover:border-blue-400 dark:hover:border-blue-500 bg-white dark:bg-slate-800'}`}>
+            ? 'border-emerald-500 bg-emerald-50 dark:bg-emerald-900/20 scale-[0.99]'
+            : 'border-slate-200 dark:border-slate-700 hover:border-emerald-400 dark:hover:border-emerald-500 bg-white dark:bg-slate-800'}`}>
         <input type="file" ref={fileInputRef} onChange={handleFileInputChange} className="hidden" multiple accept={acceptedTypes.join(',')} disabled={disabled}/>
 
         <div className="flex flex-col items-center">
-          <div className={`w-16 h-16 rounded-2xl flex items-center justify-center mb-4 transition-colors ${isDragging ? 'bg-blue-600 text-white' : 'bg-blue-50 dark:bg-blue-900/20 text-blue-600'}`}>
+          <div className={`w-16 h-16 rounded-2xl flex items-center justify-center mb-4 transition-colors ${isDragging ? 'bg-emerald-600 text-white' : 'bg-emerald-50 dark:bg-emerald-900/20 text-emerald-600'}`}>
             <Upload className="w-8 h-8"/>
           </div>
           <h3 className="text-lg font-bold text-slate-900 dark:text-white mb-1">{label}</h3>
@@ -111,7 +111,7 @@ export const FileUpload = ({ onUpload, maxSize = 5, acceptedTypes = ['image/jpeg
                     <p className="text-[10px] text-slate-400">{(entry.file.size / 1024 / 1024).toFixed(2)} MB</p>
                   </div>
                   <div className="flex items-center gap-3">
-                    {entry.status === 'uploading' && <Loader2 className="w-5 h-5 text-blue-500 animate-spin"/>}
+                    {entry.status === 'uploading' && <Loader2 className="w-5 h-5 text-emerald-500 animate-spin"/>}
                     {entry.status === 'success' && <CheckCircle2 className="w-5 h-5 text-emerald-500"/>}
                     {entry.status === 'error' && <AlertCircle className="w-5 h-5 text-red-500"/>}
                     <button type="button" onClick={(event) => {
@@ -127,3 +127,4 @@ export const FileUpload = ({ onUpload, maxSize = 5, acceptedTypes = ['image/jpeg
       </AnimatePresence>
     </div>);
 };
+

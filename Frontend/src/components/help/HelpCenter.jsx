@@ -10,8 +10,8 @@ export const HelpCenter = ({ isOpen, onClose }) => {
     console.log('🔍 HelpCenter is now rendering the modal');
     const renderHelpContent = () => (<div className="space-y-6">
       {/* Welcome Section */}
-      <div className="text-center p-6 bg-gradient-to-r from-blue-50 to-indigo-50 rounded-xl">
-        <HelpCircle className="w-12 h-12 text-blue-600 mx-auto mb-4"/>
+      <div className="text-center p-6 bg-gradient-to-r from-emerald-50 to-indigo-50 rounded-xl">
+        <HelpCircle className="w-12 h-12 text-emerald-600 mx-auto mb-4"/>
         <h3 className="text-xl font-semibold text-gray-900 mb-2">Welcome to our Help Center!</h3>
         <p className="text-gray-600 mb-4">
           You can contact us via email or live chat. Here you'll find answers to the most common questions and tips to get the best experience.
@@ -20,23 +20,23 @@ export const HelpCenter = ({ isOpen, onClose }) => {
 
       {/* Contact Options */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <div className="p-4 border border-gray-200 rounded-lg hover:border-blue-300 transition-colors">
-          <Mail className="w-6 h-6 text-blue-600 mb-2"/>
+        <div className="p-4 border border-gray-200 rounded-lg hover:border-emerald-300 transition-colors">
+          <Mail className="w-6 h-6 text-emerald-600 mb-2"/>
           <h4 className="font-semibold text-gray-900 mb-1">Email Support</h4>
           <p className="text-sm text-gray-600 mb-2">Get help via email</p>
-          <a href="mailto:support@tripbooking.com" className="text-blue-600 text-sm hover:underline">
+          <a href="mailto:support@tripbooking.com" className="text-emerald-600 text-sm hover:underline">
             support@tripbooking.com
           </a>
         </div>
         
-        <div className="p-4 border border-gray-200 rounded-lg hover:border-blue-300 transition-colors">
+        <div className="p-4 border border-gray-200 rounded-lg hover:border-emerald-300 transition-colors">
           <MessageCircle className="w-6 h-6 text-green-600 mb-2"/>
           <h4 className="font-semibold text-gray-900 mb-1">Live Chat</h4>
           <p className="text-sm text-gray-600 mb-2">Chat with our team</p>
           <button className="text-green-600 text-sm hover:underline">Start Chat</button>
         </div>
         
-        <div className="p-4 border border-gray-200 rounded-lg hover:border-blue-300 transition-colors">
+        <div className="p-4 border border-gray-200 rounded-lg hover:border-emerald-300 transition-colors">
           <Phone className="w-6 h-6 text-purple-600 mb-2"/>
           <h4 className="font-semibold text-gray-900 mb-1">Phone Support</h4>
           <p className="text-sm text-gray-600 mb-2">Call us directly</p>
@@ -52,7 +52,7 @@ export const HelpCenter = ({ isOpen, onClose }) => {
         <div className="space-y-3">
           <div className="border border-gray-200 rounded-lg p-4">
             <div className="flex items-start space-x-3">
-              <HelpCircle className="w-5 h-5 text-blue-600 mt-0.5 flex-shrink-0"/>
+              <HelpCircle className="w-5 h-5 text-emerald-600 mt-0.5 flex-shrink-0"/>
               <div>
                 <h5 className="font-medium text-gray-900 mb-1">How do I book a trip?</h5>
                 <p className="text-sm text-gray-600">
@@ -64,7 +64,7 @@ export const HelpCenter = ({ isOpen, onClose }) => {
           
           <div className="border border-gray-200 rounded-lg p-4">
             <div className="flex items-start space-x-3">
-              <HelpCircle className="w-5 h-5 text-blue-600 mt-0.5 flex-shrink-0"/>
+              <HelpCircle className="w-5 h-5 text-emerald-600 mt-0.5 flex-shrink-0"/>
               <div>
                 <h5 className="font-medium text-gray-900 mb-1">Can I cancel my booking?</h5>
                 <p className="text-sm text-gray-600">
@@ -76,7 +76,7 @@ export const HelpCenter = ({ isOpen, onClose }) => {
           
           <div className="border border-gray-200 rounded-lg p-4">
             <div className="flex items-start space-x-3">
-              <HelpCircle className="w-5 h-5 text-blue-600 mt-0.5 flex-shrink-0"/>
+              <HelpCircle className="w-5 h-5 text-emerald-600 mt-0.5 flex-shrink-0"/>
               <div>
                 <h5 className="font-medium text-gray-900 mb-1">How do I contact support?</h5>
                 <p className="text-sm text-gray-600">
@@ -170,7 +170,7 @@ export const HelpCenter = ({ isOpen, onClose }) => {
         </div>
 
         <div className="text-center">
-          <button className="inline-flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors">
+          <button className="inline-flex items-center px-4 py-2 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 transition-colors">
             Read Full Terms
             <ArrowRight className="w-4 h-4 ml-2"/>
           </button>
@@ -223,11 +223,11 @@ export const HelpCenter = ({ isOpen, onClose }) => {
           <div className="space-y-3">
             <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
               <span className="text-sm text-gray-700">Access your data</span>
-              <button className="text-blue-600 text-sm hover:underline">Request</button>
+              <button className="text-emerald-600 text-sm hover:underline">Request</button>
             </div>
             <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
               <span className="text-sm text-gray-700">Update preferences</span>
-              <button className="text-blue-600 text-sm hover:underline">Manage</button>
+              <button className="text-emerald-600 text-sm hover:underline">Manage</button>
             </div>
             <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
               <span className="text-sm text-gray-700">Delete your account</span>
@@ -235,13 +235,13 @@ export const HelpCenter = ({ isOpen, onClose }) => {
             </div>
             <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
               <span className="text-sm text-gray-700">Contact support for data issues</span>
-              <a href="mailto:privacy@tripbooking.com" className="text-blue-600 text-sm hover:underline">Email Us</a>
+              <a href="mailto:privacy@tripbooking.com" className="text-emerald-600 text-sm hover:underline">Email Us</a>
             </div>
           </div>
         </div>
 
-        <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-          <p className="text-sm text-blue-800">
+        <div className="bg-emerald-50 border border-emerald-200 rounded-lg p-4">
+          <p className="text-sm text-emerald-800">
             <strong>Your Privacy Matters:</strong> We never sell your personal information to third parties. You can update your preferences or request data deletion at any time.
           </p>
         </div>
@@ -352,22 +352,22 @@ export const HelpCenter = ({ isOpen, onClose }) => {
         {/* Tabs */}
         <div className="flex border-b border-gray-200">
           <button onClick={() => setActiveTab('help')} className={`flex-1 px-4 py-3 text-sm font-medium transition-colors ${activeTab === 'help'
-            ? 'text-blue-600 border-b-2 border-blue-600 bg-blue-50'
+            ? 'text-emerald-600 border-b-2 border-emerald-600 bg-emerald-50'
             : 'text-gray-600 hover:text-gray-900'}`}>
             Help Center
           </button>
           <button onClick={() => setActiveTab('terms')} className={`flex-1 px-4 py-3 text-sm font-medium transition-colors ${activeTab === 'terms'
-            ? 'text-blue-600 border-b-2 border-blue-600 bg-blue-50'
+            ? 'text-emerald-600 border-b-2 border-emerald-600 bg-emerald-50'
             : 'text-gray-600 hover:text-gray-900'}`}>
             Terms of Service
           </button>
           <button onClick={() => setActiveTab('privacy')} className={`flex-1 px-4 py-3 text-sm font-medium transition-colors ${activeTab === 'privacy'
-            ? 'text-blue-600 border-b-2 border-blue-600 bg-blue-50'
+            ? 'text-emerald-600 border-b-2 border-emerald-600 bg-emerald-50'
             : 'text-gray-600 hover:text-gray-900'}`}>
             Privacy Policy
           </button>
           <button onClick={() => setActiveTab('refund')} className={`flex-1 px-4 py-3 text-sm font-medium transition-colors ${activeTab === 'refund'
-            ? 'text-blue-600 border-b-2 border-blue-600 bg-blue-50'
+            ? 'text-emerald-600 border-b-2 border-emerald-600 bg-emerald-50'
             : 'text-gray-600 hover:text-gray-900'}`}>
             Refund Policy
           </button>
@@ -383,3 +383,4 @@ export const HelpCenter = ({ isOpen, onClose }) => {
       </div>
     </div>);
 };
+

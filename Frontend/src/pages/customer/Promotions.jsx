@@ -26,7 +26,7 @@ const mapPromotion = (raw) => {
         ? 'bg-emerald-600'
         : inferredType === 'all'
             ? 'bg-orange-600'
-            : 'bg-blue-600';
+            : 'bg-emerald-600';
     const image = DEFAULT_PROMOTION_IMAGES[inferredType] ?? DEFAULT_PROMOTION_IMAGES.hotel;
     const expiry = raw?.end_date || raw?.expiry || 'Limited time';
     return {
@@ -126,7 +126,7 @@ export const Promotions = ({ onBack, onClaim }) => {
               <button onClick={() => {
             setActiveFilter('hotel');
             document.getElementById('promo-results')?.scrollIntoView({ behavior: 'smooth' });
-        }} className="flex-1 bg-white text-slate-900 hover:bg-blue-50 px-6 py-4 rounded-2xl text-sm font-bold transition-colors flex items-center justify-center gap-2">
+        }} className="flex-1 bg-white text-slate-900 hover:bg-emerald-50 px-6 py-4 rounded-2xl text-sm font-bold transition-colors flex items-center justify-center gap-2">
                 <Hotel className="w-4 h-4"/>
                 Hotel Deals
               </button>
@@ -149,7 +149,7 @@ export const Promotions = ({ onBack, onClaim }) => {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Header */}
         <div className="mb-12">
-          <button onClick={onBack} className="flex items-center gap-2 text-slate-500 hover:text-blue-600 transition-colors mb-6 group">
+          <button onClick={onBack} className="flex items-center gap-2 text-slate-500 hover:text-emerald-600 transition-colors mb-6 group">
             <ChevronLeft className="w-5 h-5 group-hover:-translate-x-1 transition-transform"/>
             <span className="text-sm font-bold">Back to Dashboard</span>
           </button>
@@ -161,7 +161,7 @@ export const Promotions = ({ onBack, onClaim }) => {
             
             <div className="flex bg-white dark:bg-slate-800 p-1.5 rounded-2xl shadow-sm border border-slate-100 dark:border-slate-700">
               {['all', 'hotel', 'transport'].map((filter) => (<button key={filter} onClick={() => setActiveFilter(filter)} className={`px-6 py-2.5 rounded-xl text-sm font-bold capitalize transition-all ${activeFilter === filter
-                ? 'bg-blue-600 text-white shadow-lg shadow-blue-200 dark:shadow-none'
+                ? 'bg-emerald-600 text-white shadow-lg shadow-emerald-200 dark:shadow-none'
                 : 'text-slate-500 hover:text-slate-900 dark:hover:text-white'}`}>
                   {filter}
                 </button>))}
@@ -205,7 +205,7 @@ export const Promotions = ({ onBack, onClaim }) => {
                       </div>
                       <div className="text-right">
                         <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">You Save</p>
-                        <p className="text-sm font-extrabold text-blue-600 dark:text-blue-400 mt-1">{promo.discount}</p>
+                        <p className="text-sm font-extrabold text-emerald-600 dark:text-emerald-400 mt-1">{promo.discount}</p>
                       </div>
                     </div>
                     
@@ -218,12 +218,12 @@ export const Promotions = ({ onBack, onClaim }) => {
                       <div className="flex items-center gap-2">
                         <div className="flex-1 bg-slate-50 dark:bg-slate-900 border border-dashed border-slate-200 dark:border-slate-700 rounded-xl px-4 py-3 flex items-center justify-between">
                           <span className="text-xs font-mono font-bold text-slate-900 dark:text-white">{promo.code}</span>
-                          <button onClick={() => handleCopyCode(promo.code)} className="text-[10px] font-bold text-blue-600 hover:underline">
+                          <button onClick={() => handleCopyCode(promo.code)} className="text-[10px] font-bold text-emerald-600 hover:underline">
                             {copiedCode === promo.code ? 'Copied!' : 'Copy'}
                           </button>
                         </div>
                       </div>
-                      <button onClick={() => onClaim(promo)} className="w-full bg-slate-900 dark:bg-blue-600 hover:bg-slate-800 dark:hover:bg-blue-700 text-white py-4 rounded-2xl font-bold text-sm transition-all flex items-center justify-center gap-2 group/btn">
+                      <button onClick={() => onClaim(promo)} className="w-full bg-slate-900 dark:bg-emerald-600 hover:bg-slate-800 dark:hover:bg-emerald-700 text-white py-4 rounded-2xl font-bold text-sm transition-all flex items-center justify-center gap-2 group/btn">
                         Claim Now
                         <ArrowRight className="w-4 h-4 group-hover/btn:translate-x-1 transition-transform"/>
                       </button>
@@ -234,7 +234,7 @@ export const Promotions = ({ onBack, onClaim }) => {
         </div>
 
         {/* Newsletter / More Info */}
-        <motion.div initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} className="mt-20 bg-blue-600 rounded-[3rem] p-12 text-center relative overflow-hidden">
+        <motion.div initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} className="mt-20 bg-emerald-600 rounded-[3rem] p-12 text-center relative overflow-hidden">
           <div className="absolute top-0 right-0 w-64 h-64 bg-white/10 rounded-full -mr-32 -mt-32 blur-3xl"/>
           <div className="absolute bottom-0 left-0 w-64 h-64 bg-black/10 rounded-full -ml-32 -mb-32 blur-3xl"/>
           
@@ -243,7 +243,7 @@ export const Promotions = ({ onBack, onClaim }) => {
             <h2 className="text-3xl font-bold text-white mb-4">
               {isSubscribed ? 'Welcome to the club!' : 'Never miss a deal again'}
             </h2>
-            <p className="text-blue-100 mb-8">
+            <p className="text-emerald-100 mb-8">
               {isSubscribed
             ? "Thank you for subscribing! You'll be the first to receive our exclusive offers."
             : "Subscribe to our newsletter and be the first to know about exclusive discounts, early bird offers, and seasonal sales."}
@@ -251,15 +251,15 @@ export const Promotions = ({ onBack, onClaim }) => {
             
             {!isSubscribed ? (<form onSubmit={handleSubscribe} className="flex flex-col sm:flex-row gap-3">
                 <input type="email" required value={email} onChange={(e) => setEmail(e.target.value)} placeholder="Enter your email address" className="flex-1 bg-white/10 border border-white/20 rounded-2xl px-6 py-4 text-white placeholder:text-white/50 focus:outline-none focus:ring-2 focus:ring-white/30"/>
-                <button type="submit" disabled={isSubmitting} className="bg-white text-blue-600 px-8 py-4 rounded-2xl font-bold hover:bg-blue-50 transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center min-w-[160px]">
-                  {isSubmitting ? (<div className="w-5 h-5 border-2 border-blue-600 border-t-transparent rounded-full animate-spin"/>) : ('Subscribe Now')}
+                <button type="submit" disabled={isSubmitting} className="bg-white text-emerald-600 px-8 py-4 rounded-2xl font-bold hover:bg-emerald-50 transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center min-w-[160px]">
+                  {isSubmitting ? (<div className="w-5 h-5 border-2 border-emerald-600 border-t-transparent rounded-full animate-spin"/>) : ('Subscribe Now')}
                 </button>
               </form>) : (<motion.div initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} className="bg-white/10 border border-white/20 rounded-2xl p-6 flex items-center justify-center gap-3 text-white font-bold">
                 <CheckCircle2 className="w-6 h-6 text-emerald-400"/>
                 Subscription Active
               </motion.div>)}
             
-            {!isSubscribed && (<p className="text-[10px] text-blue-200 mt-6 flex items-center justify-center gap-2">
+            {!isSubscribed && (<p className="text-[10px] text-emerald-200 mt-6 flex items-center justify-center gap-2">
                 <CheckCircle2 className="w-3 h-3"/> No spam, only the best deals. Unsubscribe anytime.
               </p>)}
           </div>
@@ -267,3 +267,4 @@ export const Promotions = ({ onBack, onClaim }) => {
       </div>
     </div>);
 };
+

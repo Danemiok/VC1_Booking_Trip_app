@@ -303,7 +303,7 @@ const EditProperty = () => {
           <p className="mt-3 text-sm text-red-600 dark:text-red-200">
             {loadError || 'Property not found.'}
           </p>
-          <button onClick={() => navigate('/destinations')} className="mt-6 rounded-xl bg-blue-600 px-5 py-2.5 text-sm font-semibold text-white transition hover:bg-blue-700">
+          <button onClick={() => navigate('/destinations')} className="mt-6 rounded-xl bg-emerald-600 px-5 py-2.5 text-sm font-semibold text-white transition hover:bg-emerald-700">
             Back to Destinations
           </button>
         </div>
@@ -313,7 +313,7 @@ const EditProperty = () => {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-4">
-          <button onClick={() => navigate('/destinations')} className="w-10 h-10 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 flex items-center justify-center text-slate-500 hover:text-blue-600 transition-all">
+          <button onClick={() => navigate('/destinations')} className="w-10 h-10 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 flex items-center justify-center text-slate-500 hover:text-emerald-600 transition-all">
             <ArrowLeft size={20}/>
           </button>
           <div>
@@ -331,7 +331,7 @@ const EditProperty = () => {
       <div className="flex items-center justify-between bg-white dark:bg-slate-900 p-4 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm">
         {steps.map((s, i) => (<React.Fragment key={s.id}>
             <div className="flex items-center gap-3">
-              <div className={cn("w-8 h-8 rounded-lg flex items-center justify-center text-xs font-bold transition-all", step >= s.id ? "bg-blue-600 text-white shadow-md shadow-blue-500/20" : "bg-slate-100 dark:bg-slate-800 text-slate-400")}>
+              <div className={cn("w-8 h-8 rounded-lg flex items-center justify-center text-xs font-bold transition-all", step >= s.id ? "bg-emerald-600 text-white shadow-md shadow-emerald-500/20" : "bg-slate-100 dark:bg-slate-800 text-slate-400")}>
                 {step > s.id ? <CheckCircle2 size={16}/> : s.id}
               </div>
               <span className={cn("text-xs font-bold uppercase tracking-wider hidden sm:block", step >= s.id ? "text-slate-900 dark:text-slate-100" : "text-slate-400")}>
@@ -354,12 +354,12 @@ const EditProperty = () => {
               <div className="space-y-6">
                 <div className="space-y-2">
                   <label className="text-[10px] uppercase font-bold tracking-widest text-slate-400">Property Name</label>
-                  <input value={formData.name} onChange={(e) => setFormData({ ...formData, name: e.target.value })} className={cn("w-full px-4 py-3 bg-slate-50 dark:bg-slate-800 border-transparent rounded-xl text-sm focus:bg-white dark:focus:bg-slate-900 focus:ring-2 focus:ring-blue-600/10 transition-all font-medium", errors.name && "border-red-500")} placeholder="e.g. Mekong Riverside Villa"/>
+                  <input value={formData.name} onChange={(e) => setFormData({ ...formData, name: e.target.value })} className={cn("w-full px-4 py-3 bg-slate-50 dark:bg-slate-800 border-transparent rounded-xl text-sm focus:bg-white dark:focus:bg-slate-900 focus:ring-2 focus:ring-emerald-600/10 transition-all font-medium", errors.name && "border-red-500")} placeholder="e.g. Mekong Riverside Villa"/>
                   {errors.name && <p className="text-xs text-red-500 mt-1">{errors.name}</p>}
                 </div>
                 <div className="space-y-2">
                   <label className="text-[10px] uppercase font-bold tracking-widest text-slate-400">Property Type</label>
-                  <select value={formData.type} onChange={(e) => setFormData({ ...formData, type: e.target.value })} className="w-full px-4 py-3 bg-slate-50 dark:bg-slate-800 border-transparent rounded-xl text-sm focus:bg-white dark:focus:bg-slate-900 focus:ring-2 focus:ring-blue-600/10 transition-all font-medium appearance-none">
+                  <select value={formData.type} onChange={(e) => setFormData({ ...formData, type: e.target.value })} className="w-full px-4 py-3 bg-slate-50 dark:bg-slate-800 border-transparent rounded-xl text-sm focus:bg-white dark:focus:bg-slate-900 focus:ring-2 focus:ring-emerald-600/10 transition-all font-medium appearance-none">
                     <option value="Boutique Hotel">Hotel</option>
                     <option value="Luxury Villa">Villa</option>
                     <option value="Eco Lodge">Eco Stay</option>
@@ -370,32 +370,32 @@ const EditProperty = () => {
                 </div>
                 <div className="space-y-2">
                   <label className="text-[10px] uppercase font-bold tracking-widest text-slate-400">Description</label>
-                  <textarea value={formData.description} onChange={(e) => setFormData({ ...formData, description: e.target.value })} rows={4} className="w-full px-4 py-3 bg-slate-50 dark:bg-slate-800 border-transparent rounded-xl text-sm focus:bg-white dark:focus:bg-slate-900 focus:ring-2 focus:ring-blue-600/10 transition-all font-medium resize-none" placeholder="Describe the unique features of your property..."></textarea>
+                  <textarea value={formData.description} onChange={(e) => setFormData({ ...formData, description: e.target.value })} rows={4} className="w-full px-4 py-3 bg-slate-50 dark:bg-slate-800 border-transparent rounded-xl text-sm focus:bg-white dark:focus:bg-slate-900 focus:ring-2 focus:ring-emerald-600/10 transition-all font-medium resize-none" placeholder="Describe the unique features of your property..."></textarea>
                 </div>
               </div>
               <div className="space-y-6">
                 <div className="space-y-2">
                   <label className="text-[10px] uppercase font-bold tracking-widest text-slate-400">Status</label>
-                  <select value={formData.status} onChange={(e) => setFormData({ ...formData, status: e.target.value })} className="w-full px-4 py-3 bg-slate-50 dark:bg-slate-800 border-transparent rounded-xl text-sm focus:bg-white dark:focus:bg-slate-900 focus:ring-2 focus:ring-blue-600/10 transition-all font-medium appearance-none">
+                  <select value={formData.status} onChange={(e) => setFormData({ ...formData, status: e.target.value })} className="w-full px-4 py-3 bg-slate-50 dark:bg-slate-800 border-transparent rounded-xl text-sm focus:bg-white dark:focus:bg-slate-900 focus:ring-2 focus:ring-emerald-600/10 transition-all font-medium appearance-none">
                     <option value="draft">Upcoming</option>
                     <option value="active">Active</option>
                   </select>
                 </div>
                 <div className="space-y-2">
                   <label className="text-[10px] uppercase font-bold tracking-widest text-slate-400">Full Address</label>
-                  <input value={formData.address} onChange={(e) => setFormData({ ...formData, address: e.target.value })} className={cn("w-full px-4 py-3 bg-slate-50 dark:bg-slate-800 border-transparent rounded-xl text-sm focus:bg-white dark:focus:bg-slate-900 focus:ring-2 focus:ring-blue-600/10 transition-all font-medium", errors.address && "border-red-500")} placeholder="Street 123, Sangkat Chakto Mukh..."/>
+                  <input value={formData.address} onChange={(e) => setFormData({ ...formData, address: e.target.value })} className={cn("w-full px-4 py-3 bg-slate-50 dark:bg-slate-800 border-transparent rounded-xl text-sm focus:bg-white dark:focus:bg-slate-900 focus:ring-2 focus:ring-emerald-600/10 transition-all font-medium", errors.address && "border-red-500")} placeholder="Street 123, Sangkat Chakto Mukh..."/>
                   {errors.address && <p className="text-xs text-red-500 mt-1">{errors.address}</p>}
                 </div>
 
                 <div className="space-y-2">
                   <label className="text-[10px] uppercase font-bold tracking-widest text-slate-400">Location (City, Country)</label>
-                  <input value={formData.location} onChange={(e) => setFormData({ ...formData, location: e.target.value })} className={cn("w-full px-4 py-3 bg-slate-50 dark:bg-slate-800 border-transparent rounded-xl text-sm focus:bg-white dark:focus:bg-slate-900 focus:ring-2 focus:ring-blue-600/10 transition-all font-medium", errors.location && "border-red-500")} placeholder="e.g. Phnom Penh, Cambodia"/>
+                  <input value={formData.location} onChange={(e) => setFormData({ ...formData, location: e.target.value })} className={cn("w-full px-4 py-3 bg-slate-50 dark:bg-slate-800 border-transparent rounded-xl text-sm focus:bg-white dark:focus:bg-slate-900 focus:ring-2 focus:ring-emerald-600/10 transition-all font-medium", errors.location && "border-red-500")} placeholder="e.g. Phnom Penh, Cambodia"/>
                   {errors.location && <p className="text-xs text-red-500 mt-1">{errors.location}</p>}
                 </div>
 
                 <div className="space-y-2">
                   <label className="text-[10px] uppercase font-bold tracking-widest text-slate-400">Rating (optional)</label>
-                  <input type="number" min={0} max={5} step={0.1} value={formData.rating} onChange={(e) => setFormData({ ...formData, rating: e.target.value })} className="w-full px-4 py-3 bg-slate-50 dark:bg-slate-800 border-transparent rounded-xl text-sm focus:bg-white dark:focus:bg-slate-900 focus:ring-2 focus:ring-blue-600/10 transition-all font-medium" placeholder="e.g. 4.9"/>
+                  <input type="number" min={0} max={5} step={0.1} value={formData.rating} onChange={(e) => setFormData({ ...formData, rating: e.target.value })} className="w-full px-4 py-3 bg-slate-50 dark:bg-slate-800 border-transparent rounded-xl text-sm focus:bg-white dark:focus:bg-slate-900 focus:ring-2 focus:ring-emerald-600/10 transition-all font-medium" placeholder="e.g. 4.9"/>
                 </div>
               </div>
             </div>
@@ -403,14 +403,14 @@ const EditProperty = () => {
 
         {/* Step 2: Media */}
         {step === 2 && (<div className="p-8 space-y-8">
-            <div className="border-2 border-dashed border-slate-200 dark:border-slate-800 rounded-2xl p-12 flex flex-col items-center justify-center text-center hover:bg-blue-50 dark:hover:bg-blue-900/10 hover:border-blue-600/50 transition-all cursor-pointer group">
-              <div className="w-16 h-16 bg-slate-100 dark:bg-slate-900 rounded-2xl flex items-center justify-center mb-4 group-hover:bg-blue-600 group-hover:text-white transition-all shadow-sm">
+            <div className="border-2 border-dashed border-slate-200 dark:border-slate-800 rounded-2xl p-12 flex flex-col items-center justify-center text-center hover:bg-emerald-50 dark:hover:bg-emerald-900/10 hover:border-emerald-600/50 transition-all cursor-pointer group">
+              <div className="w-16 h-16 bg-slate-100 dark:bg-slate-900 rounded-2xl flex items-center justify-center mb-4 group-hover:bg-emerald-600 group-hover:text-white transition-all shadow-sm">
                 <Upload size={32}/>
               </div>
               <h4 className="font-bold text-lg">Update Property Photos</h4>
               <p className="text-xs text-slate-500 mt-2 max-w-xs">Drag and drop new images or click to select files.</p>
               <div className="flex gap-3 mt-6">
-                <label className="px-6 py-2 bg-blue-600 text-white rounded-xl text-xs font-bold hover:bg-blue-700 transition-all cursor-pointer">
+                <label className="px-6 py-2 bg-emerald-600 text-white rounded-xl text-xs font-bold hover:bg-emerald-700 transition-all cursor-pointer">
                   Select Files
                   <input ref={fileInputRef} type="file" multiple accept="image/*" onChange={addImage} className="hidden"/>
                 </label>
@@ -432,7 +432,7 @@ const EditProperty = () => {
                     <X size={16}/>
                   </button>
                 </div>))}
-              <div onClick={() => addImage()} className="aspect-square border-2 border-dashed border-slate-200 dark:border-slate-800 rounded-xl flex items-center justify-center text-slate-400 hover:text-blue-600 hover:bg-blue-50 transition-all cursor-pointer">
+              <div onClick={() => addImage()} className="aspect-square border-2 border-dashed border-slate-200 dark:border-slate-800 rounded-xl flex items-center justify-center text-slate-400 hover:text-emerald-600 hover:bg-emerald-50 transition-all cursor-pointer">
                 <Plus size={24}/>
               </div>
             </div>
@@ -444,19 +444,19 @@ const EditProperty = () => {
               <div className="space-y-6">
                 <div className="space-y-2">
                   <label className="text-[10px] uppercase font-bold tracking-widest text-slate-400">Base Price (USD/night)</label>
-                  <input type="number" value={formData.price} onChange={(e) => setFormData({ ...formData, price: e.target.value })} className={cn("w-full px-4 py-3 bg-slate-50 dark:bg-slate-800 border-transparent rounded-xl text-sm focus:bg-white dark:focus:bg-slate-900 focus:ring-2 focus:ring-blue-600/10 transition-all font-medium", errors.price && "border-red-500")} placeholder="150.00"/>
+                  <input type="number" value={formData.price} onChange={(e) => setFormData({ ...formData, price: e.target.value })} className={cn("w-full px-4 py-3 bg-slate-50 dark:bg-slate-800 border-transparent rounded-xl text-sm focus:bg-white dark:focus:bg-slate-900 focus:ring-2 focus:ring-emerald-600/10 transition-all font-medium", errors.price && "border-red-500")} placeholder="150.00"/>
                   {errors.price && <p className="text-xs text-red-500 mt-1">{errors.price}</p>}
                 </div>
                 <div className="space-y-2">
                   <label className="text-[10px] uppercase font-bold tracking-widest text-slate-400">Total Bookings</label>
-                  <input type="number" value={formData.totalBookings} onChange={(e) => setFormData({ ...formData, totalBookings: parseInt(e.target.value) || 0 })} className="w-full px-4 py-3 bg-slate-50 dark:bg-slate-800 border-transparent rounded-xl text-sm focus:bg-white dark:focus:bg-slate-900 focus:ring-2 focus:ring-blue-600/10 transition-all font-medium" placeholder="0" readOnly/>
+                  <input type="number" value={formData.totalBookings} onChange={(e) => setFormData({ ...formData, totalBookings: parseInt(e.target.value) || 0 })} className="w-full px-4 py-3 bg-slate-50 dark:bg-slate-800 border-transparent rounded-xl text-sm focus:bg-white dark:focus:bg-slate-900 focus:ring-2 focus:ring-emerald-600/10 transition-all font-medium" placeholder="0" readOnly/>
                   <p className="text-xs text-slate-500">This value is automatically updated based on bookings</p>
                 </div>
               </div>
               <div className="space-y-6">
                 <div className="space-y-2">
                   <label className="text-[10px] uppercase font-bold tracking-widest text-slate-400">Cancellation Policy</label>
-                  <select className="w-full px-4 py-3 bg-slate-50 dark:bg-slate-800 border-transparent rounded-xl text-sm focus:bg-white dark:focus:bg-slate-900 focus:ring-2 focus:ring-blue-600/10 transition-all font-medium appearance-none">
+                  <select className="w-full px-4 py-3 bg-slate-50 dark:bg-slate-800 border-transparent rounded-xl text-sm focus:bg-white dark:focus:bg-slate-900 focus:ring-2 focus:ring-emerald-600/10 transition-all font-medium appearance-none">
                     <option>Flexible (24h)</option>
                     <option>Moderate (48h)</option>
                     <option>Strict (7 days)</option>
@@ -468,8 +468,8 @@ const EditProperty = () => {
 
         {/* Step 4: Review */}
         {step === 4 && (<div className="p-8 space-y-8">
-            <div className="bg-blue-50 dark:bg-blue-900/10 border border-blue-200 dark:border-blue-800 rounded-2xl p-6">
-              <h4 className="font-bold text-lg text-blue-900 dark:text-blue-100 mb-4">Property Review</h4>
+            <div className="bg-emerald-50 dark:bg-emerald-900/10 border border-emerald-200 dark:border-emerald-800 rounded-2xl p-6">
+              <h4 className="font-bold text-lg text-emerald-900 dark:text-emerald-100 mb-4">Property Review</h4>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div className="space-y-4">
                   <div>
@@ -500,7 +500,7 @@ const EditProperty = () => {
                   </div>
                 </div>
               </div>
-              {formData.description && (<div className="mt-6 pt-6 border-t border-blue-200 dark:border-blue-800">
+              {formData.description && (<div className="mt-6 pt-6 border-t border-emerald-200 dark:border-emerald-800">
                   <span className="text-[10px] uppercase font-bold tracking-widest text-slate-400">Description</span>
                   <p className="mt-2 text-sm text-slate-700 dark:text-slate-300">{formData.description}</p>
                 </div>)}
@@ -512,7 +512,7 @@ const EditProperty = () => {
           <button disabled={step === 1 || isSubmitting || isDeleting} onClick={() => setStep(s => s - 1)} className="px-6 py-2.5 text-sm font-bold text-slate-500 hover:text-slate-900 dark:hover:text-slate-100 disabled:opacity-30 transition-all">
             Back
           </button>
-          <button disabled={isSubmitting || isDeleting} onClick={() => step < 4 ? handleNextStep() : handleUpdate()} className="px-8 py-2.5 bg-blue-600 text-white rounded-xl font-bold text-sm hover:bg-blue-700 disabled:opacity-50 transition-all shadow-lg shadow-blue-500/20 active:scale-95 flex items-center gap-2">
+          <button disabled={isSubmitting || isDeleting} onClick={() => step < 4 ? handleNextStep() : handleUpdate()} className="px-8 py-2.5 bg-emerald-600 text-white rounded-xl font-bold text-sm hover:bg-emerald-700 disabled:opacity-50 transition-all shadow-lg shadow-emerald-500/20 active:scale-95 flex items-center gap-2">
             {isSubmitting ? (<>Saving...</>) : step === 4 ? (<>
                 <Save size={18}/>
                 Update Property
@@ -559,3 +559,4 @@ const EditProperty = () => {
     </div>);
 };
 export default EditProperty;
+

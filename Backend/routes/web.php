@@ -37,6 +37,19 @@ Route::get('/dashboard', function () {
     return Inertia::render($nextView);
 })->middleware(['auth', 'verified'])->name('dashboard');
 
+Route::get('/', function () {
+    return view('welcome');
+});
+
+Route::get('/status', function () {
+    return response()->json([
+        'status' => 'ok',
+        'app' => 'VC1 Trip Booking App',
+        'environment' => app()->environment(),
+        'timestamp' => now()->toIso8601String(),
+    ]);
+});
+
 Route::middleware('auth')->group(function () {
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');

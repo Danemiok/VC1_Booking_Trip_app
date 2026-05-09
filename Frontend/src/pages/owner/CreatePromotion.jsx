@@ -170,7 +170,7 @@ const CreatePromotion = () => {
     };
     return (<div className="p-8 max-w-[1000px] mx-auto space-y-8">
       <div className="flex items-center gap-4">
-        <button onClick={() => navigate('/promotions')} className="w-10 h-10 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 flex items-center justify-center text-slate-500 hover:text-blue-600 transition-all">
+        <button onClick={() => navigate('/promotions')} className="w-10 h-10 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 flex items-center justify-center text-slate-500 hover:text-emerald-600 transition-all">
           <ArrowLeft size={20}/>
         </button>
         <div>
@@ -182,7 +182,7 @@ const CreatePromotion = () => {
       <div className="flex items-center justify-between bg-white dark:bg-slate-900 p-4 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm">
         {steps.map((s, i) => (<React.Fragment key={s.id}>
             <div className="flex items-center gap-3">
-              <div className={cn("w-8 h-8 rounded-lg flex items-center justify-center text-xs font-bold transition-all", step >= s.id ? "bg-blue-600 text-white shadow-md shadow-blue-500/20" : "bg-slate-100 dark:bg-slate-800 text-slate-400")}>
+              <div className={cn("w-8 h-8 rounded-lg flex items-center justify-center text-xs font-bold transition-all", step >= s.id ? "bg-emerald-600 text-white shadow-md shadow-emerald-500/20" : "bg-slate-100 dark:bg-slate-800 text-slate-400")}>
                 {step > s.id ? <CheckCircle2 size={16}/> : s.id}
               </div>
               <span className={cn("text-xs font-bold uppercase tracking-wider hidden sm:block", step >= s.id ? "text-slate-900 dark:text-slate-100" : "text-slate-400")}>
@@ -205,10 +205,10 @@ const CreatePromotion = () => {
             ].map((type, i) => (<div key={i} onClick={() => {
                     setPromotionType(type.title);
                     setStep(2);
-                }} className={cn("p-6 rounded-2xl border bg-slate-50 dark:bg-slate-800/50 hover:border-blue-600/30 hover:bg-blue-50/30 dark:hover:bg-blue-900/10 transition-all cursor-pointer group", promotionType === type.title
-                    ? "border-blue-600/40"
+                }} className={cn("p-6 rounded-2xl border bg-slate-50 dark:bg-slate-800/50 hover:border-emerald-600/30 hover:bg-emerald-50/30 dark:hover:bg-emerald-900/10 transition-all cursor-pointer group", promotionType === type.title
+                    ? "border-emerald-600/40"
                     : "border-slate-100 dark:border-slate-800")}>
-                  <div className={cn("w-12 h-12 rounded-xl flex items-center justify-center mb-4 transition-all group-hover:scale-110", type.color === 'blue' ? "bg-blue-600 text-white" :
+                  <div className={cn("w-12 h-12 rounded-xl flex items-center justify-center mb-4 transition-all group-hover:scale-110", type.color === 'blue' ? "bg-emerald-600 text-white" :
                     type.color === 'amber' ? "bg-amber-500 text-white" :
                         type.color === 'emerald' ? "bg-emerald-500 text-white" :
                             "bg-purple-500 text-white")}>
@@ -225,19 +225,19 @@ const CreatePromotion = () => {
               <div className="space-y-6">
                 <div className="space-y-2">
                   <label className="text-[10px] uppercase font-bold tracking-widest text-slate-400">Service Category</label>
-                  <select value={serviceCategory} onChange={(e) => setServiceCategory(e.target.value)} className="w-full px-4 py-3 bg-slate-50 dark:bg-slate-800 border-transparent rounded-xl text-sm focus:bg-white dark:focus:bg-slate-900 focus:ring-2 focus:ring-blue-600/10 transition-all font-medium">
+                  <select value={serviceCategory} onChange={(e) => setServiceCategory(e.target.value)} className="w-full px-4 py-3 bg-slate-50 dark:bg-slate-800 border-transparent rounded-xl text-sm focus:bg-white dark:focus:bg-slate-900 focus:ring-2 focus:ring-emerald-600/10 transition-all font-medium">
                     <option value="hotel">Hotel</option>
                     <option value="transport">Transport</option>
                   </select>
                 </div>
                 <div className="space-y-2">
                   <label className="text-[10px] uppercase font-bold tracking-widest text-slate-400">Campaign Name</label>
-                  <input value={campaignName} onChange={(e) => setCampaignName(e.target.value)} className="w-full px-4 py-3 bg-slate-50 dark:bg-slate-800 border-transparent rounded-xl text-sm focus:bg-white dark:focus:bg-slate-900 focus:ring-2 focus:ring-blue-600/10 transition-all font-medium" placeholder="e.g. Water Festival Special"/>
+                  <input value={campaignName} onChange={(e) => setCampaignName(e.target.value)} className="w-full px-4 py-3 bg-slate-50 dark:bg-slate-800 border-transparent rounded-xl text-sm focus:bg-white dark:focus:bg-slate-900 focus:ring-2 focus:ring-emerald-600/10 transition-all font-medium" placeholder="e.g. Water Festival Special"/>
                 </div>
                 <div className="space-y-2">
                   <label className="text-[10px] uppercase font-bold tracking-widest text-slate-400">Discount Value</label>
                   <div className="relative">
-                    <input value={discountValue} onChange={(e) => setDiscountValue(e.target.value)} className="w-full px-4 py-3 bg-slate-50 dark:bg-slate-800 border-transparent rounded-xl text-sm focus:bg-white dark:focus:bg-slate-900 focus:ring-2 focus:ring-blue-600/10 transition-all font-medium" placeholder="20"/>
+                    <input value={discountValue} onChange={(e) => setDiscountValue(e.target.value)} className="w-full px-4 py-3 bg-slate-50 dark:bg-slate-800 border-transparent rounded-xl text-sm focus:bg-white dark:focus:bg-slate-900 focus:ring-2 focus:ring-emerald-600/10 transition-all font-medium" placeholder="20"/>
                     {getDiscountSuffix() && (<span className="absolute right-4 top-1/2 -translate-y-1/2 font-bold text-slate-400">{getDiscountSuffix()}</span>)}
                   </div>
                 </div>
@@ -245,21 +245,21 @@ const CreatePromotion = () => {
               <div className="space-y-6">
                 <div className="space-y-2">
                   <label className="text-[10px] uppercase font-bold tracking-widest text-slate-400">Start Date</label>
-                  <input type="date" min={new Date().toISOString().split('T')[0]} value={startDate} onChange={(e) => setStartDate(e.target.value)} className="w-full px-4 py-3 bg-slate-50 dark:bg-slate-800 border-transparent rounded-xl text-sm focus:bg-white dark:focus:bg-slate-900 focus:ring-2 focus:ring-blue-600/10 transition-all font-medium"/>
+                  <input type="date" min={new Date().toISOString().split('T')[0]} value={startDate} onChange={(e) => setStartDate(e.target.value)} className="w-full px-4 py-3 bg-slate-50 dark:bg-slate-800 border-transparent rounded-xl text-sm focus:bg-white dark:focus:bg-slate-900 focus:ring-2 focus:ring-emerald-600/10 transition-all font-medium"/>
                 </div>
                 <div className="space-y-2">
                   <label className="text-[10px] uppercase font-bold tracking-widest text-slate-400">End Date</label>
-                  <input type="date" min={startDate || new Date().toISOString().split('T')[0]} value={endDate} onChange={(e) => setEndDate(e.target.value)} className="w-full px-4 py-3 bg-slate-50 dark:bg-slate-800 border-transparent rounded-xl text-sm focus:bg-white dark:focus:bg-slate-900 focus:ring-2 focus:ring-blue-600/10 transition-all font-medium"/>
+                  <input type="date" min={startDate || new Date().toISOString().split('T')[0]} value={endDate} onChange={(e) => setEndDate(e.target.value)} className="w-full px-4 py-3 bg-slate-50 dark:bg-slate-800 border-transparent rounded-xl text-sm focus:bg-white dark:focus:bg-slate-900 focus:ring-2 focus:ring-emerald-600/10 transition-all font-medium"/>
                 </div>
                 <div className="space-y-2">
                   <label className="text-[10px] uppercase font-bold tracking-widest text-slate-400">Promo Code (Optional)</label>
-                  <input value={promoCode} onChange={(e) => setPromoCode(e.target.value)} className="w-full px-4 py-3 bg-slate-50 dark:bg-slate-800 border-transparent rounded-xl text-sm focus:bg-white dark:focus:bg-slate-900 focus:ring-2 focus:ring-blue-600/10 transition-all font-medium" placeholder="e.g. SUMMER2024"/>
+                  <input value={promoCode} onChange={(e) => setPromoCode(e.target.value)} className="w-full px-4 py-3 bg-slate-50 dark:bg-slate-800 border-transparent rounded-xl text-sm focus:bg-white dark:focus:bg-slate-900 focus:ring-2 focus:ring-emerald-600/10 transition-all font-medium" placeholder="e.g. SUMMER2024"/>
                 </div>
                 <div className="space-y-2">
                   <label className="text-[10px] uppercase font-bold tracking-widest text-slate-400">Badge Color</label>
                   <div className="flex items-center gap-3">
                     <input type="color" value={promoColor} onChange={(e) => setPromoColor(e.target.value)} className="w-12 h-12 rounded-xl border-0 cursor-pointer"/>
-                    <input value={promoColor} onChange={(e) => setPromoColor(e.target.value)} className="flex-1 px-4 py-3 bg-slate-50 dark:bg-slate-800 border-transparent rounded-xl text-sm focus:bg-white dark:focus:bg-slate-900 focus:ring-2 focus:ring-blue-600/10 transition-all font-medium" placeholder="#3B82F6"/>
+                    <input value={promoColor} onChange={(e) => setPromoColor(e.target.value)} className="flex-1 px-4 py-3 bg-slate-50 dark:bg-slate-800 border-transparent rounded-xl text-sm focus:bg-white dark:focus:bg-slate-900 focus:ring-2 focus:ring-emerald-600/10 transition-all font-medium" placeholder="#3B82F6"/>
                   </div>
                 </div>
               </div>
@@ -268,7 +268,7 @@ const CreatePromotion = () => {
 
         {step === 3 && (<div className="p-8 space-y-6">
             <div className="flex items-center gap-2 mb-4">
-              <Layout className="text-blue-600" size={24}/>
+              <Layout className="text-emerald-600" size={24}/>
               <h4 className="font-bold text-lg">Select Linked Items</h4>
             </div>
             <p className="text-sm text-slate-500 mb-4">
@@ -280,7 +280,7 @@ const CreatePromotion = () => {
                 ? 'Focusing on hotel destinations for this campaign.'
                 : 'Focusing on transport services for this campaign.'}
               </span>
-              <button type="button" onClick={() => setShowAdditionalLinkedItems((prev) => !prev)} className="text-xs font-bold text-blue-600 border border-blue-200 rounded-full px-3 py-1 hover:bg-blue-50 transition">
+              <button type="button" onClick={() => setShowAdditionalLinkedItems((prev) => !prev)} className="text-xs font-bold text-emerald-600 border border-emerald-200 rounded-full px-3 py-1 hover:bg-emerald-50 transition">
                 {showAdditionalLinkedItems
                 ? 'Hide the other category'
                 : `Link ${serviceCategory === 'hotel' ? 'transports' : 'destinations'} too`}
@@ -298,7 +298,7 @@ const CreatePromotion = () => {
                 </div>
               <div className="relative">
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={16}/>
-                <input type="text" placeholder="Search destinations..." value={searchDestination} onChange={(e) => setSearchDestination(e.target.value)} className="w-full pl-10 pr-4 py-2 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg text-sm focus:ring-2 focus:ring-blue-500"/>
+                <input type="text" placeholder="Search destinations..." value={searchDestination} onChange={(e) => setSearchDestination(e.target.value)} className="w-full pl-10 pr-4 py-2 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg text-sm focus:ring-2 focus:ring-emerald-500"/>
               </div>
               <div className="max-h-48 overflow-y-auto space-y-2 border border-slate-200 dark:border-slate-700 rounded-lg p-2">
                 {isLoadingDestinations ? (<p className="text-sm text-slate-500 text-center py-4">Loading destinations...</p>) : filteredDestinations.length === 0 ? (<p className="text-sm text-slate-500 text-center py-4">No destinations found</p>) : (filteredDestinations.map((destination) => (<div key={destination.id} onClick={() => toggleDestination(destination.id)} className={cn("flex items-center gap-3 p-3 rounded-lg cursor-pointer transition-colors", linkedDestinations.includes(destination.id)
@@ -321,22 +321,22 @@ const CreatePromotion = () => {
             {/* Linked Transports */}
             {showTransportsSection && (<div className="space-y-3">
                 <div className="flex items-center gap-2">
-                  <Car className="text-blue-500" size={18}/>
+                  <Car className="text-emerald-500" size={18}/>
                   <h5 className="font-semibold text-sm">Linked Transports</h5>
-                  <span className="ml-auto text-xs font-medium px-2 py-1 bg-blue-100 text-blue-700 rounded-full">
+                  <span className="ml-auto text-xs font-medium px-2 py-1 bg-emerald-100 text-emerald-700 rounded-full">
                     {linkedTransports.length} selected
                   </span>
                 </div>
               <div className="relative">
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={16}/>
-                <input type="text" placeholder="Search transports..." value={searchTransport} onChange={(e) => setSearchTransport(e.target.value)} className="w-full pl-10 pr-4 py-2 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg text-sm focus:ring-2 focus:ring-blue-500"/>
+                <input type="text" placeholder="Search transports..." value={searchTransport} onChange={(e) => setSearchTransport(e.target.value)} className="w-full pl-10 pr-4 py-2 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg text-sm focus:ring-2 focus:ring-emerald-500"/>
               </div>
               <div className="max-h-48 overflow-y-auto space-y-2 border border-slate-200 dark:border-slate-700 rounded-lg p-2">
                 {isLoadingTransports ? (<p className="text-sm text-slate-500 text-center py-4">Loading transports...</p>) : filteredTransports.length === 0 ? (<p className="text-sm text-slate-500 text-center py-4">No transports found</p>) : (filteredTransports.map((transport) => (<div key={transport.id} onClick={() => toggleTransport(transport.id)} className={cn("flex items-center gap-3 p-3 rounded-lg cursor-pointer transition-colors", linkedTransports.includes(transport.id)
-                        ? "bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800"
+                        ? "bg-emerald-50 dark:bg-emerald-900/20 border border-emerald-200 dark:border-emerald-800"
                         : "bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-700")}>
                       <div className={cn("w-5 h-5 rounded flex items-center justify-center border", linkedTransports.includes(transport.id)
-                        ? "bg-blue-500 border-blue-500 text-white"
+                        ? "bg-emerald-500 border-emerald-500 text-white"
                         : "border-slate-300 dark:border-slate-600")}>
                         {linkedTransports.includes(transport.id) && <CheckCircle2 size={14}/>}
                       </div>
@@ -355,11 +355,11 @@ const CreatePromotion = () => {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
               <div className="space-y-2">
                 <label className="text-[10px] uppercase font-bold tracking-widest text-slate-400">Usage Limit</label>
-                <input className="w-full px-4 py-3 bg-slate-50 dark:bg-slate-800 border-transparent rounded-xl text-sm focus:bg-white dark:focus:bg-slate-900 focus:ring-2 focus:ring-blue-600/10 transition-all font-medium" placeholder="e.g. 500"/>
+                <input className="w-full px-4 py-3 bg-slate-50 dark:bg-slate-800 border-transparent rounded-xl text-sm focus:bg-white dark:focus:bg-slate-900 focus:ring-2 focus:ring-emerald-600/10 transition-all font-medium" placeholder="e.g. 500"/>
               </div>
               <div className="space-y-2">
                 <label className="text-[10px] uppercase font-bold tracking-widest text-slate-400">Minimum Booking Amount</label>
-                <input className="w-full px-4 py-3 bg-slate-50 dark:bg-slate-800 border-transparent rounded-xl text-sm focus:bg-white dark:focus:bg-slate-900 focus:ring-2 focus:ring-blue-600/10 transition-all font-medium" placeholder="e.g. 100"/>
+                <input className="w-full px-4 py-3 bg-slate-50 dark:bg-slate-800 border-transparent rounded-xl text-sm focus:bg-white dark:focus:bg-slate-900 focus:ring-2 focus:ring-emerald-600/10 transition-all font-medium" placeholder="e.g. 100"/>
               </div>
             </div>
           </div>)}
@@ -384,7 +384,7 @@ const CreatePromotion = () => {
                 </div>
                 <div>
                   <p className="text-[10px] uppercase font-bold tracking-widest text-slate-400">Discount</p>
-                  <p className="text-sm font-semibold text-blue-600">{formatDiscount()}</p>
+                  <p className="text-sm font-semibold text-emerald-600">{formatDiscount()}</p>
                 </div>
                 <div>
                   <p className="text-[10px] uppercase font-bold tracking-widest text-slate-400">Dates</p>
@@ -404,7 +404,7 @@ const CreatePromotion = () => {
                 })}
                       {linkedTransports.map(id => {
                     const trans = transports.find(t => t.id === id);
-                    return trans ? (<span key={id} className="inline-flex items-center gap-1 px-2 py-1 bg-blue-100 text-blue-700 rounded-lg text-xs font-medium">
+                    return trans ? (<span key={id} className="inline-flex items-center gap-1 px-2 py-1 bg-emerald-100 text-emerald-700 rounded-lg text-xs font-medium">
                             <Car size={12}/>
                             {trans.name}
                           </span>) : null;
@@ -427,7 +427,7 @@ const CreatePromotion = () => {
                 return;
             }
             launchCampaign();
-        }} className="px-8 py-2.5 bg-blue-600 text-white rounded-xl font-bold text-sm hover:bg-blue-700 transition-all shadow-lg shadow-blue-500/20 active:scale-95 flex items-center gap-2">
+        }} className="px-8 py-2.5 bg-emerald-600 text-white rounded-xl font-bold text-sm hover:bg-emerald-700 transition-all shadow-lg shadow-emerald-500/20 active:scale-95 flex items-center gap-2">
             {step === 5 ? 'Launch Campaign' : 'Continue'}
             <ChevronRight size={18}/>
           </button>
@@ -436,3 +436,4 @@ const CreatePromotion = () => {
     </div>);
 };
 export default CreatePromotion;
+

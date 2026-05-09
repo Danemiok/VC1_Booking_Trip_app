@@ -3,7 +3,7 @@ import { Download, Search, Filter, Calendar, ChevronDown, Edit3, UserMinus, LogI
 import { cn } from '../../../utils/utils';
 export const AuditLogs = () => {
     const logs = [
-        { date: 'Oct 24, 2023', time: '14:32:15 PM', user: 'Sarah Reed', role: 'Moderator', action: 'Updated Destination', icon: Edit3, iconColor: 'text-blue-500', ip: '192.168.1.104', details: 'Changed description for "Angkor Wat"', status: 'Success' },
+        { date: 'Oct 24, 2023', time: '14:32:15 PM', user: 'Sarah Reed', role: 'Moderator', action: 'Updated Destination', icon: Edit3, iconColor: 'text-emerald-500', ip: '192.168.1.104', details: 'Changed description for "Angkor Wat"', status: 'Success' },
         { date: 'Oct 24, 2023', time: '12:10:44 PM', user: 'James Kim', role: 'Admin', action: 'Deleted User', icon: UserMinus, iconColor: 'text-red-500', ip: '45.22.189.21', details: 'Removed user account ID #88412', status: 'Success' },
         { date: 'Oct 24, 2023', time: '11:55:02 AM', user: 'Marco Alva', role: 'Support', action: 'Login', icon: LogIn, iconColor: 'text-primary', ip: '102.34.12.0', details: 'Successful login via OAuth', status: 'Success' },
         { date: 'Oct 24, 2023', time: '09:41:22 AM', user: 'Unknown', role: 'Public IP', action: 'Failed Login', icon: Lock, iconColor: 'text-red-500', ip: '12.244.51.9', details: '3 invalid attempts for "admin_root"', status: 'Alert', alert: true },
@@ -259,3 +259,4 @@ export const AuditLogs = () => {
       </div>
     </div>);
 };
+

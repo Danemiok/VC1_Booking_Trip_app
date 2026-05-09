@@ -194,9 +194,9 @@ export const TripPlanner = ({ tripData, setTripData, selectedActivityIds, setSel
                   relative h-10 w-full flex items-center justify-center text-[11px] font-medium transition-all
                   ${!isCurrentMonth ? 'text-white/5' : 'text-white'}
                   ${isPast ? 'opacity-20 cursor-not-allowed' : 'hover:bg-white/10'}
-                  ${isSelected ? 'bg-blue-600 text-white font-bold rounded-lg z-10' : ''}
-                  ${range ? 'bg-blue-600/20 text-blue-400' : ''}
-                  ${isToday(day) && !isSelected ? 'after:content-[""] after:absolute after:bottom-1 after:w-1 after:h-1 after:bg-blue-500 after:rounded-full' : ''}
+                  ${isSelected ? 'bg-emerald-600 text-white font-bold rounded-lg z-10' : ''}
+                  ${range ? 'bg-emerald-600/20 text-emerald-400' : ''}
+                  ${isToday(day) && !isSelected ? 'after:content-[""] after:absolute after:bottom-1 after:w-1 after:h-1 after:bg-emerald-500 after:rounded-full' : ''}
                   ${isStart && (dates.end || hoveredDate) && !isSameDay(dates.start, dates.end || hoveredDate) ? 'rounded-r-none rounded-l-lg' : ''}
                   ${isEnd && dates.start && !isSameDay(dates.start, dates.end) ? 'rounded-l-none rounded-r-lg' : ''}
                 `}>
@@ -263,7 +263,7 @@ export const TripPlanner = ({ tripData, setTripData, selectedActivityIds, setSel
               <div className="flex items-center gap-2 text-[10px] font-bold text-white/60 uppercase tracking-widest mb-6">
                 <span className="cursor-pointer hover:text-white transition-colors" onClick={onBack}>Home</span>
                 <ChevronRight className="w-3 h-3"/>
-                <span className="text-blue-400">My Plan</span>
+                <span className="text-emerald-400">My Plan</span>
               </div>
               <h1 className="text-6xl md:text-7xl font-bold text-white mb-8 tracking-tight">
                 {tripData.title} {tripData.emoji}
@@ -275,7 +275,7 @@ export const TripPlanner = ({ tripData, setTripData, selectedActivityIds, setSel
             setShowDatePicker(!showDatePicker);
             setShowLocationPicker(false);
         }} className="flex items-center gap-3 bg-white/10 backdrop-blur-md border border-white/20 px-6 py-3 rounded-2xl text-white hover:bg-white/20 transition-all group">
-                    <Calendar className="w-5 h-5 text-blue-400 group-hover:scale-110 transition-transform"/>
+                    <Calendar className="w-5 h-5 text-emerald-400 group-hover:scale-110 transition-transform"/>
                     <span className="font-medium">{tripData.dates}</span>
                   </button>
 
@@ -298,7 +298,7 @@ export const TripPlanner = ({ tripData, setTripData, selectedActivityIds, setSel
                         </div>
                         <div className="mt-10 pt-8 border-t border-white/10 flex justify-end gap-4">
                           <button onClick={() => setShowDatePicker(false)} className="text-[11px] font-bold text-white/40 hover:text-white transition-colors uppercase tracking-widest">Cancel</button>
-                          <button onClick={confirmDates} disabled={!dates.start || !dates.end} className="bg-white text-slate-900 px-10 py-4 rounded-2xl text-xs font-bold hover:bg-blue-50 transition-all shadow-xl disabled:opacity-50">Confirm Dates</button>
+                          <button onClick={confirmDates} disabled={!dates.start || !dates.end} className="bg-white text-slate-900 px-10 py-4 rounded-2xl text-xs font-bold hover:bg-emerald-50 transition-all shadow-xl disabled:opacity-50">Confirm Dates</button>
                         </div>
                       </motion.div>)}
                   </AnimatePresence>
@@ -310,7 +310,7 @@ export const TripPlanner = ({ tripData, setTripData, selectedActivityIds, setSel
             setShowLocationPicker(!showLocationPicker);
             setShowDatePicker(false);
         }} className="flex items-center gap-3 bg-white/10 backdrop-blur-md border border-white/20 px-6 py-3 rounded-2xl text-white hover:bg-white/20 transition-all group">
-                    <MapPin className="w-5 h-5 text-blue-400 group-hover:scale-110 transition-transform"/>
+                    <MapPin className="w-5 h-5 text-emerald-400 group-hover:scale-110 transition-transform"/>
                     <span className="font-medium">{location}</span>
                   </button>
 
@@ -323,7 +323,7 @@ export const TripPlanner = ({ tripData, setTripData, selectedActivityIds, setSel
                     applyDestination(location);
                     setShowLocationPicker(false);
                 }
-            }} placeholder="Change destination..." className="w-full bg-white/5 border border-white/10 rounded-xl py-3 pl-10 pr-4 text-white text-sm focus:ring-2 focus:ring-blue-500/50 transition-all" autoFocus/>
+            }} placeholder="Change destination..." className="w-full bg-white/5 border border-white/10 rounded-xl py-3 pl-10 pr-4 text-white text-sm focus:ring-2 focus:ring-emerald-500/50 transition-all" autoFocus/>
                         </div>
                         <div className="space-y-2">
                           {DESTINATION_OPTIONS.map((destinationOption) => (<button key={destinationOption.name} onClick={() => {
@@ -337,7 +337,7 @@ export const TripPlanner = ({ tripData, setTripData, selectedActivityIds, setSel
                         <button onClick={() => {
                 applyDestination(location);
                 setShowLocationPicker(false);
-            }} className="w-full mt-4 bg-white text-slate-900 px-4 py-3 rounded-xl text-xs font-bold uppercase tracking-widest hover:bg-blue-50 transition-all">
+            }} className="w-full mt-4 bg-white text-slate-900 px-4 py-3 rounded-xl text-xs font-bold uppercase tracking-widest hover:bg-emerald-50 transition-all">
                           Apply Destination
                         </button>
                       </motion.div>)}
@@ -345,7 +345,7 @@ export const TripPlanner = ({ tripData, setTripData, selectedActivityIds, setSel
                 </div>
               </div>
             </div>
-            <button className="bg-white text-slate-900 px-10 py-5 rounded-2xl font-bold flex items-center justify-center gap-3 shadow-2xl hover:bg-blue-50 transition-all text-lg shrink-0">
+            <button className="bg-white text-slate-900 px-10 py-5 rounded-2xl font-bold flex items-center justify-center gap-3 shadow-2xl hover:bg-emerald-50 transition-all text-lg shrink-0">
               <Save className="w-6 h-6"/> Save Itinerary
             </button>
           </div>
@@ -368,7 +368,7 @@ export const TripPlanner = ({ tripData, setTripData, selectedActivityIds, setSel
             setShowDatePicker(false);
             setShowLocationPicker(true);
             window.scrollTo({ top: 0, behavior: 'smooth' });
-        }} className="bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400 px-4 py-1.5 rounded-full text-[10px] font-bold uppercase tracking-widest hover:bg-blue-100 dark:hover:bg-blue-900/40 transition-all">
+        }} className="bg-emerald-50 dark:bg-emerald-900/20 text-emerald-600 dark:text-emerald-400 px-4 py-1.5 rounded-full text-[10px] font-bold uppercase tracking-widest hover:bg-emerald-100 dark:hover:bg-emerald-900/40 transition-all">
                     Quick Edit
                   </button>
                 </div>
@@ -400,7 +400,7 @@ export const TripPlanner = ({ tripData, setTripData, selectedActivityIds, setSel
                   <button onClick={onExploreHotel} className="bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 px-4 py-1.5 rounded-full text-[10px] font-bold uppercase tracking-widest hover:bg-slate-200 dark:hover:bg-slate-700 transition-all">
                     Explore
                   </button>
-                  <button onClick={onHotelClick} className="bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400 px-4 py-1.5 rounded-full text-[10px] font-bold uppercase tracking-widest hover:bg-blue-100 dark:hover:bg-blue-900/40 transition-all">
+                  <button onClick={onHotelClick} className="bg-emerald-50 dark:bg-emerald-900/20 text-emerald-600 dark:text-emerald-400 px-4 py-1.5 rounded-full text-[10px] font-bold uppercase tracking-widest hover:bg-emerald-100 dark:hover:bg-emerald-900/40 transition-all">
                     Change
                   </button>
                 </div>
@@ -414,7 +414,7 @@ export const TripPlanner = ({ tripData, setTripData, selectedActivityIds, setSel
                   <p className="text-sm text-slate-400">{tripData.hotel.roomType}</p>
                 </div>
                 <div className="text-right">
-                  <p className="text-xl font-bold text-blue-600">${(hotelSelected ? (tripData.hotel.dailyPrice || 0) : 0).toFixed(2)}<span className="text-[10px] text-slate-400 font-normal ml-1">/night</span></p>
+                  <p className="text-xl font-bold text-emerald-600">${(hotelSelected ? (tripData.hotel.dailyPrice || 0) : 0).toFixed(2)}<span className="text-[10px] text-slate-400 font-normal ml-1">/night</span></p>
                   <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Total: ${(hotelSelected ? tripData.hotel.price : 0).toFixed(2)}</p>
                 </div>
               </div>
@@ -423,11 +423,11 @@ export const TripPlanner = ({ tripData, setTripData, selectedActivityIds, setSel
             {/* Transport */}
             <section>
               <div className="flex items-center justify-between mb-4">
-                <div className="flex items-center gap-2 text-blue-600 font-bold">
+                <div className="flex items-center gap-2 text-emerald-600 font-bold">
                   <Car className="w-5 h-5"/>
                   <h3>Rental</h3>
                 </div>
-                <button onClick={onRentalClick} className="bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400 px-4 py-1.5 rounded-full text-[10px] font-bold uppercase tracking-widest hover:bg-blue-100 dark:hover:bg-blue-900/40 transition-all">
+                <button onClick={onRentalClick} className="bg-emerald-50 dark:bg-emerald-900/20 text-emerald-600 dark:text-emerald-400 px-4 py-1.5 rounded-full text-[10px] font-bold uppercase tracking-widest hover:bg-emerald-100 dark:hover:bg-emerald-900/40 transition-all">
                   {tripData.rental.isBooked ? 'Change' : 'Add'}
                 </button>
               </div>
@@ -440,7 +440,7 @@ export const TripPlanner = ({ tripData, setTripData, selectedActivityIds, setSel
                     <p className="text-sm text-slate-400">{tripData.rental.features}</p>
                   </div>
                   <div className="text-right">
-                    <p className="text-xl font-bold text-blue-600">${(tripData.rental.dailyPrice || 0).toFixed(2)}<span className="text-[10px] text-slate-400 font-normal ml-1">/day</span></p>
+                    <p className="text-xl font-bold text-emerald-600">${(tripData.rental.dailyPrice || 0).toFixed(2)}<span className="text-[10px] text-slate-400 font-normal ml-1">/day</span></p>
                     <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Total: ${tripData.rental.price.toFixed(2)}</p>
                   </div>
                 </div>) : (<div className="w-full py-12 bg-slate-50/50 dark:bg-slate-800/50 rounded-[2.5rem] border border-dashed border-slate-200 dark:border-slate-700 flex flex-col items-center justify-center text-slate-400">
@@ -456,7 +456,7 @@ export const TripPlanner = ({ tripData, setTripData, selectedActivityIds, setSel
                   <Activity className="w-5 h-5"/>
                   <h3>Selected Activities</h3>
                 </div>
-                <button onClick={onActivitiesClick} className="bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400 px-4 py-1.5 rounded-full text-[10px] font-bold uppercase tracking-widest hover:bg-blue-100 dark:hover:bg-blue-900/40 transition-all">
+                <button onClick={onActivitiesClick} className="bg-emerald-50 dark:bg-emerald-900/20 text-emerald-600 dark:text-emerald-400 px-4 py-1.5 rounded-full text-[10px] font-bold uppercase tracking-widest hover:bg-emerald-100 dark:hover:bg-emerald-900/40 transition-all">
                   Browse All
                 </button>
               </div>
@@ -495,13 +495,13 @@ export const TripPlanner = ({ tripData, setTripData, selectedActivityIds, setSel
                         <div className="aspect-square rounded-2xl overflow-hidden mb-4 relative">
                           <img src={activity.image} alt={activity.name} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"/>
                           <div className="absolute top-2 right-2">
-                            <button onClick={() => addActivity(activity.id)} className="w-8 h-8 rounded-full bg-white/90 backdrop-blur-md flex items-center justify-center text-blue-600 shadow-lg hover:bg-blue-600 hover:text-white transition-all">
+                            <button onClick={() => addActivity(activity.id)} className="w-8 h-8 rounded-full bg-white/90 backdrop-blur-md flex items-center justify-center text-emerald-600 shadow-lg hover:bg-emerald-600 hover:text-white transition-all">
                               <Plus className="w-4 h-4"/>
                             </button>
                           </div>
                         </div>
                         <h5 className="font-bold text-slate-900 dark:text-white text-sm mb-1 line-clamp-1">{activity.name}</h5>
-                        <p className="text-blue-600 font-bold text-xs">${activity.price.toFixed(2)}</p>
+                        <p className="text-emerald-600 font-bold text-xs">${activity.price.toFixed(2)}</p>
                       </div>))}
                   </div>
                 </div>)}
@@ -549,7 +549,7 @@ export const TripPlanner = ({ tripData, setTripData, selectedActivityIds, setSel
                       <div className="flex flex-col">
                         <span className="text-[10px] font-bold text-white/60 dark:text-slate-600 uppercase tracking-widest">Promotion</span>
                         <span className="text-sm font-extrabold text-white dark:text-slate-900 leading-tight">{promotion.title}</span>
-                        <span className="text-[10px] font-bold text-blue-300 dark:text-blue-600 uppercase tracking-widest mt-1">{promotion.code} • {promotion.discount}</span>
+                        <span className="text-[10px] font-bold text-emerald-300 dark:text-emerald-600 uppercase tracking-widest mt-1">{promotion.code} • {promotion.discount}</span>
                       </div>
                       <button onClick={() => setTripData((prev) => {
                 const next = { ...prev };
@@ -576,14 +576,14 @@ export const TripPlanner = ({ tripData, setTripData, selectedActivityIds, setSel
                     </div>)}
                   <div className="flex justify-between items-center">
                     <span className="text-lg font-bold">Total Est.</span>
-                    <span className="text-3xl font-bold text-blue-400 dark:text-blue-600">
+                    <span className="text-3xl font-bold text-emerald-400 dark:text-emerald-600">
                       ${(promotion ? totalAfterPromo : baseTotal).toFixed(2)}
                     </span>
                   </div>
                 </div>
               </div>
 
-              <button onClick={onProceedToBooking} disabled={baseTotal <= 0} className="w-full bg-blue-600 disabled:bg-white/10 disabled:text-white/40 dark:disabled:bg-slate-100/60 dark:disabled:text-slate-500 text-white py-4 rounded-2xl font-bold flex items-center justify-center gap-2 hover:bg-blue-700 disabled:hover:bg-white/10 transition-all mb-4">
+              <button onClick={onProceedToBooking} disabled={baseTotal <= 0} className="w-full bg-emerald-600 disabled:bg-white/10 disabled:text-white/40 dark:disabled:bg-slate-100/60 dark:disabled:text-slate-500 text-white py-4 rounded-2xl font-bold flex items-center justify-center gap-2 hover:bg-emerald-700 disabled:hover:bg-white/10 transition-all mb-4">
                 Proceed to Booking <ArrowRight className="w-5 h-5"/>
               </button>
               
@@ -596,3 +596,4 @@ export const TripPlanner = ({ tripData, setTripData, selectedActivityIds, setSel
       </div>
     </div>);
 };
+

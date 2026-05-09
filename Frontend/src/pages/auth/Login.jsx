@@ -74,8 +74,8 @@ export const Login = ({ onSwitchToRegister, onBack, onSuccess, onClose }) => {
             setFieldErrors(prev => ({ ...prev, email: undefined }));
         }} placeholder="Enter your email" required className={`w-full rounded-lg border py-2.5 pl-3 pr-10 text-xs outline-none transition-all placeholder:text-slate-400 ${fieldErrors.email
             ? 'border-red-500 bg-red-50 text-red-900 focus:border-red-500 focus:ring-1 focus:ring-red-500/20 dark:border-red-400 dark:bg-transparent dark:text-red-400'
-            : 'border-slate-200 bg-slate-50 text-slate-700 focus:border-blue-600 focus:ring-1 focus:ring-blue-600/20 dark:border-slate-600 dark:bg-transparent dark:text-slate-200'}`}/>
-            <Mail className={`absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 transition-colors ${fieldErrors.email ? 'text-red-500 dark:text-red-400' : 'text-slate-400 dark:text-slate-500 group-focus-within:text-blue-600 dark:group-focus-within:text-blue-400'}`}/>
+            : 'border-slate-200 bg-slate-50 text-slate-700 focus:border-primary focus:ring-1 focus:ring-primary/20 dark:border-slate-600 dark:bg-transparent dark:text-slate-200'}`}/>
+            <Mail className={`absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 transition-colors ${fieldErrors.email ? 'text-red-500 dark:text-red-400' : 'text-slate-400 dark:text-slate-500 group-focus-within:text-primary dark:group-focus-within:text-primary-soft'}`}/>
           </div>
           {fieldErrors.email && (<p className="text-xs text-red-600 mt-1">{fieldErrors.email}</p>)}
         </div>
@@ -90,23 +90,24 @@ export const Login = ({ onSwitchToRegister, onBack, onSuccess, onClose }) => {
             setFieldErrors(prev => ({ ...prev, password: undefined }));
         }} placeholder="Enter your password" required className={`w-full rounded-lg border py-2.5 pl-3 pr-10 text-xs outline-none transition-all placeholder:text-slate-400 ${fieldErrors.password
             ? 'border-red-500 bg-red-50 text-red-900 focus:border-red-500 focus:ring-1 focus:ring-red-500/20 dark:border-red-400 dark:bg-transparent dark:text-red-400'
-            : 'border-slate-200 bg-slate-50 text-slate-700 focus:border-blue-600 focus:ring-1 focus:ring-blue-600/20 dark:border-slate-600 dark:bg-transparent dark:text-slate-200'}`}/>
+            : 'border-slate-200 bg-slate-50 text-slate-700 focus:border-primary focus:ring-1 focus:ring-primary/20 dark:border-slate-600 dark:bg-transparent dark:text-slate-200'}`}/>
             <button type="button" onClick={() => setShowPassword(!showPassword)} className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 dark:text-slate-500 transition-colors hover:text-slate-600 dark:hover:text-slate-400">
               {showPassword ? <EyeOff className="w-4 h-4"/> : <Eye className="w-4 h-4"/>}
             </button>
           </div>
           {fieldErrors.password && (<p className="text-xs text-red-600 mt-1">{fieldErrors.password}</p>)}
-          <a href="#" className="ml-auto text-xs font-medium text-blue-600 hover:underline dark:text-blue-400">Forgot password?</a>
+          <a href="#" className="ml-auto text-xs font-medium text-primary hover:underline dark:text-primary-soft">Forgot password?</a>
         </div>
         {errorMessage && (<div className="rounded-md border border-red-400/40 bg-red-500/10 px-2 py-1.5 text-xs text-red-600 dark:text-red-400 max-w-sm mx-auto">
             {errorMessage}
           </div>)}
 
         <div className="max-w-sm mx-auto block">
-          <button type="submit" disabled={isSubmitting} className="mt-2 w-full rounded-lg bg-blue-600 py-2.5 text-sm font-bold text-white transition-all active:scale-[0.98] hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-70">
+          <button type="submit" disabled={isSubmitting} className="mt-2 w-full bg-primary hover:bg-primary-soft transition-colors text-white px-6 py-2.5 rounded-3xl text-sm font-semibold disabled:cursor-not-allowed disabled:opacity-70">
             {isSubmitting ? 'Logging in...' : 'Login'}
           </button>
         </div>
       </form>
     </AuthLayout>);
 };
+

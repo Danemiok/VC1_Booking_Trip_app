@@ -367,7 +367,7 @@ const Transport = () => {
     };
     const getTypeColor = (type) => {
         switch (type) {
-            case 'Flight': return 'bg-blue-100 text-blue-600';
+            case 'Flight': return 'bg-emerald-100 text-emerald-600';
             case 'Bus': return 'bg-green-100 text-green-600';
             case 'Motobike': return 'bg-purple-100 text-purple-600';
             case 'Car Rental': return 'bg-orange-100 text-orange-600';
@@ -429,9 +429,9 @@ const Transport = () => {
           <div className="flex items-center gap-4">
             <div className="relative">
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-400" size={20}/>
-              <input type="text" placeholder="Search services..." value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} className="pl-10 pr-4 py-2 border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 w-64 text-slate-900 dark:text-slate-100 placeholder:text-slate-400"/>
+              <input type="text" placeholder="Search services..." value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} className="pl-10 pr-4 py-2 border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 w-64 text-slate-900 dark:text-slate-100 placeholder:text-slate-400"/>
             </div>
-            <button onClick={() => navigate('/transport/new')} className="flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors">
+            <button onClick={() => navigate('/transport/new')} className="flex items-center px-4 py-2 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 transition-colors">
               <Plus size={20} className="mr-2"/>
               Add New Transport
             </button>
@@ -450,7 +450,7 @@ const Transport = () => {
       <div className="bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 px-8 rounded-2xl">
         <div className="flex space-x-8">
           {tabs.map((tab) => (<button key={tab.id} onClick={() => setActiveTab(tab.id)} className={`py-4 px-1 border-b-2 font-medium text-sm transition-colors ${activeTab === tab.id
-                ? 'border-blue-500 text-blue-600'
+                ? 'border-emerald-500 text-emerald-600'
                 : 'border-transparent text-slate-500 hover:text-slate-700 dark:hover:text-slate-200 hover:border-slate-300'}`}>
               {tab.label}
               <span className="ml-2 bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 px-2 py-0.5 rounded-full text-xs">
@@ -493,7 +493,7 @@ const Transport = () => {
                   <p className="text-sm text-slate-600 dark:text-slate-300 mb-4">{service.details}</p>
                   <div className="flex items-center justify-between">
                     <div className="flex space-x-2">
-                      <button onClick={() => openEdit(service)} className="p-2 text-slate-400 hover:text-blue-600 transition-colors">
+                      <button onClick={() => openEdit(service)} className="p-2 text-slate-400 hover:text-emerald-600 transition-colors">
                         <Edit size={16}/>
                       </button>
                       <button onClick={() => deleteService(service)} className="p-2 text-slate-400 hover:text-red-600 transition-colors">
@@ -503,7 +503,7 @@ const Transport = () => {
                         <Clock size={16}/>
                       </button>
                     </div>
-                    <button onClick={() => openDetails(service)} className="px-3 py-1 bg-blue-600 text-white text-sm rounded hover:bg-blue-700 transition-colors">
+                    <button onClick={() => openDetails(service)} className="px-3 py-1 bg-emerald-600 text-white text-sm rounded hover:bg-emerald-700 transition-colors">
                       View Details
                     </button>
                   </div>
@@ -518,7 +518,7 @@ const Transport = () => {
             Showing {startIndex + 1} to {Math.min(startIndex + itemsPerPage, filteredServices.length)} of {filteredServices.length} transport services
           </p>
           <div className="flex items-center space-x-2">
-            <button onClick={() => setCurrentPage((p) => Math.max(1, p - 1))} disabled={safeCurrentPage === 1} className="p-2 text-slate-400 hover:text-blue-600 disabled:opacity-30 disabled:cursor-not-allowed" aria-label="Previous page">
+            <button onClick={() => setCurrentPage((p) => Math.max(1, p - 1))} disabled={safeCurrentPage === 1} className="p-2 text-slate-400 hover:text-emerald-600 disabled:opacity-30 disabled:cursor-not-allowed" aria-label="Previous page">
               <ChevronLeft size={20}/>
             </button>
 
@@ -526,13 +526,13 @@ const Transport = () => {
               {getPageItems().map((page, i) => page === '...' ? (<span key={`dots-${i}`} className="w-8 h-8 inline-flex items-center justify-center text-xs font-bold text-slate-400">
                     ...
                   </span>) : (<button key={page} onClick={() => setCurrentPage(page)} className={page === safeCurrentPage
-                ? 'w-8 h-8 rounded-lg text-xs font-bold bg-blue-600 text-white shadow-md shadow-blue-500/20'
+                ? 'w-8 h-8 rounded-lg text-xs font-bold bg-emerald-600 text-white shadow-md shadow-emerald-500/20'
                 : 'w-8 h-8 rounded-lg text-xs font-bold text-slate-600 dark:text-slate-300 border border-slate-300 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-800'} aria-label={`Page ${page}`} aria-current={page === safeCurrentPage ? 'page' : undefined}>
                     {page}
                   </button>))}
             </div>
 
-            <button onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))} disabled={safeCurrentPage === totalPages} className="p-2 text-slate-400 hover:text-blue-600 disabled:opacity-30 disabled:cursor-not-allowed" aria-label="Next page">
+            <button onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))} disabled={safeCurrentPage === totalPages} className="p-2 text-slate-400 hover:text-emerald-600 disabled:opacity-30 disabled:cursor-not-allowed" aria-label="Next page">
               <ChevronRight size={20}/>
             </button>
           </div>
@@ -549,27 +549,27 @@ const Transport = () => {
               <div className="space-y-2">
                 <label className="text-xs font-medium text-slate-700 dark:text-slate-300">Photo</label>
                 <input ref={editPhotoInputRef} type="file" accept="image/*" className="hidden" onChange={onEditPhotoSelected}/>
-                <button type="button" onClick={onPickEditPhoto} className="w-full aspect-video bg-slate-50 dark:bg-slate-800 rounded-xl border-2 border-dashed border-slate-200 dark:border-slate-700 overflow-hidden flex items-center justify-center hover:bg-blue-50 dark:hover:bg-blue-900/10 transition-all">
+                <button type="button" onClick={onPickEditPhoto} className="w-full aspect-video bg-slate-50 dark:bg-slate-800 rounded-xl border-2 border-dashed border-slate-200 dark:border-slate-700 overflow-hidden flex items-center justify-center hover:bg-emerald-50 dark:hover:bg-emerald-900/10 transition-all">
                   {editForm.image ? (<img alt="Transport" src={editForm.image} className="w-full h-full object-cover"/>) : (<span className="text-xs font-bold text-slate-400">Upload Photo</span>)}
                 </button>
               </div>
 
               <div className="space-y-1">
                 <label className="text-xs font-medium text-slate-700 dark:text-slate-300">Name</label>
-                <input value={editForm.name} onChange={(e) => setEditForm({ ...editForm, name: e.target.value })} className="w-full px-3 py-2 border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"/>
+                <input value={editForm.name} onChange={(e) => setEditForm({ ...editForm, name: e.target.value })} className="w-full px-3 py-2 border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500"/>
               </div>
               <div className="space-y-1">
                 <label className="text-xs font-medium text-slate-700 dark:text-slate-300">Route</label>
-                <input value={editForm.route} onChange={(e) => setEditForm({ ...editForm, route: e.target.value })} className="w-full px-3 py-2 border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"/>
+                <input value={editForm.route} onChange={(e) => setEditForm({ ...editForm, route: e.target.value })} className="w-full px-3 py-2 border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500"/>
               </div>
               <div className="space-y-1">
                 <label className="text-xs font-medium text-slate-700 dark:text-slate-300">Details</label>
-                <input value={editForm.details} onChange={(e) => setEditForm({ ...editForm, details: e.target.value })} className="w-full px-3 py-2 border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"/>
+                <input value={editForm.details} onChange={(e) => setEditForm({ ...editForm, details: e.target.value })} className="w-full px-3 py-2 border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500"/>
               </div>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div className="space-y-1">
                   <label className="text-xs font-medium text-slate-700 dark:text-slate-300">Type</label>
-                  <select value={editForm.type} onChange={(e) => setEditForm({ ...editForm, type: e.target.value })} className="w-full px-3 py-2 border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+                  <select value={editForm.type} onChange={(e) => setEditForm({ ...editForm, type: e.target.value })} className="w-full px-3 py-2 border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500">
                     <option value="Flight">Flight</option>
                     <option value="Bus">Bus</option>
                     <option value="Motobike">Motobike</option>
@@ -578,7 +578,7 @@ const Transport = () => {
                 </div>
                 <div className="space-y-1">
                   <label className="text-xs font-medium text-slate-700 dark:text-slate-300">Status</label>
-                  <select value={editForm.status} onChange={(e) => setEditForm({ ...editForm, status: e.target.value })} className="w-full px-3 py-2 border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+                  <select value={editForm.status} onChange={(e) => setEditForm({ ...editForm, status: e.target.value })} className="w-full px-3 py-2 border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500">
                     <option value="Active">Active</option>
                     <option value="Fixing">Fixing</option>
                     <option value="Not working">Not working</option>
@@ -589,9 +589,9 @@ const Transport = () => {
                   <label className="text-xs font-medium text-slate-700 dark:text-slate-300">Price per day</label>
                   <div className="grid grid-cols-2 gap-3">
                     {priceOptions.map((option) => (<label key={option.value} className={cn('flex items-center gap-3 cursor-pointer rounded-lg border px-3 py-2 text-sm font-semibold transition-colors', selectedEditPriceOption === option.value
-                    ? 'border-blue-500 bg-blue-50 text-blue-700 dark:bg-blue-900/20 dark:text-blue-300'
+                    ? 'border-emerald-500 bg-emerald-50 text-emerald-700 dark:bg-emerald-900/20 dark:text-emerald-300'
                     : 'border-slate-300 bg-white text-slate-700 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200')}>
-                        <input type="checkbox" checked={selectedEditPriceOption === option.value} onChange={() => applyEditPriceOption(option.value)} className="h-4 w-4 rounded border-slate-300 text-blue-600 focus:ring-blue-500"/>
+                        <input type="checkbox" checked={selectedEditPriceOption === option.value} onChange={() => applyEditPriceOption(option.value)} className="h-4 w-4 rounded border-slate-300 text-emerald-600 focus:ring-emerald-500"/>
                         <span>{option.label}</span>
                       </label>))}
                   </div>
@@ -603,7 +603,7 @@ const Transport = () => {
                 <button onClick={closeEdit} className="px-4 py-2 rounded-lg text-sm font-semibold border border-slate-300 dark:border-slate-700 text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800">
                   Cancel
                 </button>
-                <button onClick={saveEdit} className="px-4 py-2 rounded-lg text-sm font-semibold bg-blue-600 text-white hover:bg-blue-700">
+                <button onClick={saveEdit} className="px-4 py-2 rounded-lg text-sm font-semibold bg-emerald-600 text-white hover:bg-emerald-700">
                   Save Changes
                 </button>
               </div>
@@ -659,7 +659,7 @@ const Transport = () => {
                 <button onClick={() => {
                 closeDetails();
                 openEdit(viewing);
-            }} className="px-4 py-2 rounded-lg text-sm font-semibold bg-blue-600 text-white hover:bg-blue-700">
+            }} className="px-4 py-2 rounded-lg text-sm font-semibold bg-emerald-600 text-white hover:bg-emerald-700">
                   Edit
                 </button>
               </div>
@@ -669,3 +669,4 @@ const Transport = () => {
     </div>);
 };
 export default Transport;
+

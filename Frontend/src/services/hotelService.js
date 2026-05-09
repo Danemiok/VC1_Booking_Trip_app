@@ -4,7 +4,7 @@ export const hotelService = {
   // Get all active destinations/hotels from database (public - no authentication required)
   getAllHotels: async () => {
     try {
-      const response = await apiRequest('/hotels-public', {
+      const response = await apiRequest('/hotels/public', {
         method: 'GET',
       });
       const data = Array.isArray(response?.data) ? response.data : Array.isArray(response) ? response : [];

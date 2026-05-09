@@ -315,7 +315,7 @@ export const BookTrip = () => {
               Select a destination, transport, and travel details.
             </p>
           </div>
-          <Link to="/customer/bookings" className="text-sm font-bold text-blue-600 hover:text-blue-700">
+          <Link to="/customer/bookings" className="text-sm font-bold text-emerald-600 hover:text-emerald-700">
             View my bookings
           </Link>
         </div>
@@ -450,7 +450,7 @@ export const BookTrip = () => {
             <Link to="/" className="h-11 px-5 rounded-xl border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-200 font-bold hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors">
               Cancel
             </Link>
-            <button type="submit" disabled={!canSubmit || submitting} className="h-11 px-5 rounded-xl bg-blue-600 text-white font-bold hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors">
+            <button type="submit" disabled={!canSubmit || submitting} className="h-11 px-5 rounded-xl bg-emerald-600 text-white font-bold hover:bg-emerald-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors">
               {submitting ? 'Creating...' : 'Create booking'}
             </button>
           </div>
@@ -458,3 +458,4 @@ export const BookTrip = () => {
       </div>
     </div>);
 };
+

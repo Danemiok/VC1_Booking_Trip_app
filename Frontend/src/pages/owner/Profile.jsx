@@ -73,7 +73,7 @@ const Profile = () => {
     return (<div className="p-8 max-w-[1200px] mx-auto space-y-8">
       <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-6">
         <div>
-          <p className="text-[11px] uppercase font-bold tracking-[0.2em] text-blue-600">Owner Profile</p>
+          <p className="text-[11px] uppercase font-bold tracking-[0.2em] text-emerald-600">Owner Profile</p>
           <h1 className="text-3xl font-bold tracking-tight text-slate-900 dark:text-white mt-2">
             {profile.name}
           </h1>
@@ -81,7 +81,7 @@ const Profile = () => {
             Manage your profile and keep your business details up to date.
           </p>
         </div>
-        <button onClick={() => navigate('/settings')} className="inline-flex items-center gap-2 rounded-xl bg-blue-600 px-5 py-3 text-sm font-semibold text-white shadow-lg shadow-blue-500/20 hover:bg-blue-700 transition-colors">
+        <button onClick={() => navigate('/settings')} className="inline-flex items-center gap-2 rounded-xl bg-emerald-600 px-5 py-3 text-sm font-semibold text-white shadow-lg shadow-emerald-500/20 hover:bg-emerald-700 transition-colors">
           <PencilLine size={16}/>
           Edit in Settings
         </button>
@@ -90,9 +90,9 @@ const Profile = () => {
       <section className="grid grid-cols-1 lg:grid-cols-[360px_1fr] gap-6">
         <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-6 shadow-sm">
           <div className="flex flex-col items-center text-center">
-            <div className="relative w-28 h-28 rounded-full overflow-hidden border-4 border-blue-100 dark:border-blue-900/40 shadow-md">
+            <div className="relative w-28 h-28 rounded-full overflow-hidden border-4 border-emerald-100 dark:border-emerald-900/40 shadow-md">
               <img src={profile.avatar} alt={profile.name} className="w-full h-full object-cover"/>
-              <button type="button" onClick={() => fileInputRef.current?.click()} className="absolute -bottom-1 -right-1 w-9 h-9 rounded-full bg-blue-600 text-white flex items-center justify-center shadow-lg shadow-blue-500/30 hover:bg-blue-700 transition-colors" title="Change photo">
+              <button type="button" onClick={() => fileInputRef.current?.click()} className="absolute -bottom-1 -right-1 w-9 h-9 rounded-full bg-emerald-600 text-white flex items-center justify-center shadow-lg shadow-emerald-500/30 hover:bg-emerald-700 transition-colors" title="Change photo">
                 <Camera size={16}/>
               </button>
             </div>
@@ -106,7 +106,7 @@ const Profile = () => {
 
           <div className="mt-6 space-y-3">
             {infoItems.map((item) => (<div key={item.label} className="flex items-start gap-3 rounded-xl bg-slate-50 dark:bg-slate-800/60 px-4 py-3">
-                <div className="p-2 rounded-lg bg-blue-100 text-blue-600 dark:bg-blue-500/10 dark:text-blue-300">
+                <div className="p-2 rounded-lg bg-emerald-100 text-emerald-600 dark:bg-emerald-500/10 dark:text-emerald-300">
                   <item.icon size={16}/>
                 </div>
                 <div>
@@ -133,7 +133,7 @@ const Profile = () => {
               <p className="mt-2 text-sm text-slate-500 dark:text-slate-400">{stat.subtitle}</p>
             </div>))}
 
-          <div className="md:col-span-2 bg-gradient-to-br from-blue-50 via-white to-slate-50 dark:from-blue-900/10 dark:via-slate-900 dark:to-slate-950 border border-blue-100/80 dark:border-blue-900/40 rounded-2xl p-6">
+          <div className="md:col-span-2 bg-gradient-to-br from-emerald-50 via-white to-slate-50 dark:from-emerald-900/10 dark:via-slate-900 dark:to-slate-950 border border-emerald-100/80 dark:border-emerald-900/40 rounded-2xl p-6">
             <h3 className="text-lg font-bold text-slate-900 dark:text-white">Profile checklist</h3>
             <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">
               Complete these steps to boost trust with customers and earn more bookings.
@@ -145,7 +145,7 @@ const Profile = () => {
             'Describe your transport services and amenities.',
             'Enable two-factor authentication for account security.',
         ].map((item) => (<li key={item} className="flex items-center gap-2">
-                  <span className="h-2 w-2 rounded-full bg-blue-500"/>
+                  <span className="h-2 w-2 rounded-full bg-emerald-500"/>
                   {item}
                 </li>))}
             </ul>
@@ -155,3 +155,4 @@ const Profile = () => {
     </div>);
 };
 export default Profile;
+

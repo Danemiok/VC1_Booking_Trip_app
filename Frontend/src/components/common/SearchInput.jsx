@@ -6,8 +6,9 @@ export const SearchInput = ({ value, onChange, placeholder = 'Search...', disabl
       <input type="text" value={value} onChange={(e) => onChange(e.target.value)} placeholder={placeholder} disabled={disabled} className={`
           w-full pl-10 pr-4 py-2 border border-gray-300 dark:border-gray-700 rounded-lg
           bg-white dark:bg-slate-900 text-gray-900 dark:text-white
-          focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent
+          focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent
           disabled:opacity-50 disabled:cursor-not-allowed
         `}/>
     </div>);
 };
+

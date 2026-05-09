@@ -4,11 +4,11 @@ export const GroupPlanningAccessPanel = ({ accessCode, error, onAccessCodeChange
     return (<div className="min-h-[70vh] px-4 sm:px-6 lg:px-8 pt-28 pb-20">
       <div className="max-w-5xl mx-auto">
         <div className="relative overflow-hidden rounded-[3rem] border border-slate-200/60 dark:border-white/10 bg-white dark:bg-slate-950 shadow-2xl">
-          <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_right,rgba(37,99,235,0.18),transparent_55%)]"/>
+          <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_right,rgba(47,160,132,0.18),transparent_55%)]"/>
           <div className="absolute inset-0 bg-[radial-gradient(circle_at_bottom_left,rgba(16,185,129,0.12),transparent_55%)]"/>
 
           <div className="relative p-8 sm:p-12">
-            <div className="inline-flex items-center gap-2 rounded-full bg-blue-600/10 text-blue-700 dark:text-blue-300 px-3 py-1 text-[10px] font-bold tracking-widest uppercase">
+            <div className="inline-flex items-center gap-2 rounded-full bg-emerald-600/10 text-emerald-700 dark:text-emerald-300 px-3 py-1 text-[10px] font-bold tracking-widest uppercase">
               <Users className="w-3.5 h-3.5"/>
               Group Planning
             </div>
@@ -32,7 +32,7 @@ export const GroupPlanningAccessPanel = ({ accessCode, error, onAccessCodeChange
                   Start a new planning space and invite friends.
                 </p>
 
-                <button type="button" onClick={onCreateGroup} className="mt-6 w-full px-6 py-4 rounded-2xl bg-blue-600 hover:bg-blue-700 text-white font-bold shadow-[0_18px_40px_rgba(37,99,235,0.28)] transition-all inline-flex items-center justify-center gap-2">
+                <button type="button" onClick={onCreateGroup} className="mt-6 w-full px-6 py-4 rounded-2xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold shadow-[0_18px_40px_rgba(47,160,132,0.28)] transition-all inline-flex items-center justify-center gap-2">
                   <Plus className="w-4 h-4"/>
                   Create group
                 </button>
@@ -65,3 +65,4 @@ export const GroupPlanningAccessPanel = ({ accessCode, error, onAccessCodeChange
       </div>
     </div>);
 };
+

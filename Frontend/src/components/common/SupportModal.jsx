@@ -15,8 +15,8 @@ export const SupportModal = ({ isOpen, onClose, contentType }) => {
               <div>
                 <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-3">Contact Support</h3>
                 <div className="space-y-3">
-                  <div className="flex items-center gap-3 p-4 bg-blue-50 rounded-xl border border-blue-100">
-                    <div className="w-12 h-12 bg-blue-500 rounded-xl flex items-center justify-center">
+                  <div className="flex items-center gap-3 p-4 bg-emerald-50 rounded-xl border border-emerald-100">
+                    <div className="w-12 h-12 bg-emerald-500 rounded-xl flex items-center justify-center">
                       <span className="text-white font-bold">✉</span>
                     </div>
                     <div>
@@ -265,3 +265,4 @@ export const SupportModal = ({ isOpen, onClose, contentType }) => {
         </div>)}
     </AnimatePresence>);
 };
+

@@ -6,7 +6,7 @@ const WithdrawFunds = () => {
     const navigate = useNavigate();
     return (<div className="p-8 max-w-[800px] mx-auto space-y-8">
       <div className="flex items-center gap-4">
-        <button onClick={() => navigate('/financials')} className="w-10 h-10 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 flex items-center justify-center text-slate-500 hover:text-blue-600 transition-all">
+        <button onClick={() => navigate('/financials')} className="w-10 h-10 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 flex items-center justify-center text-slate-500 hover:text-emerald-600 transition-all">
           <ArrowLeft size={20}/>
         </button>
         <div>
@@ -25,9 +25,9 @@ const WithdrawFunds = () => {
                   {[
             { name: 'ABA Bank', account: '**** 8842', primary: true },
             { name: 'Wing Bank', account: '**** 3321', primary: false },
-        ].map((method, i) => (<div key={i} className={cn("p-4 rounded-xl border cursor-pointer transition-all flex items-center justify-between group", method.primary ? "border-blue-600 bg-blue-50/50 dark:bg-blue-900/10" : "border-slate-100 dark:border-slate-800 bg-slate-50 dark:bg-slate-800/50 hover:border-blue-600/30")}>
+        ].map((method, i) => (<div key={i} className={cn("p-4 rounded-xl border cursor-pointer transition-all flex items-center justify-between group", method.primary ? "border-emerald-600 bg-emerald-50/50 dark:bg-emerald-900/10" : "border-slate-100 dark:border-slate-800 bg-slate-50 dark:bg-slate-800/50 hover:border-emerald-600/30")}>
                       <div className="flex items-center gap-4">
-                        <div className={cn("w-10 h-10 rounded-xl flex items-center justify-center", method.primary ? "bg-blue-600 text-white" : "bg-white dark:bg-slate-900 text-slate-400")}>
+                        <div className={cn("w-10 h-10 rounded-xl flex items-center justify-center", method.primary ? "bg-emerald-600 text-white" : "bg-white dark:bg-slate-900 text-slate-400")}>
                           <CreditCard size={20}/>
                         </div>
                         <div>
@@ -35,7 +35,7 @@ const WithdrawFunds = () => {
                           <p className="text-[10px] text-slate-400 font-bold uppercase tracking-wider">{method.account}</p>
                         </div>
                       </div>
-                      {method.primary && <CheckCircle2 size={18} className="text-blue-600"/>}
+                      {method.primary && <CheckCircle2 size={18} className="text-emerald-600"/>}
                     </div>))}
                 </div>
               </div>
@@ -44,19 +44,19 @@ const WithdrawFunds = () => {
                 <label className="text-[10px] uppercase font-bold tracking-widest text-slate-400">Withdrawal Amount</label>
                 <div className="relative">
                   <span className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 font-bold">$</span>
-                  <input className="w-full pl-8 pr-4 py-3 bg-slate-50 dark:bg-slate-800 border-transparent rounded-xl text-xl focus:bg-white dark:focus:bg-slate-900 focus:ring-2 focus:ring-blue-600/10 transition-all font-bold" placeholder="0.00"/>
+                  <input className="w-full pl-8 pr-4 py-3 bg-slate-50 dark:bg-slate-800 border-transparent rounded-xl text-xl focus:bg-white dark:focus:bg-slate-900 focus:ring-2 focus:ring-emerald-600/10 transition-all font-bold" placeholder="0.00"/>
                 </div>
                 <p className="text-[10px] text-slate-400 font-medium mt-1">Available balance: $4,248.50</p>
               </div>
 
               <div className="space-y-2">
                 <label className="text-[10px] uppercase font-bold tracking-widest text-slate-400">Security Code (OTP)</label>
-                <input className="w-full px-4 py-3 bg-slate-50 dark:bg-slate-800 border-transparent rounded-xl text-sm focus:bg-white dark:focus:bg-slate-900 focus:ring-2 focus:ring-blue-600/10 transition-all font-medium tracking-[0.5em] text-center" placeholder="******" maxLength={6}/>
+                <input className="w-full px-4 py-3 bg-slate-50 dark:bg-slate-800 border-transparent rounded-xl text-sm focus:bg-white dark:focus:bg-slate-900 focus:ring-2 focus:ring-emerald-600/10 transition-all font-medium tracking-[0.5em] text-center" placeholder="******" maxLength={6}/>
                 <p className="text-[10px] text-slate-400 font-medium mt-1 text-center">Enter the 6-digit code sent to your phone.</p>
               </div>
             </div>
 
-            <button onClick={() => navigate('/financials')} className="w-full py-3 bg-blue-600 text-white rounded-xl font-bold text-sm hover:bg-blue-700 transition-all shadow-lg shadow-blue-500/20 active:scale-95 flex items-center justify-center gap-2">
+            <button onClick={() => navigate('/financials')} className="w-full py-3 bg-emerald-600 text-white rounded-xl font-bold text-sm hover:bg-emerald-700 transition-all shadow-lg shadow-emerald-500/20 active:scale-95 flex items-center justify-center gap-2">
               Confirm Withdrawal
               <ArrowUpRight size={18}/>
             </button>
@@ -66,7 +66,7 @@ const WithdrawFunds = () => {
         <div className="space-y-8">
           <div className="bg-white dark:bg-slate-900 p-6 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm">
             <h4 className="font-bold flex items-center gap-2 mb-6">
-              <Wallet size={18} className="text-blue-600"/>
+              <Wallet size={18} className="text-emerald-600"/>
               Withdrawal Summary
             </h4>
             <div className="space-y-4">
@@ -80,7 +80,7 @@ const WithdrawFunds = () => {
               </div>
               <div className="pt-4 border-t border-slate-100 dark:border-slate-800 flex justify-between">
                 <span className="text-sm font-bold">Total Settlement</span>
-                <span className="text-xl font-bold text-blue-600">$0.00</span>
+                <span className="text-xl font-bold text-emerald-600">$0.00</span>
               </div>
             </div>
           </div>
@@ -98,3 +98,4 @@ const WithdrawFunds = () => {
     </div>);
 };
 export default WithdrawFunds;
+

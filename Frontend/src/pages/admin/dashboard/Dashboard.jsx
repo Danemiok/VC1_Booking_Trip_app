@@ -181,7 +181,7 @@ export const Dashboard = ({ onOpenTotalUsersDetails, onOpenTotalOwnersDetails, o
             boxShadow: '0 4px 12px rgba(0,0,0,0.1)'
         }}/>
                 <Legend iconType="circle" wrapperStyle={{ fontSize: '12px' }}/>
-                <Bar dataKey="income" name="Income" fill="#0052cc" radius={[6, 6, 0, 0]}/>
+                <Bar dataKey="income" name="Income" fill="#2fa084" radius={[6, 6, 0, 0]}/>
                 <Bar dataKey="expenses" name="Expenses" fill="#94a3b8" radius={[6, 6, 0, 0]}/>
               </BarChart>
             </ResponsiveContainer>
@@ -333,3 +333,4 @@ export const Dashboard = ({ onOpenTotalUsersDetails, onOpenTotalOwnersDetails, o
       </div>
     </div>);
 };
+

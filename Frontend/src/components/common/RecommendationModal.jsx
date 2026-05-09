@@ -15,7 +15,7 @@ export const RecommendationModal = ({ item, onClose }) => {
 
         <div className="w-full md:w-1/2 h-64 md:h-auto relative">
           <img src={item.image} alt={title} className="w-full h-full object-cover" referrerPolicy="no-referrer"/>
-          {item.badge && (<span className="absolute bottom-6 left-6 bg-blue-600 text-white text-xs font-bold px-3 py-1.5 rounded-xl">
+          {item.badge && (<span className="absolute bottom-6 left-6 bg-emerald-600 text-white text-xs font-bold px-3 py-1.5 rounded-xl">
               {item.badge}
             </span>)}
         </div>
@@ -44,7 +44,7 @@ export const RecommendationModal = ({ item, onClose }) => {
               <p className="text-[10px] font-bold text-slate-400 uppercase">Price</p>
               <p className="text-xl font-bold text-slate-900 dark:text-white">{price}</p>
             </div>
-            <button className="bg-blue-600 hover:bg-blue-700 text-white px-8 py-3 rounded-2xl font-bold text-sm shadow-lg shadow-blue-100 dark:shadow-none transition-all active:scale-95">
+            <button className="bg-emerald-600 hover:bg-emerald-700 text-white px-8 py-3 rounded-2xl font-bold text-sm shadow-lg shadow-emerald-100 dark:shadow-none transition-all active:scale-95">
               Book Now
             </button>
           </div>
@@ -52,3 +52,4 @@ export const RecommendationModal = ({ item, onClose }) => {
       </motion.div>
     </div>);
 };
+

@@ -183,7 +183,7 @@ export const Bookings = () => {
                       </span>
                     </td>
                     <td className="px-6 py-4">
-                      <span className={cn("px-3 py-1 rounded-full text-[10px] font-bold", booking.status === 'Confirmed' ? "bg-blue-50 text-blue-600" : booking.status === 'Pending' ? "bg-amber-50 text-amber-600" : "bg-red-50 text-red-600")}>
+                      <span className={cn("px-3 py-1 rounded-full text-[10px] font-bold", booking.status === 'Confirmed' ? "bg-emerald-50 text-emerald-600" : booking.status === 'Pending' ? "bg-amber-50 text-amber-600" : "bg-red-50 text-red-600")}>
                         {booking.status}
                       </span>
                     </td>
@@ -226,3 +226,4 @@ export const Bookings = () => {
       </div>
     </div>);
 };
+

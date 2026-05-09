@@ -192,7 +192,7 @@ const PropertyDetail = () => {
           <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-4">
             {loadError || 'Property not found'}
           </h2>
-          <button onClick={() => navigate('/destinations')} className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors">
+          <button onClick={() => navigate('/destinations')} className="px-6 py-2 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 transition-colors">
             Back to Destinations
           </button>
         </div>
@@ -284,7 +284,7 @@ const PropertyDetail = () => {
                     <span className="text-gray-500 dark:text-gray-400 ml-1">rating</span>
                   </div>
                   <div className="flex items-center">
-                    <Users className="text-blue-600 mr-1" size={20}/>
+                    <Users className="text-emerald-600 mr-1" size={20}/>
                     <span className="font-semibold text-gray-900 dark:text-white">{property.totalBookings || 0}</span>
                     <span className="text-gray-500 dark:text-gray-400 ml-1">total bookings</span>
                   </div>
@@ -351,7 +351,7 @@ const PropertyDetail = () => {
                 <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">Property Amenities</h3>
                 <div className="grid grid-cols-2 gap-3">
                   {propertyAmenities.map((amenity, index) => (<div key={index} className="flex items-center text-gray-600 dark:text-gray-300">
-                      <amenity.icon size={16} className="mr-2 text-blue-600"/>
+                      <amenity.icon size={16} className="mr-2 text-emerald-600"/>
                       <span className="text-sm">{amenity.name}</span>
                     </div>))}
                 </div>
@@ -384,7 +384,7 @@ const PropertyDetail = () => {
       <div className="max-w-7xl mx-auto px-6 py-8">
         <div className="flex items-center justify-between mb-6">
           <h2 className="text-2xl font-bold text-gray-900 dark:text-white">Available Rooms</h2>
-          <button onClick={() => navigate(`/destinations/${property.id}/add-room`, { state: { property } })} className="flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors">
+          <button onClick={() => navigate(`/destinations/${property.id}/add-room`, { state: { property } })} className="flex items-center px-4 py-2 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 transition-colors">
             <Plus size={18} className="mr-2"/>
             Add New Room
           </button>
@@ -434,7 +434,7 @@ const PropertyDetail = () => {
                 </div>
                 <div className="flex items-center justify-between gap-2">
                   <button onClick={() => handleViewRoom(room)} className={`flex-1 h-10 rounded-lg font-medium transition-colors flex items-center justify-center gap-2 ${room.available
-                ? 'bg-blue-600 text-white hover:bg-blue-700'
+                ? 'bg-emerald-600 text-white hover:bg-emerald-700'
                 : 'bg-gray-300 dark:bg-gray-600 text-gray-500 dark:text-gray-400'}`}>
                     <Eye size={16}/>
                     View
@@ -500,7 +500,7 @@ const PropertyDetail = () => {
               <button onClick={() => {
                 setShowRoomModal(false);
                 navigate(`/destinations/${property.id}/add-room`, { state: { property, room: selectedRoom } });
-            }} className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors inline-flex items-center gap-2">
+            }} className="px-4 py-2 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 transition-colors inline-flex items-center gap-2">
                 <Edit size={16}/>
                 Edit Room
               </button>
@@ -517,3 +517,4 @@ const PropertyDetail = () => {
     </div>);
 };
 export default PropertyDetail;
+

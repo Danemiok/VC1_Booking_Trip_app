@@ -10,7 +10,7 @@ export const Header = ({ title, isDark, toggleTheme, onNotificationClick, notifi
     const unreadNotificationCount = notifications ? notifications.filter((n) => !n.read).length : null;
     const hasUnreadNotifications = unreadNotificationCount === null ? true : unreadNotificationCount > 0;
     const avatarName = user?.name || 'User';
-    const avatarSrc = `https://ui-avatars.com/api/?name=${encodeURIComponent(avatarName)}&background=f1f5f9&color=0f172a&size=128`;
+    const avatarSrc = `https://ui-avatars.com/api/?name=${encodeURIComponent(avatarName)}&background=285a48&color=ffffff&size=128`;
     const handleLogoutClick = () => {
         setIsProfileDropdownOpen(false);
         setIsLogoutConfirmOpen(true);
@@ -24,7 +24,7 @@ export const Header = ({ title, isDark, toggleTheme, onNotificationClick, notifi
       <div className="flex items-center flex-1 max-w-xl">
         <div className="relative w-full">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={18}/>
-          <input type="text" placeholder="Search businesses, owners, or destinations..." className="w-full pl-10 pr-4 py-2 bg-slate-100 dark:bg-slate-800 border-none rounded-lg text-sm focus:ring-2 focus:ring-primary/50 transition-all outline-none"/>
+          <input type="text" placeholder="Search businesses, owners, or destinations..." className="w-full pl-10 pr-4 py-2 bg-slate-100 dark:bg-[#0d1916] border-none rounded-lg text-sm focus:ring-2 focus:ring-primary/40 transition-all outline-none"/>
         </div>
       </div>
       
