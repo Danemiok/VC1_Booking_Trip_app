@@ -10,7 +10,8 @@ class HotelSeeder extends Seeder
 {
     public function run(): void
     {
-        $owner = User::where('role', 'owner')->firstOrFail();
+        // $owner = User::where('role', 'owner')->firstOrFail();
+        $owner = User::whereHas('role', fn($q) => $q->where('name', 'owner'))->first();
 
         $hotels = [
             [
